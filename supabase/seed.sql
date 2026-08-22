@@ -1,0 +1,4 @@
+-- Seed data for local development.
+-- Runs after all migrations on `supabase db reset`. Use upserts (ON CONFLICT DO UPDATE)
+-- so this stays safe to re-run. Do not put schema changes (tables, RLS, policies) here —
+-- those belong in supabase/migrations/.
