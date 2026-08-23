@@ -30,7 +30,9 @@ Fixed-value columns use real Postgres enums (not varchar+CHECK) where the value 
 
 `conversations.status` was deliberately left as `varchar` + `CHECK` (`active`/`closed`/`paused`), not converted — only `company_agents.status` was simplified to an enum, per an explicit product decision (see decisions.md).
 
-Not yet implemented (see spec sections 14–15): `CheckoutClick`/tracking events for buying-intent and checkout-click analytics, and `messages` (conversation history is referenced by the spec but has no table yet).
+Not yet implemented (see spec §14–15): `CheckoutClick`/tracking events for buying-intent and checkout-click analytics.
+
+No `messages` table by design — message history is not persisted in our own DB. `conversations.open_ai_conversation_id` is used to fetch the full message history from OpenAI's Conversations API on demand instead.
 
 ### Access model
 

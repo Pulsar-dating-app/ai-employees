@@ -20,11 +20,15 @@ The MVP focuses exclusively on Malu and WhatsApp.
 
 ---
 
+
+
 ## 2. MVP Goal
 
 The MVP must prove:
 
 > A business can hire Malu, teach her about its business and products, connect her to WhatsApp, and have Malu naturally assist customers and generate measurable purchase intent and checkout clicks.
+
+
 
 ### Included
 
@@ -37,6 +41,8 @@ The MVP must prove:
 - Checkout-link tracking
 - Admin dashboard
 - Conversations and basic analytics
+
+
 
 ### Not included
 
@@ -52,6 +58,8 @@ The MVP must prove:
 - Advanced CRM/workflows
 
 ---
+
+
 
 ## 3. Core Product Concept
 
@@ -97,6 +105,8 @@ WhatsApp
 ```
 
 ---
+
+
 
 # 4. Merchant User Journey
 
@@ -150,7 +160,11 @@ Use product language such as:
 
 ---
 
+
+
 # 5. Malu — Agent Specification
+
+
 
 ## Role
 
@@ -177,6 +191,8 @@ Core philosophy:
 
 ---
 
+
+
 ## 6. Malu Personality
 
 Malu should feel like a genuinely good salesperson working for the business.
@@ -194,6 +210,8 @@ Malu should feel like a genuinely good salesperson working for the business.
 - Helpful
 - Persuasive without being pushy
 
+
+
 ### Malu should
 
 - Ask natural follow-up questions
@@ -205,6 +223,8 @@ Malu should feel like a genuinely good salesperson working for the business.
 - Answer questions naturally
 - Handle objections calmly
 - Guide customers toward checkout when appropriate
+
+
 
 ### Malu must never
 
@@ -222,6 +242,8 @@ Malu should feel like a genuinely good salesperson working for the business.
 - Pretend certainty when information is unavailable
 
 ---
+
+
 
 # 7. Humanized Conversation
 
@@ -248,6 +270,8 @@ Example:
 Malu should behave like an attentive salesperson in a physical store.
 
 ---
+
+
 
 # 8. Malu Sales Flow
 
@@ -291,6 +315,8 @@ This is a behavioral guideline, not a rigid script.
 
 ---
 
+
+
 # 9. Example Conversation
 
 Customer:
@@ -321,6 +347,8 @@ Malu:
 
 ---
 
+
+
 # 10. Malu Knowledge
 
 Malu must have access to merchant-specific information.
@@ -339,6 +367,8 @@ Malu must have access to merchant-specific information.
 - Variants
 - Other relevant attributes
 
+
+
 ## Business information
 
 - Company description
@@ -346,6 +376,8 @@ Malu must have access to merchant-specific information.
 - Store information
 - Contact information
 - General business rules
+
+
 
 ## Shipping
 
@@ -355,11 +387,15 @@ Malu must have access to merchant-specific information.
 - Countries / regions served
 - Other shipping rules
 
+
+
 ## Returns
 
 - Return policy
 - Exchange policy
 - Refund policy
+
+
 
 ## Payments
 
@@ -367,6 +403,8 @@ Malu must have access to merchant-specific information.
 - Installments
 - Payment conditions
 - Other payment information
+
+
 
 ## FAQ
 
@@ -377,6 +415,8 @@ Arbitrary question/answer information supplied by the merchant.
 A flexible area for anything else Malu needs to know.
 
 ---
+
+
 
 # 11. Knowledge Architecture
 
@@ -413,6 +453,8 @@ Malu
 Only relevant information should be passed to the model whenever practical.
 
 ---
+
+
 
 # 12. Product Catalog
 
@@ -473,6 +515,8 @@ Import flow:
 
 ---
 
+
+
 # 13. Product Search
 
 Product search is a core part of the product.
@@ -518,6 +562,8 @@ The objective is not to return many products.
 
 ---
 
+
+
 # 14. Checkout Tracking
 
 The MVP does not process purchases inside WhatsApp.
@@ -558,6 +604,8 @@ timestamp
 
 ---
 
+
+
 # 15. MVP Conversion Metrics
 
 The MVP tracks two key levels.
@@ -578,6 +626,8 @@ Event:
 ```text
 BUYING_INTENT
 ```
+
+
 
 ## Checkout Click
 
@@ -602,6 +652,8 @@ Initial dashboard terminology:
 Actual purchases and revenue can be added later through ecommerce integrations.
 
 ---
+
+
 
 # 16. Core Data Model
 
@@ -638,6 +690,8 @@ Company
 
 ---
 
+
+
 # 17. Agent Engine
 
 Malu should run on a reusable Agent Engine.
@@ -672,6 +726,8 @@ Malu-specific behavior should be separated from WhatsApp infrastructure.
 
 ---
 
+
+
 # 18. Agent Tools
 
 Possible tools:
@@ -690,6 +746,8 @@ Tools should return deterministic, database-grounded information.
 The LLM must not be trusted to invent factual business information.
 
 ---
+
+
 
 # 19. WhatsApp Architecture
 
@@ -736,7 +794,10 @@ Example:
 ---
 
 
+
 # 23. Backend MVP Scope
+
+
 
 ## Authentication
 
@@ -744,16 +805,22 @@ Example:
 - Login
 - Authentication/session
 
+
+
 ## Companies
 
 - Create company
 - User-company relationship
+
+
 
 ## Agent
 
 - Malu
 - Hire Malu
 - Malu status/configuration
+
+
 
 ## Products
 
@@ -763,6 +830,8 @@ Example:
 - Validation
 - Search
 
+
+
 ## Knowledge
 
 - Business information
@@ -771,12 +840,16 @@ Example:
 - Other information
 - Retrieval
 
+
+
 ## Conversations
 
 - Customers
 - Conversations
 - Messages
 - History
+
+
 
 ## AI
 
@@ -788,6 +861,8 @@ Example:
 - Tool execution
 - Response validation
 
+
+
 ## WhatsApp
 
 - Connection
@@ -795,11 +870,15 @@ Example:
 - Receive messages
 - Send messages
 
+
+
 ## Tracking
 
 - Buying intent
 - Product recommendation
 - Checkout click
+
+
 
 ## Analytics
 
@@ -810,6 +889,8 @@ Example:
 - Checkout clicks
 
 ---
+
+
 
 # 27. MVP Success Criteria
 
@@ -824,27 +905,36 @@ The important success criteria are behavioral.
 Malu must:
 
 ### Understand
+
 Correctly understand what the customer wants.
 
 ### Converse
+
 Maintain natural and pleasant conversations.
 
 ### Recommend
+
 Recommend genuinely relevant products.
 
 ### Ground
+
 Never invent product/business information.
 
 ### Sell
+
 Naturally move qualified customers toward purchase.
 
 ### Track
+
 Accurately record buying intent and checkout clicks.
 
 ### Measure
+
 Show useful performance metrics in the dashboard.
 
 ---
+
+
 
 # 28. Product Philosophy
 
