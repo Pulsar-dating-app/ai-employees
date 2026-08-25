@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { defaultAgentName } from "@/lib/agents/naming";
 
 // Trello ticket B1 — agent-scalable by design even though the MVP only ever
 // hires "malu": the agent is a URL segment (agentSlug), never hardcoded, so
@@ -56,10 +57,6 @@ async function getAgentBySlug(
   }
 
   return { agentId: agent.id as string, agentSlug: agent.slug as string, error: null };
-}
-
-function defaultAgentName(slug: string) {
-  return slug.charAt(0).toUpperCase() + slug.slice(1);
 }
 
 // GET: hire status for a specific agent. Used by F1's onboarding wizard to
