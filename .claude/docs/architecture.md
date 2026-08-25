@@ -24,6 +24,13 @@ Supabase Auth via `@supabase/ssr`, cookie-based sessions:
 
 Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (the modern `sb_publishable_...` key, safe to expose client-side — RLS is what actually protects data). Real values live in `.env.local` (gitignored); `.env.example` has the placeholder shape.
 
+### Companies & membership API (Trello A3)
+
+Route Handlers under `src/app/api/companies/` — this is the API surface other epics build against, so it's plain HTTP endpoints rather than Server Actions (see decisions.md):
+- `GET /api/companies` — list companies for the current user. Plain `select * from companies`; RLS (`is_company_member`) already scopes it, no manual join.
+- `POST /api/companies` — create a company. Delegates to the `public.create_company_with_owner` RPC (migration `20260825154320`) so the `companies` insert + `company_users` owner insert happen atomically in one Postgres function call, since supabase-js has no client-side multi-table transaction. The function is `SECURITY DEFINER` (RLS-bypassing) and `anon` is explicitly denied EXECUTE — see decisions.md for why both were necessary, not just the obvious-looking `SECURITY INVOKER` + `revoke ... from public`.
+- `POST /api/companies/[companyId]/members` — add/invite a member (no email invites in MVP; target user must already have an account). Re-checks the caller is owner/admin at the API layer (querying their own `company_users` row) before inserting, so a non-admin gets a clean 403 instead of a raw Postgres RLS error. Additionally, only an existing `owner` can assign the `owner` role to someone else — an `admin` can add members/admins but not mint another owner. This distinction is API-layer only: RLS's `is_company_admin` treats `owner`/`admin` as equivalent for every other operation (updating the company, managing membership in general), so owner-vs-admin has no meaning anywhere else in the system today.
+
 ## Data model
 
 Implemented in `supabase/migrations/` (2026-08-23), all tables in `public` schema with RLS enabled:
@@ -54,7 +61,7 @@ No `messages` table by design — message history is not persisted in our own DB
 
 ### Access model
 
-- All company-scoped tables (`companies`, `company_agents`, `customers`, `conversations`, `products`) are readable/writable only by members of that `company_id`, via two `security definer` helper functions: `private.is_company_member(company_id)` and `private.is_company_admin(company_id)` (admin = `owner`/`admin` role).
+- All company-scoped tables (`companies`, `company_agents`, `customers`, `conversations`, `products`) are readable/writable only by members of that `company_id`, via three `security definer` helper functions: `private.is_company_member(company_id)`, `private.is_company_admin(company_id)` (admin = `owner`/`admin` role), and `private.is_company_owner(company_id)` (owner only). `is_company_owner` exists solely to gate `company_users` rows whose role is or would become `owner` — everywhere else, `owner`/`admin` are equivalent.
 - These helpers live in a **`private` schema**, deliberately not listed in `supabase/config.toml`'s `[api].schemas` (only `public`, `graphql_public` are exposed) — this keeps them callable from RLS policies and triggers while blocking direct PostgREST RPC access (`/rest/v1/rpc/...`). Any new internal-only helper function should go in `private`, not `public`.
 - `agents` is readable by any authenticated user (`is_active = true` rows only); only `service_role` can write to it (no insert/update/delete policies for regular users) — it's Sidde's platform catalog, not merchant-editable.
 - Every table has a `before update` trigger (`public.set_updated_at`) that stamps `updated_at = now()`.
