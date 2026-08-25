@@ -20,6 +20,7 @@ Implemented in `supabase/migrations/` (2026-08-23), all tables in `public` schem
 - **customers** — a company's end customers (`channel`: enum `conversation_channel`, currently `whatsapp` only).
 - **conversations** — a thread between a customer and a company's agent; `agent_id` FKs to the global `agents` table (per `Sidde_MVP_Database_Tables.md`), not `company_agents`; `channel` uses the same `conversation_channel` enum as `customers`; `open_ai_conversation_id` links to the OpenAI-side conversation. `status` (`active`/`closed`/`paused`) is still plain `varchar` + `CHECK`, not an enum — left as-is deliberately.
 - **products** — a company's catalog (name/price/currency/images/category/variants/attributes as jsonb), imported from CSV/XLSX today, designed for future ecommerce integrations (Shopify/WooCommerce/etc.) without changing Malu's `ProductRepository` abstraction.
+- **events** — append-only log of the three trackable behaviors from spec §14–15: `buying_intent`, `product_recommendation`, `checkout_click` (single shared table with a `type` enum column, not one table per type). Scoped to `company_id`, `conversation_id`, `customer_id` (all required); `agent_id`/`product_id` optional. `tracking_id` is the `sidde.link/c/{tracking-id}` lookup key, set on `checkout_click` rows when the link is created and read back on click; unique when present (partial unique index). `metadata` jsonb holds type-specific extras (e.g. `destination_url`) that don't warrant their own column. No `updated_at`/no update trigger/no update or delete RLS policies — rows are never mutated after insert.
 
 ### Enum types
 
@@ -27,10 +28,11 @@ Fixed-value columns use real Postgres enums (not varchar+CHECK) where the value 
 - `company_role` (`owner`/`admin`/`member`) — `company_users.role`
 - `company_agent_status` (`active`/`paused`) — `company_agents.status`
 - `conversation_channel` (`whatsapp` only for now) — `customers.channel` and `conversations.channel`. Adding a channel later (website, Instagram, ...) requires an `ALTER TYPE ... ADD VALUE` migration.
+- `event_type` (`buying_intent`/`product_recommendation`/`checkout_click`) — `events.type`.
 
 `conversations.status` was deliberately left as `varchar` + `CHECK` (`active`/`closed`/`paused`), not converted — only `company_agents.status` was simplified to an enum, per an explicit product decision (see decisions.md).
 
-Not yet implemented (see spec §14–15): `CheckoutClick`/tracking events for buying-intent and checkout-click analytics.
+Not yet implemented: the checkout-link creation/redirect logic itself (spec §14, Trello tickets C4/E1) — `events` only provides the schema those write to and read from.
 
 No `messages` table by design — message history is not persisted in our own DB. `conversations.open_ai_conversation_id` is used to fetch the full message history from OpenAI's Conversations API on demand instead.
 
@@ -57,3 +59,16 @@ The Supabase CLI only picks up flat, timestamped `.sql` files directly in `supab
 Never hand-edit the remote database directly — always go through a migration so `supabase/migrations/` stays the reproducible history of the schema.
 
 When applying migrations via the Supabase MCP tool (`apply_migration`), it only writes to the remote database — it does **not** create a local file. Always also write the matching `.sql` file to `supabase/migrations/` using the exact `version`/`name` reported by `list_migrations`, so local files and remote history stay identical.
+
+### Supabase MCP server
+
+Configured at project scope in `.mcp.json` (checked into the repo, no secrets — it authenticates via browser OAuth):
+
+```json
+{ "mcpServers": { "supabase": { "type": "http", "url": "https://mcp.supabase.com/mcp?project_ref=wtewquippvcteuxzcztd" } } }
+```
+
+- The `project_ref` query param pins every MCP call to the **ai-employees** project, so the unrelated "Faceless Videos" project in the same org can't be touched by accident.
+- `read_only` is deliberately **not** set — `apply_migration` needs write access (see the migration convention above).
+- Auth is dynamic client registration (browser OAuth). Run `/mcp` in an interactive terminal session, pick `supabase`, and choose Authenticate. There is no token to store. In CI, pass a personal access token instead via a `headers` entry: `"Authorization": "Bearer ${SUPABASE_ACCESS_TOKEN}"`.
+- Optional `features=<groups>` param narrows which tool groups load (e.g. `database,docs`); left at the default.
