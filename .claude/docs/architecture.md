@@ -95,3 +95,9 @@ Configured at project scope in `.mcp.json` (checked into the repo, no secrets �
 - `read_only` is deliberately **not** set — `apply_migration` needs write access (see the migration convention above).
 - Auth is dynamic client registration (browser OAuth). Run `/mcp` in an interactive terminal session, pick `supabase`, and choose Authenticate. There is no token to store. In CI, pass a personal access token instead via a `headers` entry: `"Authorization": "Bearer ${SUPABASE_ACCESS_TOKEN}"`.
 - Optional `features=<groups>` param narrows which tool groups load (e.g. `database,docs`); left at the default.
+
+### Testing
+
+- `npm run test:unit` — pure logic, no external services. Currently empty (see `tests/unit/README.md`).
+- `npm run test:integration` — starts local Supabase (Docker), resets it from `supabase/migrations/`, boots a real `next dev` on port 3100, and runs `tests/integration/**` against it over real HTTP with real signed-up users. One command, needs Docker Desktop running. See the 2026-08-25 decisions.md entry for why this hits real infra instead of mocks.
+- Local Supabase ports are shifted to `553xx` (not the `543xx` defaults) in `supabase/config.toml`, to coexist with the unrelated "Faceless Videos" project's own local stack on this machine.
