@@ -103,3 +103,17 @@ Configured at project scope in `.mcp.json` (checked into the repo, no secrets �
 - `read_only` is deliberately **not** set — `apply_migration` needs write access (see the migration convention above).
 - Auth is dynamic client registration (browser OAuth). Run `/mcp` in an interactive terminal session, pick `supabase`, and choose Authenticate. There is no token to store. In CI, pass a personal access token instead via a `headers` entry: `"Authorization": "Bearer ${SUPABASE_ACCESS_TOKEN}"`.
 - Optional `features=<groups>` param narrows which tool groups load (e.g. `database,docs`); left at the default.
+
+### Testing
+
+- `npm run test:unit` — pure logic, no external services. Currently empty (see `tests/unit/README.md`).
+- `npm run test:integration` — starts local Supabase (Docker), resets it from `supabase/migrations/`, boots a real `next dev` on port 3100, and runs `tests/integration/**` against it over real HTTP with real signed-up users. One command, needs Docker Desktop running. See the 2026-08-25 decisions.md entry for why this hits real infra instead of mocks.
+- Local Supabase ports are shifted to `553xx` (not the `543xx` defaults) in `supabase/config.toml`, to coexist with the unrelated "Faceless Videos" project's own local stack on this machine.
+
+**Where new tests go:**
+- One file per feature/domain area: `tests/integration/<area>.test.ts` (e.g. `companies.test.ts`) for tests that go through the actual Next.js API routes over HTTP.
+- `tests/integration/<table>-rls.test.ts` (e.g. `company-users-rls.test.ts`) for tests that call PostgREST/RPC directly via supabase-js, bypassing the Next.js app entirely — use this when testing an RLS policy or Postgres function itself (whether an admin/owner/member can do X), not app-layer behavior.
+- Reuse `tests/integration/helpers/`: `auth.ts`'s `signUpTestUser()` for a fresh authenticated test user (returns `userId`, a ready `cookieHeader` for HTTP tests, and a `client` for direct supabase-js calls), `request.ts`'s `api()` for HTTP calls against the test server, `env.ts`'s `getTestEnv()` for the local Supabase URL/key. Don't re-implement the cookie-jar/session dance those already handle.
+- `tests/unit/<name>.test.ts` only once there's pure logic worth isolating from the HTTP/DB layer (see its README).
+
+**CI:** `.github/workflows/test.yml` runs both `unit` and `integration` as separate jobs on every PR/push targeting `main`. The `integration` job needs no extra setup beyond `npm ci` — Docker is preinstalled on `ubuntu-latest` runners and the `supabase` CLI is a devDependency, so `npx supabase` (used internally by `npm run test:integration`) just works. To actually block merging on these, enable "Require status checks to pass" for `main` in GitHub's branch protection settings and select both jobs — that part isn't in this repo, it's a GitHub UI/API setting.

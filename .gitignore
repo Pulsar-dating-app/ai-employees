@@ -5,6 +5,7 @@
 
 # testing
 /coverage
+tests/integration/.test-env.json
 
 # next.js
 /.next/
