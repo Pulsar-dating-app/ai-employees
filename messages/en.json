@@ -1,0 +1,61 @@
+{
+  "Auth": {
+    "login": {
+      "title": "Log in",
+      "subtitle": "Welcome back to Sidde.",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "submit": "Log in",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up"
+    },
+    "signUp": {
+      "title": "Sign up",
+      "subtitle": "Create your Sidde account.",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordHint": "At least 6 characters.",
+      "submit": "Sign up",
+      "checkEmail": "Check your email to confirm your account before logging in.",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Log in"
+    },
+    "errors": {
+      "invalidCredentials": "Incorrect email or password.",
+      "emailNotConfirmed": "Please confirm your email before logging in.",
+      "userExists": "An account with this email already exists.",
+      "passwordTooShort": "Password must be at least 6 characters."
+    }
+  },
+  "Dashboard": {
+    "logout": "Log out",
+    "welcomeTitle": "Welcome to Sidde",
+    "welcomeSubtitle": "Hire your first team member and get them ready to sell for you.",
+    "stepProgress": "Step {completed} of {total} complete",
+    "hiredSectionTitle": "Your team",
+    "hiredBadge": "Hired · ready for the next step",
+    "teachTitle": "Teach your team about your business",
+    "teachDescription": "Tell your team about your products, shipping, and return policies so they can answer customers accurately.",
+    "connectTitle": "Connect your team to WhatsApp",
+    "connectDescription": "Link your WhatsApp Business number so customers can start chatting with your team.",
+    "readyTitle": "Your team is ready to work",
+    "readyDescription": "Once a team member is hired, taught, and connected, they'll start talking to your customers.",
+    "comingSoon": "Coming soon"
+  },
+  "HireTeam": {
+    "sectionTitle": "Hire your team",
+    "sectionSubtitle": "These are the team members available to hire.",
+    "pickPrompt": "Choose who to hire first:",
+    "businessNameLabel": "Business name",
+    "businessNamePlaceholder": "e.g. Luna Skincare",
+    "businessNamePrompt": "Give your business a name to get started.",
+    "businessNameMissing": "Enter your business name to get started.",
+    "hireButton": "Hire {name}",
+    "hiringButton": "Hiring…",
+    "hireGenericError": "Something went wrong hiring {name}. Please try again.",
+    "companyCreateError": "Couldn't save your business name. Please try again."
+  },
+  "LanguageSwitcher": {
+    "label": "Language"
+  }
+}

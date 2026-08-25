@@ -29,6 +29,15 @@ This project keeps living documentation under [.claude/docs/](.claude/docs/):
 - Local dev seed/fixture data (upserts only, no schema) goes in `supabase/seed.sql`.
 - Local config is in `supabase/config.toml`.
 
+## Internationalization
+
+- This app supports English and Portuguese (`next-intl`, cookie-based — no `[locale]` URL segment; see `.claude/docs/architecture.md#internationalization-enpt`). Every new user-facing string in a page or component must go through this system.
+- **Never hardcode a UI string.** Add it to both `messages/en.json` and `messages/pt.json` under the appropriate namespace, then read it with `getTranslations` (Server Components/Actions) or `useTranslations` (Client Components) — not a literal string in JSX.
+- Interpolate dynamic values with ICU placeholders (`"Hire {name}"`), never string concatenation.
+- **Exception — don't translate data, only copy around it.** Agent names/roles/descriptions (`agents.slug`/`role`/`description`), company names, and other merchant-entered or DB-sourced content are data, not UI chrome — they stay as stored, in whichever language they were entered in. Only the surrounding interface text (labels, buttons, headings, instructions) goes through the message files.
+- Adding a third language later: a third `messages/<locale>.json` file plus one entry in `SUPPORTED_LOCALES` (`src/i18n/request.ts`) — no routing changes needed.
+- Merchant-facing copy (translated or not) must still follow the product-language rules in `Sidde_MVP_Specification.md` §4/§28 — never expose "agent," "prompt," "LLM," "AI," "embeddings," or similar implementation jargon, in either language.
+
 ## Testing
 
 - When adding or changing a feature with real logic (API route, RLS policy, Postgres function, auth flow), write or update tests as part of that same task — don't leave it for later or wait to be asked.
