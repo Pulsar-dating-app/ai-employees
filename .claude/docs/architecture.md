@@ -101,3 +101,9 @@ Configured at project scope in `.mcp.json` (checked into the repo, no secrets �
 - `npm run test:unit` — pure logic, no external services. Currently empty (see `tests/unit/README.md`).
 - `npm run test:integration` — starts local Supabase (Docker), resets it from `supabase/migrations/`, boots a real `next dev` on port 3100, and runs `tests/integration/**` against it over real HTTP with real signed-up users. One command, needs Docker Desktop running. See the 2026-08-25 decisions.md entry for why this hits real infra instead of mocks.
 - Local Supabase ports are shifted to `553xx` (not the `543xx` defaults) in `supabase/config.toml`, to coexist with the unrelated "Faceless Videos" project's own local stack on this machine.
+
+**Where new tests go:**
+- One file per feature/domain area: `tests/integration/<area>.test.ts` (e.g. `companies.test.ts`) for tests that go through the actual Next.js API routes over HTTP.
+- `tests/integration/<table>-rls.test.ts` (e.g. `company-users-rls.test.ts`) for tests that call PostgREST/RPC directly via supabase-js, bypassing the Next.js app entirely — use this when testing an RLS policy or Postgres function itself (whether an admin/owner/member can do X), not app-layer behavior.
+- Reuse `tests/integration/helpers/`: `auth.ts`'s `signUpTestUser()` for a fresh authenticated test user (returns `userId`, a ready `cookieHeader` for HTTP tests, and a `client` for direct supabase-js calls), `request.ts`'s `api()` for HTTP calls against the test server, `env.ts`'s `getTestEnv()` for the local Supabase URL/key. Don't re-implement the cookie-jar/session dance those already handle.
+- `tests/unit/<name>.test.ts` only once there's pure logic worth isolating from the HTTP/DB layer (see its README).
