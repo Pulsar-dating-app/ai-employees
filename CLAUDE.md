@@ -35,6 +35,8 @@ This project keeps living documentation under [.claude/docs/](.claude/docs/):
 - Prefer integration tests (`tests/integration/`, run via `npm run test:integration`) over mocks for anything touching RLS, auth, or Postgres — mocks can't catch policy/grant bugs; see `.claude/docs/decisions.md`'s 2026-08-25 testing entries for real examples this caught. See `.claude/docs/architecture.md#testing` for how the local environment works.
 - `tests/unit/` is for pure logic with no DB/HTTP dependency — only add tests there when such logic actually exists; don't force it.
 - Not every change needs a new test (e.g. a doc update, a config tweak) — use judgment, but default to testing behavior that could break silently.
+- **No frontend/UI tests** (component tests, browser/e2e tests) — out of scope for this project's test suite.
+- **Priority order for what to test:** backend logic (API routes, server actions), Supabase Edge Functions (once any exist under `supabase/functions/`), RLS policies, and any other Supabase-level behavior (Postgres functions/RPCs, triggers, grants). This is exactly what `tests/integration/` is built for — see the "Where new tests go" note in `.claude/docs/architecture.md#testing`.
 - **Tests only ever run against the local Supabase stack, never the remote `ai-employees` project.** `tests/integration/helpers/env.ts` and `global-setup.ts` get connection info from `supabase status` (local), not from `.env.local` (remote) — don't hardcode the remote URL/key into a test, and don't point a test's Supabase client at anything other than what `getTestEnv()` returns.
 
 <!-- BEGIN:nextjs-agent-rules -->
