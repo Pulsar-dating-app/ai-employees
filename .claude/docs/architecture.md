@@ -8,6 +8,22 @@ Sidde MVP: a platform for hiring pre-built AI employees (first: Malu, an AI sale
 
 Supabase project: **ai-employees** (`wtewquippvcteuxzcztd`, org `pxgsqmjvtajofdyaepyr`, region us-east-2). A separate "Faceless Videos" project exists in the same org — unrelated, do not target it.
 
+## Application
+
+Next.js (App Router, TypeScript, Tailwind) at the repo root, alongside `supabase/` — one codebase for both the admin dashboard UI and API routes/server actions (decided over a separate backend+frontend split; see decisions.md). Source lives under `src/app/`; non-route logic (Supabase clients, future domain code) lives under `src/lib/`.
+
+### Auth (Trello A2)
+
+Supabase Auth via `@supabase/ssr`, cookie-based sessions:
+- `src/lib/supabase/client.ts` / `server.ts` — browser and server Supabase clients.
+- `src/lib/supabase/middleware.ts` + `src/proxy.ts` — refreshes the session cookie on every request (Server Components can't write cookies themselves) and gates access: unauthenticated users hitting `/dashboard*` are redirected to `/login`; authenticated users hitting `/login` or `/sign-up` are redirected to `/dashboard`. Next.js 16 renamed the `middleware.ts` convention to `proxy.ts`/`export function proxy` — this repo already uses the new name.
+- `src/lib/auth/actions.ts` — `login`/`signUp`/`logout` server actions, called directly from the `/login` and `/sign-up` page forms. Auth errors are translated to user-facing copy (`friendlyAuthError`) rather than shown raw. Lives under `lib/`, not `app/`, since it isn't a route — an `app/auth/` folder with no `page.tsx` would look like a route that doesn't exist.
+- `src/app/api/me/route.ts` — `GET` current-user endpoint for non-Server-Component callers.
+- `src/app/dashboard/page.tsx` is a placeholder proving the session round-trip; the real onboarding shell (Hire Malu -> Teach Malu -> Connect WhatsApp) is Trello ticket F1.
+- Company creation/membership is intentionally not part of A2 — that's A3, layered on top of a logged-in user.
+
+Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (the modern `sb_publishable_...` key, safe to expose client-side — RLS is what actually protects data). Real values live in `.env.local` (gitignored); `.env.example` has the placeholder shape.
+
 ## Data model
 
 Implemented in `supabase/migrations/` (2026-08-23), all tables in `public` schema with RLS enabled:
