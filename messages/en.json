@@ -40,7 +40,8 @@
     "connectDescription": "Link your WhatsApp Business number so customers can start chatting with your team.",
     "readyTitle": "Your team is ready to work",
     "readyDescription": "Once a team member is hired, taught, and connected, they'll start talking to your customers.",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "backToDashboard": "Back to dashboard"
   },
   "HireTeam": {
     "sectionTitle": "Hire your team",
@@ -54,6 +55,68 @@
     "hiringButton": "Hiring…",
     "hireGenericError": "Something went wrong hiring {name}. Please try again.",
     "companyCreateError": "Couldn't save your business name. Please try again."
+  },
+  "Teach": {
+    "pageTitle": "Teach your team about your business",
+    "pageSubtitle": "This is what your team will know when talking with customers.",
+    "noCompany": "Hire a team member first to start teaching them about your business.",
+    "tipBanner": "The more detail you add here, the better your team can help your customers — just like onboarding a new employee in person.",
+    "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "saveError": "Something went wrong. Please try again.",
+    "businessInfo": {
+      "title": "Business information",
+      "description": "Your company's name, description, and how customers can reach you.",
+      "nameLabel": "Business name",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What you sell, what makes you different, and any general rules customers should know.",
+      "emailLabel": "Contact email",
+      "phoneLabel": "Contact phone",
+      "websiteLabel": "Website",
+      "countryLabel": "Country",
+      "currencyLabel": "Currency",
+      "currencyPlaceholder": "Select a currency",
+      "currencyOptions": {
+        "USD": "USD — US Dollar",
+        "BRL": "BRL — Brazilian Real",
+        "EUR": "EUR — Euro"
+      }
+    },
+    "shipping": {
+      "title": "Shipping",
+      "description": "Shipping methods, costs, delivery times, and where you ship to.",
+      "label": "Shipping policy",
+      "placeholder": "e.g. We ship nationwide via [carrier], 3-5 business days, free over $50…"
+    },
+    "returns": {
+      "title": "Returns",
+      "description": "Your return, exchange, and refund policy.",
+      "label": "Return policy",
+      "placeholder": "e.g. 30-day returns, items must be unused with tags attached…"
+    },
+    "payments": {
+      "title": "Payments",
+      "description": "Accepted payment methods, installments, and other payment details.",
+      "label": "Payment policy",
+      "placeholder": "e.g. We accept credit card, PIX, and boleto. Up to 12x installments…"
+    },
+    "faq": {
+      "title": "FAQ",
+      "description": "Common questions your customers ask, answered.",
+      "questionLabel": "Question",
+      "answerLabel": "Answer",
+      "addButton": "Add a question",
+      "removeButton": "Remove",
+      "emptyState": "No questions yet — add one to get started."
+    },
+    "other": {
+      "title": "Other information",
+      "description": "Anything else your team should know that doesn't fit above.",
+      "label": "Other information",
+      "placeholder": "Anything else worth knowing…"
+    }
   },
   "LanguageSwitcher": {
     "label": "Language"

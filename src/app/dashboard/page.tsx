@@ -1,9 +1,36 @@
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { StepBadge } from "@/components/ui/step-badge";
 import { HireTeamCard } from "./hire-team-card";
+
+function LinkStepCard({
+  title,
+  description,
+  status,
+  href,
+}: {
+  title: string;
+  description: string;
+  status: "active" | "done";
+  href: string;
+}) {
+  return (
+    <Link href={href} className="block">
+      <Card className="transition-colors hover:bg-neutral-50">
+        <CardHeader>
+          <div className="flex flex-row items-center gap-3">
+            <StepBadge status={status} />
+            <CardTitle>{title}</CardTitle>
+          </div>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+      </Card>
+    </Link>
+  );
+}
 
 type CompanyAgentRow = {
   agent_id: string;
@@ -77,7 +104,16 @@ export default async function DashboardPage() {
       description: a.description,
     }));
 
-  const completedSteps = hiredAgents.length > 0 ? 1 : 0;
+  const hasKnowledge = Boolean(
+    company?.description ||
+      company?.shipping_policy ||
+      company?.return_policy ||
+      company?.payment_policy ||
+      company?.additional_information ||
+      (Array.isArray(company?.faq) && company.faq.length > 0),
+  );
+
+  const completedSteps = (hiredAgents.length > 0 ? 1 : 0) + (hasKnowledge ? 1 : 0);
   const totalSteps = 4;
 
   return (
@@ -133,10 +169,11 @@ export default async function DashboardPage() {
           />
         ) : null}
 
-        <StubStepCard
+        <LinkStepCard
           title={t("teachTitle")}
           description={t("teachDescription")}
-          comingSoonLabel={t("comingSoon")}
+          status={hasKnowledge ? "done" : "active"}
+          href="/dashboard/teach"
         />
 
         <StubStepCard

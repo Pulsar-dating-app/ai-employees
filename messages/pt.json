@@ -40,7 +40,8 @@
     "connectDescription": "Vincule seu número do WhatsApp Business para que os clientes possam conversar com sua equipe.",
     "readyTitle": "Sua equipe está pronta para trabalhar",
     "readyDescription": "Assim que um integrante for contratado, treinado e conectado, ele vai começar a falar com seus clientes.",
-    "comingSoon": "Em breve"
+    "comingSoon": "Em breve",
+    "backToDashboard": "Voltar para o painel"
   },
   "HireTeam": {
     "sectionTitle": "Contrate sua equipe",
@@ -54,6 +55,68 @@
     "hiringButton": "Contratando…",
     "hireGenericError": "Algo deu errado ao contratar {name}. Tente novamente.",
     "companyCreateError": "Não foi possível salvar o nome do seu negócio. Tente novamente."
+  },
+  "Teach": {
+    "pageTitle": "Ensine sua equipe sobre o seu negócio",
+    "pageSubtitle": "Isto é o que sua equipe vai saber ao conversar com os clientes.",
+    "noCompany": "Contrate um integrante da equipe primeiro para começar a ensiná-lo sobre o seu negócio.",
+    "tipBanner": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
+    "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "saved": "Salvo",
+    "saveError": "Algo deu errado. Tente novamente.",
+    "businessInfo": {
+      "title": "Informações do negócio",
+      "description": "O nome da sua empresa, a descrição e como os clientes podem entrar em contato.",
+      "nameLabel": "Nome do negócio",
+      "descriptionLabel": "Descrição",
+      "descriptionPlaceholder": "O que você vende, o que te diferencia e regras gerais que os clientes devem saber.",
+      "emailLabel": "E-mail de contato",
+      "phoneLabel": "Telefone de contato",
+      "websiteLabel": "Site",
+      "countryLabel": "País",
+      "currencyLabel": "Moeda",
+      "currencyPlaceholder": "Selecione uma moeda",
+      "currencyOptions": {
+        "USD": "USD — Dólar americano",
+        "BRL": "BRL — Real brasileiro",
+        "EUR": "EUR — Euro"
+      }
+    },
+    "shipping": {
+      "title": "Envio",
+      "description": "Métodos de envio, custos, prazos de entrega e para onde você envia.",
+      "label": "Política de envio",
+      "placeholder": "ex.: Enviamos para todo o país via [transportadora], 3-5 dias úteis, grátis acima de R$150…"
+    },
+    "returns": {
+      "title": "Devoluções",
+      "description": "Sua política de devolução, troca e reembolso.",
+      "label": "Política de devolução",
+      "placeholder": "ex.: Devoluções em até 30 dias, itens devem estar sem uso e com etiqueta…"
+    },
+    "payments": {
+      "title": "Pagamentos",
+      "description": "Métodos de pagamento aceitos, parcelamento e outras informações de pagamento.",
+      "label": "Política de pagamento",
+      "placeholder": "ex.: Aceitamos cartão de crédito, PIX e boleto. Parcelamos em até 12x…"
+    },
+    "faq": {
+      "title": "Perguntas frequentes",
+      "description": "Perguntas comuns dos seus clientes, já respondidas.",
+      "questionLabel": "Pergunta",
+      "answerLabel": "Resposta",
+      "addButton": "Adicionar pergunta",
+      "removeButton": "Remover",
+      "emptyState": "Nenhuma pergunta ainda — adicione uma para começar."
+    },
+    "other": {
+      "title": "Outras informações",
+      "description": "Qualquer outra coisa que sua equipe deva saber e que não se encaixa acima.",
+      "label": "Outras informações",
+      "placeholder": "Qualquer outra coisa que valha a pena saber…"
+    }
   },
   "LanguageSwitcher": {
     "label": "Idioma"
