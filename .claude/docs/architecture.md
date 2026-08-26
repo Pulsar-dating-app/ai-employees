@@ -211,6 +211,16 @@ Route Handlers under `src/app/api/companies/[companyId]/products/`, following A3
 - Both `[productId]` handlers first look up the product by `id` **and** `company_id` together, returning `404` if it doesn't exist or belongs to a different company — same "caller-supplied identifier, so a miss is a client error" reasoning as B1's `agentSlug` 404.
 - No schema changes needed — the `products` table and its RLS policies already existed from the initial MVP schema migration (`20260823204115_create_products_table`).
 
+### Product search (Trello B5)
+
+`src/lib/products/repository.ts` — `ProductRepository` (`search(params)`, `get(companyId, productId)`), the spec §12 abstraction C3's `search_products`/`get_product` tools will call directly, in-process, once the agent engine (C1) exists.
+
+- **Uses the service-role client (`createServiceClient()`), not the RLS-scoped one** — its real caller is an inbound WhatsApp message with no authenticated merchant Supabase session, so B3's regular-client-plus-RLS approach doesn't apply here. `company_id` and `is_active = true` are filtered explicitly in application code instead. Any future caller must always pass a trusted `companyId`, never one taken from an unauthenticated party.
+- `search`: filters on `category` (exact), `priceMin`/`priceMax` (`gte`/`lte`), `attributes` (jsonb containment via `.contains()`), and free-text `text` (plain `ilike` on `name`/`description` — per the card's explicit MVP allowance; a `to_tsvector` index is a documented future upgrade, not required now). Pulls up to 50 company-scoped candidates, then ranks in JS (name match worth more than description-only match) and slices to `limit` (default 5, capped at 20) — a catalog larger than that 50-row pool may miss a relevant match ranked past position 50, an accepted MVP tradeoff.
+- `get`: also enforces `is_active = true` — a soft-deleted product must never be recommendable by direct id either, e.g. if it was mentioned earlier in a conversation and the merchant later delisted it.
+- Free-text values are escaped before being interpolated into PostgREST's `.or()` filter string (wrapped in double quotes, backslash/quote-escaped) — otherwise a comma or parenthesis in customer-typed search text would corrupt or hijack the filter.
+- `src/app/api/companies/[companyId]/products/search/route.ts` — a thin `GET` wrapper, added only so the repository can be validated the same way as everything else in this repo (real HTTP + real Supabase; there's no direct-import test harness for service-role code here — see `tests/integration/product-search.test.ts`). **Not** what C3 will call. Because `ProductRepository` bypasses RLS, this route enforces company membership itself first (same reasoning as D1's service-client routes) before delegating. `?productId=` short-circuits to `.get()` (wrapped as a 0/1-element list); otherwise it runs `.search()` over `text`/`category`/`priceMin`/`priceMax`/`attributes` (JSON-encoded)/`limit` query params.
+
 ## Data model
 
 Implemented in `supabase/migrations/` (2026-08-23), all tables in `public` schema with RLS enabled:
