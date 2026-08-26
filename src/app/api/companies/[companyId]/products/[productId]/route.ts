@@ -1,0 +1,199 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+// Trello ticket B3 — update/soft-delete a single product.
+
+async function requireMember(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+  userId: string,
+) {
+  const { data: membership, error } = await supabase
+    .from("company_users")
+    .select("role")
+    .eq("company_id", companyId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
+  }
+
+  if (!membership) {
+    return {
+      error: NextResponse.json(
+        { error: "Not a member of this company" },
+        { status: 403 },
+      ),
+    };
+  }
+
+  return { error: null };
+}
+
+async function getProduct(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+  productId: string,
+) {
+  const { data: product, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (error) {
+    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
+  }
+
+  if (!product) {
+    // Doesn't exist, or belongs to a different company — either way it's a
+    // client error, not a platform config problem.
+    return { error: NextResponse.json({ error: "Product not found" }, { status: 404 }) };
+  }
+
+  return { product, error: null };
+}
+
+// price and currency travel together: a price with no currency is
+// meaningless money, a currency with no price is noise. Validated against
+// the *effective* value after the update is applied, not just the fields
+// present in this request — e.g. sending only `price` on a product that
+// already has no `currency` must still fail.
+function validatePriceCurrency(price: unknown, currency: unknown): string | null {
+  if (price === undefined || price === null) return null;
+
+  if (typeof price !== "number" || Number.isNaN(price) || price < 0) {
+    return "price must be a number >= 0";
+  }
+
+  if (!currency) {
+    return "currency is required when price is present";
+  }
+
+  return null;
+}
+
+const OPTIONAL_PASSTHROUGH_FIELDS = [
+  "external_id",
+  "sku",
+  "description",
+  "price",
+  "currency",
+  "image_url",
+  "product_url",
+  "category",
+  "variants",
+  "attributes",
+  "metadata",
+] as const;
+
+// PATCH: partial update. Only fields present in the body are changed.
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ companyId: string; productId: string }> },
+) {
+  const { companyId, productId } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const memberCheck = await requireMember(supabase, companyId, user.id);
+  if (memberCheck.error) return memberCheck.error;
+
+  const productLookup = await getProduct(supabase, companyId, productId);
+  if (productLookup.error) return productLookup.error;
+
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
+  }
+
+  const update: Record<string, unknown> = {};
+
+  if ("name" in body) {
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    if (!name) {
+      return NextResponse.json({ error: "name must be a non-empty string" }, { status: 400 });
+    }
+    update.name = name;
+  }
+
+  if ("is_active" in body) {
+    if (typeof body.is_active !== "boolean") {
+      return NextResponse.json({ error: "is_active must be a boolean" }, { status: 400 });
+    }
+    update.is_active = body.is_active;
+  }
+
+  for (const field of OPTIONAL_PASSTHROUGH_FIELDS) {
+    if (field in body) update[field] = body[field];
+  }
+
+  const effectivePrice = "price" in update ? update.price : productLookup.product.price;
+  const effectiveCurrency = "currency" in update ? update.currency : productLookup.product.currency;
+  const priceError = validatePriceCurrency(effectivePrice, effectiveCurrency);
+  if (priceError) {
+    return NextResponse.json({ error: priceError }, { status: 400 });
+  }
+
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ product: productLookup.product });
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .update(update)
+    .eq("id", productId)
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ product: data });
+}
+
+// DELETE: soft-delete. Sets is_active = false rather than removing the row,
+// so events/analytics referencing this product_id keep resolving — see the
+// card's "recommends soft-delete over hard deletion" note.
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ companyId: string; productId: string }> },
+) {
+  const { companyId, productId } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const memberCheck = await requireMember(supabase, companyId, user.id);
+  if (memberCheck.error) return memberCheck.error;
+
+  const productLookup = await getProduct(supabase, companyId, productId);
+  if (productLookup.error) return productLookup.error;
+
+  const { data, error } = await supabase
+    .from("products")
+    .update({ is_active: false })
+    .eq("id", productId)
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ product: data });
+}
