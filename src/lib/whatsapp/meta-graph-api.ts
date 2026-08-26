@@ -20,10 +20,14 @@ function graphApiUrl(path: string, params?: Record<string, string>) {
   return url.toString();
 }
 
-// Meta requires a PIN to enable two-step verification on a newly registered
-// number; we control the number entirely server-side, so a random one-time
-// PIN is sufficient -- nothing later re-prompts for it.
-function generateRegistrationPin() {
+// Meta ties a phone number to a two-step-verification PIN on its first
+// /register call -- every subsequent /register for that same number
+// (reconnect, retry) must supply the *same* PIN, or Meta rejects it with
+// "(#133005) Two step verification PIN Mismatch". Callers must persist
+// whatever PIN they pass to finishConnection (company_whatsapp_connections.two_step_pin)
+// and reuse it on every future call for that company -- only generate a
+// fresh one via this function when no stored PIN exists yet.
+export function generateRegistrationPin() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
@@ -35,7 +39,7 @@ export async function exchangeCodeForToken(code: string) {
       code,
     }),
   );
-  if (!tokenRes.ok) throw new Error("Meta token exchange failed");
+  if (!tokenRes.ok) throw new Error(`Meta token exchange failed: ${await tokenRes.text()}`);
   const { access_token: accessToken, expires_in: expiresIn } = (await tokenRes.json()) as {
     access_token?: string;
     expires_in?: number;
@@ -57,28 +61,38 @@ export async function exchangeCodeForToken(code: string) {
 // and fetches the merchant-facing display number. Takes an already-valid
 // access token -- callers get one either via exchangeCodeForToken (real
 // Embedded Signup) or by pasting one from Meta's own API Setup test number
-// (manual-connect-test, no Embedded Signup/Advanced Access needed).
-export async function finishConnection(accessToken: string, phoneNumberId: string, wabaId: string) {
+// (manual-connect-test, no Embedded Signup/Advanced Access needed). `pin`
+// must be the previously-stored PIN for this connection if one exists (see
+// generateRegistrationPin's doc comment) -- the caller decides that, not
+// this function.
+export async function finishConnection(
+  accessToken: string,
+  phoneNumberId: string,
+  wabaId: string,
+  pin: string,
+) {
   const authHeaders = { Authorization: `Bearer ${accessToken}` };
 
   const registerRes = await fetch(graphApiUrl(`/${phoneNumberId}/register`), {
     method: "POST",
     headers: { ...authHeaders, "content-type": "application/json" },
-    body: JSON.stringify({ messaging_product: "whatsapp", pin: generateRegistrationPin() }),
+    body: JSON.stringify({ messaging_product: "whatsapp", pin }),
   });
-  if (!registerRes.ok) throw new Error("Meta phone number registration failed");
+  if (!registerRes.ok) {
+    throw new Error(`Meta phone number registration failed: ${await registerRes.text()}`);
+  }
 
   const subscribeRes = await fetch(graphApiUrl(`/${wabaId}/subscribed_apps`), {
     method: "POST",
     headers: authHeaders,
   });
-  if (!subscribeRes.ok) throw new Error("Meta webhook subscription failed");
+  if (!subscribeRes.ok) throw new Error(`Meta webhook subscription failed: ${await subscribeRes.text()}`);
 
   const phoneRes = await fetch(
     graphApiUrl(`/${phoneNumberId}`, { fields: "display_phone_number" }),
     { headers: authHeaders },
   );
-  if (!phoneRes.ok) throw new Error("Meta phone number lookup failed");
+  if (!phoneRes.ok) throw new Error(`Meta phone number lookup failed: ${await phoneRes.text()}`);
   const { display_phone_number: displayPhoneNumber } = (await phoneRes.json()) as {
     display_phone_number?: string;
   };

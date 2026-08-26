@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { exchangeCodeForToken, finishConnection } from "@/lib/whatsapp/meta-graph-api";
+import {
+  exchangeCodeForToken,
+  finishConnection,
+  generateRegistrationPin,
+} from "@/lib/whatsapp/meta-graph-api";
 
 // Trello ticket D1 -- finishes what Meta's Embedded Signup starts. F4's (not
 // yet built) dashboard screen loads the Facebook JS SDK and triggers the
@@ -60,9 +64,9 @@ async function requireAdmin(
   return membership;
 }
 
-async function finishEmbeddedSignup(code: string, phoneNumberId: string, wabaId: string) {
+async function finishEmbeddedSignup(code: string, phoneNumberId: string, wabaId: string, pin: string) {
   const { accessToken, tokenExpiresAt } = await exchangeCodeForToken(code);
-  const { displayPhoneNumber } = await finishConnection(accessToken, phoneNumberId, wabaId);
+  const { displayPhoneNumber } = await finishConnection(accessToken, phoneNumberId, wabaId, pin);
   return { accessToken, displayPhoneNumber, tokenExpiresAt };
 }
 
@@ -102,6 +106,19 @@ export async function POST(
     );
   }
 
+  const serviceClient = createServiceClient();
+
+  // Reuse the PIN from a prior connection attempt if one exists -- Meta
+  // ties a phone number to a PIN on its first /register call and rejects
+  // any later /register with a different one ("PIN Mismatch"), so a
+  // reconnect must supply the same PIN, not a fresh random one.
+  const { data: existing } = await serviceClient
+    .from("company_whatsapp_connections")
+    .select("two_step_pin")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  const pin = existing?.two_step_pin ?? generateRegistrationPin();
+
   let accessToken: string;
   let displayPhoneNumber: string | null;
   let tokenExpiresAt: string | null;
@@ -110,13 +127,13 @@ export async function POST(
       code,
       phoneNumberId,
       wabaId,
+      pin,
     ));
   } catch {
     // Never leak Meta's raw error text to the merchant-facing UI.
     return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
   }
 
-  const serviceClient = createServiceClient();
   const { data: connection, error } = await serviceClient
     .from("company_whatsapp_connections")
     .upsert(
@@ -128,6 +145,7 @@ export async function POST(
         status: "connected",
         access_token: accessToken,
         token_expires_at: tokenExpiresAt,
+        two_step_pin: pin,
         connected_at: new Date().toISOString(),
       },
       { onConflict: "company_id" },

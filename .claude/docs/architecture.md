@@ -118,10 +118,18 @@ for the cost/UX tradeoff that drove this.
   trigger). Server-to-server sequence against the Graph API
   (`https://graph.facebook.com/v21.0/...`, overridable via
   `META_GRAPH_API_BASE_URL` for tests): exchange `code` for a business
-  access token, register the phone number for Cloud API messaging,
+  access token, register the phone number for Cloud API messaging (reusing
+  the previously-stored `two_step_pin` for this company if one exists, else
+  generating a fresh one — migration `20260826135816`: Meta ties a phone
+  number to whatever PIN its first `/register` call used, and rejects any
+  later `/register` for that number with a *different* PIN
+  ("(#133005) Two step verification PIN Mismatch") — a real bug hit and
+  fixed while building this, since the original code generated a new random
+  PIN on every call, breaking any reconnect),
   subscribe the app to the WABA's webhooks (**done here, not in D2** — D2's
   card only owns receiving/normalizing inbound messages), fetch
-  `display_phone_number`. The whole row (including `access_token`) is
+  `display_phone_number`. The whole row (including `access_token` and
+  `two_step_pin`, both column-privilege-locked the same way) is
   written in one upsert via the service client — the regular client
   couldn't write `access_token` anyway, so there's no reason to split the
   write. Upserts on `company_id`, so reconnecting is idempotent (same

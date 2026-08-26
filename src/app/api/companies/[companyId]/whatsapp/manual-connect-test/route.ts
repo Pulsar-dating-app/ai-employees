@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { finishConnection } from "@/lib/whatsapp/meta-graph-api";
+import { finishConnection, generateRegistrationPin } from "@/lib/whatsapp/meta-graph-api";
 
 // TODO(D1-TEST-ONLY): delete this file (and the manual-entry form in
 // dev-whatsapp-connect-test) once F4 ships and the app has real Embedded
@@ -88,14 +88,29 @@ export async function POST(
     );
   }
 
+  const serviceClient = createServiceClient();
+
+  // Same PIN-reuse requirement as the real connect route -- see
+  // meta-graph-api.ts's generateRegistrationPin doc comment.
+  const { data: existing } = await serviceClient
+    .from("company_whatsapp_connections")
+    .select("two_step_pin")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  const pin = existing?.two_step_pin ?? generateRegistrationPin();
+
   let displayPhoneNumber: string | null;
   try {
-    ({ displayPhoneNumber } = await finishConnection(accessToken, phoneNumberId, wabaId));
-  } catch {
-    return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
+    ({ displayPhoneNumber } = await finishConnection(accessToken, phoneNumberId, wabaId, pin));
+  } catch (err) {
+    // Dev-only route -- safe to surface Meta's raw error here (unlike the
+    // real connect route) so it's actually debuggable from the test page.
+    return NextResponse.json(
+      { error: "Failed to connect WhatsApp", detail: err instanceof Error ? err.message : String(err) },
+      { status: 502 },
+    );
   }
 
-  const serviceClient = createServiceClient();
   const { data: connection, error } = await serviceClient
     .from("company_whatsapp_connections")
     .upsert(
@@ -111,6 +126,7 @@ export async function POST(
         // precisely here since this path is throwaway; the real connect
         // route (via Embedded Signup) is what records a real expiry.
         token_expires_at: null,
+        two_step_pin: pin,
         connected_at: new Date().toISOString(),
       },
       { onConflict: "company_id" },
