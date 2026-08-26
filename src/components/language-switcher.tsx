@@ -2,41 +2,74 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import clsx from "clsx";
 import { setLocale } from "@/lib/i18n/actions";
 import type { Locale } from "@/i18n/request";
 
-// Each language name is shown in itself (not translated) — the reader
-// needs to recognize their own language regardless of what's currently set.
-const LANGUAGE_NAMES: Record<Locale, string> = {
-  en: "English",
-  pt: "Português",
-};
+// Short codes, not full names — a two-button segmented toggle reads faster
+// than a dropdown for exactly two options, and avoids the browser's own
+// unstyled <select> chrome (the previous version), which never matched
+// this app's design system on any surface it sat on.
+const LOCALES: Locale[] = ["en", "pt"];
 
-export function LanguageSwitcher({ currentLocale }: { currentLocale: Locale }) {
+const VARIANT_CLASSES = {
+  light: {
+    track: "bg-neutral-100",
+    active: "bg-white text-neutral-900 shadow-sm",
+    inactive: "text-neutral-500 hover:text-neutral-800",
+  },
+  dark: {
+    track: "bg-white/10",
+    active: "bg-white/90 text-neutral-900 shadow-sm",
+    inactive: "text-white/55 hover:text-white/85",
+  },
+} as const;
+
+export function LanguageSwitcher({
+  currentLocale,
+  variant = "light",
+}: {
+  currentLocale: Locale;
+  variant?: "light" | "dark";
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const c = VARIANT_CLASSES[variant];
 
-  async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const next = e.target.value as Locale;
-    await setLocale(next);
-    startTransition(() => {
+  function handleSelect(next: Locale) {
+    if (next === currentLocale || isPending) return;
+    startTransition(async () => {
+      await setLocale(next);
       router.refresh();
     });
   }
 
   return (
-    <select
-      value={currentLocale}
-      onChange={handleChange}
-      disabled={isPending}
+    <div
+      role="radiogroup"
       aria-label="Language"
-      className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-700 outline-none focus:border-accent-500 disabled:opacity-60"
+      className={clsx(
+        "inline-flex items-center gap-0.5 rounded-full p-0.5 text-[12px] font-semibold transition-opacity",
+        c.track,
+        isPending && "opacity-60",
+      )}
     >
-      {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
-        <option key={code} value={code}>
-          {name}
-        </option>
+      {LOCALES.map((locale) => (
+        <button
+          key={locale}
+          type="button"
+          role="radio"
+          aria-checked={locale === currentLocale}
+          disabled={isPending}
+          onClick={() => handleSelect(locale)}
+          className={clsx(
+            "rounded-full px-2.5 py-1 uppercase tracking-wide transition-colors duration-150",
+            locale === currentLocale ? c.active : c.inactive,
+          )}
+        >
+          {locale}
+        </button>
       ))}
-    </select>
+    </div>
   );
 }

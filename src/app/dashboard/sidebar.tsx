@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { logout } from "@/lib/auth/actions";
 import { GridIcon, UsersIcon, PackageIcon, SettingsIcon, LogoutIcon } from "@/components/ui/icons";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 const NAV_ITEMS = [
   { href: "/dashboard", key: "marketplace" as const, icon: GridIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
@@ -31,9 +32,11 @@ function BrandMark() {
 export function Sidebar({
   companyName,
   email,
+  locale,
 }: {
   companyName: string | null;
   email: string | null;
+  locale: "en" | "pt";
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
@@ -80,25 +83,28 @@ export function Sidebar({
         {/* Identity footer — who/what you're signed in as, then logout.
             A bare "Log out" row with no identity reads as unfinished on an
             admin shell; this is the one place the whole rail confirms it. */}
-        <div className="flex items-center gap-3 border-t border-white/10 px-4 py-4">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-sm font-semibold text-accent-400">
-            {identityInitial}
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-sm font-medium text-neutral-100">{identityLabel}</span>
-            {companyName && email ? (
-              <span className="truncate text-xs text-neutral-500">{email}</span>
-            ) : null}
+        <div className="flex flex-col gap-3 border-t border-white/10 px-4 py-4">
+          <LanguageSwitcher currentLocale={locale} variant="dark" />
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-sm font-semibold text-accent-400">
+              {identityInitial}
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-sm font-medium text-neutral-100">{identityLabel}</span>
+              {companyName && email ? (
+                <span className="truncate text-xs text-neutral-500">{email}</span>
+              ) : null}
+            </div>
+            <form action={logout}>
+              <button
+                type="submit"
+                aria-label={tLogout("logout")}
+                className="shrink-0 rounded-md p-1.5 text-neutral-500 transition-colors duration-200 hover:bg-white/5 hover:text-neutral-100"
+              >
+                <LogoutIcon className="h-4 w-4" />
+              </button>
+            </form>
           </div>
-          <form action={logout}>
-            <button
-              type="submit"
-              aria-label={tLogout("logout")}
-              className="shrink-0 rounded-md p-1.5 text-neutral-500 transition-colors duration-200 hover:bg-white/5 hover:text-neutral-100"
-            >
-              <LogoutIcon className="h-4 w-4" />
-            </button>
-          </form>
         </div>
       </aside>
 
@@ -110,11 +116,14 @@ export function Sidebar({
           </span>
           <span className="text-base font-semibold tracking-tight text-white">Sidde</span>
         </div>
-        <form action={logout}>
-          <button type="submit" aria-label={tLogout("logout")} className="p-1.5 text-neutral-400">
-            <LogoutIcon className="h-5 w-5" />
-          </button>
-        </form>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher currentLocale={locale} variant="dark" />
+          <form action={logout}>
+            <button type="submit" aria-label={tLogout("logout")} className="p-1.5 text-neutral-400">
+              <LogoutIcon className="h-5 w-5" />
+            </button>
+          </form>
+        </div>
       </header>
 
       {/* Mobile bottom tab bar */}
