@@ -11,9 +11,10 @@ function TraitChip({ children }: { children: React.ReactNode }) {
   );
 }
 
-// The one hireable card for MVP — links into the tutorial/pricing page.
-// Distinct "hired" rendering swaps the price for a status badge so a
-// merchant scanning the grid can tell at a glance who's already on the team.
+// One card per real, active row in `agents` — the marketplace is dynamic
+// over the database, not a fixed roster (see dashboard/page.tsx). Traits
+// come from AGENT_ENRICHMENT when a curated entry exists for this slug;
+// an agent with none just renders without the chip row, never fabricated.
 export function HireableAgentCard({
   slug,
   name,
@@ -47,11 +48,13 @@ export function HireableAgentCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {traits.map((trait) => (
-          <TraitChip key={trait}>{trait}</TraitChip>
-        ))}
-      </div>
+      {traits.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {traits.map((trait) => (
+            <TraitChip key={trait}>{trait}</TraitChip>
+          ))}
+        </div>
+      ) : null}
 
       {isHired ? (
         <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-100 px-2.5 py-1 text-xs font-semibold text-success-500">
@@ -63,39 +66,5 @@ export function HireableAgentCard({
         </span>
       )}
     </Link>
-  );
-}
-
-// Roadmap agents with no DB row — muted, not a link, "coming soon" badge.
-// Still shows role so the grid communicates the multi-agent vision.
-export function LockedAgentCard({
-  name,
-  role,
-  style,
-}: {
-  name: string;
-  role: string;
-  style?: React.CSSProperties;
-}) {
-  const t = useTranslations("Marketplace");
-
-  return (
-    <div
-      style={style}
-      className="animate-fade-up flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-5"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-4">
-          <AgentAvatar role="locked" size="lg" />
-          <div className="flex flex-col gap-1">
-            <span className="text-base font-semibold text-neutral-500">{name}</span>
-            <span className="text-sm text-neutral-400">{role}</span>
-          </div>
-        </div>
-        <span className="shrink-0 rounded-full bg-neutral-200 px-2.5 py-1 text-xs font-medium text-neutral-500">
-          {t("comingSoon")}
-        </span>
-      </div>
-    </div>
   );
 }

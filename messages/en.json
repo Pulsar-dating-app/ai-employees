@@ -41,7 +41,6 @@
     "pageSubtitle": "Choose who joins your business and get them ready to sell for you.",
     "hiredBadge": "Hired",
     "priceLabel": "R$ {price}/month",
-    "comingSoon": "Coming soon",
     "backToMarketplace": "Back to marketplace",
     "traits": {
       "warm": "Warm",
@@ -49,21 +48,11 @@
       "persuasive": "Persuasive, never pushy",
       "knowledgeable": "Knowledgeable",
       "proactive": "Proactive"
-    },
-    "lockedAgents": {
-      "emma": {
-        "name": "Emma",
-        "role": "Support"
-      },
-      "mia": {
-        "name": "Mia",
-        "role": "Customer Service"
-      }
     }
   },
   "AgentDetail": {
-    "shouldTitle": "What she does",
-    "neverTitle": "What she'll never do",
+    "shouldTitle": "What {name} does",
+    "neverTitle": "What {name} will never do",
     "should": {
       "askFollowUp": "Asks natural follow-up questions to understand what customers need",
       "explainFit": "Explains why a recommendation fits before suggesting it",
@@ -91,7 +80,7 @@
     "confirming": "Hiring…",
     "cancel": "Cancel",
     "hiredBadge": "{name} is hired",
-    "hiredDescription": "She's on your team — head to settings to teach her about your business and connect WhatsApp.",
+    "hiredDescription": "{name} is on your team — head to settings to teach them about your business and connect WhatsApp.",
     "goToSettings": "Go to settings",
     "hireError": "Something went wrong hiring {name}. Please try again."
   },
@@ -112,7 +101,7 @@
     "configure": "Configure",
     "backToMyAgents": "Back to my team",
     "connectionsTitle": "Connections",
-    "connectionsSubtitle": "Choose which platforms she talks to customers on.",
+    "connectionsSubtitle": "Choose which platforms {name} talks to customers on.",
     "notHired": "You haven't hired this team member yet.",
     "viewAgent": "View {name}",
     "channels": {
