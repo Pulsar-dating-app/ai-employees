@@ -29,39 +29,109 @@
   },
   "Dashboard": {
     "logout": "Sair",
-    "welcomeTitle": "Bem-vindo ao Sidde",
-    "welcomeSubtitle": "Contrate o primeiro integrante da sua equipe e prepare-o para vender por você.",
-    "stepProgress": "{completed} de {total} etapas concluídas",
-    "hiredSectionTitle": "Sua equipe",
-    "hiredBadge": "Contratado · pronto para a próxima etapa",
-    "teachTitle": "Ensine sua equipe sobre o seu negócio",
-    "teachDescription": "Conte para sua equipe sobre seus produtos, envio e políticas de devolução para que respondam aos clientes com precisão.",
-    "connectTitle": "Conecte sua equipe ao WhatsApp",
-    "connectDescription": "Vincule seu número do WhatsApp Business para que os clientes possam conversar com sua equipe.",
-    "readyTitle": "Sua equipe está pronta para trabalhar",
-    "readyDescription": "Assim que um integrante for contratado, treinado e conectado, ele vai começar a falar com seus clientes.",
-    "comingSoon": "Em breve",
-    "backToDashboard": "Voltar para o painel"
+    "tabs": {
+      "marketplace": "Marketplace",
+      "myAgents": "Minha equipe",
+      "settings": "Configurações"
+    }
   },
-  "HireTeam": {
-    "sectionTitle": "Contrate sua equipe",
-    "sectionSubtitle": "Estes são os integrantes disponíveis para contratar.",
-    "pickPrompt": "Escolha quem contratar primeiro:",
+  "Marketplace": {
+    "pageTitle": "Conheça sua equipe",
+    "pageSubtitle": "Escolha quem vai entrar no seu negócio e prepare-o para vender por você.",
+    "hiredBadge": "Contratada",
+    "priceLabel": "R$ {price}/mês",
+    "comingSoon": "Em breve",
+    "backToMarketplace": "Voltar para o marketplace",
+    "traits": {
+      "warm": "Calorosa",
+      "attentive": "Atenciosa",
+      "persuasive": "Persuasiva, sem ser insistente",
+      "knowledgeable": "Conhece bem os produtos",
+      "proactive": "Proativa"
+    },
+    "lockedAgents": {
+      "emma": {
+        "name": "Emma",
+        "role": "Suporte"
+      },
+      "mia": {
+        "name": "Mia",
+        "role": "Atendimento ao cliente"
+      }
+    }
+  },
+  "AgentDetail": {
+    "shouldTitle": "O que ela faz",
+    "neverTitle": "O que ela nunca faz",
+    "should": {
+      "askFollowUp": "Faz perguntas naturais para entender o que o cliente precisa",
+      "explainFit": "Explica por que uma recomendação combina antes de sugeri-la",
+      "handleObjections": "Lida com objeções com calma, sem pressionar",
+      "guideCheckout": "Guia o cliente até a compra quando ele está pronto"
+    },
+    "never": {
+      "pushAggressively": "Empurrar produtos de forma agressiva",
+      "inventInfo": "Inventar preços, estoque ou políticas",
+      "soundGeneric": "Soar como um chatbot genérico"
+    },
+    "priceLabel": "R$ {price}/mês",
+    "hireButton": "Contratar {name}",
+    "mockPaymentTitle": "Confirme e pague",
+    "mockPaymentSubtitle": "Esta é uma prévia do fluxo de contratação — nenhum pagamento é cobrado ainda.",
     "businessNameLabel": "Nome do negócio",
     "businessNamePlaceholder": "ex.: Luna Cosméticos",
-    "businessNamePrompt": "Dê um nome ao seu negócio para começar.",
     "businessNameMissing": "Informe o nome do seu negócio para começar.",
-    "hireButton": "Contratar {name}",
-    "hiringButton": "Contratando…",
-    "hireGenericError": "Algo deu errado ao contratar {name}. Tente novamente.",
-    "companyCreateError": "Não foi possível salvar o nome do seu negócio. Tente novamente."
+    "companyCreateError": "Não foi possível salvar o nome do seu negócio. Tente novamente.",
+    "cardNumberLabel": "Número do cartão",
+    "cardNameLabel": "Nome no cartão",
+    "cardExpiryLabel": "Validade",
+    "cardCvcLabel": "CVC",
+    "confirmHire": "Confirmar — R$ {price}/mês",
+    "confirming": "Contratando…",
+    "cancel": "Cancelar",
+    "hiredBadge": "{name} está contratada",
+    "hiredDescription": "Ela já faz parte da sua equipe — acesse as configurações para ensiná-la sobre o seu negócio e conectar o WhatsApp.",
+    "goToSettings": "Ir para configurações",
+    "hireError": "Algo deu errado ao contratar {name}. Tente novamente."
+  },
+  "Settings": {
+    "pageTitle": "Configurações do negócio",
+    "pageSubtitle": "O que sua equipe sabe ao conversar com os clientes.",
+    "noCompany": "Contrate o primeiro integrante da sua equipe para começar a configurar o seu negócio.",
+    "browseMarketplace": "Ver marketplace",
+    "completeness": "{filled} de {total} seções preenchidas",
+    "completenessHint": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
+    "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações."
+  },
+  "MyAgents": {
+    "pageTitle": "Minha equipe",
+    "pageSubtitle": "Os integrantes que você já contratou.",
+    "emptyState": "Você ainda não contratou ninguém.",
+    "browseMarketplace": "Ver marketplace",
+    "configure": "Configurar",
+    "backToMyAgents": "Voltar para minha equipe",
+    "connectionsTitle": "Conexões",
+    "connectionsSubtitle": "Escolha em quais plataformas ela vai falar com os clientes.",
+    "notHired": "Você ainda não contratou este integrante.",
+    "viewAgent": "Ver {name}",
+    "channels": {
+      "title": "WhatsApp",
+      "description": "Conecte seu número do WhatsApp Business para que os clientes possam começar a conversar.",
+      "loading": "Carregando…",
+      "connectedBadge": "Conectado",
+      "notConnected": "Ainda não conectado.",
+      "connectButton": "Conectar WhatsApp",
+      "connecting": "Conectando…",
+      "disconnectButton": "Desconectar",
+      "disconnectConfirm": "Desconectar este número do WhatsApp?",
+      "disconnectConfirmButton": "Sim, desconectar",
+      "cancel": "Cancelar",
+      "connectError": "Algo deu errado ao conectar o WhatsApp. Tente novamente.",
+      "disconnectError": "Algo deu errado ao desconectar. Tente novamente.",
+      "sdkNotReady": "Ainda carregando — tente novamente em instantes."
+    }
   },
   "Teach": {
-    "pageTitle": "Ensine sua equipe sobre o seu negócio",
-    "pageSubtitle": "Isto é o que sua equipe vai saber ao conversar com os clientes.",
-    "noCompany": "Contrate um integrante da equipe primeiro para começar a ensiná-lo sobre o seu negócio.",
-    "tipBanner": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
-    "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
     "save": "Salvar",
     "saving": "Salvando…",
     "saved": "Salvo",

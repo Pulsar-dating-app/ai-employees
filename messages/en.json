@@ -29,39 +29,109 @@
   },
   "Dashboard": {
     "logout": "Log out",
-    "welcomeTitle": "Welcome to Sidde",
-    "welcomeSubtitle": "Hire your first team member and get them ready to sell for you.",
-    "stepProgress": "Step {completed} of {total} complete",
-    "hiredSectionTitle": "Your team",
-    "hiredBadge": "Hired · ready for the next step",
-    "teachTitle": "Teach your team about your business",
-    "teachDescription": "Tell your team about your products, shipping, and return policies so they can answer customers accurately.",
-    "connectTitle": "Connect your team to WhatsApp",
-    "connectDescription": "Link your WhatsApp Business number so customers can start chatting with your team.",
-    "readyTitle": "Your team is ready to work",
-    "readyDescription": "Once a team member is hired, taught, and connected, they'll start talking to your customers.",
-    "comingSoon": "Coming soon",
-    "backToDashboard": "Back to dashboard"
+    "tabs": {
+      "marketplace": "Marketplace",
+      "myAgents": "My team",
+      "settings": "Settings"
+    }
   },
-  "HireTeam": {
-    "sectionTitle": "Hire your team",
-    "sectionSubtitle": "These are the team members available to hire.",
-    "pickPrompt": "Choose who to hire first:",
+  "Marketplace": {
+    "pageTitle": "Meet your team",
+    "pageSubtitle": "Choose who joins your business and get them ready to sell for you.",
+    "hiredBadge": "Hired",
+    "priceLabel": "R$ {price}/month",
+    "comingSoon": "Coming soon",
+    "backToMarketplace": "Back to marketplace",
+    "traits": {
+      "warm": "Warm",
+      "attentive": "Attentive",
+      "persuasive": "Persuasive, never pushy",
+      "knowledgeable": "Knowledgeable",
+      "proactive": "Proactive"
+    },
+    "lockedAgents": {
+      "emma": {
+        "name": "Emma",
+        "role": "Support"
+      },
+      "mia": {
+        "name": "Mia",
+        "role": "Customer Service"
+      }
+    }
+  },
+  "AgentDetail": {
+    "shouldTitle": "What she does",
+    "neverTitle": "What she'll never do",
+    "should": {
+      "askFollowUp": "Asks natural follow-up questions to understand what customers need",
+      "explainFit": "Explains why a recommendation fits before suggesting it",
+      "handleObjections": "Handles objections calmly, without pressure",
+      "guideCheckout": "Guides customers to checkout when they're ready"
+    },
+    "never": {
+      "pushAggressively": "Push products aggressively",
+      "inventInfo": "Invent prices, stock, or policies",
+      "soundGeneric": "Sound like a generic chatbot"
+    },
+    "priceLabel": "R$ {price}/month",
+    "hireButton": "Hire {name}",
+    "mockPaymentTitle": "Confirm and pay",
+    "mockPaymentSubtitle": "This is a preview of the hiring flow — no payment is actually charged yet.",
     "businessNameLabel": "Business name",
     "businessNamePlaceholder": "e.g. Luna Skincare",
-    "businessNamePrompt": "Give your business a name to get started.",
     "businessNameMissing": "Enter your business name to get started.",
-    "hireButton": "Hire {name}",
-    "hiringButton": "Hiring…",
-    "hireGenericError": "Something went wrong hiring {name}. Please try again.",
-    "companyCreateError": "Couldn't save your business name. Please try again."
+    "companyCreateError": "Couldn't save your business name. Please try again.",
+    "cardNumberLabel": "Card number",
+    "cardNameLabel": "Name on card",
+    "cardExpiryLabel": "Expiry",
+    "cardCvcLabel": "CVC",
+    "confirmHire": "Confirm — R$ {price}/month",
+    "confirming": "Hiring…",
+    "cancel": "Cancel",
+    "hiredBadge": "{name} is hired",
+    "hiredDescription": "She's on your team — head to settings to teach her about your business and connect WhatsApp.",
+    "goToSettings": "Go to settings",
+    "hireError": "Something went wrong hiring {name}. Please try again."
+  },
+  "Settings": {
+    "pageTitle": "Business settings",
+    "pageSubtitle": "What your team knows when they talk to your customers.",
+    "noCompany": "Hire your first team member to start setting up your business.",
+    "browseMarketplace": "Browse the marketplace",
+    "completeness": "{filled} of {total} sections filled in",
+    "completenessHint": "The more detail you add here, the better your team can help your customers — just like onboarding a new employee in person.",
+    "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes."
+  },
+  "MyAgents": {
+    "pageTitle": "My team",
+    "pageSubtitle": "The team members you've hired.",
+    "emptyState": "You haven't hired anyone yet.",
+    "browseMarketplace": "Browse the marketplace",
+    "configure": "Configure",
+    "backToMyAgents": "Back to my team",
+    "connectionsTitle": "Connections",
+    "connectionsSubtitle": "Choose which platforms she talks to customers on.",
+    "notHired": "You haven't hired this team member yet.",
+    "viewAgent": "View {name}",
+    "channels": {
+      "title": "WhatsApp",
+      "description": "Connect your WhatsApp Business number so customers can start chatting.",
+      "loading": "Loading…",
+      "connectedBadge": "Connected",
+      "notConnected": "Not connected yet.",
+      "connectButton": "Connect WhatsApp",
+      "connecting": "Connecting…",
+      "disconnectButton": "Disconnect",
+      "disconnectConfirm": "Disconnect this WhatsApp number?",
+      "disconnectConfirmButton": "Yes, disconnect",
+      "cancel": "Cancel",
+      "connectError": "Something went wrong connecting WhatsApp. Please try again.",
+      "disconnectError": "Something went wrong disconnecting. Please try again.",
+      "sdkNotReady": "Still loading — try again in a moment."
+    }
   },
   "Teach": {
-    "pageTitle": "Teach your team about your business",
-    "pageSubtitle": "This is what your team will know when talking with customers.",
-    "noCompany": "Hire a team member first to start teaching them about your business.",
-    "tipBanner": "The more detail you add here, the better your team can help your customers — just like onboarding a new employee in person.",
-    "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved",
