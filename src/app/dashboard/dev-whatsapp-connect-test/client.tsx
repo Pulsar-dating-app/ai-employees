@@ -45,6 +45,9 @@ export function DevWhatsAppConnectTestClient({
   const [log, setLog] = useState<string[]>([]);
   const [result, setResult] = useState<unknown>(null);
   const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
+  const [manualAccessToken, setManualAccessToken] = useState("");
+  const [manualPhoneNumberId, setManualPhoneNumberId] = useState("");
+  const [manualWabaId, setManualWabaId] = useState("");
 
   function appendLog(line: string) {
     setLog((prev) => [...prev, line]);
@@ -136,6 +139,29 @@ export function DevWhatsAppConnectTestClient({
     );
   }
 
+  function manualConnect() {
+    if (!companyId || !manualAccessToken || !manualPhoneNumberId || !manualWabaId) {
+      appendLog("Manual connect: fill company, accessToken, phoneNumberId, and wabaId first.");
+      return;
+    }
+    appendLog(`Posting to /api/companies/${companyId}/whatsapp/manual-connect-test ...`);
+    fetch(`/api/companies/${companyId}/whatsapp/manual-connect-test`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        accessToken: manualAccessToken,
+        phoneNumberId: manualPhoneNumberId,
+        wabaId: manualWabaId,
+      }),
+    })
+      .then((res) => res.json().then((json) => ({ status: res.status, json })))
+      .then(({ status, json }) => {
+        appendLog(`Manual connect response: ${status}`);
+        setResult(json);
+      })
+      .catch((err) => appendLog(`Manual connect request failed: ${err}`));
+  }
+
   function checkStatus() {
     if (!companyId) return;
     fetch(`/api/companies/${companyId}/whatsapp`)
@@ -171,6 +197,32 @@ export function DevWhatsAppConnectTestClient({
       <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
         <button onClick={startSignup}>Start WhatsApp Embedded Signup</button>
         <button onClick={checkStatus}>Check connection status</button>
+      </div>
+
+      <h3 style={{ marginTop: 24 }}>
+        Manual connect (no Embedded Signup / Advanced Access needed)
+      </h3>
+      <p>
+        Paste values from Meta App Dashboard → WhatsApp → API Setup (the free test number Meta
+        gives every app — works before Advanced Access / Business Verification is approved).
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 480 }}>
+        <input
+          placeholder="Access token"
+          value={manualAccessToken}
+          onChange={(e) => setManualAccessToken(e.target.value)}
+        />
+        <input
+          placeholder="Phone number ID"
+          value={manualPhoneNumberId}
+          onChange={(e) => setManualPhoneNumberId(e.target.value)}
+        />
+        <input
+          placeholder="WABA ID"
+          value={manualWabaId}
+          onChange={(e) => setManualWabaId(e.target.value)}
+        />
+        <button onClick={manualConnect}>Connect with these values</button>
       </div>
 
       <h3 style={{ marginTop: 24 }}>Result</h3>

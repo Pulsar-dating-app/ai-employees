@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { exchangeCodeForToken, finishConnection } from "@/lib/whatsapp/meta-graph-api";
 
 // Trello ticket D1 -- finishes what Meta's Embedded Signup starts. F4's (not
 // yet built) dashboard screen loads the Facebook JS SDK and triggers the
@@ -9,29 +10,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 // code for a business access token, register the number for Cloud API
 // messaging, subscribe our app to the WABA's webhooks (so D2's inbound
 // webhook has something to receive), and persist the result.
-//
-// META_GRAPH_API_BASE_URL lets tests point this at a local mock instead of
-// the real Meta Graph API (the spawned test Next.js server can't share an
-// in-process fetch mock with the test runner -- see tests/integration/global-setup.ts).
-const GRAPH_API_BASE_URL = process.env.META_GRAPH_API_BASE_URL ?? "https://graph.facebook.com";
-const GRAPH_API_VERSION = "v21.0";
 const SAFE_COLUMNS =
   "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at";
-
-function graphApiUrl(path: string, params?: Record<string, string>) {
-  const url = new URL(`${GRAPH_API_BASE_URL}/${GRAPH_API_VERSION}${path}`);
-  for (const [key, value] of Object.entries(params ?? {})) {
-    url.searchParams.set(key, value);
-  }
-  return url.toString();
-}
-
-// Meta requires a PIN to enable two-step verification on a newly registered
-// number; we control the number entirely server-side, so a random one-time
-// PIN is sufficient -- nothing later re-prompts for it.
-function generateRegistrationPin() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -81,53 +61,9 @@ async function requireAdmin(
 }
 
 async function finishEmbeddedSignup(code: string, phoneNumberId: string, wabaId: string) {
-  const tokenRes = await fetch(
-    graphApiUrl("/oauth/access_token", {
-      client_id: process.env.META_APP_ID!,
-      client_secret: process.env.META_APP_SECRET!,
-      code,
-    }),
-  );
-  if (!tokenRes.ok) throw new Error("Meta token exchange failed");
-  const { access_token: accessToken, expires_in: expiresIn } = (await tokenRes.json()) as {
-    access_token?: string;
-    expires_in?: number;
-  };
-  if (!accessToken) throw new Error("Meta token exchange returned no access_token");
-
-  const authHeaders = { Authorization: `Bearer ${accessToken}` };
-
-  const registerRes = await fetch(graphApiUrl(`/${phoneNumberId}/register`), {
-    method: "POST",
-    headers: { ...authHeaders, "content-type": "application/json" },
-    body: JSON.stringify({ messaging_product: "whatsapp", pin: generateRegistrationPin() }),
-  });
-  if (!registerRes.ok) throw new Error("Meta phone number registration failed");
-
-  const subscribeRes = await fetch(graphApiUrl(`/${wabaId}/subscribed_apps`), {
-    method: "POST",
-    headers: authHeaders,
-  });
-  if (!subscribeRes.ok) throw new Error("Meta webhook subscription failed");
-
-  const phoneRes = await fetch(
-    graphApiUrl(`/${phoneNumberId}`, { fields: "display_phone_number" }),
-    { headers: authHeaders },
-  );
-  if (!phoneRes.ok) throw new Error("Meta phone number lookup failed");
-  const { display_phone_number: displayPhoneNumber } = (await phoneRes.json()) as {
-    display_phone_number?: string;
-  };
-
-  return {
-    accessToken,
-    displayPhoneNumber: displayPhoneNumber ?? null,
-    // Meta doesn't renew this automatically -- expires_in (seconds) from the
-    // token exchange lets us at least record when it goes stale. No
-    // auto-refresh yet (needs a scheduled job this codebase doesn't have
-    // any precedent for, and nothing reads this token yet -- see decisions.md).
-    tokenExpiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
-  };
+  const { accessToken, tokenExpiresAt } = await exchangeCodeForToken(code);
+  const { displayPhoneNumber } = await finishConnection(accessToken, phoneNumberId, wabaId);
+  return { accessToken, displayPhoneNumber, tokenExpiresAt };
 }
 
 // POST: admin-only. Body: { code, phoneNumberId, wabaId } -- exactly what

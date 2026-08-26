@@ -154,6 +154,21 @@ for the cost/UX tradeoff that drove this.
   production, real merchants still see the unchanged "Coming soon" card.
   Revert that branch back to the single `<StubStepCard>` when F4 ships and
   this folder is deleted.
+- `src/lib/whatsapp/meta-graph-api.ts` (new, shared) — `exchangeCodeForToken`
+  and `finishConnection` (register/subscribe/lookup), extracted once a
+  second caller needed the same Graph API sequence: the real connect route,
+  and `src/app/api/companies/[companyId]/whatsapp/manual-connect-test/`
+  (**also temporary, dev-only**, production-guarded 404) — lets D1 be
+  tested against the real Graph API before the app has Embedded Signup
+  Advanced Access approved. Takes a Meta test-number's access
+  token/phone_number_id/waba_id directly (pasted from App Dashboard →
+  WhatsApp → API Setup — Meta provisions this per-app with no approval
+  needed, since it's the developer's own test setup, not onboarding a
+  third-party business) and runs the same register/subscribe/upsert
+  sequence, skipping only the code-exchange step. The manual-entry form
+  lives in the same dev-test page. **Delete this route (and the form)
+  alongside the rest of the temporary harness once F4 ships** — at that
+  point the app should have real Advanced Access anyway.
 - Tests mock the Graph API with a real local HTTP server
   (`tests/integration/helpers/graph-api-mock.ts`, wired into
   `global-setup.ts` via `META_GRAPH_API_BASE_URL`) rather than a `fetch` spy
