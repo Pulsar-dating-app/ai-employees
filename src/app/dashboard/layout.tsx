@@ -1,3 +1,4 @@
+import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "./sidebar";
 
@@ -14,11 +15,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
       data: { user },
     },
     { data: companies },
-  ] = await Promise.all([supabase.auth.getUser(), supabase.from("companies").select("name")]);
+    locale,
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from("companies").select("name"),
+    getLocale(),
+  ]);
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <Sidebar companyName={companies?.[0]?.name ?? null} email={user?.email ?? null} />
+      <Sidebar
+        companyName={companies?.[0]?.name ?? null}
+        email={user?.email ?? null}
+        locale={locale as "en" | "pt"}
+      />
       <div className="sm:pl-64">
         <main className="mx-auto max-w-3xl px-4 pt-20 pb-24 sm:px-6 sm:pt-10 sm:pb-10">
           {children}

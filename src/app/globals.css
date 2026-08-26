@@ -80,3 +80,169 @@ body {
     animation: none;
   }
 }
+
+
+/* ============================================================
+   Landing page (Persuade mode)
+
+   Stripe/Attio register: a cool near-white ground, precise hairlines,
+   one committed indigo accent, and coral demoted to a sparing
+   agent-identity mark. Everything is scoped under .landing so it can
+   never leak into dashboard utilities or fight --color-accent-*.
+   ============================================================ */
+.landing {
+  --l-bg: #fcfcfd;
+  --l-panel: #ffffff;
+  --l-sunken: #f6f7f9;
+  --l-ink: #16181d;
+  --l-sub: #5b6172;
+  --l-faint: #8b91a1;
+  --l-line: #e6e8ee;
+  --l-line-soft: #eef0f4;
+  --l-indigo: #4f46e5;
+  --l-indigo-deep: #3730a3;
+  --l-indigo-tint: #eef2ff;
+  --l-coral: #e2603a;
+  --l-coral-tint: #fdeee8;
+  --l-green: #12805c;
+  --l-green-tint: #e3f5ee;
+  --l-focus: #4f46e5;
+}
+
+.landing a:focus-visible,
+.landing button:focus-visible {
+  outline: 2px solid var(--l-focus);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.landing .l-on-dark {
+  --l-focus: #ffffff;
+}
+.landing [id] {
+  scroll-margin-top: 28px;
+}
+
+/* Scroll reveal, driven by the Reveal client component. */
+.l-rv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.l-rv[data-in="true"] {
+  opacity: 1;
+  transform: none;
+}
+.l-rv.l-rv-flat {
+  transform: none;
+}
+
+/* Product panels cross-fade as the stepper advances. */
+.l-panel-enter {
+  animation: l-panel-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes l-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Rows inside a panel settle in sequence, so a panel reads as the product
+   doing work rather than a static picture appearing. */
+@keyframes l-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.l-row {
+  animation: l-row-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* The active step's progress hairline fills over the dwell duration. */
+@keyframes l-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.l-progress {
+  transform-origin: left center;
+  animation: l-progress linear both;
+}
+
+@keyframes l-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+.l-pulse {
+  animation: l-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes l-typing-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-3.5px);
+    opacity: 1;
+  }
+}
+.l-typing-dot {
+  animation: l-typing-dot 1s ease-in-out infinite;
+}
+
+@keyframes l-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.l-bubble-in {
+  animation: l-bubble-in 0.36s cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-rv {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .l-panel-enter,
+  .l-row,
+  .l-progress,
+  .l-pulse,
+  .l-typing-dot,
+  .l-bubble-in {
+    animation: none;
+  }
+  .l-progress {
+    transform: scaleX(1);
+  }
+}

@@ -27,6 +27,120 @@
       "passwordTooShort": "A senha deve ter pelo menos 6 caracteres."
     }
   },
+  "Landing": {
+    "nav": {
+      "howItWorks": "Como funciona",
+      "team": "A equipe",
+      "login": "Entrar",
+      "cta": "Começar"
+    },
+    "hero": {
+      "badge": "{count} funcionárias de IA prontas para contratar",
+      "headline": "Contrate uma vendedora pro seu WhatsApp. Não mais um app pra configurar.",
+      "subhead": "Cada mensagem sem resposta é uma venda que vai pro concorrente. A Malu entra pro seu time, aprende sobre a sua loja e responde no instante em que o cliente escreve — entendendo, recomendando e vendendo o dia inteiro.",
+      "primaryCta": "Contratar {name}",
+      "primaryCtaGeneric": "Começar agora",
+      "secondaryCta": "Ver como funciona",
+      "reassurance": "Grátis para começar · Sem cartão de crédito · Configuração em minutos"
+    },
+    "panels": {
+      "marketplace": {
+        "title": "Sidde · Marketplace",
+        "hired": "Contratada",
+        "available": "Disponível"
+      },
+      "knowledge": {
+        "title": "Sidde · Configurações do negócio",
+        "completeness": "{filled} de {total} seções preenchidas",
+        "sections": [
+          "Informações do negócio",
+          "Envio",
+          "Devoluções",
+          "Pagamentos",
+          "Perguntas frequentes"
+        ]
+      },
+      "channel": {
+        "title": "Sidde · Canais",
+        "connected": "Conectado e recebendo mensagens",
+        "note": "O número de WhatsApp Business que você já usa. O cliente vê a sua loja, não um bot."
+      },
+      "conversation": {
+        "title": "WhatsApp · Conversa ao vivo",
+        "online": "online"
+      }
+    },
+    "demo": {
+      "transcriptLabel": "Exemplo de conversa entre um cliente e a Malu no WhatsApp",
+      "customerLabel": "Cliente",
+      "messages": [
+        {
+          "from": "customer",
+          "text": "Oi! Tô procurando um presente pra minha namorada."
+        },
+        {
+          "from": "malu",
+          "text": "Que legal! 😊 Do que ela costuma gostar? E tem algum valor em mente?"
+        },
+        {
+          "from": "customer",
+          "text": "Ela curte moda. Uns R$300."
+        },
+        {
+          "from": "malu",
+          "text": "Separei duas que combinam — R$249, mais casual, e R$289, mais elegante."
+        }
+      ]
+    },
+    "howItWorks": {
+      "kicker": "Como funciona",
+      "heading": "De criar a conta até vender, em quatro passos",
+      "sub": "Sem prompt pra escrever, sem bot pra treinar, nada pra instalar. Você integra ela como integraria qualquer funcionária nova.",
+      "steps": {
+        "hire": {
+          "title": "Contratar",
+          "description": "Escolha no marketplace quem entra pro time. Ela já faz parte do seu quadro."
+        },
+        "teach": {
+          "title": "Ensinar",
+          "description": "Preencha produtos, envio e devoluções — é tudo o que ela vai dizer pro cliente."
+        },
+        "connect": {
+          "title": "Conectar",
+          "description": "Ligue o número de WhatsApp Business que você já usa. Dois cliques, sem migração."
+        },
+        "sell": {
+          "title": "Vender",
+          "description": "Ela responde, recomenda e manda o link de compra — de dia e de noite."
+        }
+      }
+    },
+    "trust": {
+      "heading": "Você contrata uma vendedora, não aposta num bot",
+      "sub": "A {name} segue as regras que uma boa funcionária segue — e as que um bot costuma quebrar. Todo preço, política e estoque que ela informa vem do seu catálogo, nunca de um chute.",
+      "doesTitle": "O que ela faz",
+      "neverTitle": "O que ela nunca faz"
+    },
+    "team": {
+      "heading": "Conheça a equipe",
+      "sub": "Todas as funcionárias de IA que você pode contratar hoje. Cada uma com um cargo definido e um jeito de trabalhar.",
+      "count": "{count} disponíveis",
+      "availableBadge": "Disponível para contratar",
+      "soonTitle": "Mais chegando",
+      "soonBody": "A Sidde está montando um time completo de funcionárias de IA pro seu negócio.",
+      "soonCta": "Comece pela Malu →"
+    },
+    "finalCta": {
+      "heading": "Coloque alguém no seu WhatsApp hoje à noite",
+      "sub": "Crie sua conta, ensine sobre a sua loja, conecte seu número. Logo depois ela já começa a responder seus clientes.",
+      "button": "Criar conta grátis",
+      "reassurance": "Sem cartão de crédito para começar"
+    },
+    "footer": {
+      "rights": "© {year} Sidde. Todos os direitos reservados.",
+      "tagline": "Funcionárias de IA para o seu negócio"
+    }
+  },
   "Dashboard": {
     "logout": "Sair",
     "tabs": {

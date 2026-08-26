@@ -27,6 +27,120 @@
       "passwordTooShort": "Password must be at least 6 characters."
     }
   },
+  "Landing": {
+    "nav": {
+      "howItWorks": "How it works",
+      "team": "The team",
+      "login": "Log in",
+      "cta": "Get started"
+    },
+    "hero": {
+      "badge": "{count} AI employees ready to hire",
+      "headline": "Hire a salesperson for your WhatsApp. Not another app to set up.",
+      "subhead": "Every message left unanswered is a sale going to a competitor. Malu joins your team, learns your store, and answers customers the moment they write — understanding, recommending, and selling all day.",
+      "primaryCta": "Hire {name}",
+      "primaryCtaGeneric": "Get started",
+      "secondaryCta": "See how it works",
+      "reassurance": "Free to start · No credit card · Setup in minutes"
+    },
+    "panels": {
+      "marketplace": {
+        "title": "Sidde · Marketplace",
+        "hired": "Hired",
+        "available": "Available"
+      },
+      "knowledge": {
+        "title": "Sidde · Business settings",
+        "completeness": "{filled} of {total} sections filled in",
+        "sections": [
+          "Business information",
+          "Shipping",
+          "Returns",
+          "Payments",
+          "FAQ"
+        ]
+      },
+      "channel": {
+        "title": "Sidde · Channels",
+        "connected": "Connected and receiving messages",
+        "note": "Your existing WhatsApp Business number. Customers see your store, not a bot."
+      },
+      "conversation": {
+        "title": "WhatsApp · Live conversation",
+        "online": "online"
+      }
+    },
+    "demo": {
+      "transcriptLabel": "Example conversation between a customer and Malu on WhatsApp",
+      "customerLabel": "Customer",
+      "messages": [
+        {
+          "from": "customer",
+          "text": "Hi! Looking for a gift for my girlfriend."
+        },
+        {
+          "from": "malu",
+          "text": "Lovely! 😊 What does she usually like? And do you have a budget in mind?"
+        },
+        {
+          "from": "customer",
+          "text": "She likes fashion. Around R$300."
+        },
+        {
+          "from": "malu",
+          "text": "I picked two that would suit her — R$249, more casual, and R$289, a bit more elegant."
+        }
+      ]
+    },
+    "howItWorks": {
+      "kicker": "How it works",
+      "heading": "From signing up to selling, in four steps",
+      "sub": "No prompts to write, no bot to train, nothing to install. You onboard her the way you would onboard a new hire.",
+      "steps": {
+        "hire": {
+          "title": "Hire",
+          "description": "Pick who joins your team from the marketplace. She is on staff immediately."
+        },
+        "teach": {
+          "title": "Teach",
+          "description": "Fill in your products, shipping and return policies — that is everything she will ever tell a customer."
+        },
+        "connect": {
+          "title": "Connect",
+          "description": "Link the WhatsApp Business number you already use. Two clicks, no migration."
+        },
+        "sell": {
+          "title": "Sell",
+          "description": "She answers, recommends, and sends the checkout link — day and night."
+        }
+      }
+    },
+    "trust": {
+      "heading": "You are hiring a salesperson, not gambling on a bot",
+      "sub": "{name} follows the rules a good employee follows — and the ones a bot usually breaks. Every price, policy and stock level she quotes comes from your catalogue, never from a guess.",
+      "doesTitle": "What she does",
+      "neverTitle": "What she never does"
+    },
+    "team": {
+      "heading": "Meet the team",
+      "sub": "Every AI employee you can hire today. Each one has a defined role and a way of working.",
+      "count": "{count} available",
+      "availableBadge": "Available to hire",
+      "soonTitle": "More on the way",
+      "soonBody": "Sidde is building a full team of AI employees for your business.",
+      "soonCta": "Start with Malu →"
+    },
+    "finalCta": {
+      "heading": "Put someone on your WhatsApp tonight",
+      "sub": "Create your account, teach her your store, connect your number. She starts answering customers right after.",
+      "button": "Create free account",
+      "reassurance": "No credit card required to start"
+    },
+    "footer": {
+      "rights": "© {year} Sidde. All rights reserved.",
+      "tagline": "AI employees for your business"
+    }
+  },
   "Dashboard": {
     "logout": "Log out",
     "tabs": {
