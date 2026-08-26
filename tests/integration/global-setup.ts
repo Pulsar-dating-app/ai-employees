@@ -2,6 +2,7 @@ import { execSync, spawn, type ChildProcess } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { writeFileSync, rmSync } from "node:fs";
 import path from "node:path";
+import { startGraphApiMock } from "./helpers/graph-api-mock";
 
 // Boots a real Next.js server, pointed at the already-running local Supabase
 // stack (started/reset by the `test:integration:env:*` npm scripts before
@@ -15,6 +16,11 @@ const TEST_PORT = 3100;
 interface SupabaseStatus {
   API_URL: string;
   PUBLISHABLE_KEY: string;
+  // Field name for the secret/service-role key varies by CLI version
+  // (newer "secret key" naming vs. the legacy "service_role" naming) --
+  // both are read defensively below.
+  SECRET_KEY?: string;
+  SERVICE_ROLE_KEY?: string;
 }
 
 function getSupabaseStatus(): SupabaseStatus {
@@ -41,6 +47,16 @@ async function waitForServer(url: string, timeoutMs: number): Promise<void> {
 export default async function setup() {
   const status = getSupabaseStatus();
   const baseUrl = `http://127.0.0.1:${TEST_PORT}`;
+  const serviceRoleKey = status.SECRET_KEY ?? status.SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    throw new Error(
+      "`supabase status -o json` returned neither SECRET_KEY nor SERVICE_ROLE_KEY -- needed to write company_whatsapp_connections.access_token (column-privilege-locked) in tests",
+    );
+  }
+
+  // Stands in for the real Meta Graph API (Trello D1's WhatsApp connect
+  // route) -- see graph-api-mock.ts for why this can't just be a fetch spy.
+  const graphApiMock = await startGraphApiMock();
 
   const nextProcess: ChildProcess = spawn(
     "npx",
@@ -53,6 +69,10 @@ export default async function setup() {
         // Supabase project) for this spawned process only.
         NEXT_PUBLIC_SUPABASE_URL: status.API_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY: status.PUBLISHABLE_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
+        META_APP_ID: "test-meta-app-id",
+        META_APP_SECRET: "test-meta-app-secret",
+        META_GRAPH_API_BASE_URL: graphApiMock.url,
       },
       stdio: "inherit",
       // npx resolves to npx.cmd on Windows, which spawn() can't exec
@@ -65,6 +85,7 @@ export default async function setup() {
     await waitForServer(baseUrl, 60_000);
   } catch (err) {
     killProcessTree(nextProcess);
+    await graphApiMock.stop();
     throw err;
   }
 
@@ -75,6 +96,7 @@ export default async function setup() {
 
   return async () => {
     killProcessTree(nextProcess);
+    await graphApiMock.stop();
     try {
       rmSync(STATE_FILE);
     } catch {

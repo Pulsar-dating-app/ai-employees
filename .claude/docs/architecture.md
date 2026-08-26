@@ -69,6 +69,128 @@ The merchant-facing "front door" — `src/app/dashboard/` is now the real onboar
 - API error messages are not shown raw — each section falls back to a generic translated `Teach.saveError` on any failed `PATCH`, matching how `HireTeamCard` already handles its own fetch failures, so English API error text never leaks into a Portuguese-rendered page.
 - No automated tests — per `CLAUDE.md`'s testing rule, this is frontend/UI work consuming an already-tested endpoint (B2), not new backend logic.
 
+### WhatsApp connection (Trello D1)
+
+Backend-only ticket: provider decision + schema + the server-side endpoint(s)
+F4 (dashboard screen, not yet built) will call. **Provider: Meta Cloud API
+direct** (Embedded Signup), not a BSP (Twilio/360dialog) — see decisions.md
+for the cost/UX tradeoff that drove this.
+
+- `supabase/migrations/20260826104820_create_whatsapp_connection_tables.sql`
+  — one table, `company_whatsapp_connections` (one row per company,
+  `unique(company_id)`): `phone_number_id`, `waba_id`, `display_phone_number`,
+  `status` (`whatsapp_connection_status` enum: `pending`/`connected`/`disconnected`),
+  `access_token`, `connected_at`. RLS: member-readable (`is_company_member`),
+  admin-write (`is_company_admin`) for every column *except* `access_token`,
+  which is locked down with an explicit column-level
+  `revoke select/insert/update ... from authenticated, anon` followed by a
+  `grant select/insert/update (every column except access_token) ...` —
+  Postgres treats a table-wide grant as superseding any column-level grant,
+  so the revoke has to remove the table-wide privilege first (the blanket
+  grant from `20260825171500` gave one) and re-grant it back naming only
+  the safe columns; a column-level revoke layered on top of an
+  already-table-wide grant is silently a no-op (caught by the RLS test
+  actually exercising it against local Supabase, not by reasoning about the
+  SQL alone). This enforces the lockdown per-column regardless of the
+  row-level policies, so a `select *` from a regular client errors outright
+  rather than silently omitting or leaking the column. This was chosen over a second
+  zero-policy table (the initial approach) because it's less schema
+  duplication and is the idiomatic Postgres tool for "most of this row is
+  fine to read, one column never is." Any future column with this same
+  shape (client-scoped row, one field that must stay server-only) should
+  follow this pattern rather than splitting into a second table by default.
+- `src/lib/supabase/service.ts` (new) — `createServiceClient()`, a
+  server-only Supabase client using `SUPABASE_SERVICE_ROLE_KEY` (new env
+  var, no `NEXT_PUBLIC_` prefix). Bypasses both RLS and the column-level
+  grant above — the only way to read or write `access_token`. **D4
+  (outbound adapter) will need to reuse this exact client** to read the
+  stored token when sending messages — don't re-derive a second
+  service-role client.
+- `src/app/api/companies/[companyId]/whatsapp/route.ts` — `GET` (member-readable
+  status + display number, selecting an explicit safe-column list that never
+  includes `access_token`), `DELETE` (admin-only disconnect: flips `status`
+  to `disconnected` and nulls `access_token` via the service client — the
+  regular admin client can't touch that column at all; a no-op, not an
+  error, if nothing was connected).
+- `src/app/api/companies/[companyId]/whatsapp/connect/route.ts` — `POST`
+  (admin-only). Body `{ code, phoneNumberId, wabaId }`, exactly what Meta's
+  Embedded Signup hands the browser on success (F4 will build that popup
+  trigger). Server-to-server sequence against the Graph API
+  (`https://graph.facebook.com/v21.0/...`, overridable via
+  `META_GRAPH_API_BASE_URL` for tests): exchange `code` for a business
+  access token, register the phone number for Cloud API messaging (reusing
+  the previously-stored `two_step_pin` for this company if one exists, else
+  generating a fresh one — migration `20260826135816`: Meta ties a phone
+  number to whatever PIN its first `/register` call used, and rejects any
+  later `/register` for that number with a *different* PIN
+  ("(#133005) Two step verification PIN Mismatch") — a real bug hit and
+  fixed while building this, since the original code generated a new random
+  PIN on every call, breaking any reconnect),
+  subscribe the app to the WABA's webhooks (**done here, not in D2** — D2's
+  card only owns receiving/normalizing inbound messages), fetch
+  `display_phone_number`. The whole row (including `access_token` and
+  `two_step_pin`, both column-privilege-locked the same way) is
+  written in one upsert via the service client — the regular client
+  couldn't write `access_token` anyway, so there's no reason to split the
+  write. Upserts on `company_id`, so reconnecting is idempotent (same
+  convention as B1's hire endpoint). Any Graph API failure returns a
+  generic `502` — Meta's raw error text is never surfaced, matching F2's
+  don't-show-raw-API-errors convention.
+- New env vars: `SUPABASE_SERVICE_ROLE_KEY`, `META_APP_ID`, `META_APP_SECRET`,
+  `META_WHATSAPP_CONFIG_ID` (all server-only; see `.env.example`). Real
+  values require a Meta App with the WhatsApp product + an Embedded Signup
+  configuration — an external prerequisite this ticket can't create.
+  `META_WHATSAPP_CONFIG_ID` isn't used by the connect route itself — it's
+  for whichever page triggers the Embedded Signup popup (see the dev-test
+  page below). **No `NEXT_PUBLIC_` env vars were needed for any of this**:
+  the page that runs the Facebook JS SDK client-side is a Server Component
+  that reads these server-only vars and passes them down as props to its
+  Client Component — reuse that pattern rather than adding a
+  `NEXT_PUBLIC_META_*` duplicate of anything above.
+Every piece of D1's temporary test scaffolding is tagged `TODO(D1-TEST-ONLY)`
+in a comment — run `grep -rn "TODO(D1-TEST-ONLY)" src` to find everything
+that must be deleted (or reverted, for the one conditional branch in
+`dashboard/page.tsx`) when F4 ships. `src/lib/whatsapp/meta-graph-api.ts` is
+the one file in this area that is **not** tagged and must stay — only one of
+its two callers is temporary.
+- `src/app/dashboard/dev-whatsapp-connect-test/` — a **temporary, dev-only**
+  page/client-component pair (not merchant-facing: no i18n, no design
+  system, hard-guarded to throw in production) that loads the Facebook JS
+  SDK and triggers the real Embedded Signup popup, so D1 could be validated
+  against the live Meta Graph API before F4 exists to do this properly.
+  **Delete this entire folder once F4 ships its real connection screen** —
+  F4 should build its own trigger (reusing the same server-component-passes-props
+  pattern above), not extend this one. The three Meta env vars stay after
+  F4 ships; only this folder goes away. `src/app/dashboard/page.tsx`'s
+  "Connect your team to WhatsApp" stub card also has a temporary
+  `process.env.NODE_ENV !== "production"` branch linking to this page
+  instead of rendering the plain (non-clickable) stub — never active in
+  production, real merchants still see the unchanged "Coming soon" card.
+  Revert that branch back to the single `<StubStepCard>` when F4 ships and
+  this folder is deleted.
+- `src/lib/whatsapp/meta-graph-api.ts` (new, shared) — `exchangeCodeForToken`
+  and `finishConnection` (register/subscribe/lookup), extracted once a
+  second caller needed the same Graph API sequence: the real connect route,
+  and `src/app/api/companies/[companyId]/whatsapp/manual-connect-test/`
+  (**also temporary, dev-only**, production-guarded 404) — lets D1 be
+  tested against the real Graph API before the app has Embedded Signup
+  Advanced Access approved. Takes a Meta test-number's access
+  token/phone_number_id/waba_id directly (pasted from App Dashboard →
+  WhatsApp → API Setup — Meta provisions this per-app with no approval
+  needed, since it's the developer's own test setup, not onboarding a
+  third-party business) and runs the same register/subscribe/upsert
+  sequence, skipping only the code-exchange step. The manual-entry form
+  lives in the same dev-test page. **Delete this route (and the form)
+  alongside the rest of the temporary harness once F4 ships** — at that
+  point the app should have real Advanced Access anyway.
+- Tests mock the Graph API with a real local HTTP server
+  (`tests/integration/helpers/graph-api-mock.ts`, wired into
+  `global-setup.ts` via `META_GRAPH_API_BASE_URL`) rather than a `fetch` spy
+  — the route handler runs inside the separately-spawned `next dev` process,
+  which doesn't share an in-process mock with the test runner. Stateless,
+  driven by magic input values (e.g. `code: "trigger-token-failure"`) so
+  different tests can pick a failure mode without shared server state.
+
 ### Internationalization (EN/PT)
 
 `next-intl`, cookie-based with **no `[locale]` URL segment** — deliberately, to avoid restructuring every `redirect()` call in `src/lib/auth/actions.ts`, the `proxy.ts` matcher, and every internal link (see decisions.md for why locale-prefixed routing was rejected). **The project rule — never hardcode a UI string, always add it to both message files — lives in [CLAUDE.md](../../CLAUDE.md#internationalization), not here; this section is how it's implemented, that one is what to do every time.**
@@ -101,6 +223,7 @@ Implemented in `supabase/migrations/` (2026-08-23), all tables in `public` schem
 - **customers** — a company's end customers (`channel`: enum `conversation_channel`, currently `whatsapp` only).
 - **conversations** — a thread between a customer and a company's agent; `agent_id` FKs to the global `agents` table (per `Sidde_MVP_Database_Tables.md`), not `company_agents`; `channel` uses the same `conversation_channel` enum as `customers`; `open_ai_conversation_id` links to the OpenAI-side conversation. `status` (`active`/`closed`/`paused`) is still plain `varchar` + `CHECK`, not an enum — left as-is deliberately.
 - **products** — a company's catalog (name/price/currency/images/category/variants/attributes as jsonb), imported from CSV/XLSX today, designed for future ecommerce integrations (Shopify/WooCommerce/etc.) without changing Malu's `ProductRepository` abstraction.
+- **company_whatsapp_connections** — one row per company (Trello D1): WhatsApp Cloud API connection state (`phone_number_id`/`waba_id`/`display_phone_number`/`status`/`token_expires_at`) plus `access_token`, which is column-privilege-locked (see Access model below) rather than split into a second table. `token_expires_at` (migration `20260826112152`) just records when the 60-day Meta token goes stale — no auto-renewal exists yet (see decisions.md).
 - **events** — append-only log of the three trackable behaviors from spec §14–15: `buying_intent`, `product_recommendation`, `checkout_click` (single shared table with a `type` enum column, not one table per type). Scoped to `company_id`, `conversation_id`, `customer_id` (all required); `agent_id`/`product_id` optional. `tracking_id` is the `sidde.link/c/{tracking-id}` lookup key, set on `checkout_click` rows when the link is created and read back on click; unique when present (partial unique index). `metadata` jsonb holds type-specific extras (e.g. `destination_url`) that don't warrant their own column. No `updated_at`/no update trigger/no update or delete RLS policies — rows are never mutated after insert.
 
 ### Enum types
@@ -123,6 +246,7 @@ No `messages` table by design — message history is not persisted in our own DB
 - These helpers live in a **`private` schema**, deliberately not listed in `supabase/config.toml`'s `[api].schemas` (only `public`, `graphql_public` are exposed) — this keeps them callable from RLS policies and triggers while blocking direct PostgREST RPC access (`/rest/v1/rpc/...`). Any new internal-only helper function should go in `private`, not `public`.
 - `agents` is readable by any authenticated user (`is_active = true` rows only); only `service_role` can write to it (no insert/update/delete policies for regular users) — it's Sidde's platform catalog, not merchant-editable.
 - Every table has a `before update` trigger (`public.set_updated_at`) that stamps `updated_at = now()`.
+- `company_whatsapp_connections.access_token` (Trello D1) is the one column in the schema locked down below the table's own RLS policies: migration `20260826104820` revokes the table-wide select/insert/update privilege and re-grants it back per-column, naming every column except `access_token` — a column-level revoke layered on top of an existing table-wide grant is a no-op in Postgres, so the table-wide privilege has to go first. This blocks that single column for every regular client regardless of row-level access, while every other column on the same row still follows the normal member-read/admin-write RLS. Only `src/lib/supabase/service.ts`'s service-role client can touch it.
 
 ## Conventions
 
