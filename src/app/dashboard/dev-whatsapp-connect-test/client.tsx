@@ -175,6 +175,18 @@ export function DevWhatsAppConnectTestClient({
       .catch((err) => appendLog(`Status request failed: ${err}`));
   }
 
+  function disconnect() {
+    if (!companyId) return;
+    appendLog(`Posting DELETE to /api/companies/${companyId}/whatsapp ...`);
+    fetch(`/api/companies/${companyId}/whatsapp`, { method: "DELETE" })
+      .then((res) => res.json().then((json) => ({ status: res.status, json })))
+      .then(({ status, json }) => {
+        appendLog(`Disconnect response: ${status}`);
+        setResult(json);
+      })
+      .catch((err) => appendLog(`Disconnect request failed: ${err}`));
+  }
+
   return (
     <div style={{ padding: 24, maxWidth: 720, fontFamily: "monospace" }}>
       <p style={{ background: "#fee2e2", padding: 12, marginBottom: 16 }}>
@@ -199,6 +211,7 @@ export function DevWhatsAppConnectTestClient({
       <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
         <button onClick={startSignup}>Start WhatsApp Embedded Signup</button>
         <button onClick={checkStatus}>Check connection status</button>
+        <button onClick={disconnect}>Disconnect</button>
       </div>
 
       <h3 style={{ marginTop: 24 }}>
