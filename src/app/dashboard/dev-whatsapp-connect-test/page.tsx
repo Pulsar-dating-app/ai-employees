@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { DevWhatsAppConnectTestClient } from "./client";
 
 // TODO(D1-TEST-ONLY): delete this entire folder once Trello F4 ships the
@@ -8,11 +9,15 @@ import { DevWhatsAppConnectTestClient } from "./client";
 // there's no reason to duplicate them under NEXT_PUBLIC_ names just for
 // this one throwaway page.
 
-if (process.env.NODE_ENV === "production") {
-  throw new Error("dev-whatsapp-connect-test is a dev-only page and must not run in production");
-}
-
 export default function DevWhatsAppConnectTestPage() {
+  // Gated at render time, not module scope: throwing at module evaluation
+  // breaks `next build`'s page-data collection for this route entirely
+  // (NODE_ENV is "production" during build, not just at request time),
+  // even though nothing ever links here in production.
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   return (
     <DevWhatsAppConnectTestClient
       metaAppId={process.env.META_APP_ID ?? ""}

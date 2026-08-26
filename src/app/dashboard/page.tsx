@@ -84,12 +84,23 @@ export default async function DashboardPage() {
     .order("slug");
 
   let hiredAgentIds = new Set<string>();
+  let hasProducts = false;
   if (company) {
     const { data: companyAgents } = await supabase
       .from("company_agents")
       .select("agent_id")
       .eq("company_id", company.id);
     hiredAgentIds = new Set((companyAgents as CompanyAgentRow[] | null)?.map((ca) => ca.agent_id) ?? []);
+
+    const { data: existingProducts } = await supabase
+      .from("products")
+      .select("id")
+      .eq("company_id", company.id)
+      .limit(1);
+    // Any product ever added counts, active or not — a merchant who
+    // deactivated everything has still done catalog work, same "ever set"
+    // spirit as hasKnowledge below rather than "currently non-empty."
+    hasProducts = (existingProducts?.length ?? 0) > 0;
   }
 
   const allAgents = (agents as AgentRow[] | null) ?? [];
@@ -174,6 +185,13 @@ export default async function DashboardPage() {
           description={t("teachDescription")}
           status={hasKnowledge ? "done" : "active"}
           href="/dashboard/teach"
+        />
+
+        <LinkStepCard
+          title={t("productsTitle")}
+          description={t("productsDescription")}
+          status={hasProducts ? "done" : "active"}
+          href="/dashboard/products"
         />
 
         {process.env.NODE_ENV !== "production" ? (

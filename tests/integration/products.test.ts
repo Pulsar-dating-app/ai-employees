@@ -259,4 +259,94 @@ describe("Products CRUD /api/companies/:id/products", () => {
     );
     expect(defaultList.json.products.map((p) => p.id)).toContain(productId);
   });
+
+  it("filters the list by category", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Category Filter Co");
+    await createProduct(owner.cookieHeader, companyId, { name: "Shirt", category: "apparel" });
+    await createProduct(owner.cookieHeader, companyId, { name: "Mug", category: "kitchen" });
+
+    const filtered = await api<{ products: { name: string }[]; total: number }>(
+      "GET",
+      `/api/companies/${companyId}/products?category=apparel`,
+      owner.cookieHeader,
+    );
+    expect(filtered.status).toBe(200);
+    expect(filtered.json.products.map((p) => p.name)).toEqual(["Shirt"]);
+    expect(filtered.json.total).toBe(1);
+  });
+
+  it("searches the list by name, case-insensitively", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Search Filter Co");
+    await createProduct(owner.cookieHeader, companyId, { name: "Blue Widget" });
+    await createProduct(owner.cookieHeader, companyId, { name: "Red Gadget" });
+
+    const searched = await api<{ products: { name: string }[]; total: number }>(
+      "GET",
+      `/api/companies/${companyId}/products?search=widget`,
+      owner.cookieHeader,
+    );
+    expect(searched.status).toBe(200);
+    expect(searched.json.products.map((p) => p.name)).toEqual(["Blue Widget"]);
+    expect(searched.json.total).toBe(1);
+  });
+
+  it("paginates the list and reports the filtered total", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Pagination Co");
+    for (let i = 0; i < 5; i++) {
+      await createProduct(owner.cookieHeader, companyId, { name: `Product ${i}` });
+    }
+
+    const pageOne = await api<{ products: { id: string }[]; total: number; page: number; pageSize: number }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=2&page=1`,
+      owner.cookieHeader,
+    );
+    expect(pageOne.status).toBe(200);
+    expect(pageOne.json.products).toHaveLength(2);
+    expect(pageOne.json.total).toBe(5);
+    expect(pageOne.json.page).toBe(1);
+    expect(pageOne.json.pageSize).toBe(2);
+
+    const pageTwo = await api<{ products: { id: string }[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=2&page=2`,
+      owner.cookieHeader,
+    );
+    expect(pageTwo.json.products).toHaveLength(2);
+    expect(pageTwo.json.products.map((p) => p.id)).not.toEqual(pageOne.json.products.map((p) => p.id));
+
+    const pageThree = await api<{ products: { id: string }[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=2&page=3`,
+      owner.cookieHeader,
+    );
+    expect(pageThree.json.products).toHaveLength(1);
+  });
+
+  it("composes category/search filters with includeInactive", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Composed Filters Co");
+    const created = await createProduct(owner.cookieHeader, companyId, {
+      name: "Deactivated Widget",
+      category: "widgets",
+    });
+    await api("DELETE", `/api/companies/${companyId}/products/${created.json.product.id}`, owner.cookieHeader);
+
+    const withoutInactive = await api<{ products: unknown[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?category=widgets&search=widget`,
+      owner.cookieHeader,
+    );
+    expect(withoutInactive.json.products).toHaveLength(0);
+
+    const withInactive = await api<{ products: { name: string }[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?category=widgets&search=widget&includeInactive=true`,
+      owner.cookieHeader,
+    );
+    expect(withInactive.json.products.map((p) => p.name)).toEqual(["Deactivated Widget"]);
+  });
 });
