@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { HIREABLE_AGENTS } from "@/lib/agents/catalog";
+import { AGENT_ENRICHMENT, DEFAULT_MONTHLY_PRICE_BRL } from "@/lib/agents/catalog";
 import { BackLink } from "../../back-link";
 import { AgentHireFlow } from "./agent-hire-flow";
 
@@ -12,13 +12,12 @@ export default async function AgentDetailPage({
   params: Promise<{ agentSlug: string }>;
 }) {
   const { agentSlug } = await params;
-  const catalog = HIREABLE_AGENTS[agentSlug];
-  if (!catalog) notFound();
-
   const supabase = await createClient();
   const t = await getTranslations("Marketplace");
 
-  // agent lookup and the company list don't depend on each other.
+  // Any active `agents` row gets a real detail page — not gated on having
+  // a curated catalog entry. agent lookup and the company list don't
+  // depend on each other.
   const [{ data: agent }, { data: companies }] = await Promise.all([
     supabase
       .from("agents")
@@ -42,6 +41,8 @@ export default async function AgentDetailPage({
     isHired = Boolean(companyAgent);
   }
 
+  const enrichment = AGENT_ENRICHMENT[agent.slug];
+
   return (
     <div className="flex flex-col gap-6">
       <BackLink href="/dashboard">{t("backToMarketplace")}</BackLink>
@@ -51,7 +52,10 @@ export default async function AgentDetailPage({
         name={defaultAgentName(agent.slug)}
         role={agent.role ?? ""}
         description={agent.description ?? ""}
-        catalog={catalog}
+        traits={enrichment?.traits ?? []}
+        should={enrichment?.should ?? []}
+        never={enrichment?.never ?? []}
+        monthlyPriceBRL={enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL}
         companyId={company?.id ?? null}
         initialIsHired={isHired}
       />

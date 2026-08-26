@@ -38,31 +38,20 @@
   "Marketplace": {
     "pageTitle": "Conheça sua equipe",
     "pageSubtitle": "Escolha quem vai entrar no seu negócio e prepare-o para vender por você.",
-    "hiredBadge": "Contratada",
+    "hiredBadge": "Contratado(a)",
     "priceLabel": "R$ {price}/mês",
-    "comingSoon": "Em breve",
     "backToMarketplace": "Voltar para o marketplace",
     "traits": {
-      "warm": "Calorosa",
-      "attentive": "Atenciosa",
-      "persuasive": "Persuasiva, sem ser insistente",
+      "warm": "Caloroso(a)",
+      "attentive": "Atencioso(a)",
+      "persuasive": "Persuasivo(a), sem ser insistente",
       "knowledgeable": "Conhece bem os produtos",
-      "proactive": "Proativa"
-    },
-    "lockedAgents": {
-      "emma": {
-        "name": "Emma",
-        "role": "Suporte"
-      },
-      "mia": {
-        "name": "Mia",
-        "role": "Atendimento ao cliente"
-      }
+      "proactive": "Proativo(a)"
     }
   },
   "AgentDetail": {
-    "shouldTitle": "O que ela faz",
-    "neverTitle": "O que ela nunca faz",
+    "shouldTitle": "O que {name} faz",
+    "neverTitle": "O que {name} nunca faz",
     "should": {
       "askFollowUp": "Faz perguntas naturais para entender o que o cliente precisa",
       "explainFit": "Explica por que uma recomendação combina antes de sugeri-la",
@@ -90,7 +79,7 @@
     "confirming": "Contratando…",
     "cancel": "Cancelar",
     "hiredBadge": "{name} está contratada",
-    "hiredDescription": "Ela já faz parte da sua equipe — acesse as configurações para ensiná-la sobre o seu negócio e conectar o WhatsApp.",
+    "hiredDescription": "{name} já faz parte da sua equipe — acesse as configurações para ensinar {name} sobre o seu negócio e conectar o WhatsApp.",
     "goToSettings": "Ir para configurações",
     "hireError": "Algo deu errado ao contratar {name}. Tente novamente."
   },
@@ -111,7 +100,7 @@
     "configure": "Configurar",
     "backToMyAgents": "Voltar para minha equipe",
     "connectionsTitle": "Conexões",
-    "connectionsSubtitle": "Escolha em quais plataformas ela vai falar com os clientes.",
+    "connectionsSubtitle": "Escolha em quais plataformas {name} vai falar com os clientes.",
     "notHired": "Você ainda não contratou este integrante.",
     "viewAgent": "Ver {name}",
     "channels": {

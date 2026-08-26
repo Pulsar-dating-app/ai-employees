@@ -78,7 +78,9 @@ export default async function AgentConnectionsPage({
         <h1 className="text-2xl font-semibold text-neutral-900">
           {t("connectionsTitle")} — {defaultAgentName(agentSlug)}
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">{t("connectionsSubtitle")}</p>
+        <p className="mt-1 text-sm text-neutral-500">
+          {t("connectionsSubtitle", { name: defaultAgentName(agentSlug) })}
+        </p>
       </div>
 
       <ChannelsSection

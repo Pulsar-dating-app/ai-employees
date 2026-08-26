@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckIcon, XIcon } from "@/components/ui/icons";
-import type { HireableAgentCatalogEntry } from "@/lib/agents/catalog";
 
 type Stage = "browsing" | "confirming" | "hired";
 
@@ -26,7 +25,10 @@ export function AgentHireFlow({
   name,
   role,
   description,
-  catalog,
+  traits,
+  should,
+  never,
+  monthlyPriceBRL,
   companyId,
   initialIsHired,
 }: {
@@ -34,7 +36,10 @@ export function AgentHireFlow({
   name: string;
   role: string;
   description: string;
-  catalog: HireableAgentCatalogEntry;
+  traits: string[];
+  should: string[];
+  never: string[];
+  monthlyPriceBRL: number;
   companyId: string | null;
   initialIsHired: boolean;
 }) {
@@ -106,32 +111,40 @@ export function AgentHireFlow({
 
       {description ? <p className="text-sm leading-relaxed text-neutral-700">{description}</p> : null}
 
-      <div className="flex flex-wrap gap-1.5">
-        {catalog.traits.map((trait) => (
-          <TraitChip key={trait}>{tTraits(trait)}</TraitChip>
-        ))}
-      </div>
+      {traits.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {traits.map((trait) => (
+            <TraitChip key={trait}>{tTraits(trait)}</TraitChip>
+          ))}
+        </div>
+      ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-2.5">
-          <h2 className="text-sm font-semibold text-neutral-900">{t("shouldTitle")}</h2>
-          {catalog.should.map((key) => (
-            <div key={key} className="flex items-start gap-2 text-sm text-neutral-700">
-              <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-success-500" />
-              {tShould(key)}
+      {should.length > 0 || never.length > 0 ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {should.length > 0 ? (
+            <div className="flex flex-col gap-2.5">
+              <h2 className="text-sm font-semibold text-neutral-900">{t("shouldTitle", { name })}</h2>
+              {should.map((key) => (
+                <div key={key} className="flex items-start gap-2 text-sm text-neutral-700">
+                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-success-500" />
+                  {tShould(key)}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="flex flex-col gap-2.5">
-          <h2 className="text-sm font-semibold text-neutral-900">{t("neverTitle")}</h2>
-          {catalog.never.map((key) => (
-            <div key={key} className="flex items-start gap-2 text-sm text-neutral-500">
-              <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
-              {tNever(key)}
+          ) : null}
+          {never.length > 0 ? (
+            <div className="flex flex-col gap-2.5">
+              <h2 className="text-sm font-semibold text-neutral-900">{t("neverTitle", { name })}</h2>
+              {never.map((key) => (
+                <div key={key} className="flex items-start gap-2 text-sm text-neutral-500">
+                  <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
+                  {tNever(key)}
+                </div>
+              ))}
             </div>
-          ))}
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
       <Card>
         <CardContent>
@@ -140,7 +153,7 @@ export function AgentHireFlow({
               <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-100 px-2.5 py-1 text-xs font-semibold text-success-500">
                 {t("hiredBadge", { name })}
               </span>
-              <p className="text-sm text-neutral-600">{t("hiredDescription")}</p>
+              <p className="text-sm text-neutral-600">{t("hiredDescription", { name })}</p>
               <Link href={`/dashboard/my-agents/${agentSlug}`}>
                 <Button type="button">{t("goToSettings")}</Button>
               </Link>
@@ -176,9 +189,7 @@ export function AgentHireFlow({
 
               <div className="flex items-center gap-3">
                 <Button type="button" isLoading={isSubmitting} onClick={handleConfirmHire}>
-                  {isSubmitting
-                    ? t("confirming")
-                    : t("confirmHire", { price: catalog.monthlyPriceBRL })}
+                  {isSubmitting ? t("confirming") : t("confirmHire", { price: monthlyPriceBRL })}
                 </Button>
                 <Button
                   type="button"
@@ -193,7 +204,7 @@ export function AgentHireFlow({
           ) : (
             <div className="flex flex-col gap-3">
               <span className="text-lg font-semibold text-neutral-900">
-                {t("priceLabel", { price: catalog.monthlyPriceBRL })}
+                {t("priceLabel", { price: monthlyPriceBRL })}
               </span>
               <div>
                 <Button type="button" onClick={() => setStage("confirming")}>
