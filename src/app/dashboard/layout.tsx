@@ -1,25 +1,29 @@
-import { getTranslations } from "next-intl/server";
-import { logout } from "@/lib/auth/actions";
-import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
+import { Sidebar } from "./sidebar";
 
-// F2-F6 all render under /dashboard and need the same brand+logout header —
-// built once here rather than re-derived per ticket.
+// Every /dashboard/* route renders under this shell — a persistent dark
+// rail on desktop, a top bar + bottom tab bar on mobile (see sidebar.tsx).
+// This Server Component only re-runs on a full load / hard navigation, not
+// on client-side navigation between sibling pages under it — so fetching
+// identity here (for the sidebar's footer) is a one-time cost, not a
+// per-tab-click one.
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const t = await getTranslations("Dashboard");
+  const supabase = await createClient();
+  const [
+    {
+      data: { user },
+    },
+    { data: companies },
+  ] = await Promise.all([supabase.auth.getUser(), supabase.from("companies").select("name")]);
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <header className="border-b border-neutral-200 bg-white">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
-          <span className="text-lg font-semibold text-neutral-900">Sidde</span>
-          <form action={logout}>
-            <Button type="submit" variant="secondary" size="sm">
-              {t("logout")}
-            </Button>
-          </form>
-        </div>
-      </header>
-      <main className="mx-auto max-w-3xl px-4 py-10">{children}</main>
+      <Sidebar companyName={companies?.[0]?.name ?? null} email={user?.email ?? null} />
+      <div className="sm:pl-64">
+        <main className="mx-auto max-w-3xl px-4 pt-20 pb-24 sm:px-6 sm:pt-10 sm:pb-10">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

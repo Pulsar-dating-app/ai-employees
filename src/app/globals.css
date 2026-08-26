@@ -20,13 +20,22 @@
   --color-neutral-800: #292524;
   --color-neutral-900: #1c1917;
 
-  --color-accent-50: #f5f5f4;
-  --color-accent-100: #e7e5e4;
-  --color-accent-400: #57534e;
-  --color-accent-500: #292524;
-  --color-accent-600: #1c1917;
-  --color-accent-700: #0c0a09;
+  /* Primary — navigation, hired/active state, primary actions. */
+  --color-accent-50: #eef2ff;
+  --color-accent-100: #e0e7ff;
+  --color-accent-400: #818cf8;
+  --color-accent-500: #4f46e5;
+  --color-accent-600: #4338ca;
+  --color-accent-700: #3730a3;
 
+  /* Intent — Malu's own accent: buying-intent signals, personality touches. */
+  --color-intent-50: #fdf1ec;
+  --color-intent-100: #fbe0d3;
+  --color-intent-400: #e8916a;
+  --color-intent-500: #dc6b3f;
+  --color-intent-600: #c05a30;
+
+  /* Success — checkout-click, completed/connected states. */
   --color-success-100: #e3f2e9;
   --color-success-500: #4d9c6f;
 
@@ -37,10 +46,37 @@
   --radius-lg: 0.875rem;
 }
 
-/* Sidde's real design tokens — warm neutrals + one accent, forced light
-   for now regardless of OS/browser preference (no dark mode support yet). */
+/* Sidde's design tokens — warm neutral base, three named color roles
+   (primary/intent/success) instead of one flat accent, so the marketplace
+   and agent states (locked, hireable, hired, buying-intent, checkout-click)
+   read apart at a glance. Forced light for now regardless of OS/browser
+   preference (no dark mode support yet). */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* The one authored motion moment: a staggered rise-and-fade for grid/list
+   items on the marketplace and my-team surfaces (animation-delay set per
+   item from JS), not scattered per-element hover effects. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
 }
