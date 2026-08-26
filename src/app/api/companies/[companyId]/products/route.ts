@@ -37,7 +37,9 @@ async function requireMember(
 // price and currency travel together: a price with no currency is
 // meaningless money, a currency with no price is noise. Either can be
 // absent, but not one without the other.
-function validatePriceCurrency(price: unknown, currency: unknown): string | null {
+// Exported for reuse by Trello B4's import route — the ticket explicitly
+// wants row validation to reuse this rule, not duplicate it.
+export function validatePriceCurrency(price: unknown, currency: unknown): string | null {
   if (price === undefined || price === null) return null;
 
   if (typeof price !== "number" || Number.isNaN(price) || price < 0) {
@@ -48,6 +50,17 @@ function validatePriceCurrency(price: unknown, currency: unknown): string | null
     return "currency is required when price is present";
   }
 
+  return null;
+}
+
+// stock is nullable and unconstrained at the DB level (Trello B4 migration
+// 20260826135937) — null means "not tracked," 0 means "out of stock." Same
+// app-layer-only validation style as price, not a DB CHECK.
+export function validateStock(stock: unknown): string | null {
+  if (stock === undefined || stock === null) return null;
+  if (typeof stock !== "number" || !Number.isInteger(stock) || stock < 0) {
+    return "stock must be a non-negative integer";
+  }
   return null;
 }
 
@@ -117,6 +130,11 @@ export async function POST(
     return NextResponse.json({ error: priceError }, { status: 400 });
   }
 
+  const stockError = validateStock(body?.stock);
+  if (stockError) {
+    return NextResponse.json({ error: stockError }, { status: 400 });
+  }
+
   const { data, error } = await supabase
     .from("products")
     .insert({
@@ -127,6 +145,7 @@ export async function POST(
       description: body?.description ?? null,
       price: body?.price ?? null,
       currency: body?.currency ?? null,
+      stock: body?.stock ?? null,
       image_url: body?.image_url ?? null,
       product_url: body?.product_url ?? null,
       category: body?.category ?? null,
