@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { logout } from "@/lib/auth/actions";
-import { GridIcon, UsersIcon, SettingsIcon, LogoutIcon } from "@/components/ui/icons";
+import { GridIcon, UsersIcon, PackageIcon, SettingsIcon, LogoutIcon } from "@/components/ui/icons";
 
 const NAV_ITEMS = [
   { href: "/dashboard", key: "marketplace" as const, icon: GridIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
   { href: "/dashboard/my-agents", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p.startsWith("/dashboard/my-agents") },
+  { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, match: (p: string) => p.startsWith("/dashboard/products") },
   { href: "/dashboard/settings", key: "settings" as const, icon: SettingsIcon, match: (p: string) => p.startsWith("/dashboard/settings") },
 ];
 

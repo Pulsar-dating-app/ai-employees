@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { SpinnerIcon } from "./icons";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "md" | "sm";
   isLoading?: boolean;
 };
@@ -12,6 +12,10 @@ const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
   secondary:
     "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50 disabled:hover:bg-white",
   ghost: "text-neutral-600 hover:text-neutral-900 disabled:hover:text-neutral-600",
+  // For a destructive action's actual confirming click (e.g. deactivate) —
+  // still a bordered, clearly-a-button shape like secondary, just red-toned
+  // so it reads as "this one does something irreversible-ish."
+  danger: "border border-red-300 bg-white text-red-600 hover:bg-red-50 disabled:hover:bg-white",
 };
 
 const SIZE_CLASSES: Record<NonNullable<ButtonProps["size"]>, string> = {

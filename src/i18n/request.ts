@@ -13,15 +13,25 @@ function isSupportedLocale(value: string | undefined): value is Locale {
 // from the browser's Accept-Language header. No cookie is set until the
 // user actively picks a language, so detection stays live off the browser
 // until then.
-export default getRequestConfig(async () => {
+//
+// Exported (not just used inline below) so Route Handlers that generate
+// locale-aware content outside the message-bundle system (e.g. the product
+// import template's example row) can resolve the same locale without
+// duplicating this detection logic.
+export async function resolveLocale(): Promise<Locale> {
   const cookieLocale = (await cookies()).get("locale")?.value;
 
-  let locale: Locale = "en";
   if (isSupportedLocale(cookieLocale)) {
-    locale = cookieLocale;
-  } else if ((await headers()).get("accept-language")?.toLowerCase().includes("pt")) {
-    locale = "pt";
+    return cookieLocale;
   }
+  if ((await headers()).get("accept-language")?.toLowerCase().includes("pt")) {
+    return "pt";
+  }
+  return "en";
+}
+
+export default getRequestConfig(async () => {
+  const locale = await resolveLocale();
 
   return {
     locale,

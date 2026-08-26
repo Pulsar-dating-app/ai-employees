@@ -21,9 +21,10 @@ import { finishConnection, generateRegistrationPin } from "@/lib/whatsapp/meta-g
 // register/subscribe/lookup/upsert as the real POST .../whatsapp/connect --
 // only the code-exchange step is skipped, since there's already a token.
 
-if (process.env.NODE_ENV === "production") {
-  throw new Error("manual-connect-test is a dev-only route and must not run in production");
-}
+// Gated inside the POST handler below, not at module scope: throwing here
+// broke `next build`'s page-data collection for this route entirely
+// (NODE_ENV is "production" during build, not just at request time) even
+// though the handler's own in-body check already 404s correctly at runtime.
 
 const SAFE_COLUMNS =
   "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at";

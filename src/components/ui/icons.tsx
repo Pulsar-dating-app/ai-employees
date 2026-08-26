@@ -57,6 +57,16 @@ export function UsersIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function PackageIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <path d="M3.5 8.2 12 3.5l8.5 4.7v8.6L12 21.5l-8.5-4.7z" />
+      <path d="M3.5 8.2 12 12.9l8.5-4.7" />
+      <path d="M12 12.9v8.6" />
+    </svg>
+  );
+}
+
 export function SettingsIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...NAV_ICON_PROPS} {...props}>

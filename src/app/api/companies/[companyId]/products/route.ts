@@ -37,7 +37,9 @@ async function requireMember(
 // price and currency travel together: a price with no currency is
 // meaningless money, a currency with no price is noise. Either can be
 // absent, but not one without the other.
-function validatePriceCurrency(price: unknown, currency: unknown): string | null {
+// Exported for reuse by Trello B4's import route — the ticket explicitly
+// wants row validation to reuse this rule, not duplicate it.
+export function validatePriceCurrency(price: unknown, currency: unknown): string | null {
   if (price === undefined || price === null) return null;
 
   if (typeof price !== "number" || Number.isNaN(price) || price < 0) {
@@ -51,8 +53,35 @@ function validatePriceCurrency(price: unknown, currency: unknown): string | null
   return null;
 }
 
+// stock is nullable and unconstrained at the DB level (Trello B4 migration
+// 20260826135937) — null means "not tracked," 0 means "out of stock." Same
+// app-layer-only validation style as price, not a DB CHECK.
+export function validateStock(stock: unknown): string | null {
+  if (stock === undefined || stock === null) return null;
+  if (typeof stock !== "number" || !Number.isInteger(stock) || stock < 0) {
+    return "stock must be a non-negative integer";
+  }
+  return null;
+}
+
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 100;
+
+// Lenient positive-integer parsing for pagination params — an invalid value
+// silently falls back to the default rather than 400ing, matching
+// includeInactive's own permissive "=== 'true'" string check below.
+function parsePositiveInt(value: string | null, fallback: number, max?: number): number {
+  const parsed = value === null ? NaN : Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) return fallback;
+  return max ? Math.min(parsed, max) : parsed;
+}
+
 // GET: list products for the company. Soft-deleted products (is_active =
 // false) are excluded by default — pass ?includeInactive=true to see them.
+// Trello F3 added category/search filters and pagination (?category=,
+// ?search= matches name case-insensitively, ?page=/?pageSize=) — B3's own
+// card asked for this on the list endpoint but it was never built; F3's UI
+// is the first real consumer that needs it.
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ companyId: string }> },
@@ -70,20 +99,34 @@ export async function GET(
   const memberCheck = await requireMember(supabase, companyId, user.id);
   if (memberCheck.error) return memberCheck.error;
 
-  const includeInactive = new URL(request.url).searchParams.get("includeInactive") === "true";
+  const searchParams = new URL(request.url).searchParams;
+  const includeInactive = searchParams.get("includeInactive") === "true";
+  const category = searchParams.get("category")?.trim() || null;
+  const search = searchParams.get("search")?.trim() || null;
+  const page = parsePositiveInt(searchParams.get("page"), 1);
+  const pageSize = parsePositiveInt(searchParams.get("pageSize"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
 
-  let query = supabase.from("products").select("*").eq("company_id", companyId);
+  let query = supabase.from("products").select("*", { count: "exact" }).eq("company_id", companyId);
   if (!includeInactive) {
     query = query.eq("is_active", true);
   }
+  if (category) {
+    query = query.eq("category", category);
+  }
+  if (search) {
+    query = query.ilike("name", `%${search}%`);
+  }
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+  const from = (page - 1) * pageSize;
+  const { data, error, count } = await query
+    .order("created_at", { ascending: false })
+    .range(from, from + pageSize - 1);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ products: data });
+  return NextResponse.json({ products: data, total: count ?? 0, page, pageSize });
 }
 
 // POST: create a product. name is required; price/currency must travel
@@ -117,6 +160,11 @@ export async function POST(
     return NextResponse.json({ error: priceError }, { status: 400 });
   }
 
+  const stockError = validateStock(body?.stock);
+  if (stockError) {
+    return NextResponse.json({ error: stockError }, { status: 400 });
+  }
+
   const { data, error } = await supabase
     .from("products")
     .insert({
@@ -127,6 +175,7 @@ export async function POST(
       description: body?.description ?? null,
       price: body?.price ?? null,
       currency: body?.currency ?? null,
+      stock: body?.stock ?? null,
       image_url: body?.image_url ?? null,
       product_url: body?.product_url ?? null,
       category: body?.category ?? null,

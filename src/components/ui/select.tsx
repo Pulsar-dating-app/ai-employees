@@ -24,7 +24,7 @@ export function Select({ label, error, id, className, options, ...props }: Selec
       <select
         id={selectId}
         className={clsx(
-          "rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-accent-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500",
+          "w-full min-w-0 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-accent-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500",
           error && "border-red-400",
           className,
         )}

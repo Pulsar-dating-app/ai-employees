@@ -75,12 +75,24 @@ function validatePriceCurrency(price: unknown, currency: unknown): string | null
   return null;
 }
 
+// stock is nullable and unconstrained at the DB level (Trello B4 migration
+// 20260826135937) — null means "not tracked," 0 means "out of stock." Same
+// app-layer-only validation style as price, not a DB CHECK.
+function validateStock(stock: unknown): string | null {
+  if (stock === undefined || stock === null) return null;
+  if (typeof stock !== "number" || !Number.isInteger(stock) || stock < 0) {
+    return "stock must be a non-negative integer";
+  }
+  return null;
+}
+
 const OPTIONAL_PASSTHROUGH_FIELDS = [
   "external_id",
   "sku",
   "description",
   "price",
   "currency",
+  "stock",
   "image_url",
   "product_url",
   "category",
@@ -141,6 +153,13 @@ export async function PATCH(
   const priceError = validatePriceCurrency(effectivePrice, effectiveCurrency);
   if (priceError) {
     return NextResponse.json({ error: priceError }, { status: 400 });
+  }
+
+  if ("stock" in update) {
+    const stockError = validateStock(update.stock);
+    if (stockError) {
+      return NextResponse.json({ error: stockError }, { status: 400 });
+    }
   }
 
   if (Object.keys(update).length === 0) {

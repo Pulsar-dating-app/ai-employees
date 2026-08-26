@@ -32,6 +32,7 @@
     "tabs": {
       "marketplace": "Marketplace",
       "myAgents": "Minha equipe",
+      "products": "Produtos",
       "settings": "Configurações"
     }
   },
@@ -175,6 +176,105 @@
       "description": "Qualquer outra coisa que sua equipe deva saber e que não se encaixa acima.",
       "label": "Outras informações",
       "placeholder": "Qualquer outra coisa que valha a pena saber…"
+    }
+  },
+  "Products": {
+    "pageTitle": "Catálogo de produtos",
+    "pageSubtitle": "Os produtos que sua equipe recomenda aos clientes.",
+    "noCompany": "Contrate o primeiro integrante da sua equipe para começar a gerenciar seu catálogo de produtos.",
+    "browseMarketplace": "Ver marketplace",
+    "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "saved": "Salvo",
+    "saveError": "Algo deu errado. Tente novamente.",
+    "closeDialogLabel": "Fechar",
+    "filters": {
+      "searchLabel": "Buscar por nome",
+      "searchPlaceholder": "Buscar produtos…",
+      "searchButton": "Buscar",
+      "categoryLabel": "Categoria",
+      "categoryPlaceholder": "Filtrar por categoria…",
+      "includeInactiveLabel": "Mostrar produtos desativados",
+      "previousPage": "Anterior",
+      "nextPage": "Próxima",
+      "pageOf": "Página {page} de {totalPages}",
+      "emptyState": "Nenhum produto corresponde aos seus filtros ainda."
+    },
+    "form": {
+      "addButton": "Adicionar produto",
+      "editButton": "Editar",
+      "editDialogTitle": "Editar produto",
+      "cancelButton": "Cancelar",
+      "nameLabel": "Nome",
+      "descriptionLabel": "Descrição",
+      "priceLabel": "Preço",
+      "currencyLabel": "Moeda",
+      "currencyPlaceholder": "Selecione uma moeda",
+      "currencyOptions": {
+        "USD": "USD — Dólar americano",
+        "BRL": "BRL — Real brasileiro",
+        "EUR": "EUR — Euro"
+      },
+      "stockLabel": "Estoque",
+      "stockPlaceholder": "Deixe em branco se não controlado",
+      "imageUrlLabel": "URL da imagem",
+      "productUrlLabel": "URL da página do produto",
+      "categoryLabel": "Categoria",
+      "skuLabel": "SKU",
+      "variantsLabel": "Variantes",
+      "variantsHint": "Adicione cada opção que os clientes podem escolher, como Cor ou Tamanho — liste todos os valores dela, ex.: Cor: Azul.",
+      "variantsOptionLabel": "Nome da opção",
+      "variantsOptionPlaceholder": "ex.: Cor",
+      "variantsValuePlaceholder": "ex.: Azul",
+      "variantsAddOptionButton": "Adicionar opção",
+      "attributesLabel": "Atributos",
+      "attributesHint": "Adicione detalhes extras sobre o produto, como Material ou Marca.",
+      "attributesOptionLabel": "Nome do atributo",
+      "attributesOptionPlaceholder": "ex.: Material",
+      "attributesValuePlaceholder": "ex.: Algodão",
+      "attributesAddOptionButton": "Adicionar atributo",
+      "addValueButton": "Adicionar",
+      "removeOptionButton": "Remover",
+      "removeValueLabel": "Remover valor",
+      "emptyOptionsState": "Nenhuma opção adicionada ainda.",
+      "nameRequired": "O nome é obrigatório."
+    },
+    "list": {
+      "nameColumn": "Nome",
+      "priceColumn": "Preço",
+      "stockColumn": "Estoque",
+      "categoryColumn": "Categoria",
+      "statusColumn": "Status",
+      "actionsColumn": "Ações",
+      "activeLabel": "Ativo",
+      "inactiveLabel": "Inativo",
+      "noStock": "—"
+    },
+    "delete": {
+      "deactivateButton": "Desativar",
+      "confirmButton": "Clique novamente para desativar — esconde dos clientes, mantém o histórico de pedidos",
+      "cancelButton": "Cancelar",
+      "reactivateButton": "Reativar"
+    },
+    "import": {
+      "title": "Importação em massa",
+      "description": "Envie um arquivo CSV ou Excel para adicionar vários produtos de uma vez.",
+      "formatTitle": "Formato do arquivo",
+      "formatDescription": "A primeira linha deve ter estas colunas: name, description, price, currency, stock, image, product_url, category, sku, variants. Somente name é obrigatório — deixe o resto em branco se não tiver essa informação.",
+      "formatPriceHint": "Se você definir um preço, defina também a moeda (ex.: BRL, USD, EUR) — um preço sem moeda será ignorado.",
+      "formatVariantsHint": "variants é opcional — se usado, deve ser um objeto JSON associando cada opção aos seus valores, ex.: '{\"Cor\": [\"Azul\", \"Vermelho\"], \"Tamanho\": [\"P\", \"M\", \"G\"]}'.",
+      "downloadTemplateButton": "Baixar modelo",
+      "chooseFileButton": "Escolher arquivo",
+      "noFileChosen": "Nenhum arquivo selecionado",
+      "importButton": "Importar",
+      "importingButton": "Importando…",
+      "importAnotherButton": "Importar outro arquivo",
+      "resultSummary": "{imported} importados, {skippedCount} ignorados",
+      "skippedTableRowHeader": "Linha",
+      "skippedTableReasonHeader": "Motivo",
+      "genericError": "Algo deu errado ao importar o arquivo. Tente novamente.",
+      "fileRequired": "Escolha um arquivo primeiro."
     }
   },
   "LanguageSwitcher": {
