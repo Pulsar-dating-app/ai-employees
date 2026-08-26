@@ -2,6 +2,9 @@
 // Extracted once a second caller needed the same register/subscribe/lookup
 // sequence (the real connect route, and the temporary manual-connect-test
 // route -- see src/app/api/companies/[companyId]/whatsapp/manual-connect-test/).
+// This file itself is NOT test-only -- it's used by the real connect route
+// and stays after F4 ships; only manual-connect-test (one of its two
+// callers, tagged TODO(D1-TEST-ONLY)) goes away.
 //
 // META_GRAPH_API_BASE_URL lets tests point this at a local mock instead of
 // the real Meta Graph API (the spawned test Next.js server can't share an

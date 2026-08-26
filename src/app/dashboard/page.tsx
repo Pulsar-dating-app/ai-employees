@@ -177,12 +177,12 @@ export default async function DashboardPage() {
         />
 
         {process.env.NODE_ENV !== "production" ? (
-          // TEMPORARY (Trello D1): links to the throwaway Embedded Signup
-          // test harness instead of the real stub, so the connect flow can
-          // be exercised from the dashboard during dev. Never renders in
-          // production. Revert to the plain <StubStepCard> below once F4
-          // ships the real connection screen (and delete
-          // dev-whatsapp-connect-test alongside it).
+          // TODO(D1-TEST-ONLY): revert to the plain <StubStepCard> below
+          // once F4 ships the real connection screen (and delete
+          // dev-whatsapp-connect-test alongside it). Links to the
+          // throwaway Embedded Signup test harness instead of the real stub
+          // so the connect flow can be exercised from the dashboard during
+          // dev. Never renders in production.
           <LinkStepCard
             title={t("connectTitle")}
             description={t("connectDescription")}

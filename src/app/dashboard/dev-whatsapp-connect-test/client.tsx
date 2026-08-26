@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
+// TODO(D1-TEST-ONLY): delete this entire folder once F4 ships its real
+// connection screen -- it is not merchant-facing (no i18n, no design
+// system, not spec-compliant copy) and must never be the shipped UI.
+//
 // TEMPORARY DEV-ONLY TEST HARNESS -- Trello D1.
 //
 // D1 only built the backend (POST .../whatsapp/connect); the real "Connect
@@ -12,9 +16,7 @@ import Link from "next/link";
 // a throwaway stand-in for that popup trigger, so D1 can be validated
 // end-to-end against the real Meta Graph API before F4 exists.
 //
-// DELETE THIS ENTIRE FOLDER once F4 ships its real connection screen -- it
-// is not merchant-facing (no i18n, no design system, not spec-compliant
-// copy) and must never be the shipped UI. metaAppId/metaConfigId come from
+// metaAppId/metaConfigId come from
 // the parent Server Component (page.tsx) reading server-only env vars --
 // see .env.example for why there's no separate NEXT_PUBLIC_ copy of these.
 

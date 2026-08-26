@@ -139,6 +139,12 @@ for the cost/UX tradeoff that drove this.
   that reads these server-only vars and passes them down as props to its
   Client Component — reuse that pattern rather than adding a
   `NEXT_PUBLIC_META_*` duplicate of anything above.
+Every piece of D1's temporary test scaffolding is tagged `TODO(D1-TEST-ONLY)`
+in a comment — run `grep -rn "TODO(D1-TEST-ONLY)" src` to find everything
+that must be deleted (or reverted, for the one conditional branch in
+`dashboard/page.tsx`) when F4 ships. `src/lib/whatsapp/meta-graph-api.ts` is
+the one file in this area that is **not** tagged and must stay — only one of
+its two callers is temporary.
 - `src/app/dashboard/dev-whatsapp-connect-test/` — a **temporary, dev-only**
   page/client-component pair (not merchant-facing: no i18n, no design
   system, hard-guarded to throw in production) that loads the Facebook JS

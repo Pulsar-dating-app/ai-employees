@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { finishConnection } from "@/lib/whatsapp/meta-graph-api";
 
+// TODO(D1-TEST-ONLY): delete this file (and the manual-entry form in
+// dev-whatsapp-connect-test) once F4 ships and the app has real Embedded
+// Signup access -- it exists purely to unblock manual testing before that
+// approval comes through.
+//
 // TEMPORARY DEV-ONLY ROUTE -- Trello D1.
 //
 // Lets D1 be validated against the real Meta Graph API before the app's
@@ -15,10 +20,6 @@ import { finishConnection } from "@/lib/whatsapp/meta-graph-api";
 // pasted-in values directly instead of a code, and does the exact same
 // register/subscribe/lookup/upsert as the real POST .../whatsapp/connect --
 // only the code-exchange step is skipped, since there's already a token.
-//
-// DELETE THIS FILE (and the manual-entry form in dev-whatsapp-connect-test)
-// once F4 ships and the app has real Embedded Signup access -- it exists
-// purely to unblock manual testing before that approval comes through.
 
 if (process.env.NODE_ENV === "production") {
   throw new Error("manual-connect-test is a dev-only route and must not run in production");
