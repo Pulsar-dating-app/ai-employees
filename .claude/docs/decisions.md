@@ -12,6 +12,11 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-08-25 — Knowledge management UI mirrors B2's permission model instead of relying on its 403
+**Decision:** F2's `/dashboard/teach` fetches the caller's own `company_users.role` server-side and computes `canEdit` (owner/admin, same rule as B2's `requireAdmin`), then disables every field and hides every Save button when `false`, plus shows a banner explaining why — rather than letting a plain member fill out a form and hit a 403 on save.
+**Why:** B2's `GET` is member-readable but `PATCH` is admin-only — a UI that doesn't know this would let a plain member type a paragraph of policy text, click Save, and get a confusing permission error with no warning beforehand. Checking once server-side and gating the whole page is simpler and kinder than per-field error handling for an outcome that was always going to fail.
+**How to apply:** Any future page backed by an endpoint with asymmetric read/write permissions (F3's product management is the next likely candidate) should fetch the caller's role once, compute a `canEdit`-style flag, and gate the UI with it — don't rely on the API's error response as the first time a user learns they can't do something.
+
 ## 2026-08-25 — Agent hire catalog shows real role/description; `agents.description` corrected to be merchant-safe
 **Decision:** The hire step now displays each available agent as a full profile (name, `role`, `description`) rather than a bare name — true even with only one agent available, not just when there's a choice to make. Since this meant `agents.description` would now actually reach merchants, its content for Malu was rewritten (migration `20260825210027`) to remove "AI" wording that violated spec §4/§28 — previously it only mattered that the column *wasn't* shown; now that it is, it has to be right.
 **Why:** User's direct feedback — a merchant deciding who to hire needs to know what the role actually does, not just a name. Fixing the DB content (rather than writing a second, UI-only description that duplicates/shadows the real one) keeps a single source of truth: the same field that's real agent data for C3's future tools is also what merchants read when hiring — no separate "marketing copy" system to keep in sync.
