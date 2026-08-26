@@ -79,6 +79,16 @@ The merchant-facing "front door" — `src/app/dashboard/` is now the real onboar
 - Because locale resolution reads cookies/headers on every request, the app can no longer statically prerender any page (`next build`'s route list now shows everything as `ƒ` dynamic) — an expected, accepted tradeoff of request-time locale detection, not a regression to chase.
 - `next.config.ts` is wrapped with `createNextIntlPlugin()`, required by the library regardless of routing mode.
 
+### Product catalog API (Trello B3)
+
+Route Handlers under `src/app/api/companies/[companyId]/products/`, following A3/B1's shape (explicit `requireMember` check for a clean 403, file-local, duplicated per file rather than shared):
+- `GET /api/companies/[companyId]/products` — list. Excludes soft-deleted (`is_active = false`) products by default; pass `?includeInactive=true` to include them.
+- `POST /api/companies/[companyId]/products` — create. `name` is required; `price`/`currency` must travel together (a price with no currency is rejected, a currency alone is allowed). All other columns (`external_id`, `sku`, `description`, `image_url`, `product_url`, `category`, `variants`, `attributes`, `metadata`) are optional passthrough.
+- `PATCH /api/companies/[companyId]/products/[productId]` — partial update (only fields present in the body change). The price/currency rule is validated against the **effective merged state**, not just the fields in the request — e.g. sending only `{ currency: null }` on a product that already has a `price` is rejected, since the resulting row would have a price with no currency. `is_active` can be set directly here too (e.g. to reactivate a soft-deleted product).
+- `DELETE /api/companies/[companyId]/products/[productId]` — soft-delete (`is_active = false`), never a hard `DELETE`, per the card's explicit request to preserve rows that `events.product_id` may reference. Idempotent: deleting an already-inactive product just re-applies `is_active = false`, no error.
+- Both `[productId]` handlers first look up the product by `id` **and** `company_id` together, returning `404` if it doesn't exist or belongs to a different company — same "caller-supplied identifier, so a miss is a client error" reasoning as B1's `agentSlug` 404.
+- No schema changes needed — the `products` table and its RLS policies already existed from the initial MVP schema migration (`20260823204115_create_products_table`).
+
 ## Data model
 
 Implemented in `supabase/migrations/` (2026-08-23), all tables in `public` schema with RLS enabled:
