@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 
@@ -19,6 +19,10 @@ function fullSlots(messages: DemoMessage[]): Slot[] {
 // chrome. `animate` off renders the thread statically (the "old way"
 // menu); on, it types itself out character-by-character.
 //
+// The typing starts only once the frame is actually scrolled into view
+// (IntersectionObserver), not on page load — so a visitor who lands above
+// it sees it play from the top when they arrive.
+//
 // No "already played" ref guard on purpose: that pattern defeats React
 // Strict Mode's dev-only double-invoke (mount → cleanup → mount) and
 // leaves the thread frozen; the per-run `cancelled` flag alone makes the
@@ -36,6 +40,7 @@ export function WhatsAppThread({
 }) {
   const t = useTranslations("LandingV2.demo");
   const [slots, setSlots] = useState<Slot[]>(animate ? [] : fullSlots(messages));
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!animate) return;
@@ -81,15 +86,44 @@ export function WhatsAppThread({
       playNext(index + 1);
     }
 
-    const startTimer = setTimeout(() => playNext(0), 400);
+    let startTimer: ReturnType<typeof setTimeout> | undefined;
+    const start = () => {
+      startTimer = setTimeout(() => playNext(0), 200);
+    };
+
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      // No node yet, or unsupported — fall back to playing on mount.
+      start();
+      return () => {
+        cancelled = true;
+        if (startTimer) clearTimeout(startTimer);
+      };
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          start();
+        }
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(el);
+
     return () => {
       cancelled = true;
-      clearTimeout(startTimer);
+      observer.disconnect();
+      if (startTimer) clearTimeout(startTimer);
     };
   }, [messages, animate]);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#e7e8e9] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+    <div
+      ref={rootRef}
+      className="overflow-hidden rounded-2xl border border-[#e7e8e9] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)]"
+    >
       {/* Light header — WhatsApp Web's chrome, so the frame sits inside the
           page's palette rather than fighting it. */}
       <div className="flex items-center gap-3 border-b border-[#e7e8e9] bg-[#f6f5f3] px-4 py-3">
