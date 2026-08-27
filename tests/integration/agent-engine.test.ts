@@ -122,7 +122,7 @@ describe("AgentEngine.run", () => {
 
     const responsesCreate = vi
       .fn()
-      .mockResolvedValueOnce(functionCallResponse("call_1", "search_products", { text: "lantern" }))
+      .mockResolvedValueOnce(functionCallResponse("call_1", "search_products", { keywords: ["lantern"] }))
       .mockResolvedValueOnce(textResponse("We have the Blue Lantern in stock!"));
     const openai = {
       conversations: { create: vi.fn().mockResolvedValue({ id: fakeOpenAiConversationId() }) },
