@@ -224,7 +224,8 @@
     "browseMarketplace": "Browse the marketplace",
     "completeness": "{filled} of {total} sections filled in",
     "completenessHint": "The more detail you add here, the better your team can help your customers — just like onboarding a new employee in person.",
-    "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes."
+    "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
+    "personaQuote": "I use these settings every time I talk to one of your customers."
   },
   "MyAgents": {
     "pageTitle": "My team",
@@ -274,6 +275,8 @@
       "phoneLabel": "Contact phone",
       "websiteLabel": "Website",
       "countryLabel": "Country",
+      "industryLabel": "Industry",
+      "industryPlaceholder": "e.g. Fashion retail, Cosmetics, Electronics",
       "currencyLabel": "Currency",
       "currencyPlaceholder": "Select a currency",
       "currencyOptions": {

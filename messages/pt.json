@@ -224,7 +224,8 @@
     "browseMarketplace": "Ver marketplace",
     "completeness": "{filled} de {total} seções preenchidas",
     "completenessHint": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
-    "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações."
+    "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "personaQuote": "Uso estas configurações toda vez que falo com um dos seus clientes."
   },
   "MyAgents": {
     "pageTitle": "Minha equipe",
@@ -274,6 +275,8 @@
       "phoneLabel": "Telefone de contato",
       "websiteLabel": "Site",
       "countryLabel": "País",
+      "industryLabel": "Setor",
+      "industryPlaceholder": "ex.: Moda, Cosméticos, Eletrônicos",
       "currencyLabel": "Moeda",
       "currencyPlaceholder": "Selecione uma moeda",
       "currencyOptions": {

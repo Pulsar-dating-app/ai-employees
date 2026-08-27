@@ -69,11 +69,14 @@ export function FaqSection({ companyId, canEdit, initialFaq }: FaqSectionProps) 
       </CardHeader>
       <CardContent>
         {entries.length === 0 ? (
-          <p className="text-sm text-neutral-500">{t("emptyState")}</p>
+          <p className="text-sm text-on-surface-variant">{t("emptyState")}</p>
         ) : null}
 
         {entries.map((entry, index) => (
-          <div key={index} className="flex flex-col gap-2 rounded-md border border-neutral-200 p-3">
+          <div
+            key={index}
+            className="flex flex-col gap-2 rounded-md border border-outline-variant p-3"
+          >
             <Input
               label={t("questionLabel")}
               value={entry.question}
@@ -108,7 +111,7 @@ export function FaqSection({ companyId, canEdit, initialFaq }: FaqSectionProps) 
         ) : null}
 
         {saveState === "error" ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-error">
             {tCommon("saveError")}
           </p>
         ) : null}
@@ -119,7 +122,7 @@ export function FaqSection({ companyId, canEdit, initialFaq }: FaqSectionProps) 
               {isSaving ? tCommon("saving") : tCommon("save")}
             </Button>
             {saveState === "success" ? (
-              <span className="text-sm text-success-500">{tCommon("saved")}</span>
+              <span className="text-sm text-tertiary-container">{tCommon("saved")}</span>
             ) : null}
           </div>
         ) : null}
