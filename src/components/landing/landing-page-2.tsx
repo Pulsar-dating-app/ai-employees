@@ -153,7 +153,7 @@ export async function LandingPageV2() {
               href="/?auth=login"
               className="hidden text-[14px] font-medium text-[#464555] transition-colors hover:text-[#3525cd] sm:inline-block"
             >
-              {t("nav.cta")}
+              {t("nav.login")}
             </Link>
             <Link
               href="/?auth=signup"
