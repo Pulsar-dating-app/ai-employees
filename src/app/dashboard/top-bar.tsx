@@ -20,7 +20,7 @@ export function TopBar({ locale }: { locale: "en" | "pt" }) {
   const section = SECTIONS.find((s) => s.match(pathname))?.key ?? "marketplace";
 
   return (
-    <header className="sticky top-0 z-30 hidden h-16 items-center justify-between border-b border-outline-variant bg-surface px-10 sm:flex">
+    <header className="sticky top-0 z-30 hidden h-16 items-center justify-between border-b border-outline-variant bg-surface/80 px-10 backdrop-blur-md sm:flex">
       <span className="text-lg font-extrabold tracking-tight text-primary">{t(section)}</span>
       <LanguageSwitcher currentLocale={locale} />
     </header>

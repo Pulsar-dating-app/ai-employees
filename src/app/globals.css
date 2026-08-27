@@ -138,6 +138,17 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Tailwind v4 dropped the UA `cursor: pointer` on interactive controls —
+   put it back for every clickable that isn't a plain link (which keeps the
+   anchor default). Disabled controls opt back out. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+label:has(> input[type="checkbox"], > input[type="radio"]),
+summary,
+select:not(:disabled) {
+  cursor: pointer;
+}
+
 /* The one authored motion moment: a staggered rise-and-fade for grid/list
    items on the marketplace and my-team surfaces (animation-delay set per
    item from JS), not scattered per-element hover effects. */

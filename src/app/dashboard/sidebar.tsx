@@ -11,7 +11,6 @@ import {
   PackageIcon,
   SettingsIcon,
   LogoutIcon,
-  PlusIcon,
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
@@ -85,13 +84,6 @@ export function Sidebar({
         </nav>
 
         <div className="flex flex-col gap-3 border-t border-outline-variant p-4">
-          <Link
-            href="/dashboard"
-            className="flex h-11 items-center justify-center gap-2 rounded-md bg-primary text-sm font-medium text-on-primary transition-colors hover:brightness-90"
-          >
-            <PlusIcon className="h-4 w-4" />
-            {tDash("hireCta")}
-          </Link>
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-fixed text-sm font-semibold text-primary">
               {identityInitial}

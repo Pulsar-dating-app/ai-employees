@@ -1,13 +1,10 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { defaultAgentName } from "@/lib/agents/naming";
-import { agentPhoto } from "@/lib/agents/media";
 import { Button } from "@/components/ui/button";
 import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
-import { PersonaAside } from "./persona-aside";
 import { SettingsIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 
@@ -28,8 +25,6 @@ function countFilledSections(company: {
     Boolean(company.additional_information),
   ].filter(Boolean).length;
 }
-
-type HiredAgentRow = { agents: { slug: string; role: string | null } | null };
 
 // Company-wide settings — the business knowledge Malu (and any future
 // team member) draws on. Lives at the top level, not under a specific
@@ -58,17 +53,13 @@ export default async function SettingsPage() {
     );
   }
 
-  const [{ data: membership }, { data: hired }] = await Promise.all([
-    supabase
-      .from("company_users")
-      .select("role")
-      .eq("company_id", company.id)
-      .eq("user_id", user!.id)
-      .maybeSingle(),
-    supabase.from("company_agents").select("agents(slug, role)").eq("company_id", company.id),
-  ]);
+  const { data: membership } = await supabase
+    .from("company_users")
+    .select("role")
+    .eq("company_id", company.id)
+    .eq("user_id", user!.id)
+    .maybeSingle();
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
-  const leadAgent = ((hired as HiredAgentRow[] | null) ?? []).find((r) => r.agents)?.agents ?? null;
 
   const totalSections = 6;
   const filledSections = countFilledSections(company);
@@ -96,68 +87,56 @@ export default async function SettingsPage() {
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="flex flex-col gap-6 lg:col-span-8">
-          <BusinessInfoSection
+      <div className="flex max-w-4xl flex-col gap-6">
+        <BusinessInfoSection
+          companyId={company.id}
+          canEdit={canEdit}
+          initial={{
+            name: company.name,
+            description: company.description,
+            email: company.email,
+            phone: company.phone,
+            website_url: company.website_url,
+            country: company.country,
+            industry: company.industry ?? null,
+            currency: company.currency,
+          }}
+        />
+
+        {/* The four single-field policy sections read as a monotonous form
+            stack one-per-row; a grid gives the page real structure. */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <PolicySection
             companyId={company.id}
+            fieldName="shipping_policy"
+            sectionKey="shipping"
+            initialValue={company.shipping_policy}
             canEdit={canEdit}
-            initial={{
-              name: company.name,
-              description: company.description,
-              email: company.email,
-              phone: company.phone,
-              website_url: company.website_url,
-              country: company.country,
-              industry: company.industry ?? null,
-              currency: company.currency,
-            }}
           />
-
-          {/* The four single-field policy sections read as a monotonous form
-              stack one-per-row; a grid gives the page real structure. */}
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <PolicySection
-              companyId={company.id}
-              fieldName="shipping_policy"
-              sectionKey="shipping"
-              initialValue={company.shipping_policy}
-              canEdit={canEdit}
-            />
-            <PolicySection
-              companyId={company.id}
-              fieldName="return_policy"
-              sectionKey="returns"
-              initialValue={company.return_policy}
-              canEdit={canEdit}
-            />
-            <PolicySection
-              companyId={company.id}
-              fieldName="payment_policy"
-              sectionKey="payments"
-              initialValue={company.payment_policy}
-              canEdit={canEdit}
-            />
-            <PolicySection
-              companyId={company.id}
-              fieldName="additional_information"
-              sectionKey="other"
-              initialValue={company.additional_information}
-              canEdit={canEdit}
-            />
-          </div>
-
-          <FaqSection companyId={company.id} canEdit={canEdit} initialFaq={company.faq} />
+          <PolicySection
+            companyId={company.id}
+            fieldName="return_policy"
+            sectionKey="returns"
+            initialValue={company.return_policy}
+            canEdit={canEdit}
+          />
+          <PolicySection
+            companyId={company.id}
+            fieldName="payment_policy"
+            sectionKey="payments"
+            initialValue={company.payment_policy}
+            canEdit={canEdit}
+          />
+          <PolicySection
+            companyId={company.id}
+            fieldName="additional_information"
+            sectionKey="other"
+            initialValue={company.additional_information}
+            canEdit={canEdit}
+          />
         </div>
 
-        {leadAgent ? (
-          <div className="lg:col-span-4">
-            <PersonaAside
-              name={defaultAgentName(leadAgent.slug)}
-              role={leadAgent.role}
-              photoSrc={agentPhoto(leadAgent.slug)}
-            />
-          </div>
-        ) : null}
+        <FaqSection companyId={company.id} canEdit={canEdit} initialFaq={company.faq} />
       </div>
     </div>
   );

@@ -88,20 +88,24 @@ export function HireableAgentCard({
               ))}
             </div>
           ) : null}
-          {/* Both actions lead to the detail page, where hiring happens. */}
+          {/* Both actions lead to the detail page, where hiring happens —
+              once hired the primary already says "view details", so the
+              secondary would just duplicate it. */}
           <div className="mt-auto flex flex-wrap gap-3">
             <Link
               href={href}
-              className="inline-flex h-12 flex-1 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-on-primary transition-colors hover:brightness-90"
+              className="inline-flex h-12 flex-1 cursor-pointer items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-on-primary transition-colors hover:brightness-90"
             >
               {agent.isHired ? t("viewDetails") : tDetail("hireButton", { name: agent.name })}
             </Link>
-            <Link
-              href={href}
-              className="inline-flex h-12 items-center justify-center rounded-md border border-outline-variant bg-surface-container px-6 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-high"
-            >
-              {t("viewDetails")}
-            </Link>
+            {!agent.isHired ? (
+              <Link
+                href={href}
+                className="inline-flex h-12 cursor-pointer items-center justify-center rounded-md border border-outline-variant bg-surface-container px-6 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-high"
+              >
+                {t("viewDetails")}
+              </Link>
+            ) : null}
           </div>
         </div>
       </article>
