@@ -32,19 +32,19 @@ describe("searchProductsTool", () => {
 
   it("passes ctx.companyId to ProductRepository.search, ignoring any companyId in args", async () => {
     await searchProductsTool.execute(
-      { text: "widget", companyId: "attacker-supplied-company-id" },
+      { keywords: ["widget"], companyId: "attacker-supplied-company-id" },
       fakeToolCtx("trusted-company-id"),
     );
 
     expect(ProductRepository.search).toHaveBeenCalledWith(
-      expect.objectContaining({ companyId: "trusted-company-id", text: "widget" }),
+      expect.objectContaining({ companyId: "trusted-company-id", keywords: ["widget"] }),
       expect.anything(),
     );
   });
 
   it("passes ctx.supabase through instead of letting ProductRepository build its own client", async () => {
     const ctx = fakeToolCtx("trusted-company-id");
-    await searchProductsTool.execute({ text: "widget" }, ctx);
+    await searchProductsTool.execute({ keywords: ["widget"] }, ctx);
 
     expect(ProductRepository.search).toHaveBeenCalledWith(expect.anything(), ctx.supabase);
   });

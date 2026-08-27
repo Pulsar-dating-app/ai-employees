@@ -80,6 +80,65 @@ describe("Product search /api/companies/:id/products/search", () => {
     expect(res.json.products.map((p) => p.id)).toEqual([nameMatch, descriptionMatch]);
   });
 
+  // Regression test for a real bug found manually testing Malu: a customer
+  // asked for "camiseta azul" and Malu reported no results even though a
+  // matching product existed, because the old single-phrase `%text%` match
+  // required "camiseta azul" to appear as one literal substring -- it
+  // doesn't when the words are split across name/description (or when an
+  // LLM-driven caller adds extra descriptive words the customer used, like
+  // "camiseta azul masculina"). Each word is now matched independently
+  // (AND across words, OR across fields per word), not as one phrase.
+  it("text search matches when query words are split across name and description, in any order", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Tokenized Search Co");
+
+    const match = await createProduct(owner.cookieHeader, companyId, {
+      name: "Camiseta",
+      description: "Disponível nas cores azul e branco",
+    });
+    await createProduct(owner.cookieHeader, companyId, { name: "Camiseta Branca" });
+    await createProduct(owner.cookieHeader, companyId, { name: "Calça Azul" });
+
+    const res = await search(owner.cookieHeader, companyId, "?text=camiseta%20azul");
+    expect(res.status).toBe(200);
+    expect(res.json.products.map((p) => p.id)).toEqual([match]);
+  });
+
+  it("text search still requires every word to match -- doesn't degrade into matching any word", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Strict Tokenized Search Co");
+
+    await createProduct(owner.cookieHeader, companyId, { name: "Camiseta Azul" });
+
+    const res = await search(owner.cookieHeader, companyId, "?text=camiseta%20azul%20masculina");
+    expect(res.status).toBe(200);
+    expect(res.json.products).toEqual([]);
+  });
+
+  // Trello: LLM keyword expansion (see 2026-08-27 decisions.md). Unlike
+  // ?text=, which ANDs every word of one phrase together, ?keywords= (one
+  // per query param) matches if ANY keyword matches -- this is what lets
+  // the search_products agent tool pass a few alternative phrasings for
+  // the same request and still find a product that matches only one of them.
+  it("?keywords= (repeated) matches if ANY keyword matches, unlike ?text=", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Keyword OR Co");
+
+    const match = await createProduct(owner.cookieHeader, companyId, { name: "Camiseta Azul" });
+    await createProduct(owner.cookieHeader, companyId, { name: "Sapato Marrom" });
+
+    // Neither keyword alone as a `text` AND-phrase would match "Camiseta
+    // Azul" ("masculina" isn't in it) -- but as independent OR'd
+    // alternatives, the second keyword does.
+    const res = await search(
+      owner.cookieHeader,
+      companyId,
+      "?keywords=camiseta+masculina&keywords=camiseta+azul",
+    );
+    expect(res.status).toBe(200);
+    expect(res.json.products.map((p) => p.id)).toEqual([match]);
+  });
+
   it("filters by category and price range", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Filter Co");
