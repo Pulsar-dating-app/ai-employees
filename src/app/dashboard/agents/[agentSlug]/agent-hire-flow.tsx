@@ -8,13 +8,13 @@ import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckIcon, XIcon } from "@/components/ui/icons";
+import { CheckIcon, XIcon, BadgeCheckIcon } from "@/components/ui/icons";
 
 type Stage = "browsing" | "confirming" | "hired";
 
 function TraitChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full bg-intent-100 px-2.5 py-1 text-xs font-medium text-intent-600">
+    <span className="rounded-lg border border-outline-variant bg-surface-container-low px-3 py-1.5 text-label-sm font-semibold text-on-surface-variant">
       {children}
     </span>
   );
@@ -25,6 +25,7 @@ export function AgentHireFlow({
   name,
   role,
   description,
+  photoSrc,
   traits,
   should,
   never,
@@ -36,6 +37,7 @@ export function AgentHireFlow({
   name: string;
   role: string;
   description: string;
+  photoSrc: string | null;
   traits: string[];
   should: string[];
   never: string[];
@@ -102,17 +104,22 @@ export function AgentHireFlow({
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-start gap-5">
-        <AgentAvatar role="intent" size="lg" />
+        <AgentAvatar role="intent" size="lg" photoSrc={photoSrc} alt={name} />
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-semibold text-neutral-900">{name}</h1>
-          <p className="text-sm font-medium text-intent-600">{role}</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-headline-lg font-semibold text-on-surface">{name}</h1>
+            <BadgeCheckIcon className="h-5 w-5 text-primary" />
+          </div>
+          <p className="text-body-md font-medium text-primary">{role}</p>
         </div>
       </div>
 
-      {description ? <p className="text-sm leading-relaxed text-neutral-700">{description}</p> : null}
+      {description ? (
+        <p className="text-body-md leading-relaxed text-on-surface-variant">{description}</p>
+      ) : null}
 
       {traits.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {traits.map((trait) => (
             <TraitChip key={trait}>{tTraits(trait)}</TraitChip>
           ))}
@@ -123,10 +130,10 @@ export function AgentHireFlow({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {should.length > 0 ? (
             <div className="flex flex-col gap-2.5">
-              <h2 className="text-sm font-semibold text-neutral-900">{t("shouldTitle", { name })}</h2>
+              <h2 className="text-sm font-semibold text-on-surface">{t("shouldTitle", { name })}</h2>
               {should.map((key) => (
-                <div key={key} className="flex items-start gap-2 text-sm text-neutral-700">
-                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-success-500" />
+                <div key={key} className="flex items-start gap-2 text-sm text-on-surface-variant">
+                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-tertiary-container" />
                   {tShould(key)}
                 </div>
               ))}
@@ -134,10 +141,10 @@ export function AgentHireFlow({
           ) : null}
           {never.length > 0 ? (
             <div className="flex flex-col gap-2.5">
-              <h2 className="text-sm font-semibold text-neutral-900">{t("neverTitle", { name })}</h2>
+              <h2 className="text-sm font-semibold text-on-surface">{t("neverTitle", { name })}</h2>
               {never.map((key) => (
-                <div key={key} className="flex items-start gap-2 text-sm text-neutral-500">
-                  <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
+                <div key={key} className="flex items-start gap-2 text-sm text-on-surface-variant">
+                  <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-outline" />
                   {tNever(key)}
                 </div>
               ))}
@@ -150,10 +157,10 @@ export function AgentHireFlow({
         <CardContent>
           {stage === "hired" ? (
             <div className="flex flex-col gap-3">
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-100 px-2.5 py-1 text-xs font-semibold text-success-500">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-secondary-container/40 px-2.5 py-1 text-xs font-semibold text-on-secondary-container">
                 {t("hiredBadge", { name })}
               </span>
-              <p className="text-sm text-neutral-600">{t("hiredDescription", { name })}</p>
+              <p className="text-sm text-on-surface-variant">{t("hiredDescription", { name })}</p>
               <Link href={`/dashboard/my-agents/${agentSlug}`}>
                 <Button type="button">{t("goToSettings")}</Button>
               </Link>
@@ -161,8 +168,8 @@ export function AgentHireFlow({
           ) : stage === "confirming" ? (
             <div className="flex flex-col gap-4">
               <div>
-                <h2 className="text-sm font-semibold text-neutral-900">{t("mockPaymentTitle")}</h2>
-                <p className="mt-1 text-sm text-neutral-500">{t("mockPaymentSubtitle")}</p>
+                <h2 className="text-sm font-semibold text-on-surface">{t("mockPaymentTitle")}</h2>
+                <p className="mt-1 text-sm text-on-surface-variant">{t("mockPaymentSubtitle")}</p>
               </div>
 
               {!companyId ? (
@@ -182,7 +189,7 @@ export function AgentHireFlow({
               </div>
 
               {errorMessage ? (
-                <p role="alert" className="text-sm text-red-600">
+                <p role="alert" className="text-sm text-error">
                   {errorMessage}
                 </p>
               ) : null}
@@ -203,7 +210,7 @@ export function AgentHireFlow({
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              <span className="text-lg font-semibold text-neutral-900">
+              <span className="text-lg font-semibold text-on-surface">
                 {t("priceLabel", { price: monthlyPriceBRL })}
               </span>
               <div>

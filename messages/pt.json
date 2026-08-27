@@ -237,6 +237,8 @@
     "connectionsSubtitle": "Escolha em quais plataformas {name} vai falar com os clientes.",
     "notHired": "Você ainda não contratou este integrante.",
     "viewAgent": "Ver {name}",
+    "conversationsToday": "Conversas hoje",
+    "activeBadge": "Ativa",
     "channels": {
       "title": "WhatsApp",
       "description": "Conecte seu número do WhatsApp Business para que os clientes possam começar a conversar.",
@@ -251,7 +253,10 @@
       "cancel": "Cancelar",
       "connectError": "Algo deu errado ao conectar o WhatsApp. Tente novamente.",
       "disconnectError": "Algo deu errado ao desconectar. Tente novamente.",
-      "sdkNotReady": "Ainda carregando — tente novamente em instantes."
+      "sdkNotReady": "Ainda carregando — tente novamente em instantes.",
+      "stepOneTitle": "Conecte seu número do WhatsApp Business",
+      "stepTwoTitle": "Comece a falar com os clientes",
+      "stepTwoDescription": "Depois de conectado, sua equipe responde no WhatsApp automaticamente — dia e noite."
     }
   },
   "Teach": {
