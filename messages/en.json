@@ -157,6 +157,8 @@
   },
   "Dashboard": {
     "logout": "Log out",
+    "workspaceLabel": "Workspace",
+    "hireCta": "Hire someone new",
     "tabs": {
       "marketplace": "Marketplace",
       "myAgents": "My team",

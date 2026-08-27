@@ -157,6 +157,8 @@
   },
   "Dashboard": {
     "logout": "Sair",
+    "workspaceLabel": "Espaço de trabalho",
+    "hireCta": "Contratar alguém",
     "tabs": {
       "marketplace": "Marketplace",
       "myAgents": "Minha equipe",
