@@ -89,9 +89,18 @@ export default async function setup() {
     throw err;
   }
 
+  // serviceRoleKey is also written here (not just passed to the spawned
+  // next process above) so a test that imports app code directly and calls
+  // it in-process -- e.g. Agent Engine (Trello C1), which has no HTTP route
+  // yet -- can build its own service-role client via
+  // helpers/service-client.ts instead of going through next dev at all.
   writeFileSync(
     STATE_FILE,
-    JSON.stringify({ baseUrl, supabaseUrl: status.API_URL, anonKey: status.PUBLISHABLE_KEY }, null, 2),
+    JSON.stringify(
+      { baseUrl, supabaseUrl: status.API_URL, anonKey: status.PUBLISHABLE_KEY, serviceRoleKey },
+      null,
+      2,
+    ),
   );
 
   return async () => {
