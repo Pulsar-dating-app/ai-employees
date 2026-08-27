@@ -1,5 +1,6 @@
 {
   "Auth": {
+    "close": "Fechar",
     "login": {
       "title": "Entrar",
       "subtitle": "Bem-vindo de volta ao Sidde.",

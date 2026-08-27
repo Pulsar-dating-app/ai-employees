@@ -149,6 +149,29 @@ select:not(:disabled) {
   cursor: pointer;
 }
 
+/* Auth overlay (src/components/auth/auth-overlay.tsx) — the scrim fades,
+   the card fades + rises. Reduced motion drops the movement. */
+@keyframes auth-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.auth-backdrop-in {
+  animation: auth-backdrop-in 0.24s ease-out both;
+}
+@keyframes auth-panel-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+.auth-panel-in {
+  animation: auth-panel-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-backdrop-in,
+  .auth-panel-in {
+    animation: none;
+  }
+}
+
 /* The one authored motion moment: a staggered rise-and-fade for grid/list
    items on the marketplace and my-team surfaces (animation-delay set per
    item from JS), not scattered per-element hover effects. */
