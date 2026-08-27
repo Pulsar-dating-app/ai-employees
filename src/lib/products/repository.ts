@@ -73,7 +73,18 @@ export type ProductSearchParams = {
 };
 
 const DEFAULT_LIMIT = 5;
-const MAX_LIMIT = 20;
+// Hard ceiling regardless of what the caller (the search_products agent
+// tool, driven by an LLM) requests -- found by hand-testing: the
+// system_prompt's anti-overwhelm rule (2026-08-27, see decisions.md) only
+// named "the full list"/"all products" as the trigger to avoid, so a
+// request like "todos os calçados e camisetas" (a scoped-but-still-broad
+// multi-category ask, not literally "everything") slipped past it and
+// still got a large dump. Prompt wording can always miss a phrasing that
+// wasn't named -- this cap is a deterministic backstop that holds
+// regardless of wording, lowered from 20 (per user request, after seeing
+// this gap) since even 20 items in one reply is more than a real
+// salesperson would recite at once.
+const MAX_LIMIT = 10;
 
 // Ranking, full-text matching, and trigram tie-breaking all happen in
 // Postgres now (see migration 20260827180000_add_product_search_ranking and

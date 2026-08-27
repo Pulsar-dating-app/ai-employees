@@ -76,7 +76,14 @@ export const searchProductsTool: AgentTool = {
           "guess a value here -- just search normally and pick the cheapest product from the " +
           "results yourself, since you can already see each one's price.",
       },
-      limit: { type: "number", description: "Max results, defaults to 5." },
+      limit: {
+        type: "number",
+        description:
+          "Max results, defaults to 5, hard-capped at 10 regardless of what's requested here -- " +
+          "don't rely on raising this to show a broad or combined-category request (e.g. \"todos " +
+          "os calçados e camisetas\"); narrow with `keywords`/`category`/price instead, or ask a " +
+          "clarifying question.",
+      },
     },
     additionalProperties: false,
   },
