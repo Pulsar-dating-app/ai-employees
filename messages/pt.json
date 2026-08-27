@@ -170,6 +170,9 @@
     "pageTitle": "Conheça sua equipe",
     "pageSubtitle": "Escolha quem vai entrar no seu negócio e prepare-o para vender por você.",
     "hiredBadge": "Contratado(a)",
+    "availableBadge": "Disponível",
+    "viewDetails": "Ver detalhes",
+    "searchPlaceholder": "Buscar por nome ou cargo…",
     "priceLabel": "R$ {price}/mês",
     "backToMarketplace": "Voltar para o marketplace",
     "traits": {

@@ -170,6 +170,9 @@
     "pageTitle": "Meet your team",
     "pageSubtitle": "Choose who joins your business and get them ready to sell for you.",
     "hiredBadge": "Hired",
+    "availableBadge": "Available",
+    "viewDetails": "View details",
+    "searchPlaceholder": "Search by name or role…",
     "priceLabel": "R$ {price}/month",
     "backToMarketplace": "Back to marketplace",
     "traits": {
