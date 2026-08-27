@@ -27,52 +27,114 @@
       "passwordTooShort": "Password must be at least 6 characters."
     }
   },
-  "Landing": {
+  "LandingV2": {
+    "switcher": {
+      "label": "Compare landing designs",
+      "a": "Version A",
+      "b": "Version B"
+    },
     "nav": {
-      "howItWorks": "How it works",
-      "team": "The team",
-      "login": "Log in",
-      "cta": "Get started"
+      "features": "Features",
+      "employees": "Our AI Employees",
+      "pricing": "Pricing",
+      "cta": "Get started",
+      "menu": "Open menu"
     },
     "hero": {
-      "badge": "{count} AI employees ready to hire",
-      "headline": "Hire a salesperson for your WhatsApp. Not another app to set up.",
-      "subhead": "Every message left unanswered is a sale going to a competitor. Malu joins your team, learns your store, and answers customers the moment they write — understanding, recommending, and selling all day.",
-      "primaryCta": "Hire {name}",
-      "primaryCtaGeneric": "Get started",
-      "secondaryCta": "See how it works",
-      "reassurance": "Free to start · No credit card · Setup in minutes"
+      "badge": "Now hiring specialized AI talent",
+      "headline": "AI employees for your business.",
+      "sub": "Hire specialized AI talent that understands your business, helps your customers, and drives sales naturally on WhatsApp.",
+      "primaryCta": "Hire your first employee",
+      "secondaryCta": "View roster",
+      "imageAlt": "A Sidde AI employee at work"
     },
-    "panels": {
-      "marketplace": {
-        "title": "Sidde · Marketplace",
-        "hired": "Hired",
-        "available": "Available"
+    "spotlight": {
+      "title": "Malu — AI Sales Representative",
+      "tagline": "Malu is not a chatbot. She is a sales employee.",
+      "features": {
+        "warm": {
+          "title": "Warm & empathetic",
+          "description": "Connects with customers on a human level, understanding their needs."
+        },
+        "negotiator": {
+          "title": "Confident negotiator",
+          "description": "Guides conversations towards conversion without being pushy."
+        },
+        "expert": {
+          "title": "Knowledgeable expert",
+          "description": "Learns your entire catalogue instantly and recalls it flawlessly."
+        }
       },
-      "knowledge": {
-        "title": "Sidde · Business settings",
-        "completeness": "{filled} of {total} sections filled in",
-        "sections": [
-          "Business information",
-          "Shipping",
-          "Returns",
-          "Payments",
-          "FAQ"
-        ]
-      },
-      "channel": {
-        "title": "Sidde · Channels",
-        "connected": "Connected and receiving messages",
-        "note": "Your existing WhatsApp Business number. Customers see your store, not a bot."
-      },
-      "conversation": {
-        "title": "WhatsApp · Live conversation",
-        "online": "online"
+      "cta": "Meet Malu",
+      "badge": "Verified Human-Centric AI",
+      "badgeSub": "Sales & Partnerships Division",
+      "imageAlt": "Portrait of Malu, AI Sales Representative"
+    },
+    "flow": {
+      "heading": "Hire. Teach. Connect. Work.",
+      "sub": "Getting started with a Sidde AI employee is simpler than onboarding a human, but just as effective.",
+      "stepLabel": "Step {number}",
+      "steps": {
+        "hire": {
+          "title": "Hire Malu",
+          "description": "Select your first agent from our roster of specialized AI professionals."
+        },
+        "teach": {
+          "title": "Teach Malu",
+          "description": "Upload your product catalogue, FAQs, and business policies for instant learning."
+        },
+        "connect": {
+          "title": "Connect WhatsApp",
+          "description": "Seamlessly link her directly to your primary customer communication channel."
+        },
+        "work": {
+          "title": "Let Malu work",
+          "description": "She handles conversations, qualifies leads, and tracks buying intent 24/7."
+        }
       }
+    },
+    "comparison": {
+      "heading": "Humanized conversations",
+      "sub": "Customers want to talk to people, not phone menus.",
+      "oldWay": "The old way",
+      "siddeWay": "The Sidde way",
+      "oldContact": "Virtual assistant",
+      "customerMessage": "Hi! Looking for a gift for my girlfriend.",
+      "botReply": "Please select an option:\n1. Browse catalogue\n2. Store hours\n3. Speak to an agent"
+    },
+    "measure": {
+      "heading": "Measure what matters.",
+      "sub": "Malu doesn't just chat; she works towards your business goals. Track her performance in real time through our intuitive dashboard.",
+      "intent": {
+        "title": "Buying intent",
+        "description": "Monitor how effectively Malu moves conversations towards a purchase."
+      },
+      "checkout": {
+        "title": "Checkout clicks",
+        "description": "Track direct conversions originating from WhatsApp interactions."
+      },
+      "imageAlt": "Preview of the Sidde performance dashboard"
+    },
+    "footer": {
+      "blurb": "Building the future of AI workforce for modern businesses.",
+      "product": "Product",
+      "company": "Company",
+      "legal": "Legal",
+      "links": {
+        "features": "Features",
+        "pricing": "Pricing",
+        "docs": "Documentation",
+        "careers": "Careers",
+        "support": "Contact support",
+        "privacy": "Privacy policy",
+        "terms": "Terms of service"
+      },
+      "rights": "© {year} Sidde AI. All rights reserved."
     },
     "demo": {
       "transcriptLabel": "Example conversation between a customer and Malu on WhatsApp",
       "customerLabel": "Customer",
+      "online": "online",
       "messages": [
         {
           "from": "customer",
@@ -91,54 +153,6 @@
           "text": "I picked two that would suit her — R$249, more casual, and R$289, a bit more elegant."
         }
       ]
-    },
-    "howItWorks": {
-      "kicker": "How it works",
-      "heading": "From signing up to selling, in four steps",
-      "sub": "No prompts to write, no bot to train, nothing to install. You onboard her the way you would onboard a new hire.",
-      "steps": {
-        "hire": {
-          "title": "Hire",
-          "description": "Pick who joins your team from the marketplace. She is on staff immediately."
-        },
-        "teach": {
-          "title": "Teach",
-          "description": "Fill in your products, shipping and return policies — that is everything she will ever tell a customer."
-        },
-        "connect": {
-          "title": "Connect",
-          "description": "Link the WhatsApp Business number you already use. Two clicks, no migration."
-        },
-        "sell": {
-          "title": "Sell",
-          "description": "She answers, recommends, and sends the checkout link — day and night."
-        }
-      }
-    },
-    "trust": {
-      "heading": "You are hiring a salesperson, not gambling on a bot",
-      "sub": "{name} follows the rules a good employee follows — and the ones a bot usually breaks. Every price, policy and stock level she quotes comes from your catalogue, never from a guess.",
-      "doesTitle": "What she does",
-      "neverTitle": "What she never does"
-    },
-    "team": {
-      "heading": "Meet the team",
-      "sub": "Every AI employee you can hire today. Each one has a defined role and a way of working.",
-      "count": "{count} available",
-      "availableBadge": "Available to hire",
-      "soonTitle": "More on the way",
-      "soonBody": "Sidde is building a full team of AI employees for your business.",
-      "soonCta": "Start with Malu →"
-    },
-    "finalCta": {
-      "heading": "Put someone on your WhatsApp tonight",
-      "sub": "Create your account, teach her your store, connect your number. She starts answering customers right after.",
-      "button": "Create free account",
-      "reassurance": "No credit card required to start"
-    },
-    "footer": {
-      "rights": "© {year} Sidde. All rights reserved.",
-      "tagline": "AI employees for your business"
     }
   },
   "Dashboard": {

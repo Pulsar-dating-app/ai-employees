@@ -1,11 +1,11 @@
-import { Archivo } from "next/font/google";
+import { Inter } from "next/font/google";
 
-// Display only. Body and every authored product panel deliberately use
-// Geist — the dashboard's own face, already loaded by the root layout as
-// --font-geist-sans — so the product surfaces on this page read as the real
-// application rather than an illustration of it, at zero extra font cost.
-export const landingDisplay = Archivo({
+// The public landing (`src/components/landing/landing-page-2.tsx`) is a
+// faithful reproduction of the Stitch "Sidde Human-Centric AI" design
+// system, which specifies Inter exclusively. Loaded here so the dashboard's
+// Geist bundle stays untouched.
+export const landingV2Sans = Inter({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-landing-display",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-landing-v2",
 });
