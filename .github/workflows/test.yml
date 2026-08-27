@@ -15,7 +15,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # npm ci -- not npm install -- has repeatedly hit a known npm bug
+      # (github.com/npm/cli/issues/4828) that silently skips installing the
+      # correct platform-specific optional dependency for native-binary
+      # packages with many platform variants (rolldown, used by Vitest 4;
+      # previously hit the same way with the supabase CLI's own optional
+      # binaries -- see decisions.md). npm install re-resolves instead of
+      # trusting a prior install state and doesn't hit this path.
+      - run: npm install
       - run: npm run test:unit
 
   integration:
@@ -26,7 +33,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # npm ci -- not npm install -- has repeatedly hit a known npm bug
+      # (github.com/npm/cli/issues/4828) that silently skips installing the
+      # correct platform-specific optional dependency for native-binary
+      # packages with many platform variants (rolldown, used by Vitest 4;
+      # previously hit the same way with the supabase CLI's own optional
+      # binaries -- see decisions.md). npm install re-resolves instead of
+      # trusting a prior install state and doesn't hit this path.
+      - run: npm install
       # Docker is preinstalled on ubuntu-latest runners; the `supabase` CLI
       # is a devDependency (see package.json), so `npx supabase` in the
       # test:integration:env:* scripts needs no separate setup step.
