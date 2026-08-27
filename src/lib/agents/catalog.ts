@@ -21,6 +21,12 @@ export type AgentEnrichment = {
 // confirms, not a real charge.
 export const DEFAULT_MONTHLY_PRICE_BRL = 197;
 
+// MOCK. There is no conversations/analytics aggregation yet (the `events`
+// and `conversations` tables exist but nothing rolls them up). The
+// dashboard shows this fixed number on the "my team" persona cards as a
+// placeholder until real per-day counts are wired in.
+export const MOCK_CONVERSATIONS_TODAY = 142;
+
 export const AGENT_ENRICHMENT: Record<string, AgentEnrichment> = {
   malu: {
     traits: ["warm", "attentive", "persuasive", "knowledgeable", "proactive"],

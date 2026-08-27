@@ -7,7 +7,7 @@ export function BackLink({ href, children }: { href: string; children: React.Rea
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900"
+      className="inline-flex items-center gap-1 text-sm font-medium text-on-surface-variant transition-colors hover:text-primary"
     >
       ← {children}
     </Link>

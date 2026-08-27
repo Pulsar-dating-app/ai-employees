@@ -27,7 +27,7 @@ export default async function ProductsPage() {
     return (
       <div className="flex flex-col gap-4">
         <PageHeader icon={PackageIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
-        <p className="text-sm text-neutral-600">{t("noCompany")}</p>
+        <p className="text-sm text-on-surface-variant">{t("noCompany")}</p>
         <Link href="/dashboard">
           <Button type="button">{t("browseMarketplace")}</Button>
         </Link>
@@ -64,7 +64,7 @@ export default async function ProductsPage() {
       <PageHeader icon={PackageIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
 
       {!canEdit ? (
-        <p className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+        <p className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-on-surface-variant">
           {t("readOnlyBanner")}
         </p>
       ) : null}

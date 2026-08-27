@@ -21,6 +21,7 @@ type BusinessInfoValues = {
   phone: string | null;
   website_url: string | null;
   country: string | null;
+  industry: string | null;
   currency: string | null;
 };
 
@@ -119,6 +120,14 @@ export function BusinessInfoSection({ companyId, canEdit, initial }: BusinessInf
           disabled={!canEdit}
           maxLength={255}
         />
+        <Input
+          label={t("industryLabel")}
+          placeholder={t("industryPlaceholder")}
+          value={values.industry ?? ""}
+          onChange={(e) => update("industry", e.target.value)}
+          disabled={!canEdit}
+          maxLength={255}
+        />
         <Select
           label={t("currencyLabel")}
           value={values.currency ?? ""}
@@ -131,7 +140,7 @@ export function BusinessInfoSection({ companyId, canEdit, initial }: BusinessInf
         />
 
         {saveState === "error" ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-error">
             {tCommon("saveError")}
           </p>
         ) : null}
@@ -142,7 +151,7 @@ export function BusinessInfoSection({ companyId, canEdit, initial }: BusinessInf
               {isSaving ? tCommon("saving") : tCommon("save")}
             </Button>
             {saveState === "success" ? (
-              <span className="text-sm text-success-500">{tCommon("saved")}</span>
+              <span className="text-sm text-tertiary-container">{tCommon("saved")}</span>
             ) : null}
           </div>
         ) : null}

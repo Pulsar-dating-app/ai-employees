@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { WhatsAppIcon, CheckIcon } from "@/components/ui/icons";
 
 declare global {
   interface Window {
@@ -28,10 +29,9 @@ type Connection = {
 
 type ViewState = "loading" | "idle" | "connecting" | "disconnecting" | "confirmingDisconnect";
 
-// F4 — the real merchant-facing WhatsApp connect screen. Replaces the
-// throwaway dev-whatsapp-connect-test harness with the same underlying Meta
-// Embedded Signup mechanics (D1's backend), but design-system UI, i18n
-// copy, and no manual/debug controls.
+// The real merchant-facing WhatsApp connect screen — Meta Embedded Signup
+// (D1's backend), presented as the Stitch "Connect to WhatsApp" card with a
+// two-step setup guide. Connect/disconnect mechanics are unchanged.
 export function ChannelsSection({
   companyId,
   canEdit,
@@ -160,81 +160,133 @@ export function ChannelsSection({
   const isConnected = connection?.status === "connected";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {view === "loading" ? (
-          <p className="text-sm text-neutral-500">{t("loading")}</p>
-        ) : isConnected ? (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-3 rounded-md border border-neutral-200 p-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success-100 px-2.5 py-1 text-xs font-semibold text-success-500">
-                {t("connectedBadge")}
-              </span>
-              <span className="text-sm font-medium text-neutral-900">
-                {connection?.display_phone_number}
-              </span>
-            </div>
+    <Card className="relative overflow-hidden">
+      <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-secondary-container/25 blur-3xl" />
 
-            {canEdit ? (
-              view === "confirmingDisconnect" || view === "disconnecting" ? (
-                <div className="flex items-center gap-3">
-                  <p className="text-sm text-neutral-600">{t("disconnectConfirm")}</p>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    isLoading={view === "disconnecting"}
-                    onClick={confirmDisconnect}
-                  >
-                    {t("disconnectConfirmButton")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={view === "disconnecting"}
-                    onClick={() => setView("idle")}
-                  >
-                    {t("cancel")}
-                  </Button>
+      <div className="relative flex items-center gap-3">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#25D366] text-white shadow-sm">
+          <WhatsAppIcon className="h-6 w-6" />
+        </span>
+        <div>
+          <h2 className="text-lg font-semibold text-on-surface">{t("title")}</h2>
+          <p className="text-sm text-on-surface-variant">{t("description")}</p>
+        </div>
+      </div>
+
+      <div className="relative mt-8 flex flex-col gap-6">
+        {view === "loading" ? (
+          <p className="text-sm text-on-surface-variant">{t("loading")}</p>
+        ) : (
+          <>
+            <Step index={1} done={isConnected} title={t("stepOneTitle")}>
+              {isConnected ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3 rounded-md border border-outline-variant p-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary-container/40 px-2.5 py-1 text-xs font-semibold text-on-secondary-container">
+                      {t("connectedBadge")}
+                    </span>
+                    <span className="text-sm font-medium text-on-surface">
+                      {connection?.display_phone_number}
+                    </span>
+                  </div>
+                  {canEdit &&
+                    (view === "confirmingDisconnect" || view === "disconnecting" ? (
+                      <div className="flex flex-wrap items-center gap-3">
+                        <p className="text-sm text-on-surface-variant">{t("disconnectConfirm")}</p>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          isLoading={view === "disconnecting"}
+                          onClick={confirmDisconnect}
+                        >
+                          {t("disconnectConfirmButton")}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={view === "disconnecting"}
+                          onClick={() => setView("idle")}
+                        >
+                          {t("cancel")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setView("confirmingDisconnect")}
+                        >
+                          {t("disconnectButton")}
+                        </Button>
+                      </div>
+                    ))}
                 </div>
               ) : (
-                <div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setView("confirmingDisconnect")}
-                  >
-                    {t("disconnectButton")}
-                  </Button>
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-on-surface-variant">{t("notConnected")}</p>
+                  {canEdit ? (
+                    <div>
+                      <Button
+                        type="button"
+                        isLoading={view === "connecting"}
+                        onClick={startSignup}
+                      >
+                        {view === "connecting" ? t("connecting") : t("connectButton")}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
-              )
-            ) : null}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-neutral-600">{t("notConnected")}</p>
-            {canEdit ? (
-              <div>
-                <Button type="button" isLoading={view === "connecting"} onClick={startSignup}>
-                  {view === "connecting" ? t("connecting") : t("connectButton")}
-                </Button>
-              </div>
-            ) : null}
-          </div>
+              )}
+            </Step>
+
+            <Step index={2} done={isConnected} muted={!isConnected} title={t("stepTwoTitle")}>
+              <p className="text-sm text-on-surface-variant">{t("stepTwoDescription")}</p>
+            </Step>
+          </>
         )}
 
         {errorMessage ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-error">
             {errorMessage}
           </p>
         ) : null}
-      </CardContent>
+      </div>
     </Card>
+  );
+}
+
+function Step({
+  index,
+  title,
+  done,
+  muted,
+  children,
+}: {
+  index: number;
+  title: string;
+  done: boolean;
+  muted?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`flex gap-4 ${muted ? "opacity-50" : ""}`}>
+      <span
+        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-label-sm font-semibold ${
+          done
+            ? "bg-tertiary-container text-on-tertiary-container"
+            : "bg-primary-fixed text-on-primary-fixed"
+        }`}
+      >
+        {done ? <CheckIcon className="h-4 w-4" /> : index}
+      </span>
+      <div className="flex-1">
+        <h3 className="mb-1 text-sm font-semibold text-on-surface">{title}</h3>
+        {children}
+      </div>
+    </div>
   );
 }

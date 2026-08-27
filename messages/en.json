@@ -157,6 +157,7 @@
   },
   "Dashboard": {
     "logout": "Log out",
+    "workspaceLabel": "Workspace",
     "tabs": {
       "marketplace": "Marketplace",
       "myAgents": "My team",
@@ -168,6 +169,9 @@
     "pageTitle": "Meet your team",
     "pageSubtitle": "Choose who joins your business and get them ready to sell for you.",
     "hiredBadge": "Hired",
+    "availableBadge": "Available",
+    "viewDetails": "View details",
+    "searchPlaceholder": "Search by name or role…",
     "priceLabel": "R$ {price}/month",
     "backToMarketplace": "Back to marketplace",
     "traits": {
@@ -232,6 +236,8 @@
     "connectionsSubtitle": "Choose which platforms {name} talks to customers on.",
     "notHired": "You haven't hired this team member yet.",
     "viewAgent": "View {name}",
+    "conversationsToday": "Conversations today",
+    "activeBadge": "Active",
     "channels": {
       "title": "WhatsApp",
       "description": "Connect your WhatsApp Business number so customers can start chatting.",
@@ -246,7 +252,10 @@
       "cancel": "Cancel",
       "connectError": "Something went wrong connecting WhatsApp. Please try again.",
       "disconnectError": "Something went wrong disconnecting. Please try again.",
-      "sdkNotReady": "Still loading — try again in a moment."
+      "sdkNotReady": "Still loading — try again in a moment.",
+      "stepOneTitle": "Connect your WhatsApp Business number",
+      "stepTwoTitle": "Start talking to customers",
+      "stepTwoDescription": "Once connected, your team answers on WhatsApp automatically — day and night."
     }
   },
   "Teach": {
@@ -264,6 +273,8 @@
       "phoneLabel": "Contact phone",
       "websiteLabel": "Website",
       "countryLabel": "Country",
+      "industryLabel": "Industry",
+      "industryPlaceholder": "e.g. Fashion retail, Cosmetics, Electronics",
       "currencyLabel": "Currency",
       "currencyPlaceholder": "Select a currency",
       "currencyOptions": {

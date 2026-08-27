@@ -14,13 +14,13 @@ const LOCALES: Locale[] = ["en", "pt"];
 
 const VARIANT_CLASSES = {
   light: {
-    track: "bg-neutral-100",
-    active: "bg-white text-neutral-900 shadow-sm",
-    inactive: "text-neutral-500 hover:text-neutral-800",
+    track: "bg-surface-container",
+    active: "bg-surface-container-lowest text-on-surface shadow-sm",
+    inactive: "text-on-surface-variant hover:text-on-surface",
   },
   dark: {
     track: "bg-white/10",
-    active: "bg-white/90 text-neutral-900 shadow-sm",
+    active: "bg-white/90 text-on-surface shadow-sm",
     inactive: "text-white/55 hover:text-white/85",
   },
 } as const;

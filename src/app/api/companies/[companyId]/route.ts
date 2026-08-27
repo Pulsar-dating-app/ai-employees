@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 // / get_policy_information tools will read at runtime, so keep them stable.
 
 const MAX_TEXT_LENGTH = 5000; // description, shipping/return/payment policy, additional_information
-const MAX_SHORT_LENGTH = 255; // name, email, phone, website_url, country, timezone
+const MAX_SHORT_LENGTH = 255; // name, email, phone, website_url, country, timezone, industry
 const MAX_FAQ_ENTRIES = 50;
 const MAX_FAQ_QUESTION_LENGTH = 300;
 const MAX_FAQ_ANSWER_LENGTH = 2000;
@@ -19,7 +19,15 @@ const TEXT_FIELDS = [
   "additional_information",
 ] as const;
 
-const SHORT_FIELDS = ["name", "email", "phone", "website_url", "country", "timezone"] as const;
+const SHORT_FIELDS = [
+  "name",
+  "email",
+  "phone",
+  "website_url",
+  "country",
+  "timezone",
+  "industry",
+] as const;
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,

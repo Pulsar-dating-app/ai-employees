@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
+import { agentPhoto } from "@/lib/agents/media";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
+import { AgentPersonaCard } from "../agent-persona-card";
 import { ChannelsSection } from "./channels-section";
 
 // A hired team member's own page is scoped to *how customers reach them* —
@@ -19,23 +21,27 @@ export default async function AgentConnectionsPage({
   const supabase = await createClient();
   const t = await getTranslations("MyAgents");
 
-  // Independent lookups fired together — cuts the round-trips to the
-  // remote Supabase project this page needs before it can render anything.
   const [{ data: agent }, { data: companies }, { data: userData }] = await Promise.all([
-    supabase.from("agents").select("id, slug, role").eq("slug", agentSlug).eq("is_active", true).maybeSingle(),
+    supabase
+      .from("agents")
+      .select("id, slug, role, description")
+      .eq("slug", agentSlug)
+      .eq("is_active", true)
+      .maybeSingle(),
     supabase.from("companies").select("id"),
     supabase.auth.getUser(),
   ]);
   if (!agent) notFound();
   const company = companies?.[0] ?? null;
   const user = userData.user;
+  const name = defaultAgentName(agentSlug);
 
   if (!company) {
     return (
       <div className="flex flex-col gap-4">
         <BackLink href="/dashboard/my-agents">{t("backToMyAgents")}</BackLink>
-        <h1 className="text-2xl font-semibold text-neutral-900">{t("connectionsTitle")}</h1>
-        <p className="text-sm text-neutral-600">{t("notHired")}</p>
+        <h1 className="text-headline-lg font-semibold text-on-surface">{t("connectionsTitle")}</h1>
+        <p className="text-sm text-on-surface-variant">{t("notHired")}</p>
       </div>
     );
   }
@@ -43,7 +49,7 @@ export default async function AgentConnectionsPage({
   const [{ data: companyAgent }, { data: membership }] = await Promise.all([
     supabase
       .from("company_agents")
-      .select("id")
+      .select("id, status")
       .eq("company_id", company.id)
       .eq("agent_id", agent.id)
       .maybeSingle(),
@@ -59,10 +65,10 @@ export default async function AgentConnectionsPage({
     return (
       <div className="flex flex-col gap-4">
         <BackLink href="/dashboard/my-agents">{t("backToMyAgents")}</BackLink>
-        <h1 className="text-2xl font-semibold text-neutral-900">{t("connectionsTitle")}</h1>
-        <p className="text-sm text-neutral-600">{t("notHired")}</p>
+        <h1 className="text-headline-lg font-semibold text-on-surface">{t("connectionsTitle")}</h1>
+        <p className="text-sm text-on-surface-variant">{t("notHired")}</p>
         <Link href={`/dashboard/agents/${agentSlug}`}>
-          <Button type="button">{t("viewAgent", { name: defaultAgentName(agentSlug) })}</Button>
+          <Button type="button">{t("viewAgent", { name })}</Button>
         </Link>
       </div>
     );
@@ -75,20 +81,32 @@ export default async function AgentConnectionsPage({
       <BackLink href="/dashboard/my-agents">{t("backToMyAgents")}</BackLink>
 
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">
-          {t("connectionsTitle")} — {defaultAgentName(agentSlug)}
+        <h1 className="text-headline-lg font-semibold text-on-surface">
+          {t("connectionsTitle")} — {name}
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          {t("connectionsSubtitle", { name: defaultAgentName(agentSlug) })}
+        <p className="mt-1 text-sm text-on-surface-variant">
+          {t("connectionsSubtitle", { name })}
         </p>
       </div>
 
-      <ChannelsSection
-        companyId={company.id}
-        canEdit={canEdit}
-        metaAppId={process.env.META_APP_ID ?? ""}
-        metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
-      />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <AgentPersonaCard
+          name={name}
+          role={agent.role}
+          description={agent.description}
+          photoSrc={agentPhoto(agentSlug)}
+          active={companyAgent.status === "active"}
+          className="lg:col-span-4"
+        />
+        <div className="lg:col-span-8">
+          <ChannelsSection
+            companyId={company.id}
+            canEdit={canEdit}
+            metaAppId={process.env.META_APP_ID ?? ""}
+            metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
+          />
+        </div>
+      </div>
     </div>
   );
 }

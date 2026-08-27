@@ -68,7 +68,7 @@ export function PolicySection({
         />
 
         {saveState === "error" ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-error">
             {tCommon("saveError")}
           </p>
         ) : null}
@@ -79,7 +79,7 @@ export function PolicySection({
               {isSaving ? tCommon("saving") : tCommon("save")}
             </Button>
             {saveState === "success" ? (
-              <span className="text-sm text-success-500">{tCommon("saved")}</span>
+              <span className="text-sm text-tertiary-container">{tCommon("saved")}</span>
             ) : null}
           </div>
         ) : null}

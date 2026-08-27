@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { FIELD_CLASSES, FIELD_LABEL_CLASSES } from "./input";
 
 type SelectOption = {
   value: string;
@@ -11,23 +12,24 @@ type SelectProps = Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "children
   options: SelectOption[];
 };
 
+// Custom chevron (Stitch) since we strip the native appearance for a
+// consistent filled-field look across browsers.
+const CHEVRON =
+  "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 width=%2224%22 height=%2224%22><path fill=%22%23464555%22 d=%22M7 10l5 5 5-5z%22/></svg>')] bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-10 appearance-none";
+
 export function Select({ label, error, id, className, options, ...props }: SelectProps) {
   const selectId = id ?? (typeof props.name === "string" ? props.name : undefined);
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       {label ? (
-        <label htmlFor={selectId} className="text-sm font-medium text-neutral-900">
+        <label htmlFor={selectId} className={FIELD_LABEL_CLASSES}>
           {label}
         </label>
       ) : null}
       <select
         id={selectId}
-        className={clsx(
-          "w-full min-w-0 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-accent-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500",
-          error && "border-red-400",
-          className,
-        )}
+        className={clsx(FIELD_CLASSES, CHEVRON, error && "ring-2 ring-error/50", className)}
         {...props}
       >
         {options.map((option) => (
@@ -37,7 +39,7 @@ export function Select({ label, error, id, className, options, ...props }: Selec
         ))}
       </select>
       {error ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-error">
           {error}
         </p>
       ) : null}

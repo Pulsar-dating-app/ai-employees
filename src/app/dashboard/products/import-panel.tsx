@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 // Matches Button's own secondary+sm class string so this <a> (a real
 // download link, which Button — a <button> — can't be) looks identical to
 // every other secondary button on this page.
+// Kept in sync with Button's `secondary` + `sm` styling by hand — this has
+// to be a real <a> (download link), which Button (a <button>) can't be.
 const TEMPLATE_LINK_CLASSES =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-50";
+  "inline-flex h-9 items-center justify-center gap-2 rounded-md border border-outline-variant bg-surface-container px-4 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-high";
 
 type ImportResult = {
   imported: number;
@@ -108,11 +110,11 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 text-sm text-neutral-700">
-        <p className="font-medium text-neutral-900">{t("formatTitle")}</p>
-        <p className="mt-1 text-neutral-600">{t("formatDescription")}</p>
-        <p className="mt-1 text-neutral-600">{t("formatPriceHint")}</p>
-        <p className="mt-1 text-neutral-600">{t("formatVariantsHint")}</p>
+      <div className="rounded-md border border-outline-variant bg-surface-container-low px-3 py-3 text-sm text-on-surface-variant">
+        <p className="font-semibold text-on-surface">{t("formatTitle")}</p>
+        <p className="mt-1">{t("formatDescription")}</p>
+        <p className="mt-1">{t("formatPriceHint")}</p>
+        <p className="mt-1">{t("formatVariantsHint")}</p>
         <div className="mt-2">
           <a href={`/api/companies/${companyId}/products/import-template`} className={TEMPLATE_LINK_CLASSES}>
             {t("downloadTemplateButton")}
@@ -142,7 +144,7 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
       </div>
 
       {error ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-error">
           {error}
         </p>
       ) : null}

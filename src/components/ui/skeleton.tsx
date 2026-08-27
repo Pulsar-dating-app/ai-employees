@@ -5,5 +5,5 @@ import clsx from "clsx";
 // slow" is fewer/parallel round-trips (see the dashboard pages), but a
 // skeleton is what makes the wait itself read as instant rather than frozen.
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={clsx("animate-pulse rounded-md bg-neutral-200", className)} />;
+  return <div className={clsx("animate-pulse rounded-md bg-surface-container-high", className)} />;
 }

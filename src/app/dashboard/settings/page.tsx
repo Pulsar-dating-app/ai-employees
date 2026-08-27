@@ -45,7 +45,7 @@ export default async function SettingsPage() {
     return (
       <div className="flex flex-col gap-4">
         <PageHeader icon={SettingsIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
-        <p className="text-sm text-neutral-600">{t("noCompany")}</p>
+        <p className="text-sm text-on-surface-variant">{t("noCompany")}</p>
         <Link href="/dashboard">
           <Button type="button">{t("browseMarketplace")}</Button>
         </Link>
@@ -68,26 +68,26 @@ export default async function SettingsPage() {
     <div className="flex flex-col gap-8">
       <PageHeader icon={SettingsIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
 
-      <div className="rounded-md bg-intent-50 px-4 py-3">
-        <p className="text-sm font-medium text-intent-600">
+      <div className="rounded-md bg-primary-fixed/40 px-4 py-3">
+        <p className="text-sm font-semibold text-primary">
           {t("completeness", { filled: filledSections, total: totalSections })}
         </p>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-intent-100">
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-primary-fixed">
           <div
-            className="h-full rounded-full bg-intent-500 transition-all duration-500"
+            className="h-full rounded-full bg-primary transition-all duration-500"
             style={{ width: `${(filledSections / totalSections) * 100}%` }}
           />
         </div>
-        <p className="mt-2 text-sm text-neutral-600">{t("completenessHint")}</p>
+        <p className="mt-2 text-sm text-on-surface-variant">{t("completenessHint")}</p>
       </div>
 
       {!canEdit ? (
-        <p className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+        <p className="rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-sm text-on-surface-variant">
           {t("readOnlyBanner")}
         </p>
       ) : null}
 
-      <div className="flex flex-col gap-6">
+      <div className="flex max-w-4xl flex-col gap-6">
         <BusinessInfoSection
           companyId={company.id}
           canEdit={canEdit}
@@ -98,14 +98,14 @@ export default async function SettingsPage() {
             phone: company.phone,
             website_url: company.website_url,
             country: company.country,
+            industry: company.industry ?? null,
             currency: company.currency,
           }}
         />
 
         {/* The four single-field policy sections read as a monotonous form
-            stack one-per-row; a grid gives the page real structure instead
-            of a scroll of near-identical boxes. */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            stack one-per-row; a grid gives the page real structure. */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <PolicySection
             companyId={company.id}
             fieldName="shipping_policy"
@@ -113,7 +113,6 @@ export default async function SettingsPage() {
             initialValue={company.shipping_policy}
             canEdit={canEdit}
           />
-
           <PolicySection
             companyId={company.id}
             fieldName="return_policy"
@@ -121,7 +120,6 @@ export default async function SettingsPage() {
             initialValue={company.return_policy}
             canEdit={canEdit}
           />
-
           <PolicySection
             companyId={company.id}
             fieldName="payment_policy"
@@ -129,7 +127,6 @@ export default async function SettingsPage() {
             initialValue={company.payment_policy}
             canEdit={canEdit}
           />
-
           <PolicySection
             companyId={company.id}
             fieldName="additional_information"

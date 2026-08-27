@@ -25,14 +25,14 @@ export function ProductList({ companyId, canEdit, products, isLoading, onEdit, o
   const t = useTranslations("Products");
 
   if (products.length === 0 && !isLoading) {
-    return <p className="py-6 text-sm text-neutral-500">{t("filters.emptyState")}</p>;
+    return <p className="py-6 text-sm text-on-surface-variant">{t("filters.emptyState")}</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 text-neutral-500">
+          <tr className="border-b border-outline-variant text-on-surface-variant">
             <th className="py-2 pr-3 font-medium">{t("list.nameColumn")}</th>
             <th className="py-2 pr-3 font-medium">{t("list.priceColumn")}</th>
             <th className="py-2 pr-3 font-medium">{t("list.stockColumn")}</th>
@@ -101,12 +101,23 @@ function ProductRow({
   }
 
   return (
-    <tr className={clsx("border-b border-neutral-100", !product.is_active && "opacity-50")}>
+    <tr className={clsx("border-b border-outline-variant/60", !product.is_active && "opacity-50")}>
       <td className="py-2 pr-3">{product.name}</td>
       <td className="py-2 pr-3">{formatPrice(product)}</td>
       <td className="py-2 pr-3">{product.stock ?? t("list.noStock")}</td>
       <td className="py-2 pr-3">{product.category ?? t("list.noStock")}</td>
-      <td className="py-2 pr-3">{product.is_active ? t("list.activeLabel") : t("list.inactiveLabel")}</td>
+      <td className="py-2 pr-3">
+        <span
+          className={clsx(
+            "inline-flex items-center rounded-full px-2 py-0.5 text-label-sm font-semibold",
+            product.is_active
+              ? "bg-secondary-container/40 text-on-secondary-container"
+              : "bg-surface-container text-on-surface-variant",
+          )}
+        >
+          {product.is_active ? t("list.activeLabel") : t("list.inactiveLabel")}
+        </span>
+      </td>
       {canEdit ? (
         <td className="py-2 pr-3">
           <div className="flex items-center gap-2">

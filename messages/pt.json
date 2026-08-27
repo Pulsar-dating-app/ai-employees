@@ -157,6 +157,7 @@
   },
   "Dashboard": {
     "logout": "Sair",
+    "workspaceLabel": "Espaço de trabalho",
     "tabs": {
       "marketplace": "Marketplace",
       "myAgents": "Minha equipe",
@@ -168,6 +169,9 @@
     "pageTitle": "Conheça sua equipe",
     "pageSubtitle": "Escolha quem vai entrar no seu negócio e prepare-o para vender por você.",
     "hiredBadge": "Contratado(a)",
+    "availableBadge": "Disponível",
+    "viewDetails": "Ver detalhes",
+    "searchPlaceholder": "Buscar por nome ou cargo…",
     "priceLabel": "R$ {price}/mês",
     "backToMarketplace": "Voltar para o marketplace",
     "traits": {
@@ -232,6 +236,8 @@
     "connectionsSubtitle": "Escolha em quais plataformas {name} vai falar com os clientes.",
     "notHired": "Você ainda não contratou este integrante.",
     "viewAgent": "Ver {name}",
+    "conversationsToday": "Conversas hoje",
+    "activeBadge": "Ativa",
     "channels": {
       "title": "WhatsApp",
       "description": "Conecte seu número do WhatsApp Business para que os clientes possam começar a conversar.",
@@ -246,7 +252,10 @@
       "cancel": "Cancelar",
       "connectError": "Algo deu errado ao conectar o WhatsApp. Tente novamente.",
       "disconnectError": "Algo deu errado ao desconectar. Tente novamente.",
-      "sdkNotReady": "Ainda carregando — tente novamente em instantes."
+      "sdkNotReady": "Ainda carregando — tente novamente em instantes.",
+      "stepOneTitle": "Conecte seu número do WhatsApp Business",
+      "stepTwoTitle": "Comece a falar com os clientes",
+      "stepTwoDescription": "Depois de conectado, sua equipe responde no WhatsApp automaticamente — dia e noite."
     }
   },
   "Teach": {
@@ -264,6 +273,8 @@
       "phoneLabel": "Telefone de contato",
       "websiteLabel": "Site",
       "countryLabel": "País",
+      "industryLabel": "Setor",
+      "industryPlaceholder": "ex.: Moda, Cosméticos, Eletrônicos",
       "currencyLabel": "Moeda",
       "currencyPlaceholder": "Selecione uma moeda",
       "currencyOptions": {

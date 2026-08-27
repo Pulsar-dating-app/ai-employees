@@ -2,16 +2,21 @@ import clsx from "clsx";
 
 type DivProps = React.HTMLAttributes<HTMLDivElement>;
 
-// Two-layer shadow (tight contact + soft ambient) instead of a flat
-// shadow-sm — the depth an admin surface needs to read as raised, not just
-// outlined.
-export const CARD_SHADOW = "shadow-[0_1px_2px_rgba(28,25,23,0.06),0_8px_24px_-8px_rgba(28,25,23,0.10)]";
-export const CARD_SHADOW_HOVER = "hover:shadow-[0_2px_4px_rgba(28,25,23,0.08),0_16px_32px_-8px_rgba(28,25,23,0.16)]";
+// Sidde "Human-Centric AI" (Stitch): rounded-xl surface card, hairline
+// outline, soft ambient elevation (level1), lifting to level2 on hover for
+// interactive cards. The two exports are reused on the marketplace / my-team
+// link cards, which are <Link>s rather than <Card>s.
+export const CARD_SHADOW = "shadow-level1";
+export const CARD_SHADOW_HOVER = "hover:shadow-level2";
 
 export function Card({ className, ...props }: DivProps) {
   return (
     <div
-      className={clsx("rounded-lg border border-neutral-200 bg-white p-6", CARD_SHADOW, className)}
+      className={clsx(
+        "rounded-xl border border-outline-variant bg-surface-container-lowest p-6",
+        CARD_SHADOW,
+        className,
+      )}
       {...props}
     />
   );
@@ -23,15 +28,12 @@ export function CardHeader({ className, ...props }: DivProps) {
 
 export function CardTitle({ className, ...props }: DivProps) {
   return (
-    <h3
-      className={clsx("text-base font-semibold text-neutral-900", className)}
-      {...props}
-    />
+    <h3 className={clsx("text-lg font-semibold text-on-surface", className)} {...props} />
   );
 }
 
 export function CardDescription({ className, ...props }: DivProps) {
-  return <p className={clsx("text-sm text-neutral-500", className)} {...props} />;
+  return <p className={clsx("text-sm text-on-surface-variant", className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: DivProps) {
