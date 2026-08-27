@@ -37,22 +37,22 @@ export function Dialog({ open, onClose, title, closeLabel, children }: DialogPro
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 bg-on-surface/40" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto overflow-x-hidden rounded-lg bg-white p-6 shadow-xl outline-none"
+        className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto overflow-x-hidden rounded-xl bg-surface-container-lowest p-6 shadow-level2 outline-none"
       >
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-on-surface">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label={closeLabel}
-            className="text-xl leading-none text-neutral-400 hover:text-neutral-700"
+            className="text-xl leading-none text-on-surface-variant hover:text-on-surface"
           >
             ×
           </button>

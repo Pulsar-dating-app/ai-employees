@@ -7,20 +7,21 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   isLoading?: boolean;
 };
 
+// Sidde "Human-Centric AI" (Stitch): 48px-tall primary actions, filled
+// indigo primary, tonal secondary, no-chrome ghost.
 const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-accent-500 text-white hover:bg-accent-600 disabled:hover:bg-accent-500",
+  primary: "bg-primary text-on-primary hover:brightness-90",
   secondary:
-    "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50 disabled:hover:bg-white",
-  ghost: "text-neutral-600 hover:text-neutral-900 disabled:hover:text-neutral-600",
-  // For a destructive action's actual confirming click (e.g. deactivate) —
-  // still a bordered, clearly-a-button shape like secondary, just red-toned
-  // so it reads as "this one does something irreversible-ish."
-  danger: "border border-red-300 bg-white text-red-600 hover:bg-red-50 disabled:hover:bg-white",
+    "border border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high",
+  ghost: "text-on-surface-variant hover:text-on-surface",
+  // A destructive action's actual confirming click — bordered like secondary,
+  // error-toned so it reads as "this one does something irreversible-ish."
+  danger: "border border-error/40 bg-surface-container-lowest text-error hover:bg-error-container/40",
 };
 
 const SIZE_CLASSES: Record<NonNullable<ButtonProps["size"]>, string> = {
-  md: "px-4 py-2 text-sm",
-  sm: "px-3 py-1.5 text-sm",
+  md: "h-12 px-6 text-sm",
+  sm: "h-9 px-4 text-sm",
 };
 
 export function Button({

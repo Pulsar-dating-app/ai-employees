@@ -1,56 +1,137 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fefdfb;
-  --foreground: #1c1917;
+  /* App canvas = the Stitch "surface" tone. */
+  --background: #f8f9fa;
+  --foreground: #191c1d;
 }
 
+/* ============================================================
+   Sidde "Human-Centric AI" design system (from Stitch).
+
+   Material-3-style roles. The legacy scales (`neutral`, `accent`,
+   `intent`, `success`) are kept as aliases and REPOINTED onto this
+   palette, so every existing utility class stays on-brand without a
+   per-file rewrite; new dashboard surfaces use the semantic names
+   (`surface-*`, `on-surface*`, `primary*`, `outline-variant`, …)
+   lifted verbatim from the Stitch Tailwind config.
+
+   Forced light for now (no dark mode yet).
+   ============================================================ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --color-neutral-50: #fafaf9;
-  --color-neutral-100: #f5f4f2;
-  --color-neutral-200: #e7e4e0;
-  --color-neutral-300: #d3cec7;
-  --color-neutral-400: #a39c92;
-  --color-neutral-500: #78716c;
-  --color-neutral-600: #57534e;
-  --color-neutral-700: #44403c;
-  --color-neutral-800: #292524;
-  --color-neutral-900: #1c1917;
+  /* ---- Material roles ---- */
+  --color-primary: #3525cd;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #4f46e5;
+  --color-on-primary-container: #dad7ff;
+  --color-primary-fixed: #e2dfff;
+  --color-primary-fixed-dim: #c3c0ff;
+  --color-on-primary-fixed: #0f0069;
 
-  /* Primary — navigation, hired/active state, primary actions. */
+  --color-secondary: #006c49;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #6cf8bb;
+  --color-on-secondary-container: #00714d;
+
+  --color-tertiary-container: #007030;
+  --color-on-tertiary-container: #59f986;
+  --color-tertiary-fixed-dim: #3de273;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --color-surface: #f8f9fa;
+  --color-surface-bright: #f8f9fa;
+  --color-surface-dim: #d9dadb;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f4f5;
+  --color-surface-container: #edeeef;
+  --color-surface-container-high: #e7e8e9;
+  --color-surface-container-highest: #e1e3e4;
+  --color-surface-variant: #e1e3e4;
+
+  --color-on-surface: #191c1d;
+  --color-on-surface-variant: #464555;
+  --color-outline: #777587;
+  --color-outline-variant: #c7c4d8;
+
+  --color-inverse-surface: #2e3132;
+  --color-inverse-on-surface: #f0f1f2;
+
+  /* ---- Legacy aliases, repointed onto the palette above ---- */
+  --color-neutral-50: #f3f4f5;
+  --color-neutral-100: #edeeef;
+  --color-neutral-200: #e1e3e4;
+  --color-neutral-300: #c7c4d8;
+  --color-neutral-400: #9a97a6;
+  --color-neutral-500: #464555;
+  --color-neutral-600: #3f3e4d;
+  --color-neutral-700: #33323d;
+  --color-neutral-800: #26252e;
+  --color-neutral-900: #191c1d;
+
   --color-accent-50: #eef2ff;
-  --color-accent-100: #e0e7ff;
-  --color-accent-400: #818cf8;
-  --color-accent-500: #4f46e5;
-  --color-accent-600: #4338ca;
-  --color-accent-700: #3730a3;
+  --color-accent-100: #e2dfff;
+  --color-accent-400: #c3c0ff;
+  --color-accent-500: #3525cd;
+  --color-accent-600: #3323cc;
+  --color-accent-700: #0f0069;
 
-  /* Intent — Malu's own accent: buying-intent signals, personality touches. */
-  --color-intent-50: #fdf1ec;
-  --color-intent-100: #fbe0d3;
-  --color-intent-400: #e8916a;
-  --color-intent-500: #dc6b3f;
-  --color-intent-600: #c05a30;
+  --color-intent-50: #eef2ff;
+  --color-intent-100: #e2dfff;
+  --color-intent-400: #c3c0ff;
+  --color-intent-500: #3525cd;
+  --color-intent-600: #3323cc;
 
-  /* Success — checkout-click, completed/connected states. */
-  --color-success-100: #e3f2e9;
-  --color-success-500: #4d9c6f;
+  --color-success-100: #d7f5e4;
+  --color-success-500: #007030;
 
-  --font-sans: var(--font-geist-sans);
+  /* ---- Type scale (Stitch) ---- */
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 56px;
+  --text-display-lg--font-weight: 700;
+  --text-display-lg--letter-spacing: -0.02em;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-lg--letter-spacing: -0.01em;
+
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--font-weight: 600;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+
+  --text-label-md: 14px;
+  --text-label-md--line-height: 20px;
+  --text-label-md--font-weight: 500;
+  --text-label-md--letter-spacing: 0.01em;
+
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--font-weight: 600;
+
+  /* ---- Elevation (Stitch level1/level2) ---- */
+  --shadow-level1: 0 4px 20px rgba(0, 0, 0, 0.03);
+  --shadow-level2: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 
   --radius-md: 0.5rem;
-  --radius-lg: 0.875rem;
+  --radius-lg: 0.75rem;
 }
 
-/* Sidde's design tokens — warm neutral base, three named color roles
-   (primary/intent/success) instead of one flat accent, so the marketplace
-   and agent states (locked, hireable, hired, buying-intent, checkout-click)
-   read apart at a glance. Forced light for now regardless of OS/browser
-   preference (no dark mode support yet). */
 body {
   background: var(--background);
   color: var(--foreground);
@@ -80,7 +161,6 @@ body {
     animation: none;
   }
 }
-
 
 /* ============================================================
    Public landing — WhatsApp conversation demo
