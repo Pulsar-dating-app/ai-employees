@@ -60,6 +60,7 @@ export default async function AgentDetailPage({
         monthlyPriceBRL={enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL}
         companyId={company?.id ?? null}
         initialIsHired={isHired}
+        showDevChatTest={process.env.NODE_ENV !== "production"}
       />
     </div>
   );

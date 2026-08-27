@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckIcon, XIcon, BadgeCheckIcon } from "@/components/ui/icons";
+import { DevChatTest } from "../../dev-chat-test";
 
 type Stage = "browsing" | "confirming" | "hired";
 
@@ -32,6 +33,7 @@ export function AgentHireFlow({
   monthlyPriceBRL,
   companyId,
   initialIsHired,
+  showDevChatTest,
 }: {
   agentSlug: string;
   name: string;
@@ -44,6 +46,7 @@ export function AgentHireFlow({
   monthlyPriceBRL: number;
   companyId: string | null;
   initialIsHired: boolean;
+  showDevChatTest: boolean;
 }) {
   const t = useTranslations("AgentDetail");
   const tTraits = useTranslations("Marketplace.traits");
@@ -164,6 +167,9 @@ export function AgentHireFlow({
               <Link href={`/dashboard/my-agents/${agentSlug}`}>
                 <Button type="button">{t("goToSettings")}</Button>
               </Link>
+              {showDevChatTest && companyId ? (
+                <DevChatTest companyId={companyId} agentSlug={agentSlug} agentName={name} />
+              ) : null}
             </div>
           ) : stage === "confirming" ? (
             <div className="flex flex-col gap-4">

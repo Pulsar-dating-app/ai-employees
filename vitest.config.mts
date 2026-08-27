@@ -1,3 +1,4 @@
+import path from "node:path";
 import { defineConfig } from "vitest/config";
 
 // Two projects, run independently (see package.json scripts):
@@ -6,6 +7,13 @@ import { defineConfig } from "vitest/config";
 //   Next.js server, exactly like the manual testing that validated Trello
 //   A3. global-setup.ts boots/tears down the Next server; the Supabase
 //   stack itself is started/reset by the npm script before Vitest runs.
+// Mirrors tsconfig.json's "@/*" -> "./src/*" -- needed the first time a test
+// imports app code directly (Trello C1's Agent Engine, in both projects)
+// rather than only exercising it over HTTP the way every prior integration
+// test does. Each `projects` entry is its own Vite config, so this has to
+// be repeated per project rather than set once at the root.
+const alias = { "@": path.resolve(import.meta.dirname, "./src") };
+
 export default defineConfig({
   test: {
     // tests/unit/ is intentionally empty right now (see its README) --
@@ -13,6 +21,7 @@ export default defineConfig({
     passWithNoTests: true,
     projects: [
       {
+        resolve: { alias },
         test: {
           name: "unit",
           environment: "node",
@@ -20,6 +29,7 @@ export default defineConfig({
         },
       },
       {
+        resolve: { alias },
         test: {
           name: "integration",
           environment: "node",

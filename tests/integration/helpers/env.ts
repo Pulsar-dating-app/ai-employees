@@ -12,6 +12,7 @@ export interface TestEnv {
   baseUrl: string;
   supabaseUrl: string;
   anonKey: string;
+  serviceRoleKey: string;
 }
 
 // Reads the connection info global-setup.ts wrote after booting the test

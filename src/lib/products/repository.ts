@@ -1,15 +1,24 @@
 import { createServiceClient } from "@/lib/supabase/service";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Trello ticket B5 -- the ProductRepository abstraction from spec §12. Its
-// real caller is C3's search_products/get_product tools, invoked mid-turn
-// while Malu is answering an inbound WhatsApp message -- there is no
-// authenticated merchant Supabase session in that context (customers aren't
-// in auth.users), so the regular RLS-scoped client (src/lib/supabase/server.ts)
-// simply doesn't work here, unlike B3's merchant-facing CRUD routes. This is
-// why every query below goes through the service-role client and filters
-// company_id/is_active explicitly in application code instead of relying on
-// RLS -- any future caller of this module must always pass a trusted
-// companyId, never one taken from an unauthenticated party.
+// real caller is the Agent Engine's (C1) search_products/get_product tools,
+// invoked mid-turn while Malu is answering an inbound WhatsApp message --
+// there is no authenticated merchant Supabase session in that context
+// (customers aren't in auth.users), so the regular RLS-scoped client
+// (src/lib/supabase/server.ts) simply doesn't work here, unlike B3's
+// merchant-facing CRUD routes. This is why every query below goes through
+// the service-role client and filters company_id/is_active explicitly in
+// application code instead of relying on RLS -- any future caller of this
+// module must always pass a trusted companyId, never one taken from an
+// unauthenticated party.
+//
+// An optional `supabaseClient` param lets a caller inject its own client
+// (defaulting to createServiceClient() when omitted) -- the Agent Engine's
+// tool wrappers pass through the same client the rest of a run() call is
+// using (deps.supabase), which is what lets an integration test point the
+// whole pipeline at a local test Supabase instance instead of whatever
+// createServiceClient() would resolve to from process.env.
 
 export type Product = {
   id: string;
@@ -78,9 +87,9 @@ function rankByRelevance(products: Product[], text: string): Product[] {
   return [...products].sort((a, b) => relevanceScore(b, needle) - relevanceScore(a, needle));
 }
 
-async function search(params: ProductSearchParams): Promise<Product[]> {
+async function search(params: ProductSearchParams, supabaseClient?: SupabaseClient): Promise<Product[]> {
   const limit = Math.min(Math.max(params.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
-  const serviceClient = createServiceClient();
+  const serviceClient = supabaseClient ?? createServiceClient();
 
   let query = serviceClient
     .from("products")
@@ -114,8 +123,12 @@ async function search(params: ProductSearchParams): Promise<Product[]> {
 // soft-deleted product must never be recommendable to a customer, even by
 // direct id, e.g. if it was mentioned earlier in the conversation and the
 // merchant has since delisted it.
-async function get(companyId: string, productId: string): Promise<Product | null> {
-  const serviceClient = createServiceClient();
+async function get(
+  companyId: string,
+  productId: string,
+  supabaseClient?: SupabaseClient,
+): Promise<Product | null> {
+  const serviceClient = supabaseClient ?? createServiceClient();
   const { data, error } = await serviceClient
     .from("products")
     .select("*")

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { AgentPersonaCard } from "../agent-persona-card";
 import { ChannelsSection } from "./channels-section";
+import { DevChatTest } from "../../dev-chat-test";
 
 // A hired team member's own page is scoped to *how customers reach them* —
 // platform connections only. Business knowledge is company-wide, not
@@ -98,13 +99,16 @@ export default async function AgentConnectionsPage({
           active={companyAgent.status === "active"}
           className="lg:col-span-4"
         />
-        <div className="lg:col-span-8">
+        <div className="flex flex-col gap-6 lg:col-span-8">
           <ChannelsSection
             companyId={company.id}
             canEdit={canEdit}
             metaAppId={process.env.META_APP_ID ?? ""}
             metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
           />
+          {process.env.NODE_ENV !== "production" ? (
+            <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />
+          ) : null}
         </div>
       </div>
     </div>
