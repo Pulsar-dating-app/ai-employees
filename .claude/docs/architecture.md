@@ -322,13 +322,13 @@ When applying migrations via the Supabase MCP tool (`apply_migration`), it only 
 
 ### Supabase MCP server
 
-Configured at project scope in `.mcp.json` (checked into the repo, no secrets — it authenticates via browser OAuth):
+Configured in `.mcp.json` (checked into the repo, no secrets — it authenticates via browser OAuth):
 
 ```json
-{ "mcpServers": { "supabase": { "type": "http", "url": "https://mcp.supabase.com/mcp?project_ref=wtewquippvcteuxzcztd" } } }
+{ "mcpServers": { "supabase": { "type": "http", "url": "https://mcp.supabase.com/mcp" } } }
 ```
 
-- The `project_ref` query param pins every MCP call to the **ai-employees** project, so the unrelated "Faceless Videos" project in the same org can't be touched by accident.
+- **No `project_ref` query param** — despite being the documented/intended way to pin every MCP call to the **ai-employees** project (so the unrelated "Faceless Videos" project in the same org can't be touched by accident), authenticating against a `project_ref`-scoped URL currently fails outright (`"resource: Resource must be a valid MCP endpoint"`) — a known, open upstream bug in Supabase's hosted MCP OAuth (`supabase/agent-skills#147`), not a config mistake. See the 2026-08-27 decisions.md entry. **Until that's fixed, there is no URL-level guardrail** — always pass and double-check `project_id: "wtewquippvcteuxzcztd"` explicitly on every `apply_migration`/`execute_sql` call. Revert to the scoped URL once Supabase closes that issue.
 - `read_only` is deliberately **not** set — `apply_migration` needs write access (see the migration convention above).
 - Auth is dynamic client registration (browser OAuth). Run `/mcp` in an interactive terminal session, pick `supabase`, and choose Authenticate. There is no token to store. In CI, pass a personal access token instead via a `headers` entry: `"Authorization": "Bearer ${SUPABASE_ACCESS_TOKEN}"`.
 - Optional `features=<groups>` param narrows which tool groups load (e.g. `database,docs`); left at the default.
