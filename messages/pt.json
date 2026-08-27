@@ -1,5 +1,6 @@
 {
   "Auth": {
+    "close": "Fechar",
     "login": {
       "title": "Entrar",
       "subtitle": "Bem-vindo de volta ao Sidde.",
@@ -37,7 +38,8 @@
       "features": "Recursos",
       "employees": "Nossas funcionárias de IA",
       "pricing": "Preços",
-      "cta": "Começar",
+      "login": "Entrar",
+      "cta": "Começar agora",
       "menu": "Abrir menu"
     },
     "hero": {

@@ -150,13 +150,13 @@ export async function LandingPageV2() {
           <div className="flex items-center gap-4">
             <LanguageSwitcher currentLocale={locale as "en" | "pt"} />
             <Link
-              href="/login"
+              href="/?auth=login"
               className="hidden text-[14px] font-medium text-[#464555] transition-colors hover:text-[#3525cd] sm:inline-block"
             >
-              {t("nav.cta")}
+              {t("nav.login")}
             </Link>
             <Link
-              href="/sign-up"
+              href="/?auth=signup"
               className="inline-flex h-10 items-center justify-center rounded-lg bg-[#3525cd] px-5 text-[14px] font-medium text-white transition-all hover:brightness-90"
             >
               {t("nav.cta")}
@@ -184,7 +184,7 @@ export async function LandingPageV2() {
               </p>
               <div className="mt-2 flex flex-col gap-4 sm:flex-row">
                 <Link
-                  href="/sign-up"
+                  href="/?auth=signup"
                   className={`${BTN_PRIMARY} shadow-[0_4px_14px_0_rgba(53,37,205,0.39)]`}
                 >
                   {t("hero.primaryCta")}
@@ -240,7 +240,7 @@ export async function LandingPageV2() {
                       </div>
                     ))}
                   </div>
-                  <Link href="/sign-up" className={`${BTN_PRIMARY} mt-4 w-fit`}>
+                  <Link href="/?auth=signup" className={`${BTN_PRIMARY} mt-4 w-fit`}>
                     {t("spotlight.cta")}
                   </Link>
                 </div>

@@ -1,5 +1,6 @@
 {
   "Auth": {
+    "close": "Close",
     "login": {
       "title": "Log in",
       "subtitle": "Welcome back to Sidde.",
@@ -37,6 +38,7 @@
       "features": "Features",
       "employees": "Our AI Employees",
       "pricing": "Pricing",
+      "login": "Log in",
       "cta": "Get started",
       "menu": "Open menu"
     },

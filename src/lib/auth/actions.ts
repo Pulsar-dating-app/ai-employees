@@ -4,6 +4,11 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
+// Shape returned to `useActionState` in the auth forms — errors and the
+// sign-up "confirm your email" state render inline (in a modal or a full
+// page) with no redirect. Success still redirects to /dashboard.
+export type AuthState = { error: string | null; checkEmail?: boolean };
+
 // Supabase's raw error text isn't customer-facing copy — translate the ones
 // users will actually hit, pass the rest through as-is (untranslated — these
 // are unexpected/rare enough that they're not worth a message key each).
@@ -25,7 +30,7 @@ async function friendlyAuthError(message: string): Promise<string> {
   return message;
 }
 
-export async function login(formData: FormData) {
+export async function login(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -33,13 +38,13 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(await friendlyAuthError(error.message))}`);
+    return { error: await friendlyAuthError(error.message) };
   }
 
   redirect("/dashboard");
 }
 
-export async function signUp(formData: FormData) {
+export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -47,12 +52,12 @@ export async function signUp(formData: FormData) {
   const { data, error } = await supabase.auth.signUp({ email, password });
 
   if (error) {
-    redirect(`/sign-up?error=${encodeURIComponent(await friendlyAuthError(error.message))}`);
+    return { error: await friendlyAuthError(error.message) };
   }
 
   // No session back means the project requires email confirmation before login.
   if (!data.session) {
-    redirect("/sign-up?checkEmail=1");
+    return { error: null, checkEmail: true };
   }
 
   redirect("/dashboard");
