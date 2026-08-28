@@ -47,3 +47,21 @@ export function resolveCheckoutBaseUrl(): string {
 export function buildCheckoutUrl(trackingId: string): string {
   return `${resolveCheckoutBaseUrl()}${CHECKOUT_LINK_PATH_PREFIX}/${trackingId}`;
 }
+
+// Link-preview crawlers (Trello E1). WhatsApp -- the channel these links are
+// *sent over* -- fetches every URL in a message to render its preview card,
+// before any human touches it. Counting those as clicks would inflate the one
+// metric that's supposed to prove a customer actually engaged, on literally
+// every link Malu sends: the same class of error as typing the minted row
+// `checkout_click` in the first place (see decisions.md).
+//
+// Deliberately matched loosely and conservatively: a real click misread as a
+// bot silently loses a data point, so the list stays limited to agents that
+// are unambiguously preview fetchers. Anything unrecognized counts as human.
+const LINK_PREVIEW_AGENT_PATTERN =
+  /whatsapp|facebookexternalhit|facebookcatalog|telegrambot|twitterbot|slackbot|discordbot|linkedinbot|skypeuripreview|bingpreview|googlebot|embedly|redditbot|pinterest|vkshare|preview|bot\b|crawler|spider/i;
+
+export function isLinkPreviewAgent(userAgent: string | null | undefined): boolean {
+  if (!userAgent) return false;
+  return LINK_PREVIEW_AGENT_PATTERN.test(userAgent);
+}

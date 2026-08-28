@@ -28,6 +28,10 @@
       "passwordTooShort": "A senha deve ter pelo menos 6 caracteres."
     }
   },
+  "CheckoutLink": {
+    "title": "Este link não está mais disponível",
+    "body": "O link que você abriu é inválido ou expirou. Mande uma mensagem para a loja de novo que eles enviam um novo."
+  },
   "LandingV2": {
     "switcher": {
       "label": "Comparar designs da landing",
