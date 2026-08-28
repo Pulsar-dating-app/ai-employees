@@ -11,6 +11,7 @@ import type { AgentTool, ToolExecutionContext } from "@/lib/agent-engine/tools/t
 function fakeToolCtx(): ToolExecutionContext {
   return {
     companyId: "company-1",
+    agentId: "agent-1",
     conversationId: "conversation-1",
     customerId: "customer-1",
     // Not used by any of these fakes; present to satisfy the type.

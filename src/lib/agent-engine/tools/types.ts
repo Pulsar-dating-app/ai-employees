@@ -7,6 +7,7 @@ import type OpenAI from "openai";
 // ctx.companyId, never a companyId a caller could smuggle into `args`.
 export type ToolExecutionContext = {
   companyId: string;
+  agentId: string;
   conversationId: string;
   customerId: string;
   supabase: SupabaseClient;
