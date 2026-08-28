@@ -45,16 +45,21 @@ export type AggregateInput = {
 };
 
 // A UTC instant -> the "YYYY-MM-DD" calendar date it falls on in `tz`.
-// `en-CA` formats as ISO `YYYY-MM-DD`, which is the standard way to get a
-// timezone-shifted calendar date in plain JS with no date library.
+// Built from `formatToParts` (with the always-present `en-US` locale) so it
+// stays ISO-shaped regardless of which locale data the Node build ships —
+// the `en-CA` short-date trick silently produces other formats without it.
 function makeLocalDateFn(tz: string): (isoInstant: string) => string {
-  const fmt = new Intl.DateTimeFormat("en-CA", {
+  const fmt = new Intl.DateTimeFormat("en-US", {
     timeZone: tz,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   });
-  return (isoInstant) => fmt.format(new Date(isoInstant));
+  return (isoInstant) => {
+    const parts = fmt.formatToParts(new Date(isoInstant));
+    const pick = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+    return `${pick("year")}-${pick("month")}-${pick("day")}`;
+  };
 }
 
 // Plain calendar arithmetic on a date-only string. Uses UTC accessors so it

@@ -168,8 +168,57 @@
       "marketplace": "Marketplace",
       "myAgents": "My team",
       "products": "Products",
+      "metrics": "Performance",
       "settings": "Settings"
     }
+  },
+  "Metrics": {
+    "pageTitle": "Performance",
+    "pageSubtitle": "See how your team is doing and where customers move toward buying.",
+    "overviewTitle": "Key metrics overview",
+    "overviewSubtitle": "Activity and engagement for the selected period.",
+    "range": {
+      "label": "Period",
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days",
+      "last90Days": "Last 90 days"
+    },
+    "metrics": {
+      "conversations": {
+        "label": "Conversations",
+        "caption": "Total conversations in this period"
+      },
+      "customers": {
+        "label": "Customers",
+        "caption": "People your team talked with"
+      },
+      "productRecommendations": {
+        "label": "Product recommendations",
+        "caption": "Products your team suggested"
+      },
+      "buyingIntent": {
+        "label": "Buying intent",
+        "caption": "Clear signals a customer wanted to buy"
+      },
+      "checkoutClicks": {
+        "label": "Checkout clicks",
+        "caption": "Taps on a link through to your store"
+      }
+    },
+    "notASale": "A checkout click means a customer opened your store, not that a sale was completed.",
+    "health": {
+      "healthyTitle": "{name} is working",
+      "healthyBody": "{name} handled {conversations} conversations this period and is running normally.",
+      "waitingTitle": "{name} is ready",
+      "waitingBody": "{name} is set up and connected. Numbers will start showing here as customers reach out.",
+      "pausedTitle": "{name} is paused",
+      "pausedBody": "{name} won't reply to customers until you resume from My team.",
+      "notHiredTitle": "No one is on the job yet",
+      "notHiredBody": "Hire {name} from the marketplace to start seeing conversations and buying signals here.",
+      "notHiredCta": "Go to marketplace"
+    },
+    "noCompany": "Create your business to start tracking performance.",
+    "browseMarketplace": "Browse the marketplace"
   },
   "Marketplace": {
     "pageTitle": "Meet your team",

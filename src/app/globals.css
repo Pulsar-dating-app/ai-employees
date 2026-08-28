@@ -240,3 +240,48 @@ select:not(:disabled) {
     animation: none;
   }
 }
+
+/* ============================================================
+   Metrics dashboard (src/app/dashboard/metrics/)
+   ============================================================ */
+
+/* Sparkline draws itself in on every render — so changing the date filter
+   makes each trend line redraw left-to-right. Relies on pathLength="1". */
+@keyframes metrics-spark-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.metrics-spark-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: metrics-spark-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Indeterminate progress sweep shown across the metrics grid while a new
+   range is loading (paired with a dim + blur on the content itself). */
+@keyframes metrics-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(400%);
+  }
+}
+.animate-metrics-sweep {
+  animation: metrics-sweep 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metrics-spark-draw {
+    animation: none;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+  .animate-metrics-sweep {
+    animation: none;
+  }
+}
