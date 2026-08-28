@@ -5,7 +5,7 @@ import { DEFAULT_MAX_TOOL_ITERATIONS, DEFAULT_MODEL } from "./constants";
 import { loadConversation, resolveOpenAiConversationId } from "./conversation";
 import { loadAgentConfig } from "./config";
 import { loadCustomer } from "./customer";
-import { loadBusinessKnowledge } from "./knowledge";
+import { loadBusinessName } from "./knowledge";
 import { determineIntent, validateResponse } from "./stubs";
 import { buildInitialInput, buildSystemPrompt } from "./prompt";
 import { runToolLoop } from "./tool-loop";
@@ -37,10 +37,10 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   // "load customer context," and inventing a shape (e.g. "greet by name")
   // isn't this ticket's call to make. Available for the next ticket that
   // needs it.
-  const [agentConfig, , knowledge] = await Promise.all([
+  const [agentConfig, , businessName] = await Promise.all([
     loadAgentConfig(supabase, { companyId: input.companyId, agentId: conversation.agent_id! }),
     loadCustomer(supabase, { companyId: input.companyId, customerId: conversation.customer_id }),
-    loadBusinessKnowledge(supabase, input.companyId),
+    loadBusinessName(supabase, input.companyId),
   ]);
 
   // Step 2
@@ -50,7 +50,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   const intent = determineIntent(input.message);
 
   // Step 7
-  const instructions = buildSystemPrompt({ agentConfig, knowledge, intent });
+  const instructions = buildSystemPrompt({ agentConfig, businessName, intent });
   const initialInput = buildInitialInput(input.message);
 
   // Steps 8+9

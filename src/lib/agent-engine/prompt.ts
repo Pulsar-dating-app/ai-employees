@@ -1,5 +1,4 @@
 import type { AgentConfig } from "./config";
-import type { BusinessKnowledge } from "./knowledge";
 
 // Found manually testing the dev-chat-test tool: asked "what was my last
 // message?" on a fresh conversation, and the model echoed this prompt's own
@@ -86,18 +85,61 @@ const CAPABILITY_GUARDRAIL =
   "\"I'm here to help you find what you need 😊\") instead of explaining any " +
   "internal mechanism.";
 
+// Found by hand-testing (Trello C3), in two stages. First: a merchant put
+// a real FAQ entry on file (an unusual one, unrelated to typical store
+// policy) and asked the matching question in chat -- Malu never called
+// get_policy_information at all, and just answered plausibly from her own
+// general knowledge instead, ignoring the real FAQ content entirely (the
+// first paragraph below fixes this). Second, after that fix: she *did*
+// call the tool and got the real (deliberately informal/joke) answer back
+// -- but then paraphrased/"translated" it into what she guessed it meant,
+// rather than using the actual retrieved content. That's the same
+// underlying failure (substituting a guess for a real fact) one step
+// later -- having the real answer doesn't help if it gets rewritten into
+// something else before reaching the customer (the second paragraph below
+// fixes this). Deliberately scoped to specific/checkable claims (not
+// general chat, opinions, or product recommendations) to avoid triggering
+// a tool call, or an unnatural word-for-word recitation, on every message.
+const GROUNDING_GUARDRAIL =
+  "Before answering any specific, checkable question (a yes/no, a fact, a claim about " +
+  "something) from your own general knowledge or assumptions, consider whether this business " +
+  "might have a real answer on file instead, and check with the available tools first. This " +
+  "matters even when the question doesn't sound related to a typical store -- this business's " +
+  "FAQ can cover any topic the merchant chose to document, not just shipping/returns/payments, " +
+  "so \"this doesn't sound like a store question\" is never a safe reason to skip checking. This " +
+  "business's real, specific answer always overrides your own general knowledge, however " +
+  "unexpected either one is.\n\n" +
+  "Once a tool gives you a real answer, use exactly that content -- you can phrase it naturally " +
+  "in your own tone, but never paraphrase it into what you guess it means, never reinterpret or " +
+  "\"translate\" it into something more sensible-sounding, and never add anything to it, even if " +
+  "it reads unusually, informally, or like a joke. Guessing at what a real answer \"probably " +
+  "means\" and presenting that guess is still inventing information, even though you technically " +
+  "looked something up first -- deliver what's actually on file, don't improve on it.";
+
 // Step 7 -- pure logic, no I/O, the single best unit-test target in this
 // module. `agents.system_prompt` is NULL for Malu today (C2 hasn't run
 // yet), so this must fall back to composing something usable from
-// role/description/personality + the retrieved knowledge instead of
-// hard-failing before C2 lands.
+// role/description/personality instead of hard-failing before C2 lands.
+//
+// Trello C3 removed everything this used to unconditionally inject from
+// `companies` (description, contact, industry, shipping/return/payment
+// policy, FAQ) -- that's the exact stub the ticket existed to replace,
+// per spec §18 ("the LLM must not be trusted to invent factual business
+// information"): those facts are now fetched on demand via
+// get_business_information/get_policy_information (see tools/), not
+// force-fed into every single call regardless of relevance. `businessName`
+// is the one exception, kept here directly rather than moved behind a tool
+// call -- it's cheap, always relevant (Malu needs to know who she
+// represents from her very first reply), and not really a "fact that could
+// be invented" in the sense spec §18 cares about (it's an identity, not a
+// claim like a price or a policy).
 export function buildSystemPrompt({
   agentConfig,
-  knowledge,
+  businessName,
   intent,
 }: {
   agentConfig: AgentConfig;
-  knowledge: BusinessKnowledge;
+  businessName: string | null;
   intent: string;
 }): string {
   const base =
@@ -106,17 +148,7 @@ export function buildSystemPrompt({
       .filter((part): part is string => Boolean(part))
       .join("\n\n");
 
-  const knowledgeSection = [
-    knowledge.name ? `Business name: ${knowledge.name}` : null,
-    knowledge.description ? `About: ${knowledge.description}` : null,
-    knowledge.shippingPolicy ? `Shipping policy: ${knowledge.shippingPolicy}` : null,
-    knowledge.returnPolicy ? `Return policy: ${knowledge.returnPolicy}` : null,
-    knowledge.paymentPolicy ? `Payment policy: ${knowledge.paymentPolicy}` : null,
-    knowledge.additionalInformation ? `Additional information: ${knowledge.additionalInformation}` : null,
-    knowledge.faq ? `FAQ: ${JSON.stringify(knowledge.faq)}` : null,
-  ]
-    .filter((line): line is string => Boolean(line))
-    .join("\n");
+  const businessNameSection = businessName ? `Business name: ${businessName}` : null;
 
   // "unknown" is determineIntent's stub value (step 6 has no real
   // implementation yet -- see stubs.ts) and carries no information the
@@ -124,7 +156,15 @@ export function buildSystemPrompt({
   // -- one less thing to ever leak, until intent detection is real.
   const intentSection = intent !== "unknown" ? `Detected intent: ${intent}` : null;
 
-  return [CONFIDENTIALITY_GUARDRAIL, LANGUAGE_GUARDRAIL, CAPABILITY_GUARDRAIL, base, knowledgeSection, intentSection]
+  return [
+    CONFIDENTIALITY_GUARDRAIL,
+    LANGUAGE_GUARDRAIL,
+    CAPABILITY_GUARDRAIL,
+    GROUNDING_GUARDRAIL,
+    base,
+    businessNameSection,
+    intentSection,
+  ]
     .filter((section) => section && section.length > 0)
     .join("\n\n");
 }
