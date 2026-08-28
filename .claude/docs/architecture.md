@@ -251,6 +251,20 @@ The tool Malu calls once a customer is ready to buy (spec §14). Sidde never pro
 - Collisions on the partial unique index over `tracking_id` are retried (3 attempts) rather than surfaced as a raw Postgres error mid-conversation.
 - Tests: `tests/unit/checkout/links.test.ts` (pure), `tests/unit/agent-engine/tools/create-checkout-link.test.ts` (schema, ctx-over-args, both unavailable paths), `tests/integration/checkout-link.test.ts` (real `events` rows, distinct ids per call, cross-tenant product refused, full `AgentEngine.run` round trip).
 
+### Checkout-click redirect (Trello E1)
+
+`src/app/c/[trackingId]/route.ts` — the other half of C4's loop. A customer taps the link in WhatsApp; this resolves the tracking id, records the click, and forwards to the merchant's own page.
+
+- **Public and unauthenticated by design** (the customer has no Sidde account and isn't in `auth.users`), so it uses the service-role client — `events` RLS is company-membership scoped and would deny both the lookup and the insert. The tracking id from the URL is the only untrusted input and is used purely as a lookup key: **every id written on the click row is copied from the minted row**, never from the request.
+- **302, never 301.** A permanent redirect gets cached by the browser, so every click after the first would skip the server entirely and go straight to the merchant — silently losing the measurement this endpoint exists for. `cache-control: no-store` for the same reason at the proxy layer.
+- **Inserts its own `checkout_click` row rather than mutating the minted one** (`events` is append-only). `tracking_id` is left **null** on the click row so the partial unique index never collides across repeat clicks; the id it belongs to travels in `metadata.tracking_id`. Each real tap is its own row.
+- **Link-preview crawlers are redirected but not counted** (`isLinkPreviewAgent`, `src/lib/checkout/links.ts`). WhatsApp — the channel these links are *sent over* — fetches every URL in a message to build its preview card before a human touches it, so without this, every link Malu sends would immediately register a click. The matcher is deliberately conservative: an unrecognized agent counts as human, since a real click misread as a bot silently loses a data point.
+- **A failed click insert never costs the customer their redirect** — they're mid-purchase; losing one analytics row is strictly better than a dead end. The error is logged and the redirect proceeds.
+- **Unknown/expired ids get a friendly, localized, self-contained HTML 404**, not JSON or a stack trace — a real person tapped this. Localized via `resolveLocale()` (same Route-Handler pattern as the product import-template route), copy in the `CheckoutLink` i18n namespace. A DB error and an unknown id return the same page, so nothing leaks about what exists.
+- **`src/proxy.ts` excludes `c/`** from its matcher: there's no session to refresh on a public link, so running `updateSession`'s `auth.getUser()` round-trip would add latency to every click for nothing.
+- Nothing here records revenue, an order, or any completed-purchase signal — a click is a click, never a sale (spec §14/§15).
+- Tests: `tests/unit/checkout/link-preview.test.ts`, and `tests/integration/checkout-redirect.test.ts` (over real HTTP, mint→tap→click→redirect end to end; covers repeat clicks, the preview-bot path, append-only preservation, and the unknown-id page).
+
 ### Product management UI (Trello F3)
 
 `src/app/dashboard/products/` — the merchant-facing screen for the catalog, following F1/F2's conventions (`page.tsx` Server Component fetches company/role/first-page directly via the server Supabase client; Client Components own their own save state; shared `src/components/ui/*` primitives; `Products` i18n namespace mirroring `Teach`'s nesting style).

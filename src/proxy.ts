@@ -7,6 +7,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // `c/` (Trello E1's checkout redirect) is excluded deliberately: it's a
+    // public link a customer taps mid-purchase, with no session to refresh,
+    // so running updateSession's supabase.auth.getUser() round-trip on it
+    // would add latency to every click for nothing.
+    "/((?!_next/static|_next/image|favicon.ico|c/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

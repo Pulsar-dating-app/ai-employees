@@ -28,6 +28,10 @@
       "passwordTooShort": "Password must be at least 6 characters."
     }
   },
+  "CheckoutLink": {
+    "title": "This link is no longer available",
+    "body": "The link you opened is invalid or has expired. Send a message to the store again and they will share a new one."
+  },
   "LandingV2": {
     "switcher": {
       "label": "Compare landing designs",
