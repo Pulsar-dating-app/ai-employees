@@ -8,6 +8,7 @@ const SECTIONS = [
   { key: "marketplace" as const, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
   { key: "myAgents" as const, match: (p: string) => p.startsWith("/dashboard/my-agents") },
   { key: "products" as const, match: (p: string) => p.startsWith("/dashboard/products") },
+  { key: "metrics" as const, match: (p: string) => p.startsWith("/dashboard/metrics") },
   { key: "settings" as const, match: (p: string) => p.startsWith("/dashboard/settings") },
 ];
 

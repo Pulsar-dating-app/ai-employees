@@ -168,8 +168,57 @@
       "marketplace": "Marketplace",
       "myAgents": "Minha equipe",
       "products": "Produtos",
+      "metrics": "Desempenho",
       "settings": "Configurações"
     }
+  },
+  "Metrics": {
+    "pageTitle": "Desempenho",
+    "pageSubtitle": "Veja como sua equipe está indo e onde os clientes avançam para a compra.",
+    "overviewTitle": "Visão geral das métricas",
+    "overviewSubtitle": "Atividade e engajamento no período selecionado.",
+    "range": {
+      "label": "Período",
+      "last7Days": "Últimos 7 dias",
+      "last30Days": "Últimos 30 dias",
+      "last90Days": "Últimos 90 dias"
+    },
+    "metrics": {
+      "conversations": {
+        "label": "Conversas",
+        "caption": "Total de conversas no período"
+      },
+      "customers": {
+        "label": "Clientes",
+        "caption": "Pessoas com quem sua equipe falou"
+      },
+      "productRecommendations": {
+        "label": "Recomendações de produtos",
+        "caption": "Produtos que sua equipe sugeriu"
+      },
+      "buyingIntent": {
+        "label": "Intenção de compra",
+        "caption": "Sinais claros de que o cliente quis comprar"
+      },
+      "checkoutClicks": {
+        "label": "Cliques para o checkout",
+        "caption": "Cliques em um link para a sua loja"
+      }
+    },
+    "notASale": "Um clique para o checkout significa que o cliente abriu sua loja, não que uma venda foi concluída.",
+    "health": {
+      "healthyTitle": "{name} está trabalhando",
+      "healthyBody": "{name} atendeu {conversations} conversas neste período e está funcionando normalmente.",
+      "waitingTitle": "{name} está pronto(a)",
+      "waitingBody": "{name} está configurado(a) e conectado(a). Os números vão começar a aparecer aqui conforme os clientes entrarem em contato.",
+      "pausedTitle": "{name} está pausado(a)",
+      "pausedBody": "{name} não vai responder aos clientes até você retomar em Minha equipe.",
+      "notHiredTitle": "Ninguém no trabalho ainda",
+      "notHiredBody": "Contrate {name} no marketplace para começar a ver conversas e sinais de compra aqui.",
+      "notHiredCta": "Ir para o marketplace"
+    },
+    "noCompany": "Crie sua empresa para começar a acompanhar o desempenho.",
+    "browseMarketplace": "Explorar o marketplace"
   },
   "Marketplace": {
     "pageTitle": "Conheça sua equipe",

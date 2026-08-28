@@ -9,6 +9,7 @@ import {
   SearchIcon,
   UsersIcon,
   PackageIcon,
+  BarChartIcon,
   SettingsIcon,
   LogoutIcon,
 } from "@/components/ui/icons";
@@ -18,19 +19,41 @@ const NAV_ITEMS = [
   { href: "/dashboard", key: "marketplace" as const, icon: SearchIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
   { href: "/dashboard/my-agents", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p.startsWith("/dashboard/my-agents") },
   { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, match: (p: string) => p.startsWith("/dashboard/products") },
+  { href: "/dashboard/metrics", key: "metrics" as const, icon: BarChartIcon, match: (p: string) => p.startsWith("/dashboard/metrics") },
   { href: "/dashboard/settings", key: "settings" as const, icon: SettingsIcon, match: (p: string) => p.startsWith("/dashboard/settings") },
 ];
 
-function BrandMark({ workspaceLabel }: { workspaceLabel: string }) {
+// Sidebar top (Stitch "Performance Analytics" screen): the brand, then an
+// identity block — avatar-initial, the account label, the workspace tier —
+// directly under it. Identity used to sit in the footer; the footer is now
+// just the log-out action.
+function SidebarHeader({
+  identityLabel,
+  workspaceLabel,
+}: {
+  identityLabel: string;
+  workspaceLabel: string;
+}) {
+  const initial = identityLabel ? identityLabel.charAt(0).toUpperCase() : "?";
   return (
-    <div className="flex flex-col gap-1 px-6 py-6">
+    <div className="flex flex-col gap-4 border-b border-outline-variant px-6 py-5">
       <div className="flex items-center gap-2.5">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-on-primary">
           S
         </span>
         <span className="text-lg font-bold tracking-tight text-primary">Sidde</span>
       </div>
-      <span className="pl-[38px] text-xs font-semibold text-on-surface-variant">{workspaceLabel}</span>
+      <div className="flex items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-fixed text-sm font-semibold text-primary">
+          {initial}
+        </span>
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-sm font-semibold text-on-surface">
+            {identityLabel || workspaceLabel}
+          </span>
+          <span className="truncate text-xs text-on-surface-variant">{workspaceLabel}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -52,15 +75,14 @@ export function Sidebar({
   const tDash = useTranslations("Dashboard");
 
   const identityLabel = companyName ?? email ?? "";
-  const identityInitial = identityLabel ? identityLabel.charAt(0).toUpperCase() : "?";
 
   return (
     <>
       {/* Desktop rail */}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-outline-variant bg-surface sm:flex">
-        <BrandMark workspaceLabel={tDash("workspaceLabel")} />
+        <SidebarHeader identityLabel={identityLabel} workspaceLabel={tDash("workspaceLabel")} />
 
-        <nav className="flex flex-1 flex-col gap-1 px-3">
+        <nav className="flex flex-1 flex-col gap-1 px-3 pt-4">
           {NAV_ITEMS.map((item) => {
             const isActive = item.match(pathname);
             const Icon = item.icon;
@@ -83,27 +105,16 @@ export function Sidebar({
           })}
         </nav>
 
-        <div className="flex flex-col gap-3 border-t border-outline-variant p-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-fixed text-sm font-semibold text-primary">
-              {identityInitial}
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate text-sm font-medium text-on-surface">{identityLabel}</span>
-              {companyName && email ? (
-                <span className="truncate text-xs text-on-surface-variant">{email}</span>
-              ) : null}
-            </div>
-            <form action={logout}>
-              <button
-                type="submit"
-                aria-label={tDash("logout")}
-                className="shrink-0 rounded-md p-1.5 text-on-surface-variant transition-colors duration-150 hover:bg-surface-container hover:text-on-surface"
-              >
-                <LogoutIcon className="h-4 w-4" />
-              </button>
-            </form>
-          </div>
+        <div className="border-t border-outline-variant p-3">
+          <form action={logout}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-on-surface-variant transition-colors duration-150 hover:bg-surface-container hover:text-on-surface"
+            >
+              <LogoutIcon className="h-5 w-5 shrink-0" />
+              {tDash("logout")}
+            </button>
+          </form>
         </div>
       </aside>
 
