@@ -281,6 +281,20 @@ The tool Malu calls once a customer is ready to buy (spec §14). Sidde never pro
 - Nothing here records revenue, an order, or any completed-purchase signal — a click is a click, never a sale (spec §14/§15).
 - Tests: `tests/unit/checkout/link-preview.test.ts`, and `tests/integration/checkout-redirect.test.ts` (over real HTTP, mint→tap→click→redirect end to end; covers repeat clicks, the preview-bot path, append-only preservation, and the unknown-id page).
 
+### Analytics aggregation API (Trello E2)
+
+`GET /api/companies/[companyId]/analytics` — the read side F6's dashboard consumes directly. Returns exactly the five metrics spec §15 names for the initial dashboard, each as `{ metric, total, series: [{ date, count }] }`:
+
+- `conversations` / `customers` — counts from those tables. `product_recommendations` / `buying_intent` / `checkout_clicks` — `events` rows filtered by `type` (the response keys are spec §15's dashboard labels, not the raw enum values). Order in the `metrics` array is fixed to spec §15's listing order.
+- **Query params** (all optional, all lenient-defaulted like the products list route — a bad value falls back, never 400s): `granularity` = `day` (default) | `week`; `from` / `to` = `YYYY-MM-DD` inclusive bounds. Defaults: `to` = today in the company's timezone, `from` = 30 days back (`day`) / 84 days back (`week`). The one hard error is `from` after `to` → `400`. An over-long span is **clamped** to `MAX_RANGE_DAYS` (370), not rejected.
+- **Timezone-aware day boundaries.** Buckets follow `companies.timezone` (falls back to `UTC` if unset/invalid) so "today" on the dashboard is the merchant's today. The DB query runs in UTC widened by ±1 day; the pure aggregator re-filters each row to its real local calendar date. `week` buckets are keyed by the ISO-week Monday on/before the date.
+- **Series are zero-filled** across the whole range so F6 can draw a continuous line; `total` is the sum of the series (single source of truth, no separate count query to drift from it).
+- **Member-readable** (`requireMember`, matches the `is_company_member` SELECT policy on all three tables) — file-local check for a clean 403, same precedent as every sibling route. No admin gate.
+- **No migration, no RPC.** Aggregation is plain JS over rows read through the RLS-scoped client; `route.ts` pages past PostgREST's 1000-row cap (`fetchWindow`) so a high-volume company isn't silently undercounted. If catalog/event volume ever makes the row scan a real cost, a `date_trunc` Postgres function is the upgrade path — not needed at MVP scale (same call as B3's `ilike`-over-FTS decision).
+- **Pure core split out** to `src/lib/analytics/aggregate.ts` (`aggregateAnalytics`, plus `weekStart` / `bucketKeysInRange` helpers) — unit-tested without a DB, mirroring how B5's `ProductRepository` and C4's `checkout/links.ts` keep their pure logic out of the IO layer.
+- Nothing here touches revenue or attribution — explicitly out of MVP scope per spec §15.
+- Tests: `tests/unit/analytics/aggregate.test.ts` (bucketing, timezone shift, week grouping, event-type mapping, out-of-range drop), `tests/integration/analytics.test.ts` (real Postgres: non-member 403, empty-company zero series, per-type day counts scoped to the company, weekly grouping, `from > to` 400).
+
 ### Product management UI (Trello F3)
 
 `src/app/dashboard/products/` — the merchant-facing screen for the catalog, following F1/F2's conventions (`page.tsx` Server Component fetches company/role/first-page directly via the server Supabase client; Client Components own their own save state; shared `src/components/ui/*` primitives; `Products` i18n namespace mirroring `Teach`'s nesting style).
