@@ -2,6 +2,7 @@ import type { AgentTool } from "./types";
 import { searchProductsTool } from "./search-products";
 import { getProductTool } from "./get-product";
 import { createCheckoutLinkTool } from "./create-checkout-link";
+import { flagBuyingIntentTool } from "./flag-buying-intent";
 import { getBusinessInformationTool } from "./get-business-information";
 import { getPolicyInformationTool } from "./get-policy-information";
 
@@ -13,6 +14,7 @@ export const defaultTools: AgentTool[] = [
   searchProductsTool,
   getProductTool,
   createCheckoutLinkTool,
+  flagBuyingIntentTool,
   getBusinessInformationTool,
   getPolicyInformationTool,
 ];
