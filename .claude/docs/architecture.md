@@ -256,6 +256,17 @@ The tool Malu calls once a customer is ready to buy (spec §14). Sidde never pro
 - Collisions on the partial unique index over `tracking_id` are retried (3 attempts) rather than surfaced as a raw Postgres error mid-conversation.
 - Tests: `tests/unit/checkout/links.test.ts` (pure), `tests/unit/agent-engine/tools/create-checkout-link.test.ts` (schema, ctx-over-args, both unavailable paths), `tests/integration/checkout-link.test.ts` (real `events` rows, distinct ids per call, cross-tenant product refused, full `AgentEngine.run` round trip).
 
+### Buying-intent detection (Trello C6)
+
+`src/lib/agent-engine/tools/flag-buying-intent.ts` — the tool that powers spec §15's "Buying Intent" metric (which E2 will aggregate). Registered in `tools/registry.ts` alongside the other agent tools.
+
+- **A model-callable tool, not a keyword/regex classification pass** — deliberate, and the reason it isn't English-only: a purchase signal is phrased completely differently in every language ("quero esse", "me manda o link", "lo quiero", "I'll take it"), and any keyword list would only ever catch the language it was written in. The model already recognizes intent in whatever language the customer writes, and a tool call slots into C1's existing tool-execution loop with no extra round trip — same reasoning C3's grounding tools used over hand-rolled logic. See decisions.md.
+- **Writes one `events` row typed exactly `buying_intent`** (`company_id`/`agent_id`/`conversation_id`/`customer_id` from `ctx`, never model args), returns `{ recorded: true }`. No `tracking_id` (checkout-link only), no `metadata`, no dedup — a customer can legitimately signal intent more than once and E2 counts occurrences. No migration needed: A1's `event_type` enum already has `buying_intent` and the table's columns already match the card's suggested fields.
+- **Optional `productId` arg** — the only model-controlled input, validated the same way `create_checkout_link` does (`ProductRepository.get`, company-scoped + `is_active`). If it doesn't resolve (stale, wrong, or another tenant's), it's silently dropped and the row is written with `product_id: null` rather than failing the turn — the buying-intent signal is real regardless of a bad product reference.
+- **Silent tracking**: the tool description tells the model never to mention it to the customer, to call it only on a clear present intent to buy (not "that looks nice" / "maybe later" / "how much is it?"), and that it never means a sale happened. Guidance lives in the tool description only (no `system_prompt` change) — matching how `create_checkout_link` / `get_policy_information` carry their own call/don't-call rules.
+- **`determineIntent` (step 6 stub) is untouched** — that's synchronous prompt-building input, a separate concern from emitting an event mid-loop.
+- Tests: `tests/unit/agent-engine/tools/flag-buying-intent.test.ts` (schema, ctx-over-args, product resolved/dropped, insert error surfaced), `tests/integration/buying-intent.test.ts` (real `buying_intent` rows, product attribution, cross-tenant product dropped, full `AgentEngine.run` round trip driven by a Portuguese message). Integration suite not run locally this session — Docker/local Supabase was down; follows `checkout-link.test.ts`'s proven pattern verbatim.
+
 ### Checkout-click redirect (Trello E1)
 
 `src/app/c/[trackingId]/route.ts` — the other half of C4's loop. A customer taps the link in WhatsApp; this resolves the tracking id, records the click, and forwards to the merchant's own page.
