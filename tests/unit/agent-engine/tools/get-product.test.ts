@@ -11,6 +11,7 @@ import { ProductRepository } from "@/lib/products/repository";
 function fakeToolCtx(companyId: string): ToolExecutionContext {
   return {
     companyId,
+    agentId: "agent-1",
     conversationId: "conversation-1",
     customerId: "customer-1",
     supabase: {} as ToolExecutionContext["supabase"],

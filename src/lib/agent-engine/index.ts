@@ -64,6 +64,10 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     maxToolIterations,
     toolCtx: {
       companyId: input.companyId,
+      // Non-null: loadConversation throws ConversationAgentMissingError
+      // otherwise. Tools that write an event row (C4's checkout link, and
+      // C5's request_human next) need it to attribute the row to an agent.
+      agentId: conversation.agent_id!,
       conversationId: conversation.id,
       customerId: conversation.customer_id,
       supabase,
