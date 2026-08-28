@@ -49,8 +49,10 @@ function parseNumberParam(raw: string | null, field: string): { value?: number; 
 
 // GET: with ?productId=, looks up that single product (ProductRepository.get)
 // and wraps it as a one-or-zero-element list. Otherwise runs a filtered,
-// relevance-ranked search (ProductRepository.search) over ?text=/&category=/
-// &priceMin=/&priceMax=/&attributes= (JSON-encoded object)/&limit=.
+// relevance-ranked search (ProductRepository.search) over ?text=/&keywords=
+// (repeatable -- ?keywords=a&keywords=b -- matches ANY of them, unlike
+// ?text= whose words are all required)/&category=/&priceMin=/&priceMax=/
+// &attributes= (JSON-encoded object)/&limit=.
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ companyId: string }> },
@@ -96,9 +98,12 @@ export async function GET(
       }
     }
 
+    const keywords = url.searchParams.getAll("keywords");
+
     const products = await ProductRepository.search({
       companyId,
       text: url.searchParams.get("text") ?? undefined,
+      keywords: keywords.length > 0 ? keywords : undefined,
       category: url.searchParams.get("category") ?? undefined,
       priceMin: priceMin.value,
       priceMax: priceMax.value,

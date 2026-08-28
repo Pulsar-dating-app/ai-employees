@@ -37,6 +37,12 @@ export type Product = {
   variants: unknown;
   attributes: Record<string, unknown> | null;
   metadata: unknown;
+  // Nullable/unconstrained at the DB level (Trello B4) -- null means "not
+  // tracked," 0 means "out of stock." Was missing from this type even
+  // though `select("*")` always returned it -- fixed while rewriting
+  // search() below, since search_products' explicit column list needed to
+  // decide this deliberately rather than by omission.
+  stock: number | null;
   is_active: boolean;
   created_at: string;
   updated_at: string | null;
@@ -44,7 +50,21 @@ export type Product = {
 
 export type ProductSearchParams = {
   companyId: string;
+  // Single free-text phrase (e.g. a merchant-facing search box, or a caller
+  // that only has one term) -- its words are ANDed together (via
+  // websearch_to_tsquery's space-is-AND syntax), same as one entry in
+  // `keywords` below.
   text?: string;
+  // Multiple independent search terms -- a product matches if it matches
+  // ANY of them (OR across keywords), ranked by how well it matched
+  // overall. This is what the search_products agent tool uses: the model
+  // is asked for a few related terms (the customer's literal words plus
+  // reasonable synonyms/alternate phrasings), not just one phrase -- see
+  // that tool's schema description and the 2026-08-27 decisions.md entry.
+  // `text` and `keywords` are simply merged into one list before hitting
+  // the DB; both are equally "a keyword," `text` just predates `keywords`
+  // as this module's original single-term param.
+  keywords?: string[];
   category?: string;
   priceMin?: number;
   priceMax?: number;
@@ -53,70 +73,49 @@ export type ProductSearchParams = {
 };
 
 const DEFAULT_LIMIT = 5;
-const MAX_LIMIT = 20;
-// How many company-scoped candidates to pull from Postgres before ranking by
-// relevance in JS -- must be wider than any requested limit or there'd be
-// nothing left to rank among. Plain `ilike`, per the card's explicit MVP
-// allowance (a `to_tsvector` index is called out as an optional upgrade, not
-// required now); a company with a catalog larger than this pool may miss a
-// relevant match ranked past position 50, an accepted MVP tradeoff.
-const CANDIDATE_POOL_SIZE = 50;
+// Hard ceiling regardless of what the caller (the search_products agent
+// tool, driven by an LLM) requests -- found by hand-testing: the
+// system_prompt's anti-overwhelm rule (2026-08-27, see decisions.md) only
+// named "the full list"/"all products" as the trigger to avoid, so a
+// request like "todos os calçados e camisetas" (a scoped-but-still-broad
+// multi-category ask, not literally "everything") slipped past it and
+// still got a large dump. Prompt wording can always miss a phrasing that
+// wasn't named -- this cap is a deterministic backstop that holds
+// regardless of wording, lowered from 20 (per user request, after seeing
+// this gap) since even 20 items in one reply is more than a real
+// salesperson would recite at once.
+const MAX_LIMIT = 10;
 
-// PostgREST's `.or()` filter string uses commas to separate conditions, so a
-// raw comma/parenthesis in user-supplied search text would otherwise corrupt
-// or hijack the filter. Wrapping the value in double quotes (escaping any
-// backslash/quote already inside it) is PostgREST's documented escape hatch
-// for exactly this.
-function escapeOrFilterValue(value: string): string {
-  const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  return `"${escaped}"`;
-}
-
-function relevanceScore(product: Product, needle: string): number {
-  let score = 0;
-  if (product.name?.toLowerCase().includes(needle)) score += 2;
-  if (product.description?.toLowerCase().includes(needle)) score += 1;
-  return score;
-}
-
-// Array.prototype.sort is stable (guaranteed since ES2019), so products
-// tied on score keep their incoming order (created_at desc) as a
-// secondary sort -- no separate tie-breaker needed.
-function rankByRelevance(products: Product[], text: string): Product[] {
-  const needle = text.toLowerCase();
-  return [...products].sort((a, b) => relevanceScore(b, needle) - relevanceScore(a, needle));
-}
-
+// Ranking, full-text matching, and trigram tie-breaking all happen in
+// Postgres now (see migration 20260827180000_add_product_search_ranking and
+// that migration's own function-body comments for why a plain SQL function
+// was necessary instead of PostgREST's .textSearch()/.or() filter DSL:
+// combining full-text rank + trigram + an OR-across-keywords match with one
+// ORDER BY isn't expressible through it). This replaced an earlier
+// application-side ILIKE + JS-side ranking implementation that required
+// pulling a wide unranked candidate pool and sorting it in JS -- the DB now
+// does exact ranking with its own ORDER BY + LIMIT, no candidate pool
+// needed.
 async function search(params: ProductSearchParams, supabaseClient?: SupabaseClient): Promise<Product[]> {
   const limit = Math.min(Math.max(params.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
   const serviceClient = supabaseClient ?? createServiceClient();
 
-  let query = serviceClient
-    .from("products")
-    .select("*")
-    .eq("company_id", params.companyId)
-    .eq("is_active", true);
+  const keywords = [...(params.keywords ?? []), ...(params.text ? [params.text] : [])]
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
 
-  if (params.category) query = query.eq("category", params.category);
-  if (params.priceMin !== undefined) query = query.gte("price", params.priceMin);
-  if (params.priceMax !== undefined) query = query.lte("price", params.priceMax);
-  if (params.attributes) query = query.contains("attributes", params.attributes);
-
-  const text = params.text?.trim();
-  if (text) {
-    const pattern = escapeOrFilterValue(`%${text}%`);
-    query = query.or(`name.ilike.${pattern},description.ilike.${pattern}`);
-  }
-
-  const { data, error } = await query
-    .order("created_at", { ascending: false })
-    .limit(CANDIDATE_POOL_SIZE);
+  const { data, error } = await serviceClient.rpc("search_products", {
+    p_company_id: params.companyId,
+    p_keywords: keywords.length > 0 ? keywords : null,
+    p_category: params.category ?? null,
+    p_price_min: params.priceMin ?? null,
+    p_price_max: params.priceMax ?? null,
+    p_attributes: params.attributes ?? null,
+    p_limit: limit,
+  });
 
   if (error) throw error;
-  const products = (data ?? []) as Product[];
-
-  if (!text) return products.slice(0, limit);
-  return rankByRelevance(products, text).slice(0, limit);
+  return (data ?? []) as Product[];
 }
 
 // is_active is always enforced here too (not just in search) -- a

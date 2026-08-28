@@ -122,7 +122,7 @@ describe("AgentEngine.run", () => {
 
     const responsesCreate = vi
       .fn()
-      .mockResolvedValueOnce(functionCallResponse("call_1", "search_products", { text: "lantern" }))
+      .mockResolvedValueOnce(functionCallResponse("call_1", "search_products", { keywords: ["lantern"] }))
       .mockResolvedValueOnce(textResponse("We have the Blue Lantern in stock!"));
     const openai = {
       conversations: { create: vi.fn().mockResolvedValue({ id: fakeOpenAiConversationId() }) },
@@ -139,6 +139,48 @@ describe("AgentEngine.run", () => {
     const secondCallInput = responsesCreate.mock.calls[1][0].input;
     const toolOutput = JSON.parse(secondCallInput[0].output);
     expect(toolOutput.map((p: { id: string }) => p.id)).toContain(product.json.product.id);
+  });
+
+  // Trello C3 -- proves the two new grounding tools are actually wired into
+  // the registry and reachable end to end, not just unit-tested in
+  // isolation (tests/unit/agent-engine/tools/get-business-information.test.ts
+  // and get-policy-information.test.ts cover the wrapper contract itself;
+  // this is the same "round-trip through the real repository" shape as the
+  // existing search_products test above).
+  it("round-trips real get_business_information and get_policy_information tool calls", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId, conversationId } = await seedConversation(owner, "Grounding Tools Co");
+
+    await api("PATCH", `/api/companies/${companyId}`, owner.cookieHeader, {
+      shipping_policy: "Ships within 5 business days.",
+    });
+
+    const responsesCreate = vi
+      .fn()
+      .mockResolvedValueOnce(functionCallResponse("call_1", "get_business_information", {}))
+      .mockResolvedValueOnce(functionCallResponse("call_2", "get_policy_information", { type: "shipping" }))
+      .mockResolvedValueOnce(textResponse("We're Grounding Tools Co, and we ship within 5 business days!"));
+    const openai = {
+      conversations: { create: vi.fn().mockResolvedValue({ id: fakeOpenAiConversationId() }) },
+      responses: { create: responsesCreate },
+    } as never;
+
+    const result = await AgentEngine.run(
+      { companyId, conversationId, message: "Who are you and what's your shipping policy?" },
+      { supabase: getTestServiceClient(), openai },
+    );
+
+    expect(result.responseText).toBe("We're Grounding Tools Co, and we ship within 5 business days!");
+
+    const businessInfoOutput = JSON.parse(responsesCreate.mock.calls[1][0].input[0].output);
+    expect(businessInfoOutput.name).toBe("Grounding Tools Co");
+
+    const policyOutput = JSON.parse(responsesCreate.mock.calls[2][0].input[0].output);
+    expect(policyOutput).toEqual({
+      type: "shipping",
+      available: true,
+      content: "Ships within 5 business days.",
+    });
   });
 
   it("rejects when companyId doesn't match the conversation's own company", async () => {
