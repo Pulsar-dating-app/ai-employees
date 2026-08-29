@@ -28,10 +28,11 @@ import { AgentEngine } from "@/lib/agent-engine";
 // inbound-message-driven channel) so the next message's staleness check has
 // an accurate timestamp -- this is exactly the "persist updated_at after the
 // turn" work D3's card already names, just implemented here first.
-
-if (process.env.NODE_ENV === "production") {
-  throw new Error("dev-chat-test is a dev-only route and must not run in production");
-}
+//
+// The NODE_ENV production guard lives inside POST() below, not here at
+// module scope — a module-scope throw breaks `next build`'s page-data
+// collection, since NODE_ENV is "production" during build regardless of
+// runtime routing (see decisions.md).
 
 const DEV_TEST_CUSTOMER_NAME = "Dev Chat Test";
 const CONVERSATION_TTL_MS = 24 * 60 * 60 * 1000;
