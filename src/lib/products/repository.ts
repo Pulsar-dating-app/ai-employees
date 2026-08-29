@@ -96,14 +96,12 @@ const MAX_LIMIT = 10;
 // pulling a wide unranked candidate pool and sorting it in JS -- the DB now
 // does exact ranking with its own ORDER BY + LIMIT, no candidate pool
 // needed.
-async function search(params: ProductSearchParams, supabaseClient?: SupabaseClient): Promise<Product[]> {
-  const limit = Math.min(Math.max(params.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
-  const serviceClient = supabaseClient ?? createServiceClient();
-
-  const keywords = [...(params.keywords ?? []), ...(params.text ? [params.text] : [])]
-    .map((keyword) => keyword.trim())
-    .filter(Boolean);
-
+async function runSearchRpc(
+  params: ProductSearchParams,
+  keywords: string[],
+  limit: number,
+  serviceClient: SupabaseClient,
+): Promise<Product[]> {
   const { data, error } = await serviceClient.rpc("search_products", {
     p_company_id: params.companyId,
     p_keywords: keywords.length > 0 ? keywords : null,
@@ -116,6 +114,84 @@ async function search(params: ProductSearchParams, supabaseClient?: SupabaseClie
 
   if (error) throw error;
   return (data ?? []) as Product[];
+}
+
+// Every word inside one keyword is ANDed together (websearch_to_tsquery's
+// space-is-AND syntax), which is what stops "camiseta azul" from matching
+// every camiseta in the catalog. The cost is that a single word the catalog
+// simply doesn't use makes the whole keyword match nothing: "camisa de time"
+// becomes 'camis' & 'tim', and finds no football shirt even though "camisa"
+// on its own would have found it.
+//
+// This relaxation drops exactly those dead words and keeps every surviving
+// word ANDed. It is deliberately NOT a widening to OR-of-words: that would
+// answer "camiseta azul masculina" with a "Calça Azul", matching on one
+// unrelated word -- precisely the irrelevance this search was rewritten to
+// eliminate (see the migration's own comments). A word the catalog has never
+// heard of carries no information, so removing it loses no precision;
+// everything the catalog does know stays required together.
+async function withUnmatchableWordsDropped(
+  params: ProductSearchParams,
+  keywords: string[],
+  serviceClient: SupabaseClient,
+): Promise<string[]> {
+  const words = [
+    ...new Set(
+      keywords
+        .flatMap((keyword) => keyword.split(/\s+/))
+        .map((word) => word.trim())
+        // Single characters carry no signal and only widen the net.
+        .filter((word) => word.length > 1),
+    ),
+  ];
+  if (words.length === 0) return [];
+
+  // One probe per distinct word, in parallel, reusing the same
+  // category/price filters so a word that only matches outside them doesn't
+  // count as known. Bounded and cheap: a handful of limit-1 queries, run
+  // only on a path whose alternative is telling the customer the store has
+  // nothing.
+  const probes = await Promise.all(words.map((word) => runSearchRpc(params, [word], 1, serviceClient)));
+  const known = new Set(words.filter((_, index) => probes[index].length > 0));
+  if (known.size === 0) return [];
+
+  return [
+    ...new Set(
+      keywords
+        .map((keyword) =>
+          keyword
+            .split(/\s+/)
+            .filter((word) => known.has(word))
+            .join(" "),
+        )
+        .filter(Boolean),
+    ),
+  ];
+}
+
+async function search(params: ProductSearchParams, supabaseClient?: SupabaseClient): Promise<Product[]> {
+  const limit = Math.min(Math.max(params.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
+  const serviceClient = supabaseClient ?? createServiceClient();
+
+  const keywords = [...(params.keywords ?? []), ...(params.text ? [params.text] : [])]
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
+
+  const strict = await runSearchRpc(params, keywords, limit, serviceClient);
+  if (strict.length > 0 || keywords.length === 0) return strict;
+
+  // Found by hand-testing: "camisa de time" and "camisa de futebol" both
+  // returned nothing while "camisa do corinthians" found the shirt at once.
+  // The tool description asks the model for short single-concept terms, but
+  // a model can always phrase one some way that wasn't anticipated -- this
+  // is the deterministic backstop for that, in the same spirit as MAX_LIMIT.
+  // Runs only when the strict pass found nothing, so it can never dilute a
+  // search that was already working.
+  const relaxed = await withUnmatchableWordsDropped(params, keywords, serviceClient);
+  const unchanged = relaxed.length === keywords.length && relaxed.every((k, i) => k === keywords[i]);
+  if (relaxed.length === 0 || unchanged) return strict;
+
+  return runSearchRpc(params, relaxed, limit, serviceClient);
 }
 
 // is_active is always enforced here too (not just in search) -- a

@@ -49,7 +49,15 @@ export const searchProductsTool: AgentTool = {
           "\"calçado\": [\"tênis\", \"sapato\", \"sandália\", \"bota\", \"chinelo\"]. A single " +
           "empty search result does not mean the store has nothing in that category -- it means " +
           "that specific wording didn't match; broaden to concrete product types before telling " +
-          "the customer something isn't available.",
+          "the customer something isn't available.\n\n" +
+          "Keep each term SHORT -- one or two words. Every word inside a single term has to " +
+          "appear in the same product, so a long phrase is a narrow filter, not a generous one: " +
+          "\"camisa de time\" finds nothing unless some product literally says \"time\", even when " +
+          "the store does sell football shirts. Split the customer's phrasing into its meaningful " +
+          "words and pass them as separate terms, and add the kind of thing it is -- the sport, " +
+          "the activity, the occasion -- as its own term, since a product's category is searched " +
+          "too. For \"camisa de time\", search [\"camisa\", \"camiseta\", \"futebol\"], not " +
+          "[\"camisa de time\"].",
       },
       category: {
         type: "string",
