@@ -41,6 +41,17 @@ describe("requestHumanTool", () => {
     });
   });
 
+  // Regression test found manually testing: Malu never proactively offered
+  // a human handoff -- she'd just keep apologizing if she couldn't resolve
+  // something, with no path to escalate unless the customer named a human
+  // explicitly. Asserts the description tells her to offer (not decide
+  // unilaterally) after two failed attempts at the same question.
+  it("instructs proactively offering a human after two failed attempts, not deciding unilaterally", () => {
+    expect(requestHumanTool.description).toContain("after two attempts");
+    expect(requestHumanTool.description).toContain("proactively OFFER");
+    expect(requestHumanTool.description).toContain("only call this tool once they say yes");
+  });
+
   it("pauses the conversation scoped to ctx.companyId, ignoring any companyId smuggled into args", async () => {
     const { ctx, updates } = fakeToolCtx("trusted-company-id");
 

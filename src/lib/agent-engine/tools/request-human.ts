@@ -26,6 +26,18 @@ export type RequestHumanResult = { recorded: true };
 // message in that *test* tool would silently start a new conversation
 // rather than staying paused. Real production routing doesn't exist yet
 // (D2 isn't built), so this doesn't apply to the real product today.
+//
+// Found by hand-testing: Malu never proactively offered a human handoff --
+// she'd just keep apologizing/trying again if she couldn't resolve
+// something, with no path to actually escalate unless the customer
+// explicitly asked for a person by name. The description below adds that
+// path: after two failed attempts at the same question, OFFER a human
+// (ask, don't decide unilaterally) -- matches how a real employee would
+// behave, and keeps this tool's own "don't hand off just because an
+// answer isn't immediately obvious" rule intact (still requires a real,
+// repeated failure, not a single miss). Only an explicit, direct request
+// for a human skips the offer step, since the customer has already said
+// what they want.
 export const requestHumanTool: AgentTool = {
   name: "request_human",
   description:
@@ -34,10 +46,16 @@ export const requestHumanTool: AgentTool = {
     "request outside what you can do, something you don't have on file after actually " +
     "checking). Before calling this, make sure you've actually tried the tools available to " +
     "you (search_products, get_business_information, get_policy_information) -- don't hand " +
-    "off just because an answer isn't immediately obvious. After calling this, still reply to " +
-    "the customer yourself, in your own natural voice, letting them know someone will follow " +
-    "up -- never mention this as a technical action, just say what a real employee would " +
-    "(e.g. \"Deixa que eu chamo alguém do time pra te ajudar com isso 😊\").",
+    "off just because an answer isn't immediately obvious.\n\n" +
+    "If the customer directly asks to speak to a person, call this right away. Otherwise, if " +
+    "you've failed to answer or resolve the same question after two attempts, don't just keep " +
+    "apologizing or trying again -- proactively OFFER to connect them with someone from the " +
+    "team (e.g. \"Quer que eu chame alguém do time pra te ajudar com isso?\") and only call " +
+    "this tool once they say yes.\n\n" +
+    "After calling this, still reply to the customer yourself, in your own natural voice, " +
+    "letting them know someone will follow up -- never mention this as a technical action, " +
+    "just say what a real employee would (e.g. \"Deixa que eu chamo alguém do time pra te " +
+    "ajudar com isso 😊\").",
   parameters: {
     type: "object",
     properties: {},
