@@ -11,6 +11,14 @@ export type ToolExecutionContext = {
   conversationId: string;
   customerId: string;
   supabase: SupabaseClient;
+  // Added for hybrid product search (pgvector): search_products embeds the
+  // customer's search terms via this same client before calling
+  // ProductRepository.search, so query and document embeddings come from
+  // one consistent OpenAI account/config, and the loop's real client is
+  // reused rather than a tool building its own. The same client run()
+  // already uses for the Responses/Conversations API -- no separate
+  // connection or credential.
+  openai: OpenAI;
 };
 
 // The tool-call contract this whole ticket exists to define. `parameters`

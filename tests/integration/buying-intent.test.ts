@@ -94,6 +94,7 @@ function toolCtxFor(seed: Awaited<ReturnType<typeof seedConversation>>): ToolExe
     conversationId: seed.conversationId,
     customerId: seed.customerId,
     supabase: getTestServiceClient(),
+    openai: {} as ToolExecutionContext["openai"],
   };
 }
 

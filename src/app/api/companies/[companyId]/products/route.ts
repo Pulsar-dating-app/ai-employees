@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildProductEmbeddingInput, createProductEmbedding } from "@/lib/products/embeddings";
+import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 
 // Trello ticket B3 — product catalog CRUD, scoped to company_id. RLS
 // (is_company_member) already enforces this at the DB layer; the explicit
@@ -106,7 +108,7 @@ export async function GET(
   const page = parsePositiveInt(searchParams.get("page"), 1);
   const pageSize = parsePositiveInt(searchParams.get("pageSize"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
 
-  let query = supabase.from("products").select("*", { count: "exact" }).eq("company_id", companyId);
+  let query = supabase.from("products").select(PRODUCT_PUBLIC_COLUMNS, { count: "exact" }).eq("company_id", companyId);
   if (!includeInactive) {
     query = query.eq("is_active", true);
   }
@@ -165,6 +167,17 @@ export async function POST(
     return NextResponse.json({ error: stockError }, { status: 400 });
   }
 
+  // Hybrid search's semantic leg (Trello: pgvector, src/lib/products/embeddings.ts).
+  // Generated before the insert -- not deferred to a background job, since
+  // this app has no job runner -- so the product is searchable by meaning
+  // from the moment it exists, never stale relative to what was just typed.
+  // Never blocks the write: a failure (or the test-env kill switch) yields
+  // null, and the row is simply searchable by keyword only until a later
+  // edit fills it in.
+  const embedding = await createProductEmbedding(
+    buildProductEmbeddingInput({ name, category: body?.category, description: body?.description }),
+  );
+
   const { data, error } = await supabase
     .from("products")
     .insert({
@@ -182,8 +195,9 @@ export async function POST(
       variants: body?.variants ?? null,
       attributes: body?.attributes ?? null,
       metadata: body?.metadata ?? null,
+      embedding,
     })
-    .select()
+    .select(PRODUCT_PUBLIC_COLUMNS)
     .single();
 
   if (error) {

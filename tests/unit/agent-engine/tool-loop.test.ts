@@ -16,6 +16,7 @@ function fakeToolCtx(): ToolExecutionContext {
     customerId: "customer-1",
     // Not used by any of these fakes; present to satisfy the type.
     supabase: {} as ToolExecutionContext["supabase"],
+    openai: {} as ToolExecutionContext["openai"],
   };
 }
 
@@ -83,7 +84,7 @@ describe("runToolLoop", () => {
     expect(result.responseText).toBe("Done!");
     // Recorded, not just forwarded to the model -- C7's grounding check
     // validates the final text against exactly these results.
-    expect(result.toolResults).toEqual([{ name: "do_thing", result: { ok: true } }]);
+    expect(result.toolResults).toEqual([{ name: "do_thing", args: { foo: "bar" }, result: { ok: true } }]);
     expect(execute).toHaveBeenCalledWith({ foo: "bar" }, expect.objectContaining({ companyId: "company-1" }));
 
     const secondCallArgs = create.mock.calls[1][0];

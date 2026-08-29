@@ -41,7 +41,7 @@ function fakeSupabase({
 function check(
   responseText: string,
   {
-    toolResults = [] as { name: string; result: unknown }[],
+    toolResults = [] as { name: string; args: Record<string, unknown>; result: unknown }[],
     customerMessage = "",
     productRows = [] as Record<string, unknown>[],
     companyRow = null as Record<string, unknown> | null,
@@ -135,7 +135,7 @@ describe("checkResponseGrounding", () => {
     const result = await check("Essa camiseta sai por R$ 89,90 😊", {
       // PostgREST returns numeric columns as strings -- the exact shape B5's
       // ProductRepository hands back.
-      toolResults: [{ name: "search_products", result: [{ name: "Camiseta", price: "89.90", stock: 4 }] }],
+      toolResults: [{ name: "search_products", args: {}, result: [{ name: "Camiseta", price: "89.90", stock: 4 }] }],
     });
 
     expect(result.grounded).toBe(true);
@@ -143,7 +143,7 @@ describe("checkResponseGrounding", () => {
 
   it("blocks a price that appears nowhere in this turn's tool results or the catalog", async () => {
     const result = await check("Essa camiseta sai por R$ 199,90!", {
-      toolResults: [{ name: "search_products", result: [{ name: "Camiseta", price: "89.90" }] }],
+      toolResults: [{ name: "search_products", args: {}, result: [{ name: "Camiseta", price: "89.90" }] }],
     });
 
     expect(result.grounded).toBe(false);
@@ -156,7 +156,7 @@ describe("checkResponseGrounding", () => {
     // 89.90 + 49.90 -- both real, the sum is not a retrieved fact and could
     // simply be wrong. See the matching GROUNDING_GUARDRAIL sentence.
     const result = await check("As duas juntas ficam R$ 139,80", {
-      toolResults: [{ name: "search_products", result: [{ price: "89.90" }, { price: "49.90" }] }],
+      toolResults: [{ name: "search_products", args: {}, result: [{ price: "89.90" }, { price: "49.90" }] }],
     });
 
     expect(result.grounded).toBe(false);
@@ -192,7 +192,7 @@ describe("checkResponseGrounding", () => {
 
   it("blocks a stock quantity no product actually has", async () => {
     const result = await check("Restam 7 unidades!", {
-      toolResults: [{ name: "get_product", result: { name: "Camiseta", stock: 2 } }],
+      toolResults: [{ name: "get_product", args: {}, result: { name: "Camiseta", stock: 2 } }],
       productRows: [],
     });
 

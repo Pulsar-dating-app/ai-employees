@@ -1,5 +1,8 @@
 import { createServiceClient } from "@/lib/supabase/service";
+import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
+import { createProductEmbedding } from "@/lib/products/embeddings";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type OpenAI from "openai";
 
 // Trello ticket B5 -- the ProductRepository abstraction from spec §12. Its
 // real caller is the Agent Engine's (C1) search_products/get_product tools,
@@ -96,9 +99,17 @@ const MAX_LIMIT = 10;
 // pulling a wide unranked candidate pool and sorting it in JS -- the DB now
 // does exact ranking with its own ORDER BY + LIMIT, no candidate pool
 // needed.
+// Serialized as pgvector's own text literal format ("[0.1,0.2,...]"), which
+// is what a `vector` column casts from -- a raw JS array sent as JSON has no
+// built-in cast to `vector` and would be rejected by Postgres.
+function toPgVectorLiteral(embedding: number[]): string {
+  return `[${embedding.join(",")}]`;
+}
+
 async function runSearchRpc(
   params: ProductSearchParams,
   keywords: string[],
+  queryEmbedding: number[] | null,
   limit: number,
   serviceClient: SupabaseClient,
 ): Promise<Product[]> {
@@ -109,6 +120,7 @@ async function runSearchRpc(
     p_price_min: params.priceMin ?? null,
     p_price_max: params.priceMax ?? null,
     p_attributes: params.attributes ?? null,
+    p_query_embedding: queryEmbedding ? toPgVectorLiteral(queryEmbedding) : null,
     p_limit: limit,
   });
 
@@ -146,12 +158,17 @@ async function withUnmatchableWordsDropped(
   ];
   if (words.length === 0) return [];
 
+  // Lexical-only probes (no embedding) -- this is purely "does the catalog
+  // contain this exact word anywhere," a question the semantic leg can't
+  // meaningfully answer per-word (a single word rarely carries enough
+  // meaning to embed usefully on its own, unlike the full keyword phrase).
+  //
   // One probe per distinct word, in parallel, reusing the same
   // category/price filters so a word that only matches outside them doesn't
   // count as known. Bounded and cheap: a handful of limit-1 queries, run
   // only on a path whose alternative is telling the customer the store has
   // nothing.
-  const probes = await Promise.all(words.map((word) => runSearchRpc(params, [word], 1, serviceClient)));
+  const probes = await Promise.all(words.map((word) => runSearchRpc(params, [word], null, 1, serviceClient)));
   const known = new Set(words.filter((_, index) => probes[index].length > 0));
   if (known.size === 0) return [];
 
@@ -169,7 +186,29 @@ async function withUnmatchableWordsDropped(
   ];
 }
 
-async function search(params: ProductSearchParams, supabaseClient?: SupabaseClient): Promise<Product[]> {
+// Hybrid search's semantic leg (see search_products' own migration comments
+// for the RRF fusion this feeds). `openaiClient` is deliberately NOT
+// defaulted to createOpenAIClient() the way `supabaseClient` defaults to
+// createServiceClient() above -- that default is safe (a free local
+// Postgres call), but silently defaulting this one would mean every
+// untouched caller of search() starts making real, paid OpenAI calls it
+// never asked for, including tests/integration/product-search.test.ts's
+// plain HTTP route, which has no DI seam to opt back out. Requiring an
+// explicit client keeps that route (and any future caller that doesn't pass
+// one) exactly as it behaves today -- lexical-only -- while the one caller
+// that's meant to get semantic recall, the Agent Engine's search_products
+// tool, passes ctx.openai through explicitly.
+async function embedQuery(keywords: string[], openaiClient?: OpenAI): Promise<number[] | null> {
+  if (!openaiClient || keywords.length === 0) return null;
+  const text = [...new Set(keywords.map((k) => k.trim()).filter(Boolean))].join(" ");
+  return createProductEmbedding(text, openaiClient);
+}
+
+async function search(
+  params: ProductSearchParams,
+  supabaseClient?: SupabaseClient,
+  openaiClient?: OpenAI,
+): Promise<Product[]> {
   const limit = Math.min(Math.max(params.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
   const serviceClient = supabaseClient ?? createServiceClient();
 
@@ -177,21 +216,46 @@ async function search(params: ProductSearchParams, supabaseClient?: SupabaseClie
     .map((keyword) => keyword.trim())
     .filter(Boolean);
 
-  const strict = await runSearchRpc(params, keywords, limit, serviceClient);
-  if (strict.length > 0 || keywords.length === 0) return strict;
+  // One embedding per search call, from the combined keyword set -- not one
+  // per keyword. Cheaper (a single API call regardless of how many keywords
+  // the model expanded to) and conceptually simpler: the keywords together
+  // already represent "what the customer wants," and the fused RRF ranking
+  // still gets the OR-across-keywords precision from the lexical leg
+  // alongside this one merged semantic signal. Never blocks the search --
+  // a failure here (or no openaiClient passed) just means this call runs
+  // lexical-only, exactly like before this feature existed.
+  const queryEmbedding = await embedQuery(keywords, openaiClient);
 
+  // search_products' SQL already fuses both legs in one query (see its own
+  // migration comments on RRF) -- when an embedding is present, "strict"
+  // below is really the full hybrid result, not lexical-only. A product the
+  // lexical side can't match at all ("camisa de time" against a catalog
+  // that only says "Camisa Corinthians") can already surface here purely
+  // via the vector leg, with no relaxation needed.
+  const strict = await runSearchRpc(params, keywords, queryEmbedding, limit, serviceClient);
+  if (strict.length > 0 || (keywords.length === 0 && !queryEmbedding)) return strict;
+
+  // Both legs came back empty. Since the vector leg's own candidate pool
+  // never depends on the keyword list (it's always "nearest neighbours to
+  // this embedding," see the SQL), re-querying with a different keyword
+  // framing can only ever change the lexical leg's contribution -- so this
+  // relaxation (lexical dead-word dropping, unrelated to embeddings) is the
+  // only thing left worth retrying, and it's what keeps recall intact for
+  // every caller that has no openaiClient at all (e.g. the plain HTTP
+  // search route, which never generates one). Runs only when both legs
+  // found nothing, so it can never dilute a search that was already working.
+  //
   // Found by hand-testing: "camisa de time" and "camisa de futebol" both
-  // returned nothing while "camisa do corinthians" found the shirt at once.
-  // The tool description asks the model for short single-concept terms, but
-  // a model can always phrase one some way that wasn't anticipated -- this
-  // is the deterministic backstop for that, in the same spirit as MAX_LIMIT.
-  // Runs only when the strict pass found nothing, so it can never dilute a
-  // search that was already working.
+  // returned nothing while "camisa do corinthians" found the shirt at once,
+  // before this migration series added the semantic leg above -- see
+  // decisions.md for the full history. The same query embedding (if any) is
+  // reused on the retry, since dropping a dead lexical word doesn't change
+  // what the customer meant.
   const relaxed = await withUnmatchableWordsDropped(params, keywords, serviceClient);
   const unchanged = relaxed.length === keywords.length && relaxed.every((k, i) => k === keywords[i]);
   if (relaxed.length === 0 || unchanged) return strict;
 
-  return runSearchRpc(params, relaxed, limit, serviceClient);
+  return runSearchRpc(params, relaxed, queryEmbedding, limit, serviceClient);
 }
 
 // is_active is always enforced here too (not just in search) -- a
@@ -206,7 +270,7 @@ async function get(
   const serviceClient = supabaseClient ?? createServiceClient();
   const { data, error } = await serviceClient
     .from("products")
-    .select("*")
+    .select(PRODUCT_PUBLIC_COLUMNS)
     .eq("id", productId)
     .eq("company_id", companyId)
     .eq("is_active", true)

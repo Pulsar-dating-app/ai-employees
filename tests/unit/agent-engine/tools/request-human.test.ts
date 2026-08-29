@@ -28,6 +28,7 @@ function fakeToolCtx(companyId: string, updateError: { message: string; code: st
         },
       }),
     } as unknown as ToolExecutionContext["supabase"],
+    openai: {} as ToolExecutionContext["openai"],
   } satisfies ToolExecutionContext;
   return { ctx, updates };
 }

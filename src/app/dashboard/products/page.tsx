@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 import { Button } from "@/components/ui/button";
 import { PackageIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
@@ -46,7 +47,7 @@ export default async function ProductsPage() {
       .maybeSingle(),
     supabase
       .from("products")
-      .select("*", { count: "exact" })
+      .select(PRODUCT_PUBLIC_COLUMNS, { count: "exact" })
       .eq("company_id", company.id)
       .eq("is_active", true)
       .order("created_at", { ascending: false })

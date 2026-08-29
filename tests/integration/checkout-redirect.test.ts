@@ -96,6 +96,7 @@ async function seedLink() {
     conversationId: conversation!.id,
     customerId: shared.customerId,
     supabase: getTestServiceClient(),
+    openai: {} as ToolExecutionContext["openai"],
   };
 
   const minted = (await createCheckoutLinkTool.execute({ productId: shared.productId }, ctx)) as {

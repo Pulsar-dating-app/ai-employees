@@ -3,6 +3,8 @@ import { parse as parseCsvSync } from "csv-parse/sync";
 import ExcelJS from "exceljs";
 import { createClient } from "@/lib/supabase/server";
 import { validatePriceCurrency, validateStock } from "../route";
+import { buildProductEmbeddingInput, createProductEmbeddingsBatch } from "@/lib/products/embeddings";
+import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 
 // Trello ticket B4 — bulk product import (spec §12: upload -> parse ->
 // validate -> report invalid rows -> import valid rows). MVP limits so the
@@ -244,7 +246,18 @@ export async function POST(
 
   let inserted: unknown[] = [];
   if (toInsert.length > 0) {
-    const { data, error } = await supabase.from("products").insert(toInsert).select();
+    // One batched embeddings call for the whole file rather than one per
+    // row (createProductEmbeddingsBatch) -- see products/embeddings.ts.
+    // Order-preserving, so zipping back onto toInsert by index is safe.
+    const embeddings = await createProductEmbeddingsBatch(
+      toInsert.map((row) => buildProductEmbeddingInput(row)),
+    );
+    const toInsertWithEmbeddings = toInsert.map((row, i) => ({ ...row, embedding: embeddings[i] }));
+
+    const { data, error } = await supabase
+      .from("products")
+      .insert(toInsertWithEmbeddings)
+      .select(PRODUCT_PUBLIC_COLUMNS);
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

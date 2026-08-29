@@ -128,6 +128,13 @@ describe("AgentEngine.run", () => {
     const openai = {
       conversations: { create: vi.fn().mockResolvedValue({ id: fakeOpenAiConversationId() }) },
       responses: { create: responsesCreate },
+      // Hybrid search's semantic leg (pgvector): search_products now embeds
+      // its keywords via ctx.openai before calling ProductRepository.search
+      // -- a fake here (rather than leaving .embeddings undefined) actually
+      // exercises that wiring end to end against the real search_products
+      // RPC, instead of relying on the module's own graceful-failure catch
+      // to keep this test passing.
+      embeddings: { create: vi.fn().mockResolvedValue({ data: [{ embedding: new Array(1536).fill(0.01) }] }) },
     } as never;
 
     const result = await AgentEngine.run(

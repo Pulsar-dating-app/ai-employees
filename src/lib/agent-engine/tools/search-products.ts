@@ -98,11 +98,14 @@ export const searchProductsTool: AgentTool = {
   async execute(rawArgs, ctx) {
     const args = rawArgs as SearchProductsArgs;
     // Spread args FIRST -- companyId must win even if a model-supplied
-    // args object smuggled its own `companyId` key. ctx.supabase is passed
-    // through so this tool honors whatever client run() was given (real
-    // service client in production, an injected test client otherwise) --
-    // ProductRepository must never build its own here.
-    const products = await ProductRepository.search({ ...args, companyId: ctx.companyId }, ctx.supabase);
+    // args object smuggled its own `companyId` key. ctx.supabase/ctx.openai
+    // are passed through so this tool honors whatever clients run() was
+    // given (real clients in production, injected test ones otherwise) --
+    // ProductRepository must never build its own here. ctx.openai is what
+    // turns search() on to its semantic (embedding) leg -- this is the one
+    // real caller that's meant to get it; ProductRepository.search's own
+    // file comment explains why it isn't defaulted the way ctx.supabase is.
+    const products = await ProductRepository.search({ ...args, companyId: ctx.companyId }, ctx.supabase, ctx.openai);
     return products;
   },
 };
