@@ -104,15 +104,26 @@ describe("Product search /api/companies/:id/products/search", () => {
     expect(res.json.products.map((p) => p.id)).toEqual([match]);
   });
 
-  it("text search still requires every word to match -- doesn't degrade into matching any word", async () => {
+  // This used to assert an empty result: every word was required, full stop,
+  // so "camiseta azul masculina" found nothing even with a blue t-shirt in
+  // stock. That turned out to be the same bug a merchant later hit with
+  // "camisa de time" -- a word the catalog has simply never heard of
+  // silently killed the whole search. A word with no match anywhere carries
+  // no information, so it is now dropped and the surviving words stay ANDed.
+  //
+  // The invariant that actually matters is unchanged, and is what this test
+  // now pins: the search must never degrade into matching ANY word. "Calça
+  // Azul" shares "azul" and must still never come back for a camiseta query.
+  it("drops a word the catalog never uses, without degrading into matching any word", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Strict Tokenized Search Co");
 
     await createProduct(owner.cookieHeader, companyId, { name: "Camiseta Azul" });
+    await createProduct(owner.cookieHeader, companyId, { name: "Calça Azul" });
 
     const res = await search(owner.cookieHeader, companyId, "?text=camiseta%20azul%20masculina");
     expect(res.status).toBe(200);
-    expect(res.json.products).toEqual([]);
+    expect(res.json.products.map((p) => p.name)).toEqual(["Camiseta Azul"]);
   });
 
   // Trello: LLM keyword expansion (see 2026-08-27 decisions.md). Unlike
@@ -242,6 +253,69 @@ describe("Product search /api/companies/:id/products/search", () => {
     const res = await search(owner.cookieHeader, companyId, `?productId=${productId}`);
     expect(res.status).toBe(200);
     expect(res.json.products).toEqual([]);
+  });
+
+  // Real bug found hand-testing Malu: a customer asked for "camisa de time",
+  // then "camisa de futebol", and was told the store had neither -- but
+  // "camisa do corinthians" found the shirt immediately. Two independent
+  // causes, one test each.
+  describe("category-word and multi-word keyword recall", () => {
+    async function seedFootballShirt(cookie: string, name: string) {
+      const companyId = await createCompany(cookie, name);
+      await createProduct(cookie, companyId, {
+        name: "Camisa Corinthians Nike I 2026/27",
+        description: "Uniforme oficial do clube, tecido leve",
+        category: "Futebol",
+      });
+      return companyId;
+    }
+
+    it("finds a product by its category word, which no name/description contains", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await seedFootballShirt(owner.cookieHeader, "Category Recall Co");
+
+      // "futebol" appears only in `category` -- before it was added to
+      // search_vector this matched nothing, and the p_category filter
+      // couldn't help either (exact-match only, and the model is told never
+      // to guess it).
+      const res = await search(owner.cookieHeader, companyId, "?keywords=futebol");
+      expect(res.status).toBe(200);
+      expect(res.json.products).toHaveLength(1);
+    });
+
+    it("falls back to individual words when a multi-word keyword matches nothing", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await seedFootballShirt(owner.cookieHeader, "Phrase Fallback Co");
+
+      // Every word inside one keyword is ANDed, and no product says "time",
+      // so the strict pass finds nothing -- the relaxation retries on the
+      // individual words, where "camisa" hits.
+      const res = await search(
+        owner.cookieHeader,
+        companyId,
+        `?keywords=${encodeURIComponent("camisa de time")}`,
+      );
+      expect(res.status).toBe(200);
+      expect(res.json.products).toHaveLength(1);
+    });
+
+    it("does not relax a multi-word keyword that already found something", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "No Needless Relax Co");
+      await createProduct(owner.cookieHeader, companyId, { name: "Camiseta Azul" });
+      await createProduct(owner.cookieHeader, companyId, { name: "Camiseta Vermelha" });
+
+      // The precision the AND semantics buys must survive: "camiseta azul"
+      // matches, so the red one must never be dragged in by a fallback.
+      const res = await search(
+        owner.cookieHeader,
+        companyId,
+        `?keywords=${encodeURIComponent("camiseta azul")}`,
+      );
+      expect(res.status).toBe(200);
+      expect(res.json.products).toHaveLength(1);
+      expect(res.json.products[0].name).toBe("Camiseta Azul");
+    });
   });
 
   it("text search containing a comma/quote doesn't break the query", async () => {
