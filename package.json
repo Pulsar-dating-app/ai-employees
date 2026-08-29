@@ -12,7 +12,8 @@
     "test:integration": "npm run test:integration:env:up && npm run test:integration:env:reset && vitest run --project=integration",
     "test:integration:env:up": "supabase start",
     "test:integration:env:reset": "supabase db reset",
-    "test:integration:env:down": "supabase stop"
+    "test:integration:env:down": "supabase stop",
+    "backfill:product-embeddings": "node scripts/backfill-product-embeddings.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

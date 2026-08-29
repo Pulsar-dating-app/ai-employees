@@ -73,6 +73,16 @@ export default async function setup() {
         META_APP_ID: "test-meta-app-id",
         META_APP_SECRET: "test-meta-app-secret",
         META_GRAPH_API_BASE_URL: graphApiMock.url,
+        // src/lib/products/embeddings.ts's kill switch -- the ~60 product-
+        // create call sites across this suite must never make a real
+        // OpenAI network call (cost, latency, and the exact "no real LLM
+        // calls in tests" principle agent-engine.test.ts's own tests
+        // follow). Every write still succeeds with embedding: null, which
+        // exercises the same degrade-gracefully path a real API outage
+        // would. Hybrid-search ranking itself is tested by writing a
+        // fabricated vector directly (see product-search-hybrid.test.ts),
+        // never by waiting on a real embedding here.
+        DISABLE_PRODUCT_EMBEDDINGS: "true",
       },
       stdio: "inherit",
       // npx resolves to npx.cmd on Windows, which spawn() can't exec
@@ -120,7 +130,14 @@ export default async function setup() {
 // running. taskkill /T kills the whole tree; on POSIX, kill() is enough.
 function killProcessTree(child: ChildProcess) {
   if (process.platform === "win32" && child.pid) {
-    execSync(`taskkill /pid ${child.pid} /T /F`, { stdio: "ignore" });
+    try {
+      execSync(`taskkill /pid ${child.pid} /T /F`, { stdio: "ignore" });
+    } catch {
+      // taskkill exits 128 when the process is already gone -- which is the
+      // desired end state, not a failure. Left unhandled it throws out of
+      // teardown *after* every test has passed, which suppresses vitest's
+      // own summary and makes a green run look ambiguous.
+    }
   } else {
     child.kill();
   }

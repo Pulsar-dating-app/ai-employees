@@ -21,7 +21,17 @@ type Grounding = {
   violations: { kind: string; text: string }[];
 };
 
-type ChatMessage = { role: "user" | "assistant"; content: string; grounding?: Grounding };
+// The arguments the model chose for each tool call. For a search these are
+// the closest thing to seeing her reasoning: they are the decision she
+// made, and they appear in no log anywhere else.
+type ToolCall = { name: string; args: Record<string, unknown>; resultCount: number | null; resultNames: string[] };
+
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  grounding?: Grounding;
+  toolCalls?: ToolCall[];
+};
 
 export function DevChatTest({
   companyId,
@@ -61,8 +71,8 @@ export function DevChatTest({
       return;
     }
 
-    const { responseText, grounding } = await res.json();
-    setMessages((prev) => [...prev, { role: "assistant", content: responseText, grounding }]);
+    const { responseText, grounding, toolCalls } = await res.json();
+    setMessages((prev) => [...prev, { role: "assistant", content: responseText, grounding, toolCalls }]);
   }
 
   return (
@@ -95,6 +105,15 @@ export function DevChatTest({
                     >
                       {m.content}
                     </div>
+                    {m.toolCalls?.map((call, ci) => (
+                      <p key={ci} className="mt-1 max-w-[85%] text-xs text-on-surface-variant">
+                        🔎 {call.name}({Object.entries(call.args)
+                          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
+                          .join(" | ")}
+                        ){call.resultCount === null ? null : ` → ${call.resultCount}`}
+                        {call.resultNames.length > 0 ? `: ${call.resultNames.join(", ")}` : null}
+                      </p>
+                    ))}
                     {/* Shown on every reply, including the passing case: a
                         badge that only appears on failure makes "nothing here"
                         ambiguous between "the check passed" and "the check

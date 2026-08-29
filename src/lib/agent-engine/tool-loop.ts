@@ -7,7 +7,11 @@ import { ToolLoopLimitExceededError, UnknownToolCallError } from "./errors";
 // after being handed back to the model) because C7's step-10 grounding check
 // needs the real retrieved facts to validate the final response against --
 // see grounding.ts.
-export type ToolCallRecord = { name: string; result: unknown };
+// `args` is what the MODEL chose to search for -- the single most useful
+// thing to see when a search behaves oddly, and invisible everywhere else:
+// it travels in the RPC's POST body, which Supabase's edge logs don't
+// capture, and Postgres doesn't log function parameters by default.
+export type ToolCallRecord = { name: string; args: Record<string, unknown>; result: unknown };
 
 export type ToolLoopResult = {
   responseText: string;
@@ -81,7 +85,7 @@ export async function runToolLoop({
 
         const args = JSON.parse(call.arguments);
         const result = await tool.execute(args, toolCtx);
-        toolResults.push({ name: call.name, result });
+        toolResults.push({ name: call.name, args, result });
 
         return {
           type: "function_call_output" as const,

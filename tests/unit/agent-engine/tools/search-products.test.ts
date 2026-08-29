@@ -19,6 +19,7 @@ function fakeToolCtx(companyId: string): ToolExecutionContext {
     conversationId: "conversation-1",
     customerId: "customer-1",
     supabase: {} as ToolExecutionContext["supabase"],
+    openai: {} as ToolExecutionContext["openai"],
   };
 }
 
@@ -39,13 +40,16 @@ describe("searchProductsTool", () => {
     expect(ProductRepository.search).toHaveBeenCalledWith(
       expect.objectContaining({ companyId: "trusted-company-id", keywords: ["widget"] }),
       expect.anything(),
+      expect.anything(),
     );
   });
 
-  it("passes ctx.supabase through instead of letting ProductRepository build its own client", async () => {
+  it("passes ctx.supabase and ctx.openai through instead of building its own clients", async () => {
     const ctx = fakeToolCtx("trusted-company-id");
     await searchProductsTool.execute({ keywords: ["widget"] }, ctx);
 
-    expect(ProductRepository.search).toHaveBeenCalledWith(expect.anything(), ctx.supabase);
+    // ctx.openai is what turns on hybrid search's semantic leg (see
+    // ProductRepository.search's own comment on why it isn't defaulted).
+    expect(ProductRepository.search).toHaveBeenCalledWith(expect.anything(), ctx.supabase, ctx.openai);
   });
 });

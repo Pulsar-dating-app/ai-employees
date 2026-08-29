@@ -192,7 +192,24 @@ export async function POST(
     // the step-10 check regenerated or blocked a reply -- otherwise a
     // successful block is invisible while hand-testing, and looks like Malu
     // just decided to be vague.
-    return NextResponse.json({ responseText: result.responseText, grounding: result.grounding });
+    // Summarised, not raw: the panel wants "what did she search, and how
+    // many came back", not the full product rows it already renders in the
+    // reply. The arguments are the model's actual decision -- they exist
+    // nowhere else (the RPC body isn't in Supabase's logs).
+    const toolCalls = result.toolCalls.map((call) => ({
+      name: call.name,
+      args: call.args,
+      resultCount: Array.isArray(call.result) ? call.result.length : null,
+      resultNames: Array.isArray(call.result)
+        ? call.result.map((row: unknown) => (row as { name?: string })?.name).filter(Boolean)
+        : [],
+    }));
+
+    return NextResponse.json({
+      responseText: result.responseText,
+      grounding: result.grounding,
+      toolCalls,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: "Agent Engine failed", detail: err instanceof Error ? err.message : String(err) },

@@ -70,6 +70,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       conversationId: conversation.id,
       customerId: conversation.customer_id,
       supabase,
+      openai,
     },
   };
 
@@ -94,6 +95,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       conversationId: conversation.id,
       openAiConversationId,
       grounding: { status: "grounded", violations: [] },
+      toolCalls: draft.toolResults,
     };
   }
 
@@ -123,6 +125,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       conversationId: conversation.id,
       openAiConversationId,
       grounding: { status: "regenerated", violations: firstCheck.violations },
+      toolCalls: [...draft.toolResults, ...retry.toolResults],
     };
   }
 
@@ -133,6 +136,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     conversationId: conversation.id,
     openAiConversationId,
     grounding: { status: "blocked", violations: firstCheck.violations },
+    toolCalls: [...draft.toolResults, ...retry.toolResults],
   };
 }
 

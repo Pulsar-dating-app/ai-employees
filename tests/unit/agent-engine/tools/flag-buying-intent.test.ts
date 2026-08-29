@@ -29,6 +29,7 @@ function fakeToolCtx(companyId: string) {
         },
       }),
     } as unknown as ToolExecutionContext["supabase"],
+    openai: {} as ToolExecutionContext["openai"],
   } satisfies ToolExecutionContext;
   return { ctx, inserts };
 }
@@ -101,6 +102,7 @@ describe("flagBuyingIntentTool", () => {
           insert: () => Promise.resolve({ error: { message: "boom", code: "XX000" } }),
         }),
       } as unknown as ToolExecutionContext["supabase"],
+      openai: {} as ToolExecutionContext["openai"],
     } satisfies ToolExecutionContext;
 
     await expect(flagBuyingIntentTool.execute({}, ctx)).rejects.toMatchObject({ code: "XX000" });

@@ -19,6 +19,7 @@ function fakeToolCtx(companyId: string): ToolExecutionContext {
     conversationId: "conversation-1",
     customerId: "customer-1",
     supabase: {} as ToolExecutionContext["supabase"],
+    openai: {} as ToolExecutionContext["openai"],
   };
 }
 

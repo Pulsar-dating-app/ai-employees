@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildProductEmbeddingInput, createProductEmbedding } from "@/lib/products/embeddings";
+import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 
 // Trello ticket B3 — update/soft-delete a single product.
 
@@ -38,7 +40,7 @@ async function getProduct(
 ) {
   const { data: product, error } = await supabase
     .from("products")
-    .select("*")
+    .select(PRODUCT_PUBLIC_COLUMNS)
     .eq("id", productId)
     .eq("company_id", companyId)
     .maybeSingle();
@@ -166,11 +168,33 @@ export async function PATCH(
     return NextResponse.json({ product: productLookup.product });
   }
 
+  // Only regenerate the embedding when a field that actually feeds it
+  // changed -- editing price/stock/sku/etc is by far the most common PATCH
+  // on this route (F3's product management UI), and re-embedding on every
+  // one of those would be a real API call this update doesn't need. Uses
+  // the *effective* value (post-update, falling back to what's already
+  // stored) the same way price/currency validation above does, so clearing
+  // just the description on an otherwise-unchanged product still re-embeds
+  // with the new (shorter) text rather than the stale one.
+  if ("name" in update || "description" in update || "category" in update) {
+    const embedding = await createProductEmbedding(
+      buildProductEmbeddingInput({
+        name: "name" in update ? (update.name as string) : productLookup.product.name,
+        category: "category" in update ? (update.category as string | null) : productLookup.product.category,
+        description:
+          "description" in update
+            ? (update.description as string | null)
+            : productLookup.product.description,
+      }),
+    );
+    update.embedding = embedding;
+  }
+
   const { data, error } = await supabase
     .from("products")
     .update(update)
     .eq("id", productId)
-    .select()
+    .select(PRODUCT_PUBLIC_COLUMNS)
     .single();
 
   if (error) {
@@ -207,7 +231,7 @@ export async function DELETE(
     .from("products")
     .update({ is_active: false })
     .eq("id", productId)
-    .select()
+    .select(PRODUCT_PUBLIC_COLUMNS)
     .single();
 
   if (error) {
