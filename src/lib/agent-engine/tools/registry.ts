@@ -5,6 +5,7 @@ import { createCheckoutLinkTool } from "./create-checkout-link";
 import { flagBuyingIntentTool } from "./flag-buying-intent";
 import { getBusinessInformationTool } from "./get-business-information";
 import { getPolicyInformationTool } from "./get-policy-information";
+import { requestHumanTool } from "./request-human";
 
 // The append-to-this-array registry: a future tool (checkout links, etc.)
 // gets added here and needs no other wiring. deps.tools on AgentEngine.run
@@ -17,4 +18,5 @@ export const defaultTools: AgentTool[] = [
   flagBuyingIntentTool,
   getBusinessInformationTool,
   getPolicyInformationTool,
+  requestHumanTool,
 ];

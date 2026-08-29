@@ -256,6 +256,16 @@ The tool Malu calls once a customer is ready to buy (spec §14). Sidde never pro
 - Collisions on the partial unique index over `tracking_id` are retried (3 attempts) rather than surfaced as a raw Postgres error mid-conversation.
 - Tests: `tests/unit/checkout/links.test.ts` (pure), `tests/unit/agent-engine/tools/create-checkout-link.test.ts` (schema, ctx-over-args, both unavailable paths), `tests/integration/checkout-link.test.ts` (real `events` rows, distinct ids per call, cross-tenant product refused, full `AgentEngine.run` round trip).
 
+### request_human handoff (Trello C5)
+
+`src/lib/agent-engine/tools/request-human.ts` — deliberately minimal per the card's own scope: a flag, not a live handoff system. No notification, no takeover UI, no assignment logic; F5 (not built yet) will surface flagged conversations by reading this field.
+
+- **Reuses `conversations.status = 'paused'`** rather than adding a dedicated `needs_human` boolean — the column already allows the value (`check (status in ('active', 'closed', 'paused'))`, no migration), nothing else currently writes `'paused'` to *this* table (only `company_agents.status`, a different column, uses that value — no collision), and it was already anticipated when the 24h conversation-rotation logic (C1) was built: see the 2026-08-27 decisions.md entry noting `status` is never blindly reset to `'active'` on an unrelated `updated_at` bump, specifically so a paused/needs-human conversation can't be silently reactivated. See the 2026-08-28 decisions.md entry for the full reasoning this ticket's own "pick one" requirement resolved.
+- **No args, no `events` row** — the card only asks about `conversations`, and `event_type` has no matching enum value; adding one wasn't in scope.
+- Tool description explicitly discourages overuse: only after actually trying `search_products`/`get_business_information`/`get_policy_information`, not as a first resort. After calling it, Malu still replies to the customer herself in her own voice (e.g. "Deixa que eu chamo alguém do time...") — the tool call itself is invisible to the customer, same as every other tool here.
+- **Known caveat, not fixed here** (D2/D3's job, not this tool's): `dev-chat-test`'s 24h reuse query only looks up `status = 'active'` conversations, so the customer's next message in that *test* tool would silently start a new conversation rather than staying paused. Doesn't apply to real production routing since D2 doesn't exist yet.
+- Tests: `tests/unit/agent-engine/tools/request-human.test.ts` (schema, ctx-over-args company scoping, update error surfaced), a round-trip case added to `tests/integration/agent-engine.test.ts` (real `AgentEngine.run` call, asserts `conversations.status` actually becomes `'paused'` in Postgres).
+
 ### Buying-intent detection (Trello C6)
 
 `src/lib/agent-engine/tools/flag-buying-intent.ts` — the tool that powers spec §15's "Buying Intent" metric (which E2 will aggregate). Registered in `tools/registry.ts` alongside the other agent tools.
