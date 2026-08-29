@@ -197,6 +197,21 @@ export async function PATCH(
     updates.faq = value;
   }
 
+  // Trello H3 — whether Ana's book_appointment tool (and this app's own
+  // appointments POST route) auto-confirms a new booking or holds it as
+  // 'requested' pending merchant approval. Not nullable like the
+  // text/short fields above — a boolean setting has no "unset" state.
+  if ("requires_appointment_approval" in body) {
+    const value = (body as Record<string, unknown>).requires_appointment_approval;
+    if (typeof value !== "boolean") {
+      return NextResponse.json(
+        { error: "requires_appointment_approval must be a boolean" },
+        { status: 400 },
+      );
+    }
+    updates.requires_appointment_approval = value;
+  }
+
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
