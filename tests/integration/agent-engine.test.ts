@@ -183,6 +183,42 @@ describe("AgentEngine.run", () => {
     });
   });
 
+  // Trello C5 -- proves request_human is actually wired into the registry
+  // and reachable end to end (tests/unit/agent-engine/tools/request-human.test.ts
+  // covers the wrapper's own contract in isolation), and that it really
+  // pauses the real conversations row rather than just returning a shape.
+  it("round-trips a real request_human tool call, pausing the conversation in Postgres", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId, conversationId } = await seedConversation(owner, "Handoff Co");
+
+    const responsesCreate = vi
+      .fn()
+      .mockResolvedValueOnce(functionCallResponse("call_1", "request_human", {}))
+      .mockResolvedValueOnce(textResponse("Deixa que eu chamo alguém do time pra te ajudar com isso 😊"));
+    const openai = {
+      conversations: { create: vi.fn().mockResolvedValue({ id: fakeOpenAiConversationId() }) },
+      responses: { create: responsesCreate },
+    } as never;
+    const supabase = getTestServiceClient();
+
+    const result = await AgentEngine.run(
+      { companyId, conversationId, message: "I want to speak to a real person about a complaint" },
+      { supabase, openai },
+    );
+
+    expect(result.responseText).toBe("Deixa que eu chamo alguém do time pra te ajudar com isso 😊");
+
+    const toolOutput = JSON.parse(responsesCreate.mock.calls[1][0].input[0].output);
+    expect(toolOutput).toEqual({ recorded: true });
+
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("status")
+      .eq("id", conversationId)
+      .single();
+    expect(conversation?.status).toBe("paused");
+  });
+
   it("rejects when companyId doesn't match the conversation's own company", async () => {
     const owner = await signUpTestUser("owner");
     const { conversationId } = await seedConversation(owner, "Mismatch Co A");
