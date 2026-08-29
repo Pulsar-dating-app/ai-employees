@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { syncAppointmentConfirmed } from "@/lib/google-calendar/appointment-sync";
 
 // Trello H3 — appointments CRUD, scoped to company_id. The booking record
 // behind Ana's scheduling tools (Trello J3) and the dashboard's Appointments
-// view (Trello K4) — this ticket only has to be internally consistent with
-// itself; Google Calendar sync is Trello I3, not this file's job.
+// view (Trello K4). Google Calendar sync (Trello I3) hooks in below: a
+// newly `confirmed` appointment gets a Google event; a `requested` one
+// (pending manual approval) does not, until a later PATCH confirms it.
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -148,11 +150,11 @@ export async function POST(
     await Promise.all([
       supabase
         .from("services")
-        .select("id, duration_minutes, buffer_minutes, is_active")
+        .select("id, name, duration_minutes, buffer_minutes, is_active")
         .eq("id", serviceId)
         .eq("company_id", companyId)
         .maybeSingle(),
-      supabase.from("customers").select("id").eq("id", customerId).eq("company_id", companyId).maybeSingle(),
+      supabase.from("customers").select("id, name").eq("id", customerId).eq("company_id", companyId).maybeSingle(),
       supabase.from("companies").select("requires_appointment_approval").eq("id", companyId).single(),
     ]);
 
@@ -231,6 +233,28 @@ export async function POST(
       );
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Sync to Google Calendar only once the appointment is actually
+  // confirmed — a `requested` one pending manual approval never touches
+  // the merchant's calendar. Best-effort: a sync failure never fails the
+  // booking itself, see appointment-sync.ts.
+  if (status === "confirmed") {
+    const googleEventId = await syncAppointmentConfirmed(companyId, {
+      serviceName: service.name,
+      customerName: customer.name,
+      startsAt: data.starts_at,
+      endsAt: data.ends_at,
+    });
+    if (googleEventId) {
+      const { data: synced } = await supabase
+        .from("appointments")
+        .update({ google_event_id: googleEventId })
+        .eq("id", data.id)
+        .select()
+        .single();
+      if (synced) return NextResponse.json({ appointment: synced }, { status: 201 });
+    }
   }
 
   return NextResponse.json({ appointment: data }, { status: 201 });

@@ -1,11 +1,24 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  syncAppointmentConfirmed,
+  syncAppointmentRescheduled,
+  syncAppointmentCancelled,
+} from "@/lib/google-calendar/appointment-sync";
 
 // Trello H3 — update/cancel a single appointment. Reschedule (changing
 // starts_at and/or service_id) is supported here for dashboard convenience
 // even though Ana's own book_appointment tool (Trello J3) treats reschedule
 // as cancel-then-rebook rather than a dedicated tool call — this is the
 // general-purpose CRUD API, not limited to what one caller needs.
+//
+// Trello I3 — Google Calendar sync hooks in after the DB write succeeds,
+// keyed off the appointment's *pre-update* google_event_id: cancelling an
+// appointment that had one deletes the Google event; confirming one that
+// didn't have one (a manual-approval appointment going requested ->
+// confirmed) creates it; rescheduling one that already had one updates it.
+// These three cases are mutually exclusive by construction. Best-effort —
+// see appointment-sync.ts, a sync failure never fails the request.
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -53,6 +66,27 @@ async function getAppointment(
   }
 
   return { appointment, error: null };
+}
+
+// Shared by PATCH and DELETE: deletes the Google event for a
+// newly-cancelled appointment and clears google_event_id. Returns the
+// re-fetched row (with google_event_id nulled), or null if that follow-up
+// update itself failed for some reason — callers fall back to their own
+// already-fetched row in that case.
+async function cancelGoogleEventAndClear(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+  appointmentId: string,
+  googleEventId: string,
+) {
+  await syncAppointmentCancelled(companyId, googleEventId);
+  const { data: synced } = await supabase
+    .from("appointments")
+    .update({ google_event_id: null })
+    .eq("id", appointmentId)
+    .select()
+    .single();
+  return synced ?? null;
 }
 
 const VALID_STATUSES = ["requested", "confirmed", "cancelled", "completed", "no_show"] as const;
@@ -171,6 +205,41 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const preUpdateGoogleEventId = appointmentLookup.appointment.google_event_id as string | null;
+  const rescheduled = "starts_at" in body || "service_id" in body;
+
+  if (update.status === "cancelled" && preUpdateGoogleEventId) {
+    const synced = await cancelGoogleEventAndClear(supabase, companyId, appointmentId, preUpdateGoogleEventId);
+    if (synced) return NextResponse.json({ appointment: synced });
+  } else if (update.status === "confirmed" && !preUpdateGoogleEventId) {
+    const [{ data: service }, { data: customer }] = await Promise.all([
+      supabase.from("services").select("name").eq("id", data.service_id).maybeSingle(),
+      supabase.from("customers").select("name").eq("id", data.customer_id).maybeSingle(),
+    ]);
+    if (service && customer) {
+      const googleEventId = await syncAppointmentConfirmed(companyId, {
+        serviceName: service.name,
+        customerName: customer.name,
+        startsAt: data.starts_at,
+        endsAt: data.ends_at,
+      });
+      if (googleEventId) {
+        const { data: synced } = await supabase
+          .from("appointments")
+          .update({ google_event_id: googleEventId })
+          .eq("id", appointmentId)
+          .select()
+          .single();
+        if (synced) return NextResponse.json({ appointment: synced });
+      }
+    }
+  } else if (preUpdateGoogleEventId && rescheduled && update.status !== "cancelled") {
+    await syncAppointmentRescheduled(companyId, preUpdateGoogleEventId, {
+      startsAt: data.starts_at,
+      endsAt: data.ends_at,
+    });
+  }
+
   return NextResponse.json({ appointment: data });
 }
 
@@ -208,6 +277,12 @@ export async function DELETE(
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const preUpdateGoogleEventId = appointmentLookup.appointment.google_event_id as string | null;
+  if (preUpdateGoogleEventId) {
+    const synced = await cancelGoogleEventAndClear(supabase, companyId, appointmentId, preUpdateGoogleEventId);
+    if (synced) return NextResponse.json({ appointment: synced });
   }
 
   return NextResponse.json({ appointment: data });
