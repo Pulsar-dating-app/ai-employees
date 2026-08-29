@@ -3,13 +3,11 @@
 // well-defined slot to replace, not dead code to route around later --
 // `message` is kept in the signature (unused for now) so a real
 // implementation can slot in without callers changing.
+//
+// Step 10 used to live here too, as a pass-through `validateResponse`.
+// Trello C7 replaced it with the real grounding check (`grounding.ts`), so
+// this file is down to one stub.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function determineIntent(message: string): string {
   return "unknown";
-}
-
-// Step 10 -- pass-through. C7 implements the real check (e.g. rejecting a
-// hallucinated price/stock claim per the Grounding principle).
-export function validateResponse(responseText: string): string {
-  return responseText;
 }

@@ -3,6 +3,22 @@ import type { ResponseFunctionToolCall, ResponseInput } from "openai/resources/r
 import { toOpenAiTool, type AgentTool, type ToolExecutionContext } from "./tools/types";
 import { ToolLoopLimitExceededError, UnknownToolCallError } from "./errors";
 
+// What each tool actually returned this turn. Kept (rather than discarded
+// after being handed back to the model) because C7's step-10 grounding check
+// needs the real retrieved facts to validate the final response against --
+// see grounding.ts.
+export type ToolCallRecord = { name: string; result: unknown };
+
+export type ToolLoopResult = {
+  responseText: string;
+  toolResults: ToolCallRecord[];
+  // Ids of the assistant message items the final call produced. C7 deletes
+  // these from the OpenAI conversation when a response fails the grounding
+  // check, so an invented figure can't be read back as something Malu already
+  // said on the next turn.
+  messageItemIds: string[];
+};
+
 // Steps 8+9 -- call the model, and if it asks to run tools, execute them
 // and resubmit their output, repeating until it returns a final answer or
 // maxToolIterations is hit. The `conversation` id already carries prior
@@ -26,10 +42,11 @@ export async function runToolLoop({
   tools: AgentTool[];
   maxToolIterations: number;
   toolCtx: ToolExecutionContext;
-}): Promise<string> {
+}): Promise<ToolLoopResult> {
   const toolsByName = new Map(tools.map((tool) => [tool.name, tool]));
   const openAiTools = tools.map(toOpenAiTool);
 
+  const toolResults: ToolCallRecord[] = [];
   let input: ResponseInput = initialInput;
 
   for (let iteration = 0; iteration < maxToolIterations; iteration++) {
@@ -46,7 +63,16 @@ export async function runToolLoop({
       (item): item is ResponseFunctionToolCall => item.type === "function_call",
     );
 
-    if (functionCalls.length === 0) return response.output_text;
+    if (functionCalls.length === 0) {
+      return {
+        responseText: response.output_text,
+        toolResults,
+        messageItemIds: response.output
+          .filter((item) => item.type === "message")
+          .map((item) => item.id)
+          .filter((id): id is string => Boolean(id)),
+      };
+    }
 
     input = await Promise.all(
       functionCalls.map(async (call) => {
@@ -55,6 +81,7 @@ export async function runToolLoop({
 
         const args = JSON.parse(call.arguments);
         const result = await tool.execute(args, toolCtx);
+        toolResults.push({ name: call.name, result });
 
         return {
           type: "function_call_output" as const,

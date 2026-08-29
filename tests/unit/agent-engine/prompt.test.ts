@@ -220,6 +220,50 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("Guessing at what a real answer \"probably means\"");
   });
 
+  // Trello C7. This wording has to stay in sync with what grounding.ts
+  // actually enforces: a self-computed total traces to no retrieved value, so
+  // the check blocks it. Without this line the model would keep producing
+  // sums the check keeps rejecting.
+  it("always includes a guardrail against stating an unretrieved figure or a self-calculated total", () => {
+    const agentConfig: AgentConfig = {
+      slug: "malu",
+      role: "Sales assistant",
+      description: null,
+      personality: null,
+      systemPrompt: null,
+      companyAgentStatus: "active",
+    };
+
+    const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
+    expect(prompt).toContain("Never state a price or a stock quantity you have not actually looked up");
+    expect(prompt).toContain("A figure you calculated is not a figure you retrieved");
+  });
+
+  // Regression test found manually testing: asked for a country's capital and
+  // when the light bulb was invented, Malu answered both -- nothing had ever
+  // told her what she's *for*, only how to answer. The second assertion is
+  // the one that matters most: this guardrail must defer to C3's
+  // check-the-FAQ-first rule, never override it, or it would re-break the
+  // "Setembro chove?" bug that guardrail exists to fix.
+  it("always includes a guardrail refusing off-topic questions, but only after checking the business's own data", () => {
+    const agentConfig: AgentConfig = {
+      slug: "malu",
+      role: "Sales assistant",
+      description: null,
+      personality: null,
+      systemPrompt: null,
+      companyAgentStatus: "active",
+    };
+
+    const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
+    expect(prompt).toContain("You are not a general assistant");
+    expect(prompt).toContain("a real answer on file always wins, however off-topic the question sounds");
+    expect(prompt).toContain("Only when the business has nothing on it do you decline");
+    // A scope rule's failure mode is a wall -- needs discovery and courtesy
+    // are the job (spec §6), not off-topic chat.
+    expect(prompt).toContain("greetings, small talk, thank-yous");
+  });
+
   it("omits the intent line when intent is the determineIntent stub value ('unknown')", () => {
     const agentConfig: AgentConfig = {
       slug: "malu",

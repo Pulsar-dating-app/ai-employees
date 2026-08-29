@@ -19,8 +19,8 @@ function fakeToolCtx(): ToolExecutionContext {
   };
 }
 
-function textResponse(text: string) {
-  return { output: [], output_text: text };
+function textResponse(text: string, messageId = "msg_1") {
+  return { output: [{ type: "message", id: messageId }], output_text: text };
 }
 
 function functionCallResponse(callId: string, name: string, args: Record<string, unknown>) {
@@ -46,7 +46,11 @@ describe("runToolLoop", () => {
       toolCtx: fakeToolCtx(),
     });
 
-    expect(result).toBe("Hello there!");
+    expect(result.responseText).toBe("Hello there!");
+    expect(result.toolResults).toEqual([]);
+    // C7 needs these ids to be able to delete an ungrounded draft from the
+    // conversation.
+    expect(result.messageItemIds).toEqual(["msg_1"]);
     expect(create).toHaveBeenCalledTimes(1);
   });
 
@@ -76,7 +80,10 @@ describe("runToolLoop", () => {
       toolCtx: fakeToolCtx(),
     });
 
-    expect(result).toBe("Done!");
+    expect(result.responseText).toBe("Done!");
+    // Recorded, not just forwarded to the model -- C7's grounding check
+    // validates the final text against exactly these results.
+    expect(result.toolResults).toEqual([{ name: "do_thing", result: { ok: true } }]);
     expect(execute).toHaveBeenCalledWith({ foo: "bar" }, expect.objectContaining({ companyId: "company-1" }));
 
     const secondCallArgs = create.mock.calls[1][0];

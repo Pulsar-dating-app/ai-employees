@@ -188,7 +188,11 @@ export async function POST(
     // stamps this on any UPDATE regardless of the value written here.
     await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversation.id);
 
-    return NextResponse.json({ responseText: result.responseText });
+    // `grounding` (Trello C7) is echoed back so the dev panel can show when
+    // the step-10 check regenerated or blocked a reply -- otherwise a
+    // successful block is invisible while hand-testing, and looks like Malu
+    // just decided to be vague.
+    return NextResponse.json({ responseText: result.responseText, grounding: result.grounding });
   } catch (err) {
     return NextResponse.json(
       { error: "Agent Engine failed", detail: err instanceof Error ? err.message : String(err) },

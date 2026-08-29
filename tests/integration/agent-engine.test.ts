@@ -4,6 +4,7 @@ import {
   AgentUnavailableError,
   ConversationCompanyMismatchError,
 } from "@/lib/agent-engine/errors";
+import { UNGROUNDED_FALLBACK_TEXT } from "@/lib/agent-engine/constants";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
@@ -217,6 +218,113 @@ describe("AgentEngine.run", () => {
       .eq("id", conversationId)
       .single();
     expect(conversation?.status).toBe("paused");
+  });
+
+  // Trello C7 -- step 10. The unit tests (tests/unit/agent-engine/grounding.test.ts)
+  // cover claim extraction against fakes; these three prove the check is
+  // actually wired into run(), and that its cross-turn backstop reads real
+  // Postgres rows.
+  describe("grounding validation (C7)", () => {
+    function fakeOpenAi(responsesCreate: ReturnType<typeof vi.fn>, itemsDelete = vi.fn().mockResolvedValue({})) {
+      return {
+        conversations: {
+          create: vi.fn().mockResolvedValue({ id: fakeOpenAiConversationId() }),
+          items: { delete: itemsDelete },
+        },
+        responses: { create: responsesCreate },
+      } as never;
+    }
+
+    it("blocks an invented price, and never sends either failed draft", async () => {
+      const owner = await signUpTestUser("owner");
+      const { companyId, conversationId } = await seedConversation(owner, "Invented Price Co");
+
+      await api("POST", `/api/companies/${companyId}/products`, owner.cookieHeader, {
+        name: "Camiseta Azul",
+        price: 89.9,
+        currency: "BRL",
+      });
+
+      // Both drafts quote a price that exists nowhere: not in a tool result,
+      // not in the customer's message, not in the real catalog.
+      const responsesCreate = vi
+        .fn()
+        .mockResolvedValueOnce(textResponse("A camiseta azul sai por R$ 199,90!"))
+        .mockResolvedValueOnce(textResponse("Ela custa 199,90 mesmo 😊"));
+      const openai = fakeOpenAi(responsesCreate);
+
+      const result = await AgentEngine.run(
+        { companyId, conversationId, message: "quanto custa a camiseta azul?" },
+        { supabase: getTestServiceClient(), openai },
+      );
+
+      expect(result.grounding.status).toBe("blocked");
+      expect(result.responseText).toBe(UNGROUNDED_FALLBACK_TEXT);
+      expect(result.responseText).not.toContain("199");
+      // One regeneration attempt, no more.
+      expect(responsesCreate).toHaveBeenCalledTimes(2);
+      expect(result.grounding.violations[0]).toMatchObject({ kind: "price" });
+    });
+
+    it("regenerates once and sends the retry when it stops inventing", async () => {
+      const owner = await signUpTestUser("owner");
+      const { companyId, conversationId } = await seedConversation(owner, "Regenerated Reply Co");
+
+      await api("POST", `/api/companies/${companyId}/products`, owner.cookieHeader, {
+        name: "Camiseta Azul",
+        price: 89.9,
+        currency: "BRL",
+      });
+
+      const responsesCreate = vi
+        .fn()
+        .mockResolvedValueOnce(textResponse("Sai por R$ 199,90!"))
+        .mockResolvedValueOnce(functionCallResponse("call_1", "search_products", { keywords: ["camiseta"] }))
+        .mockResolvedValueOnce(textResponse("Na verdade ela sai por R$ 89,90 😊"));
+      const itemsDelete = vi.fn().mockResolvedValue({});
+      const openai = fakeOpenAi(responsesCreate, itemsDelete);
+
+      const result = await AgentEngine.run(
+        { companyId, conversationId, message: "quanto custa a camiseta?" },
+        { supabase: getTestServiceClient(), openai },
+      );
+
+      expect(result.grounding.status).toBe("regenerated");
+      expect(result.responseText).toBe("Na verdade ela sai por R$ 89,90 😊");
+
+      // The retry is told what was rejected, as a developer turn -- never as
+      // something the customer said.
+      const retryInput = responsesCreate.mock.calls[1][0].input;
+      expect(retryInput[0].role).toBe("developer");
+      expect(retryInput[0].content).toContain("R$ 199,90");
+    });
+
+    it("accepts a real catalog price restated with no tool call this turn", async () => {
+      const owner = await signUpTestUser("owner");
+      const { companyId, conversationId } = await seedConversation(owner, "Cross Turn Price Co");
+
+      await api("POST", `/api/companies/${companyId}/products`, owner.cookieHeader, {
+        name: "Camiseta Azul",
+        price: 89.9,
+        currency: "BRL",
+      });
+
+      // The price was looked up on an earlier turn (that history lives
+      // server-side at OpenAI, so this process holds no tool result for it).
+      // Without the real-catalog backstop this ordinary restatement would be
+      // a false block.
+      const responsesCreate = vi.fn().mockResolvedValueOnce(textResponse("Isso, ela é R$ 89,90 mesmo!"));
+      const openai = fakeOpenAi(responsesCreate);
+
+      const result = await AgentEngine.run(
+        { companyId, conversationId, message: "então é 89,90 mesmo?" },
+        { supabase: getTestServiceClient(), openai },
+      );
+
+      expect(result.grounding.status).toBe("grounded");
+      expect(result.responseText).toBe("Isso, ela é R$ 89,90 mesmo!");
+      expect(responsesCreate).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("rejects when companyId doesn't match the conversation's own company", async () => {
