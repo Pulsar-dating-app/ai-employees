@@ -1,6 +1,7 @@
 import type OpenAI from "openai";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AgentTool } from "./tools/types";
+import type { GroundingClaim } from "./grounding";
 
 // Trello ticket C1 -- the Agent Engine's public contract (spec §17). The
 // pipeline only starts once a `conversations` row already exists -- finding
@@ -16,10 +17,25 @@ export type AgentEngineInput = {
   message: string;
 };
 
+// Trello C7 -- what the step-10 grounding check did to this turn.
+// `grounded`: the first draft passed, nothing was changed. `regenerated`: the
+// first draft quoted a figure it hadn't retrieved, and the retry passed.
+// `blocked`: both drafts failed, so `responseText` is the safe fallback and
+// neither draft was ever sent. `violations` always describes the *first*
+// failure (the one that triggered the intervention), and is empty when
+// `grounded`. Surfaced rather than kept internal so G1's QA pass -- which
+// exists specifically to try to break this -- can see it fire, and so
+// dev-chat-test can flag it while hand-testing.
+export type GroundingOutcome = {
+  status: "grounded" | "regenerated" | "blocked";
+  violations: GroundingClaim[];
+};
+
 export type AgentEngineResult = {
   responseText: string;
   conversationId: string;
   openAiConversationId: string;
+  grounding: GroundingOutcome;
 };
 
 // Every dependency is injectable and defaults to the real production
@@ -33,4 +49,8 @@ export type AgentEngineDeps = {
   model?: string;
   tools?: AgentTool[];
   maxToolIterations?: number;
+  // C7 -- overrides UNGROUNDED_FALLBACK_TEXT, the one hard-coded customer-
+  // facing string in the pipeline (see constants.ts for why it exists and why
+  // a caller may want to localise it).
+  ungroundedFallbackText?: string;
 };

@@ -13,7 +13,15 @@ import { Input } from "@/components/ui/input";
 // the my-agents connections page render it, dev-only, each guarded by its
 // own NODE_ENV check.
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
+// C7's step-10 outcome, echoed by the route purely so this panel can make a
+// grounding intervention visible while hand-testing -- a blocked reply
+// otherwise just looks like Malu being vague for no reason.
+type Grounding = {
+  status: "grounded" | "regenerated" | "blocked";
+  violations: { kind: string; text: string }[];
+};
+
+type ChatMessage = { role: "user" | "assistant"; content: string; grounding?: Grounding };
 
 export function DevChatTest({
   companyId,
@@ -53,8 +61,8 @@ export function DevChatTest({
       return;
     }
 
-    const { responseText } = await res.json();
-    setMessages((prev) => [...prev, { role: "assistant", content: responseText }]);
+    const { responseText, grounding } = await res.json();
+    setMessages((prev) => [...prev, { role: "assistant", content: responseText, grounding }]);
   }
 
   return (
@@ -77,15 +85,33 @@ export function DevChatTest({
                 <p className="text-sm text-on-surface-variant">Manda uma mensagem pra começar.</p>
               ) : (
                 messages.map((m, i) => (
-                  <div
-                    key={i}
-                    className={
-                      m.role === "user"
-                        ? "max-w-[85%] self-end rounded-lg bg-primary px-3 py-2 text-sm text-on-primary"
-                        : "max-w-[85%] self-start whitespace-pre-wrap rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm text-on-surface"
-                    }
-                  >
-                    {m.content}
+                  <div key={i} className={m.role === "user" ? "flex flex-col items-end" : "flex flex-col items-start"}>
+                    <div
+                      className={
+                        m.role === "user"
+                          ? "max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-on-primary"
+                          : "max-w-[85%] whitespace-pre-wrap rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm text-on-surface"
+                      }
+                    >
+                      {m.content}
+                    </div>
+                    {/* Shown on every reply, including the passing case: a
+                        badge that only appears on failure makes "nothing here"
+                        ambiguous between "the check passed" and "the check
+                        never ran", which is the one question a test panel has
+                        to answer. */}
+                    {m.grounding ? (
+                      <p className="mt-1 max-w-[85%] text-xs text-on-surface-variant">
+                        {m.grounding.status === "blocked"
+                          ? "⛔ Resposta bloqueada (grounding)"
+                          : m.grounding.status === "regenerated"
+                            ? "♻️ Resposta refeita (grounding)"
+                            : "✅ Grounding ok"}
+                        {m.grounding.violations.length > 0
+                          ? ` — sem origem: ${m.grounding.violations.map((v) => v.text).join(", ")}`
+                          : null}
+                      </p>
+                    ) : null}
                   </div>
                 ))
               )}

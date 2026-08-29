@@ -1,13 +1,14 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { createOpenAIClient } from "@/lib/openai/client";
 import type { AgentEngineDeps, AgentEngineInput, AgentEngineResult } from "./types";
-import { DEFAULT_MAX_TOOL_ITERATIONS, DEFAULT_MODEL } from "./constants";
-import { loadConversation, resolveOpenAiConversationId } from "./conversation";
+import { DEFAULT_MAX_TOOL_ITERATIONS, DEFAULT_MODEL, UNGROUNDED_FALLBACK_TEXT } from "./constants";
+import { discardConversationItems, loadConversation, resolveOpenAiConversationId } from "./conversation";
 import { loadAgentConfig } from "./config";
 import { loadCustomer } from "./customer";
 import { loadBusinessName } from "./knowledge";
-import { determineIntent, validateResponse } from "./stubs";
+import { determineIntent } from "./stubs";
 import { buildInitialInput, buildSystemPrompt } from "./prompt";
+import { buildGroundingCorrectionInput, checkResponseGrounding } from "./grounding";
 import { runToolLoop } from "./tool-loop";
 import { defaultTools } from "./tools/registry";
 
@@ -53,13 +54,11 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   const instructions = buildSystemPrompt({ agentConfig, businessName, intent });
   const initialInput = buildInitialInput(input.message);
 
-  // Steps 8+9
-  const rawResponseText = await runToolLoop({
+  const loopParams = {
     openai,
     model,
     openAiConversationId,
     instructions,
-    initialInput,
     tools,
     maxToolIterations,
     toolCtx: {
@@ -72,14 +71,71 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       customerId: conversation.customer_id,
       supabase,
     },
+  };
+
+  // Steps 8+9
+  const draft = await runToolLoop({ ...loopParams, initialInput });
+
+  // Step 10 (Trello C7) -- every price/stock figure in the reply has to be
+  // traceable to something actually retrieved, or the reply doesn't go out.
+  // See grounding.ts for what is and isn't deterministically checkable.
+  const firstCheck = await checkResponseGrounding({
+    responseText: draft.responseText,
+    toolResults: draft.toolResults,
+    customerMessage: input.message,
+    supabase,
+    companyId: input.companyId,
   });
 
-  // Step 10
-  const responseText = validateResponse(rawResponseText);
+  if (firstCheck.grounded) {
+    // Step 11
+    return {
+      responseText: draft.responseText,
+      conversationId: conversation.id,
+      openAiConversationId,
+      grounding: { status: "grounded", violations: [] },
+    };
+  }
 
-  // Step 11
-  return { responseText, conversationId: conversation.id, openAiConversationId };
+  // Drop the rejected draft from the conversation *before* regenerating, so
+  // the retry isn't anchored on its own invented figure (and so no later turn
+  // can quote it back).
+  await discardConversationItems(openai, openAiConversationId, draft.messageItemIds);
+
+  const retry = await runToolLoop({
+    ...loopParams,
+    initialInput: buildGroundingCorrectionInput(firstCheck.violations),
+  });
+
+  const secondCheck = await checkResponseGrounding({
+    responseText: retry.responseText,
+    // Facts the first attempt retrieved are still facts this turn retrieved --
+    // the retry shouldn't have to look them up again to be allowed to use them.
+    toolResults: [...draft.toolResults, ...retry.toolResults],
+    customerMessage: input.message,
+    supabase,
+    companyId: input.companyId,
+  });
+
+  if (secondCheck.grounded) {
+    return {
+      responseText: retry.responseText,
+      conversationId: conversation.id,
+      openAiConversationId,
+      grounding: { status: "regenerated", violations: firstCheck.violations },
+    };
+  }
+
+  await discardConversationItems(openai, openAiConversationId, retry.messageItemIds);
+
+  return {
+    responseText: deps.ungroundedFallbackText ?? UNGROUNDED_FALLBACK_TEXT,
+    conversationId: conversation.id,
+    openAiConversationId,
+    grounding: { status: "blocked", violations: firstCheck.violations },
+  };
 }
 
 export const AgentEngine = { run };
-export type { AgentEngineInput, AgentEngineResult, AgentEngineDeps } from "./types";
+export type { AgentEngineInput, AgentEngineResult, AgentEngineDeps, GroundingOutcome } from "./types";
+export type { GroundingClaim } from "./grounding";
