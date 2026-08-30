@@ -10,7 +10,7 @@ import { determineIntent } from "./stubs";
 import { buildInitialInput, buildSystemPrompt } from "./prompt";
 import { buildGroundingCorrectionInput, checkResponseGrounding } from "./grounding";
 import { runToolLoop } from "./tool-loop";
-import { defaultTools } from "./tools/registry";
+import { resolveToolsForAgent } from "./tools/tool-sets";
 
 // Trello ticket C1 -- the orchestration shell from spec §17. This is the
 // piece that turns "an LLM call" into "Malu": every step below is numbered
@@ -21,7 +21,6 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   const supabase = deps.supabase ?? createServiceClient();
   const openai = deps.openai ?? createOpenAIClient();
   const model = deps.model ?? DEFAULT_MODEL;
-  const tools = deps.tools ?? defaultTools;
   const maxToolIterations = deps.maxToolIterations ?? DEFAULT_MAX_TOOL_ITERATIONS;
 
   // Step 1 (conversation half) -- everything else in this pipeline is
@@ -43,6 +42,12 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     loadCustomer(supabase, { companyId: input.companyId, customerId: conversation.customer_id }),
     loadBusinessName(supabase, input.companyId),
   ]);
+
+  // Trello J2 -- resolved here, not at the top of run(), because it depends
+  // on which agent this conversation belongs to. deps.tools still overrides
+  // everything (that's how tests drive the loop with fake single-purpose
+  // tools), so an explicit list is never silently filtered by slug.
+  const tools = deps.tools ?? resolveToolsForAgent(agentConfig.slug);
 
   // Step 2
   const openAiConversationId = await resolveOpenAiConversationId(openai, supabase, conversation);
