@@ -5,6 +5,8 @@ import {
   syncAppointmentRescheduled,
   syncAppointmentCancelled,
 } from "@/lib/google-calendar/appointment-sync";
+import { isWithinBusinessHours, type BusinessHourWindow } from "@/lib/availability/engine";
+import { isValidTimeZone } from "@/lib/analytics/load";
 
 // Trello H3 — update/cancel a single appointment. Reschedule (changing
 // starts_at and/or service_id) is supported here for dashboard convenience
@@ -175,6 +177,36 @@ export async function PATCH(
     const startsAt = typeof startsAtRaw === "string" ? new Date(startsAtRaw) : null;
     if (!startsAt || Number.isNaN(startsAt.getTime())) {
       return NextResponse.json({ error: "starts_at must be a valid ISO datetime string" }, { status: 400 });
+    }
+
+    // Same H3 gap fix as the create route: reject a reschedule whose new
+    // time falls outside every active business_hours window for that local
+    // day, rather than only guarding this at creation.
+    const [{ data: company, error: companyError }, { data: businessHours, error: businessHoursError }] =
+      await Promise.all([
+        supabase.from("companies").select("timezone").eq("id", companyId).single(),
+        supabase.from("business_hours").select("day_of_week, start_time, end_time").eq("company_id", companyId).eq("is_active", true),
+      ]);
+    if (companyError) {
+      return NextResponse.json({ error: companyError.message }, { status: 500 });
+    }
+    if (businessHoursError) {
+      return NextResponse.json({ error: businessHoursError.message }, { status: 500 });
+    }
+
+    // No configured hours means "not set up yet," not "never open" -- see
+    // the matching comment in appointments/route.ts.
+    if (businessHours && businessHours.length > 0) {
+      const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
+      const withinHours = isWithinBusinessHours({
+        timezone,
+        businessHours: businessHours as BusinessHourWindow[],
+        startsAt: startsAt.toISOString(),
+        durationMinutes: service.duration_minutes,
+      });
+      if (!withinHours) {
+        return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
+      }
     }
 
     update.service_id = effectiveServiceId;

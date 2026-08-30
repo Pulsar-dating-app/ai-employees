@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { syncAppointmentConfirmed } from "@/lib/google-calendar/appointment-sync";
+import { isWithinBusinessHours, type BusinessHourWindow } from "@/lib/availability/engine";
+import { isValidTimeZone } from "@/lib/analytics/load";
 
 // Trello H3 — appointments CRUD, scoped to company_id. The booking record
 // behind Ana's scheduling tools (Trello J3) and the dashboard's Appointments
@@ -155,7 +157,7 @@ export async function POST(
         .eq("company_id", companyId)
         .maybeSingle(),
       supabase.from("customers").select("id, name").eq("id", customerId).eq("company_id", companyId).maybeSingle(),
-      supabase.from("companies").select("requires_appointment_approval").eq("id", companyId).single(),
+      supabase.from("companies").select("requires_appointment_approval, timezone").eq("id", companyId).single(),
     ]);
 
   if (serviceError || customerError || companyError) {
@@ -200,6 +202,32 @@ export async function POST(
     }
     if (!agent) {
       return NextResponse.json({ error: "agent not found" }, { status: 400 });
+    }
+  }
+
+  const { data: businessHours, error: businessHoursError } = await supabase
+    .from("business_hours")
+    .select("day_of_week, start_time, end_time")
+    .eq("company_id", companyId)
+    .eq("is_active", true);
+  if (businessHoursError) {
+    return NextResponse.json({ error: businessHoursError.message }, { status: 500 });
+  }
+
+  // No configured hours means "not set up yet," not "never open" -- only
+  // enforce once the merchant has actually defined at least one window.
+  // Otherwise a brand-new company (business_hours starts empty, H2) couldn't
+  // accept any booking until someone filled hours in first.
+  if (businessHours && businessHours.length > 0) {
+    const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
+    const withinHours = isWithinBusinessHours({
+      timezone,
+      businessHours: businessHours as BusinessHourWindow[],
+      startsAt: startsAt.toISOString(),
+      durationMinutes: service.duration_minutes,
+    });
+    if (!withinHours) {
+      return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
     }
   }
 

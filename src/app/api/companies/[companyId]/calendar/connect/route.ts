@@ -93,52 +93,70 @@ export async function POST(
     return NextResponse.json({ error: "code is required" }, { status: 400 });
   }
 
-  const serviceClient = createServiceClient();
-
-  // Google only returns refresh_token on the very first consent (or a
-  // reconnect that forced prompt=consent) -- an ordinary reconnect can
-  // legitimately omit it, so the previously stored one must be reused
-  // rather than overwritten with null. Same "read existing before writing"
-  // shape as D1's two_step_pin reuse.
-  const { data: existing } = await serviceClient
-    .from("company_calendar_connections")
-    .select("refresh_token")
-    .eq("company_id", companyId)
-    .maybeSingle();
-
-  let accessToken: string;
-  let refreshToken: string | null;
-  let tokenExpiresAt: string | null;
-  let scope: string | null;
+  // Wraps the whole body, not just the Google call below: createServiceClient()
+  // and the Supabase calls it makes can throw/error too (a misconfigured env
+  // var, a network blip), and an uncaught throw here becomes a bare, unlogged
+  // 500 with no way to tell what actually failed -- see the 2026-08-29
+  // decisions.md entry for the real incident (SUPABASE_SERVICE_ROLE_KEY
+  // missing from .env.local) this logging was added for.
   try {
-    ({ accessToken, refreshToken, tokenExpiresAt, scope } = await exchangeCodeForToken(code));
-  } catch {
-    // Never leak Google's raw error text to the merchant-facing UI.
-    return NextResponse.json({ error: "Failed to connect Google Calendar" }, { status: 502 });
+    const serviceClient = createServiceClient();
+
+    // Google only returns refresh_token on the very first consent (or a
+    // reconnect that forced prompt=consent) -- an ordinary reconnect can
+    // legitimately omit it, so the previously stored one must be reused
+    // rather than overwritten with null. Same "read existing before writing"
+    // shape as D1's two_step_pin reuse.
+    const { data: existing } = await serviceClient
+      .from("company_calendar_connections")
+      .select("refresh_token")
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    let accessToken: string;
+    let refreshToken: string | null;
+    let tokenExpiresAt: string | null;
+    let scope: string | null;
+    try {
+      ({ accessToken, refreshToken, tokenExpiresAt, scope } = await exchangeCodeForToken(code));
+    } catch (err) {
+      // Never leak Google's raw error text to the merchant-facing UI, but
+      // log the real cause server-side (bad client secret, code already
+      // used/expired, redirect_uri mismatch, etc. all land here).
+      console.error("Google Calendar token exchange failed", err);
+      return NextResponse.json({ error: "Failed to connect Google Calendar" }, { status: 502 });
+    }
+
+    const { data: connection, error } = await serviceClient
+      .from("company_calendar_connections")
+      .upsert(
+        {
+          company_id: companyId,
+          provider: "google",
+          google_calendar_id: GOOGLE_CALENDAR_ID,
+          status: "connected",
+          access_token: accessToken,
+          refresh_token: refreshToken ?? existing?.refresh_token ?? null,
+          token_expires_at: tokenExpiresAt,
+          scopes: scope,
+          connected_at: new Date().toISOString(),
+        },
+        { onConflict: "company_id" },
+      )
+      .select(SAFE_COLUMNS)
+      .single();
+
+    if (error) {
+      console.error("Failed to persist Google Calendar connection", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ connection });
+  } catch (err) {
+    console.error("Unexpected error connecting Google Calendar", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to connect Google Calendar" },
+      { status: 500 },
+    );
   }
-
-  const { data: connection, error } = await serviceClient
-    .from("company_calendar_connections")
-    .upsert(
-      {
-        company_id: companyId,
-        provider: "google",
-        google_calendar_id: GOOGLE_CALENDAR_ID,
-        status: "connected",
-        access_token: accessToken,
-        refresh_token: refreshToken ?? existing?.refresh_token ?? null,
-        token_expires_at: tokenExpiresAt,
-        scopes: scope,
-        connected_at: new Date().toISOString(),
-      },
-      { onConflict: "company_id" },
-    )
-    .select(SAFE_COLUMNS)
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ connection });
 }

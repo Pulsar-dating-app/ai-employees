@@ -85,6 +85,7 @@ export async function GET(
     .maybeSingle();
 
   if (error) {
+    console.error("Failed to read Google Calendar connection status", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
@@ -114,17 +115,29 @@ export async function DELETE(
   const adminCheck = await requireAdmin(supabase, companyId, user.id);
   if (adminCheck.error) return adminCheck.error;
 
-  const serviceClient = createServiceClient();
-  const { data, error } = await serviceClient
-    .from("company_calendar_connections")
-    .update({ status: "disconnected", access_token: null, refresh_token: null, token_expires_at: null })
-    .eq("company_id", companyId)
-    .select(SAFE_COLUMNS)
-    .maybeSingle();
+  // See connect/route.ts's matching comment -- createServiceClient() throws
+  // synchronously on a missing env var, so this must be caught explicitly or
+  // it becomes a bare, unlogged 500.
+  try {
+    const serviceClient = createServiceClient();
+    const { data, error } = await serviceClient
+      .from("company_calendar_connections")
+      .update({ status: "disconnected", access_token: null, refresh_token: null, token_expires_at: null })
+      .eq("company_id", companyId)
+      .select(SAFE_COLUMNS)
+      .maybeSingle();
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error("Failed to disconnect Google Calendar", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ connection: data ?? null });
+  } catch (err) {
+    console.error("Unexpected error disconnecting Google Calendar", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to disconnect Google Calendar" },
+      { status: 500 },
+    );
   }
-
-  return NextResponse.json({ connection: data ?? null });
 }

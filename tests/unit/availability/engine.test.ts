@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeAvailableSlots, type BusinessHourWindow } from "@/lib/availability/engine";
+import { computeAvailableSlots, isWithinBusinessHours, type BusinessHourWindow } from "@/lib/availability/engine";
 
 // Trello I2 -- the real correctness coverage for the availability engine,
 // no DB/HTTP needed (mirrors tests/unit/analytics/aggregate.test.ts's
@@ -193,5 +193,99 @@ describe("computeAvailableSlots", () => {
     });
     expect(slots.every((s) => s.start.startsWith("2026-08-31"))).toBe(true);
     expect(slots.length).toBeGreaterThan(0);
+  });
+});
+
+// Trello H3 gap fix -- the appointments write path (POST/PATCH) now rejects
+// a booking outside business hours instead of only advising via
+// computeAvailableSlots. See the 2026-08-29 decisions.md entry.
+describe("isWithinBusinessHours", () => {
+  it("accepts a start time that fits inside a window", () => {
+    expect(
+      isWithinBusinessHours({
+        timezone: "UTC",
+        businessHours: [MON_9_TO_12],
+        startsAt: "2026-08-31T10:00:00.000Z", // Monday
+        durationMinutes: 30,
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects a start time before the window opens", () => {
+    expect(
+      isWithinBusinessHours({
+        timezone: "UTC",
+        businessHours: [MON_9_TO_12],
+        startsAt: "2026-08-31T08:00:00.000Z",
+        durationMinutes: 30,
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects a start time whose duration would run past closing, even if the start itself is inside the window", () => {
+    expect(
+      isWithinBusinessHours({
+        timezone: "UTC",
+        businessHours: [MON_9_TO_12],
+        startsAt: "2026-08-31T11:45:00.000Z", // window closes 12:00
+        durationMinutes: 30, // would end 12:15
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects a day with no matching business_hours row at all", () => {
+    expect(
+      isWithinBusinessHours({
+        timezone: "UTC",
+        businessHours: [MON_9_TO_12],
+        startsAt: "2026-09-01T10:00:00.000Z", // Tuesday
+        durationMinutes: 30,
+      }),
+    ).toBe(false);
+  });
+
+  it("does not require alignment to the slot-step grid -- any start with room for the full duration passes", () => {
+    // 09:00-12:00 window; 09:07 isn't a multiple of any duration+buffer
+    // step computeAvailableSlots would have walked, but the business is
+    // genuinely open and there's room for the appointment, so it passes.
+    expect(
+      isWithinBusinessHours({
+        timezone: "UTC",
+        businessHours: [MON_9_TO_12],
+        startsAt: "2026-08-31T09:07:00.000Z",
+        durationMinutes: 30,
+      }),
+    ).toBe(true);
+  });
+
+  it("resolves against the correct local day in a non-UTC timezone", () => {
+    // America/Sao_Paulo is UTC-3: 2026-08-31T09:00 local is 12:00 UTC.
+    expect(
+      isWithinBusinessHours({
+        timezone: "America/Sao_Paulo",
+        businessHours: [{ day_of_week: 1, start_time: "09:00", end_time: "10:00" }],
+        startsAt: "2026-08-31T12:30:00.000Z",
+        durationMinutes: 15,
+      }),
+    ).toBe(true);
+    expect(
+      isWithinBusinessHours({
+        timezone: "America/Sao_Paulo",
+        businessHours: [{ day_of_week: 1, start_time: "09:00", end_time: "10:00" }],
+        startsAt: "2026-08-31T09:30:00.000Z", // 06:30 local -- before the window
+        durationMinutes: 15,
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects an invalid startsAt string rather than throwing", () => {
+    expect(
+      isWithinBusinessHours({
+        timezone: "UTC",
+        businessHours: [MON_9_TO_12],
+        startsAt: "not-a-date",
+        durationMinutes: 30,
+      }),
+    ).toBe(false);
   });
 });

@@ -114,6 +114,63 @@ function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): b
   return aStart < bEnd && bStart < aEnd;
 }
 
+// UTC instant -> the "YYYY-MM-DD" calendar date it falls on in `tz`. Same
+// formatToParts technique as tzOffsetMsAt above (and analytics/load.ts's
+// localDate, for the same instant->local-date problem) -- not imported from
+// there, this module stays cross-import-free by design (see the file header).
+function localDateOf(tz: string, instant: Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(instant);
+  const pick = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${pick("year")}-${pick("month")}-${pick("day")}`;
+}
+
+export type BusinessHoursCheckInput = {
+  timezone: string;
+  // Pre-filtered to is_active by the caller, same convention as
+  // computeAvailableSlots.
+  businessHours: readonly BusinessHourWindow[];
+  startsAt: string; // ISO UTC
+  durationMinutes: number;
+};
+
+// Trello H3 gap, closed here rather than duplicated: the appointments write
+// path (POST/PATCH) needs to reject a booking whose requested time falls
+// outside every active business_hours window for that local day -- I2's
+// availability engine only ever offered slots as advisory reads, nothing
+// enforced them at write time. Mirrors computeAvailableSlots' own window-fit
+// rule (`start >= windowStart && start + duration <= windowEnd`) exactly, so
+// a time this accepts is always one computeAvailableSlots would have
+// offered as a valid window to book *something* in -- but deliberately does
+// NOT require alignment to the step grid computeAvailableSlots walks (e.g. a
+// 9:15 start inside a 9:00-17:00 window passes here even though
+// computeAvailableSlots would only ever have offered 9:00/9:30/...): this
+// check's job is "is the business open long enough for this," not "is this
+// exactly one of the suggested slots" -- a merchant manually booking a
+// custom time isn't required to land on the grid.
+export function isWithinBusinessHours(input: BusinessHoursCheckInput): boolean {
+  const { timezone, businessHours, startsAt, durationMinutes } = input;
+  const start = new Date(startsAt);
+  if (Number.isNaN(start.getTime())) return false;
+
+  const startMs = start.getTime();
+  const durationMs = durationMinutes * 60_000;
+  const date = localDateOf(timezone, start);
+  const dow = localDayOfWeek(date, timezone);
+
+  return businessHours
+    .filter((w) => w.day_of_week === dow)
+    .some((window) => {
+      const windowStart = zonedTimeToUtc(date, window.start_time, timezone).getTime();
+      const windowEnd = zonedTimeToUtc(date, window.end_time, timezone).getTime();
+      return startMs >= windowStart && startMs + durationMs <= windowEnd;
+    });
+}
+
 export function computeAvailableSlots(input: ComputeAvailableSlotsInput): AvailableSlot[] {
   const {
     timezone,
