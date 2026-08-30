@@ -99,6 +99,27 @@ describe("per-agent tool sets (J2)", () => {
     expect(names).not.toContain("flag_buying_intent");
   });
 
+  it("offers Ana the scheduling tools (J3)", async () => {
+    const names = await toolNamesOfferedTo("ana");
+
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "list_services",
+        "find_available_slots",
+        "book_appointment",
+        "cancel_appointment",
+      ]),
+    );
+  });
+
+  it("never offers Malu the scheduling tools", async () => {
+    const names = await toolNamesOfferedTo("malu");
+
+    expect(names).not.toContain("find_available_slots");
+    expect(names).not.toContain("book_appointment");
+    expect(names).not.toContain("cancel_appointment");
+  });
+
   it("offers both agents the shared business-knowledge and escalation tools", async () => {
     for (const slug of ["malu", "ana"]) {
       const names = await toolNamesOfferedTo(slug);

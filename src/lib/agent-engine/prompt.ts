@@ -193,10 +193,20 @@ export function buildSystemPrompt({
   agentConfig,
   businessName,
   intent,
+  currentDate,
 }: {
   agentConfig: AgentConfig;
   businessName: string | null;
   intent: string;
+  // A preformatted human string like "Thursday, June 12, 2026
+  // (America/Sao_Paulo)" -- real, non-inventable context (the same category
+  // as businessName), not a guardrail. Optional so the pure unit tests can
+  // keep calling this without a clock; index.ts always supplies it. Without
+  // it an agent has no temporal anchor at all, so a customer saying "next
+  // Thursday" or "tomorrow" is literally unresolvable and the model can only
+  // fall back to demanding an exact date -- exactly the bad UX Ana's J3
+  // testing surfaced.
+  currentDate?: string | null;
 }): string {
   const base =
     agentConfig.systemPrompt ??
@@ -205,6 +215,19 @@ export function buildSystemPrompt({
       .join("\n\n");
 
   const businessNameSection = businessName ? `Business name: ${businessName}` : null;
+
+  // Real context, phrased so it also fixes the failure mode it exists for:
+  // an agent with a date anchor but no instruction still tends to make the
+  // customer spell the date out. This tells it to do the relative-date math
+  // itself and, when unsure, confirm briefly instead of demanding precision.
+  const currentDateSection = currentDate
+    ? `Current date: ${currentDate}. When the customer refers to a day in relative or ` +
+      `informal terms ("next Thursday", "tomorrow", "this weekend", "the 15th"), work out ` +
+      `the actual calendar date yourself from this -- never ask them to give you a full ` +
+      `date, and never ask for a year. If it's genuinely unclear which date they mean, ` +
+      `confirm it in one short, natural line ("that'd be Thursday the 15th, right?") rather ` +
+      `than asking them to restate it precisely.`
+    : null;
 
   // "unknown" is determineIntent's stub value (step 6 has no real
   // implementation yet -- see stubs.ts) and carries no information the
@@ -222,6 +245,7 @@ export function buildSystemPrompt({
     SCOPE_GUARDRAIL,
     base,
     businessNameSection,
+    currentDateSection,
     intentSection,
   ]
     .filter((section) => section && section.length > 0)
