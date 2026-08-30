@@ -1,0 +1,23 @@
+-- Removes the `john` agent row, which was inserted by hand directly into the
+-- remote database rather than by a migration -- it was throwaway mock data
+-- used while building the multi-agent marketplace, never a real product
+-- agent (unlike `malu` and `ana`, both migration-seeded).
+--
+-- It matters that it goes: `agents` is the live roster the marketplace reads
+-- (see decisions.md, 2026-08-26), so a merchant could see and "hire" a mock
+-- support agent with no personality, no system_prompt, and -- after Trello
+-- J2 -- only the common tool set.
+--
+-- Written as a migration, not a hand-run DELETE, for the same reason Malu's
+-- row was: `supabase/seed.sql` is local-dev-only and never touches remote, so
+-- migrations are the only reproducible way to change this table. This is a
+-- no-op locally (john was never in any migration, so local databases never
+-- had him) and idempotent on re-run.
+--
+-- Deliberately a DELETE rather than `is_active = false`: verified zero
+-- referencing rows in company_agents / conversations / events / appointments
+-- at the time of writing. If any exist when this runs, company_agents'
+-- `on delete restrict` will abort the migration rather than orphan a hire --
+-- which is the correct outcome, and the signal that the row stopped being
+-- mock data and needs a real decision instead.
+delete from public.agents where slug = 'john';
