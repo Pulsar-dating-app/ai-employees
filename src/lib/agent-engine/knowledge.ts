@@ -17,3 +17,21 @@ export async function loadBusinessName(supabase: SupabaseClient, companyId: stri
   if (error) throw error;
   return data?.name ?? null;
 }
+
+// Also loaded unconditionally, same "cheap and always relevant" rationale as
+// the name above: any agent that reasons about time at all (Ana resolving
+// "next Thursday", Malu quoting a delivery estimate) needs to know both what
+// day it is and in which timezone the business operates -- and neither is a
+// fact the model can invent. `null` -> the caller falls back to "UTC".
+export async function loadCompanyTimezone(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("companies")
+    .select("timezone")
+    .eq("id", companyId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.timezone ?? null;
+}

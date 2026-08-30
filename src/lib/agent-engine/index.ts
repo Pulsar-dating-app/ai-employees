@@ -5,12 +5,32 @@ import { DEFAULT_MAX_TOOL_ITERATIONS, DEFAULT_MODEL, UNGROUNDED_FALLBACK_TEXT } 
 import { discardConversationItems, loadConversation, resolveOpenAiConversationId } from "./conversation";
 import { loadAgentConfig } from "./config";
 import { loadCustomer } from "./customer";
-import { loadBusinessName } from "./knowledge";
+import { loadBusinessName, loadCompanyTimezone } from "./knowledge";
+import { isValidTimeZone } from "@/lib/analytics/load";
 import { determineIntent } from "./stubs";
 import { buildInitialInput, buildSystemPrompt } from "./prompt";
 import { buildGroundingCorrectionInput, checkResponseGrounding } from "./grounding";
 import { runToolLoop } from "./tool-loop";
 import { resolveToolsForAgent } from "./tools/tool-sets";
+
+// A human-readable "weekday, month day, year (timezone)" string for the
+// system prompt's temporal anchor -- resolved in the business's own
+// timezone (falling back to UTC when it's unset or invalid) so "today" and
+// the current weekday match what the merchant and customer actually
+// experience. Locale is fixed to en-CA for a stable, unambiguous shape
+// regardless of the Node build's locale data; the model localizes the
+// phrasing itself when it replies (LANGUAGE_GUARDRAIL).
+function formatCurrentDate(timezone: string | null, now: Date = new Date()): string {
+  const tz = timezone && isValidTimeZone(timezone) ? timezone : "UTC";
+  const formatted = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(now);
+  return `${formatted} (${tz})`;
+}
 
 // Trello ticket C1 -- the orchestration shell from spec §17. This is the
 // piece that turns "an LLM call" into "Malu": every step below is numbered
@@ -37,10 +57,11 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   // "load customer context," and inventing a shape (e.g. "greet by name")
   // isn't this ticket's call to make. Available for the next ticket that
   // needs it.
-  const [agentConfig, , businessName] = await Promise.all([
+  const [agentConfig, , businessName, companyTimezone] = await Promise.all([
     loadAgentConfig(supabase, { companyId: input.companyId, agentId: conversation.agent_id! }),
     loadCustomer(supabase, { companyId: input.companyId, customerId: conversation.customer_id }),
     loadBusinessName(supabase, input.companyId),
+    loadCompanyTimezone(supabase, input.companyId),
   ]);
 
   // Trello J2 -- resolved here, not at the top of run(), because it depends
@@ -56,7 +77,12 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   const intent = determineIntent(input.message);
 
   // Step 7
-  const instructions = buildSystemPrompt({ agentConfig, businessName, intent });
+  const instructions = buildSystemPrompt({
+    agentConfig,
+    businessName,
+    intent,
+    currentDate: formatCurrentDate(companyTimezone),
+  });
   const initialInput = buildInitialInput(input.message);
 
   const loopParams = {

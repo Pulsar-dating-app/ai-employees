@@ -291,6 +291,42 @@ describe("buildSystemPrompt", () => {
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "buying" });
     expect(prompt).toContain("Detected intent: buying");
   });
+
+  it("omits the current-date anchor when none is supplied", () => {
+    const agentConfig: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling Assistant",
+      description: null,
+      personality: null,
+      systemPrompt: null,
+      companyAgentStatus: "active",
+    };
+
+    const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
+    expect(prompt).not.toContain("Current date:");
+  });
+
+  it("adds the current-date anchor with the resolve-relative-dates instruction when supplied", () => {
+    const agentConfig: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling Assistant",
+      description: null,
+      personality: null,
+      systemPrompt: null,
+      companyAgentStatus: "active",
+    };
+
+    const prompt = buildSystemPrompt({
+      agentConfig,
+      businessName: null,
+      intent: "unknown",
+      currentDate: "Thursday, June 12, 2026 (America/Sao_Paulo)",
+    });
+
+    expect(prompt).toContain("Current date: Thursday, June 12, 2026 (America/Sao_Paulo)");
+    expect(prompt).toContain("work out the actual calendar date yourself from this");
+    expect(prompt).toContain("never ask for a year");
+  });
 });
 
 describe("buildInitialInput", () => {
