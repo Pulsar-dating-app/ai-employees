@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import Script from "next/script";
 import { createClient } from "@/lib/supabase/server";
 import { LandingPageV2 } from "@/components/landing/landing-page-2";
 import { AuthModalController } from "@/components/auth/auth-modal-controller";
@@ -21,6 +22,13 @@ export default async function Home() {
       <Suspense fallback={null}>
         <AuthModalController />
       </Suspense>
+      {/* Dev-only: the M5 embeddable widget script, live on this app's own
+          landing page purely so it can be exercised locally without a
+          separate host page. Never renders in production -- points at
+          mateus-company/malu, this session's own throwaway test company. */}
+      {process.env.NODE_ENV !== "production" ? (
+        <Script src="/widget.js" data-company="mateus-company" data-agent="malu" strategy="afterInteractive" />
+      ) : null}
     </>
   );
 }

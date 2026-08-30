@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
+import { EmbedDomainsSection } from "./embed-domains-section";
 import { SettingsIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 
@@ -137,6 +138,12 @@ export default async function SettingsPage() {
         </div>
 
         <FaqSection companyId={company.id} canEdit={canEdit} initialFaq={company.faq} />
+
+        <EmbedDomainsSection
+          companyId={company.id}
+          canEdit={canEdit}
+          initialDomains={company.allowed_embed_domains ?? []}
+        />
       </div>
     </div>
   );

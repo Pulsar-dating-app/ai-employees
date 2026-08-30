@@ -278,7 +278,16 @@
     "browseMarketplace": "Ver marketplace",
     "completeness": "{filled} de {total} seções preenchidas",
     "completenessHint": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
-    "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações."
+    "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "embedDomains": {
+      "title": "Sites autorizados a incorporar o chat",
+      "description": "Adicione os domínios onde o widget de chat pode aparecer. Até você adicionar um, o widget incorporado não funcionará em lugar nenhum — seu link de chat autônomo continua funcionando normalmente.",
+      "domainLabel": "Domínio",
+      "domainPlaceholder": "exemplo.com",
+      "addButton": "Adicionar domínio",
+      "removeButton": "Remover",
+      "emptyStateWarning": "Nenhum domínio adicionado ainda — o widget incorporado fica bloqueado em todos os sites até você adicionar pelo menos um."
+    }
   },
   "MyAgents": {
     "pageTitle": "Minha equipe",
@@ -311,6 +320,14 @@
       "stepOneTitle": "Conecte seu número do WhatsApp Business",
       "stepTwoTitle": "Comece a falar com os clientes",
       "stepTwoDescription": "Depois de conectado, sua equipe responde no WhatsApp automaticamente — dia e noite."
+    },
+    "webChat": {
+      "title": "Chat do site",
+      "description": "Compartilhe um link direto ou incorpore uma bolha de chat no seu próprio site.",
+      "linkLabel": "Link direto",
+      "embedLabel": "Código de incorporação",
+      "embedHint": "Cole este trecho logo antes da tag de fechamento </body> do seu site.",
+      "copyButton": "Copiar"
     }
   },
   "Teach": {
@@ -473,5 +490,20 @@
   },
   "LanguageSwitcher": {
     "label": "Idioma"
+  },
+  "Chat": {
+    "inputPlaceholder": "Responder para {name}…",
+    "sendButton": "Enviar",
+    "poweredBy": "Desenvolvido por Sidde",
+    "emptyState": "Envie uma mensagem para começar a conversa.",
+    "activeNow": "Ativo agora",
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "unavailableTitle": "Este chat não está disponível no momento.",
+    "unavailableBody": "Tente novamente mais tarde ou entre em contato diretamente com {companyName}.",
+    "errorRateLimited": "Você está enviando mensagens muito rápido — tente novamente em instantes.",
+    "errorGeneric": "Algo deu errado. Tente novamente.",
+    "closeButton": "Fechar chat",
+    "unavailableHere": "Este chat ainda não está configurado para aparecer neste site."
   }
 }
