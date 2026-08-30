@@ -190,6 +190,23 @@ export function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function CopyIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <rect x="8.5" y="8.5" width="12" height="12" rx="2" />
+      <path d="M15.5 8.5V6a2 2 0 0 0-2-2H5.5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2.5" />
+    </svg>
+  );
+}
+
+export function SendIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M3.4 20.6 21 12 3.4 3.4l.01 6.36L16 12l-12.59 2.24z" />
+    </svg>
+  );
+}
+
 export function SpinnerIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg

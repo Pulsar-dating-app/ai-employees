@@ -11,6 +11,27 @@ const MAX_FAQ_ENTRIES = 50;
 const MAX_FAQ_QUESTION_LENGTH = 300;
 const MAX_FAQ_ANSWER_LENGTH = 2000;
 
+// Trello M7 -- the widget's domain allowlist (M1). A bare-hostname pattern
+// (letters/digits/hyphens, at least one dot) since that's the exact shape
+// isEmbedOriginAllowed (src/lib/web-chat/embed-authorization.ts) compares
+// against -- storing "https://example.com/" instead of "example.com" would
+// silently never match anything.
+const MAX_EMBED_DOMAINS = 20;
+const HOSTNAME_PATTERN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
+
+// Forgiving of the most common paste mistake (a full URL instead of a bare
+// hostname) rather than rejecting it outright -- a merchant filling this in
+// is very likely to paste "https://example.com/" verbatim. Strips a
+// leading scheme and everything from the first "/" or ":" onward, then
+// lowercases (matching normalizeHostname's own case-insensitivity).
+function normalizeEmbedDomainInput(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .split(/[/:]/)[0]
+    .toLowerCase();
+}
+
 const TEXT_FIELDS = [
   "description",
   "shipping_policy",
@@ -195,6 +216,42 @@ export async function PATCH(
       );
     }
     updates.faq = value;
+  }
+
+  // Trello M7 — the widget's domain allowlist. Not nullable like the
+  // text/short fields (the column is `not null default '{}'`) -- an empty
+  // array *is* the valid "no domains configured yet, block everywhere"
+  // state (M1's deny-by-default decision), so unlike faq there's no `null`
+  // clear-value here. Whole-array-replace on save, same as faq.
+  if ("allowed_embed_domains" in body) {
+    const value = (body as Record<string, unknown>).allowed_embed_domains;
+    if (!Array.isArray(value)) {
+      return NextResponse.json(
+        { error: "allowed_embed_domains must be an array of domains (an empty array is valid)" },
+        { status: 400 },
+      );
+    }
+    if (value.length > MAX_EMBED_DOMAINS) {
+      return NextResponse.json(
+        { error: `allowed_embed_domains can have at most ${MAX_EMBED_DOMAINS} entries` },
+        { status: 400 },
+      );
+    }
+    const normalized: string[] = [];
+    for (const entry of value) {
+      if (typeof entry !== "string") {
+        return NextResponse.json({ error: "Each domain must be a string" }, { status: 400 });
+      }
+      const domain = normalizeEmbedDomainInput(entry);
+      if (!domain || domain.length > MAX_SHORT_LENGTH || !HOSTNAME_PATTERN.test(domain)) {
+        return NextResponse.json(
+          { error: `"${entry}" doesn't look like a valid domain (e.g. "example.com")` },
+          { status: 400 },
+        );
+      }
+      normalized.push(domain);
+    }
+    updates.allowed_embed_domains = normalized;
   }
 
   // Trello H3 — whether Ana's book_appointment tool (and this app's own

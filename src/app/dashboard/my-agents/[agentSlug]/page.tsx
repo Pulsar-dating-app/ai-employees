@@ -4,10 +4,12 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { agentPhoto } from "@/lib/agents/media";
+import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { AgentPersonaCard } from "../agent-persona-card";
 import { ChannelsSection } from "./channels-section";
+import { WebChatChannelCard } from "./web-chat-channel-card";
 import { DevChatTest } from "../../dev-chat-test";
 
 // A hired team member's own page is scoped to *how customers reach them* —
@@ -29,7 +31,7 @@ export default async function AgentConnectionsPage({
       .eq("slug", agentSlug)
       .eq("is_active", true)
       .maybeSingle(),
-    supabase.from("companies").select("id"),
+    supabase.from("companies").select("id, slug"),
     supabase.auth.getUser(),
   ]);
   if (!agent) notFound();
@@ -77,6 +79,10 @@ export default async function AgentConnectionsPage({
 
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
 
+  const baseUrl = resolveCheckoutBaseUrl();
+  const chatUrl = `${baseUrl}/talk/${company.slug}/${agentSlug}`;
+  const embedSnippet = `<script src="${baseUrl}/widget.js" data-company="${company.slug}" data-agent="${agentSlug}"></script>`;
+
   return (
     <div className="flex flex-col gap-6">
       <BackLink href="/dashboard/my-agents">{t("backToMyAgents")}</BackLink>
@@ -106,6 +112,7 @@ export default async function AgentConnectionsPage({
             metaAppId={process.env.META_APP_ID ?? ""}
             metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
           />
+          <WebChatChannelCard chatUrl={chatUrl} embedSnippet={embedSnippet} />
           {process.env.NODE_ENV !== "production" ? (
             <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />
           ) : null}
