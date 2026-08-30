@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 import { writeFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { startGraphApiMock } from "./helpers/graph-api-mock";
+import { startGoogleOAuthMock } from "./helpers/google-oauth-mock";
+import { startGoogleCalendarMock } from "./helpers/google-calendar-mock";
 
 // Boots a real Next.js server, pointed at the already-running local Supabase
 // stack (started/reset by the `test:integration:env:*` npm scripts before
@@ -57,6 +59,10 @@ export default async function setup() {
   // Stands in for the real Meta Graph API (Trello D1's WhatsApp connect
   // route) -- see graph-api-mock.ts for why this can't just be a fetch spy.
   const graphApiMock = await startGraphApiMock();
+  // Same reasoning, for Trello I1's Google Calendar connect route.
+  const googleOAuthMock = await startGoogleOAuthMock();
+  // Same reasoning, for Trello I2's freeBusy.query call.
+  const googleCalendarMock = await startGoogleCalendarMock();
 
   const nextProcess: ChildProcess = spawn(
     "npx",
@@ -73,6 +79,10 @@ export default async function setup() {
         META_APP_ID: "test-meta-app-id",
         META_APP_SECRET: "test-meta-app-secret",
         META_GRAPH_API_BASE_URL: graphApiMock.url,
+        GOOGLE_CLIENT_ID: "test-google-client-id",
+        GOOGLE_CLIENT_SECRET: "test-google-client-secret",
+        GOOGLE_OAUTH_TOKEN_URL: googleOAuthMock.url,
+        GOOGLE_CALENDAR_API_BASE_URL: googleCalendarMock.url,
         // src/lib/products/embeddings.ts's kill switch -- the ~60 product-
         // create call sites across this suite must never make a real
         // OpenAI network call (cost, latency, and the exact "no real LLM
@@ -96,6 +106,8 @@ export default async function setup() {
   } catch (err) {
     killProcessTree(nextProcess);
     await graphApiMock.stop();
+    await googleOAuthMock.stop();
+    await googleCalendarMock.stop();
     throw err;
   }
 
@@ -116,6 +128,8 @@ export default async function setup() {
   return async () => {
     killProcessTree(nextProcess);
     await graphApiMock.stop();
+    await googleOAuthMock.stop();
+    await googleCalendarMock.stop();
     try {
       rmSync(STATE_FILE);
     } catch {

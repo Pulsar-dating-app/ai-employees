@@ -42,6 +42,10 @@ describe("Appointments CRUD /api/companies/:id/appointments", () => {
     );
   }
 
+  async function setBusinessHours(cookie: string, companyId: string, windows: Record<string, unknown>[]) {
+    await api("PUT", `/api/companies/${companyId}/business-hours`, cookie, { businessHours: windows });
+  }
+
   it("requires authentication", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Auth Check Co");
@@ -94,6 +98,93 @@ describe("Appointments CRUD /api/companies/:id/appointments", () => {
       starts_at: "2027-01-01T10:00:00Z",
     });
     expect(badCustomer.status).toBe(400);
+  });
+
+  // Trello H3 gap fix (2026-08-29) -- booking outside business_hours used to
+  // succeed silently; the write path now enforces the same window rule I2's
+  // availability engine already advised against. See decisions.md.
+  it("rejects a booking outside every configured business_hours window", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Hours Enforced Co");
+    const serviceId = await createService(owner.cookieHeader, companyId, { name: "Cleaning", duration_minutes: 30 });
+    const customerId = await createCustomer(owner, companyId, "Alice");
+    // 2027-03-01 is a Monday -> day_of_week 1 (0 = Sunday, this repo's convention).
+    await setBusinessHours(owner.cookieHeader, companyId, [
+      { day_of_week: 1, start_time: "09:00", end_time: "17:00" },
+    ]);
+
+    const tooEarly = await createAppointment(owner.cookieHeader, companyId, {
+      service_id: serviceId,
+      customer_id: customerId,
+      starts_at: "2027-03-01T08:00:00.000Z",
+    });
+    expect(tooEarly.status).toBe(400);
+
+    const wrongDay = await createAppointment(owner.cookieHeader, companyId, {
+      service_id: serviceId,
+      customer_id: customerId,
+      starts_at: "2027-03-02T10:00:00.000Z", // Tuesday, no configured hours
+    });
+    expect(wrongDay.status).toBe(400);
+  });
+
+  it("allows a booking that fits inside a configured business_hours window", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Hours Fits Co");
+    const serviceId = await createService(owner.cookieHeader, companyId, { name: "Cleaning", duration_minutes: 30 });
+    const customerId = await createCustomer(owner, companyId, "Alice");
+    await setBusinessHours(owner.cookieHeader, companyId, [
+      { day_of_week: 1, start_time: "09:00", end_time: "17:00" },
+    ]);
+
+    const res = await createAppointment(owner.cookieHeader, companyId, {
+      service_id: serviceId,
+      customer_id: customerId,
+      starts_at: "2027-03-01T10:00:00.000Z",
+    });
+    expect(res.status).toBe(201);
+  });
+
+  it("allows any booking time when the company has no business_hours configured at all", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Hours Unconfigured Co");
+    const serviceId = await createService(owner.cookieHeader, companyId, { name: "Cleaning", duration_minutes: 30 });
+    const customerId = await createCustomer(owner, companyId, "Alice");
+    // Deliberately never calling setBusinessHours -- a brand-new company's
+    // business_hours starts empty (H2), and that must mean "not set up yet,"
+    // not "closed at all times."
+
+    const res = await createAppointment(owner.cookieHeader, companyId, {
+      service_id: serviceId,
+      customer_id: customerId,
+      starts_at: "2027-03-01T03:00:00.000Z",
+    });
+    expect(res.status).toBe(201);
+  });
+
+  it("rejects a reschedule (PATCH) to a time outside business_hours", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Hours Reschedule Co");
+    const serviceId = await createService(owner.cookieHeader, companyId, { name: "Cleaning", duration_minutes: 30 });
+    const customerId = await createCustomer(owner, companyId, "Alice");
+    await setBusinessHours(owner.cookieHeader, companyId, [
+      { day_of_week: 1, start_time: "09:00", end_time: "17:00" },
+    ]);
+
+    const created = await createAppointment(owner.cookieHeader, companyId, {
+      service_id: serviceId,
+      customer_id: customerId,
+      starts_at: "2027-03-01T10:00:00.000Z",
+    });
+    expect(created.status).toBe(201);
+
+    const rescheduled = await api(
+      "PATCH",
+      `/api/companies/${companyId}/appointments/${created.json.appointment.id}`,
+      owner.cookieHeader,
+      { starts_at: "2027-03-01T20:00:00.000Z" }, // well after closing
+    );
+    expect(rescheduled.status).toBe(400);
   });
 
   it("computes ends_at from the service's duration + buffer, and auto-confirms by default", async () => {
