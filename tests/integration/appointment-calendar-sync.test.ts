@@ -200,7 +200,10 @@ describe("Calendar sync on appointment booking/cancel/reschedule", () => {
       { starts_at: "2027-03-01T10:00:00.000Z" },
     );
     expect(rescheduled.status).toBe(200);
-    expect(rescheduled.json.appointment.starts_at).toBe("2027-03-01T10:00:00.000Z");
+    // PostgREST renders timestamptz as `+00:00`, not JS's `.000Z` — same
+    // instant, different spelling. Matches how appointments.test.ts asserts
+    // the identical field.
+    expect(rescheduled.json.appointment.starts_at).toBe("2027-03-01T10:00:00+00:00");
     // Rescheduling updates the existing event in place -- the id doesn't change.
     expect(rescheduled.json.appointment.google_event_id).toBe(originalEventId);
   });
