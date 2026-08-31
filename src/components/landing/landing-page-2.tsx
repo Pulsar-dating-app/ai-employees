@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { WhatsAppThread, type DemoMessage } from "./whatsapp-thread";
+import { ChatThread, type DemoMessage } from "./chat-thread";
 import { landingV2Sans } from "./fonts";
 import heroImg from "../../../public/landing-v2/hero.jpg";
 import maluImg from "../../../public/landing-v2/malu.jpg";
@@ -20,7 +20,7 @@ import logo from "../../../public/logo.png";
 //   surface #f8f9fa · container-lowest #ffffff · container-low #f3f4f5
 //   container-high #e7e8e9 · on-surface #191c1d · on-surface-variant #464555
 //   primary #3525cd · primary-container #4f46e5 · primary-fixed #e2dfff
-//   secondary #006c49 · status-green #3de272 · whatsapp #25d366
+//   secondary #006c49 · status-green #3de272
 
 const CARD =
   "rounded-2xl border border-[#e7e8e9] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)]";
@@ -30,6 +30,20 @@ const BTN_NEUTRAL =
   "inline-flex h-12 items-center justify-center rounded-lg bg-[#edeeef] px-8 text-[14px] font-medium text-[#191c1d] transition-colors hover:bg-[#e7e8e9]";
 
 const ICONS: Record<string, React.ReactNode> = {
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </>
+  ),
+  calendar: (
+    <>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </>
+  ),
   heart: (
     <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.04 3 5.5l7 7Z" />
   ),
@@ -101,17 +115,40 @@ function Icon({ name, className }: { name: keyof typeof ICONS; className?: strin
   );
 }
 
-const SPOTLIGHT_FEATURES = [
-  { key: "warm", icon: "heart" },
-  { key: "negotiator", icon: "badgeCheck" },
-  { key: "expert", icon: "book" },
+// Two team members exist now (Trello epic J added Ana); the spotlight
+// section shows both side by side instead of only Malu. Ana has no
+// portrait yet (src/lib/agents/media.ts has no `ana` entry) -- her card
+// uses a silhouette mark instead of `maluImg`'s real photo, same
+// "photo where we have one, authored mark otherwise" rule the dashboard's
+// own AgentAvatar already follows (not reused directly here: that
+// component is styled with the dashboard's CSS-variable tokens, and this
+// page is deliberately self-contained with inline hex colors -- see the
+// header comment above).
+const AGENT_SPOTLIGHTS = [
+  {
+    key: "malu",
+    image: maluImg,
+    traits: [
+      { key: "warm", icon: "heart" },
+      { key: "negotiator", icon: "badgeCheck" },
+      { key: "expert", icon: "book" },
+    ],
+  },
+  {
+    key: "ana",
+    image: null,
+    traits: [
+      { key: "punctual", icon: "clock" },
+      { key: "availability", icon: "calendar" },
+    ],
+  },
 ] as const;
 
 const FLOW_STEPS = [
-  { key: "hire", icon: "userPlus", whatsapp: false },
-  { key: "teach", icon: "fileUp", whatsapp: false },
-  { key: "connect", icon: "chat", whatsapp: true },
-  { key: "work", icon: "activity", whatsapp: false },
+  { key: "hire", icon: "userPlus" },
+  { key: "teach", icon: "fileUp" },
+  { key: "connect", icon: "chat" },
+  { key: "work", icon: "activity" },
 ] as const;
 
 export async function LandingPageV2() {
@@ -207,67 +244,95 @@ export async function LandingPageV2() {
           </div>
         </section>
 
-        {/* Malu spotlight */}
+        {/* Team spotlight -- Malu (real photo) and Ana (silhouette mark,
+            no portrait yet) side by side, not a single-agent hero. Ana
+            joined after this page originally shipped Malu-only. */}
         <section id="spotlight" className="bg-white py-24">
           <div className="mx-auto max-w-[1280px] px-4 md:px-10">
-            <div className="relative overflow-hidden rounded-2xl border border-[#e7e8e9] bg-[#f8f9fa] p-8 shadow-sm md:p-12">
-              <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
-                <div className="relative z-10 order-2 flex flex-col gap-6 md:order-1">
-                  <div>
-                    <h2 className="mb-2 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#191c1d]">
-                      {t("spotlight.title")}
-                    </h2>
-                    <p className="text-[18px] leading-[28px] text-[#3525cd]">
-                      {t("spotlight.tagline")}
-                    </p>
-                  </div>
-                  <div className="space-y-4">
-                    {SPOTLIGHT_FEATURES.map(({ key, icon }) => (
-                      <div
-                        key={key}
-                        className="flex items-start gap-4 rounded-xl border border-[#f3f4f5] bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-transform hover:-translate-y-0.5"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e2dfff] text-[#3525cd]">
-                          <Icon name={icon} className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h4 className="text-[14px] font-bold text-[#191c1d]">
-                            {t(`spotlight.features.${key}.title`)}
-                          </h4>
-                          <p className="mt-1 text-[16px] leading-[24px] text-[#464555]">
-                            {t(`spotlight.features.${key}.description`)}
-                          </p>
-                        </div>
+            <div className="mb-12 text-center">
+              <h2 className="text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#191c1d]">
+                {t("spotlight.heading")}
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-[18px] leading-[28px] text-[#464555]">
+                {t("spotlight.sub")}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+              {AGENT_SPOTLIGHTS.map(({ key, image, traits }) => (
+                <div
+                  key={key}
+                  className="relative overflow-hidden rounded-2xl border border-[#e7e8e9] bg-[#f8f9fa] p-8 shadow-sm"
+                >
+                  <div className="relative z-10 flex flex-col gap-6">
+                    <div className="flex items-center gap-4">
+                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full">
+                        {image ? (
+                          <Image
+                            src={image}
+                            alt={t(`spotlight.agents.${key}.imageAlt`)}
+                            className="h-full w-full object-cover object-top"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-[#e2dfff]">
+                            <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-9 w-9 text-[#3525cd]">
+                              <circle cx="20" cy="15" r="7" fill="currentColor" />
+                              <path
+                                d="M6 35c0-8.837 6.268-14 14-14s14 5.163 14 14"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                  <Link href="/?auth=signup" className={`${BTN_PRIMARY} mt-4 w-fit`}>
-                    {t("spotlight.cta")}
-                  </Link>
-                </div>
-                <div className="relative order-1 md:order-2">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-lg">
-                    <Image
-                      src={maluImg}
-                      alt={t("spotlight.imageAlt")}
-                      className="h-full w-full object-cover object-top"
-                    />
-                    <div className="absolute inset-x-4 bottom-4 flex items-center gap-3 rounded-xl border border-white/30 bg-white/70 p-4 backdrop-blur-md">
+                      <div>
+                        <h3 className="text-[20px] font-semibold text-[#191c1d]">
+                          {t(`spotlight.agents.${key}.name`)}
+                        </h3>
+                        <p className="text-[14px] font-medium text-[#3525cd]">
+                          {t(`spotlight.agents.${key}.tagline`)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 rounded-xl border border-white/60 bg-white/70 p-3">
                       <Icon name="shieldCheck" className="h-5 w-5 shrink-0 text-[#006c49]" />
                       <div className="flex flex-col">
                         <span className="text-[12px] font-semibold text-[#191c1d]">
                           {t("spotlight.badge")}
                         </span>
                         <span className="text-[12px] text-[#464555]">
-                          {t("spotlight.badgeSub")}
+                          {t(`spotlight.agents.${key}.badgeSub`)}
                         </span>
                       </div>
                     </div>
+                    <div className="space-y-3">
+                      {traits.map(({ key: traitKey, icon }) => (
+                        <div
+                          key={traitKey}
+                          className="flex items-start gap-4 rounded-xl border border-[#f3f4f5] bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-transform hover:-translate-y-0.5"
+                        >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e2dfff] text-[#3525cd]">
+                            <Icon name={icon} className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-[14px] font-bold text-[#191c1d]">
+                              {t(`spotlight.agents.${key}.features.${traitKey}.title`)}
+                            </h4>
+                            <p className="mt-1 text-[16px] leading-[24px] text-[#464555]">
+                              {t(`spotlight.agents.${key}.features.${traitKey}.description`)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <Link href="/?auth=signup" className={`${BTN_PRIMARY} w-fit`}>
+                      {t(`spotlight.agents.${key}.cta`)}
+                    </Link>
                   </div>
-                  <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#4f46e5] opacity-20 blur-[80px]" />
-                  <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-[#006c49] opacity-20 blur-[80px]" />
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#4f46e5] opacity-20 blur-[80px]" />
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
@@ -283,25 +348,18 @@ export async function LandingPageV2() {
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {FLOW_STEPS.map(({ key, icon, whatsapp }, i) => (
+            {FLOW_STEPS.map(({ key, icon }, i) => (
               <div
                 key={key}
                 className={`${CARD} p-6 transition duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)]`}
               >
                 <div
                   className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl"
-                  style={
-                    whatsapp
-                      ? { backgroundColor: "rgba(37,211,102,0.2)", color: "#25d366" }
-                      : { backgroundColor: "#e2dfff", color: "#3525cd" }
-                  }
+                  style={{ backgroundColor: "#e2dfff", color: "#3525cd" }}
                 >
                   <Icon name={icon} className="h-6 w-6" />
                 </div>
-                <span
-                  className="mb-2 block text-[12px] font-semibold"
-                  style={{ color: whatsapp ? "#25d366" : "#3525cd" }}
-                >
+                <span className="mb-2 block text-[12px] font-semibold" style={{ color: "#3525cd" }}>
                   {t("flow.stepLabel", { number: i + 1 })}
                 </span>
                 <h3 className="mb-3 text-[24px] font-semibold leading-[32px] text-[#191c1d]">
@@ -327,7 +385,7 @@ export async function LandingPageV2() {
               </p>
             </div>
             <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
-              {/* Same WhatsApp frame on both sides — only the conversation differs. */}
+              {/* Same chat frame on both sides — only the conversation differs. */}
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-3">
                   <div className="h-3 w-3 rounded-full bg-[#ba1a1a]" />
@@ -335,7 +393,7 @@ export async function LandingPageV2() {
                     {t("comparison.oldWay")}
                   </h3>
                 </div>
-                <WhatsAppThread
+                <ChatThread
                   animate={false}
                   contactName={t("comparison.oldContact")}
                   messages={[
@@ -352,7 +410,7 @@ export async function LandingPageV2() {
                     {t("comparison.staffraWay")}
                   </h3>
                 </div>
-                <WhatsAppThread
+                <ChatThread
                   contactName="Malu"
                   avatarSrc={maluImg.src}
                   messages={demoMessages}

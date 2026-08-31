@@ -49,32 +49,54 @@
     "hero": {
       "badge": "Now hiring specialized AI talent",
       "headline": "AI employees for your business.",
-      "sub": "Hire specialized AI talent that understands your business, helps your customers, and drives sales naturally on WhatsApp.",
+      "sub": "Hire specialized AI talent that understands your business, helps your customers, and drives sales naturally on your communication channel.",
       "primaryCta": "Hire your first employee",
       "secondaryCta": "View roster",
       "imageAlt": "A Staffra AI employee at work"
     },
     "spotlight": {
-      "title": "Malu — AI Sales Representative",
-      "tagline": "Malu is not a chatbot. She is a sales employee.",
-      "features": {
-        "warm": {
-          "title": "Warm & empathetic",
-          "description": "Connects with customers on a human level, understanding their needs."
-        },
-        "negotiator": {
-          "title": "Confident negotiator",
-          "description": "Guides conversations towards conversion without being pushy."
-        },
-        "expert": {
-          "title": "Knowledgeable expert",
-          "description": "Learns your entire catalogue instantly and recalls it flawlessly."
-        }
-      },
-      "cta": "Meet Malu",
+      "heading": "Meet your team",
+      "sub": "Every Staffra employee has a defined role and a personality that fits it — not a generic assistant you have to configure.",
       "badge": "Verified Human-Centric AI",
-      "badgeSub": "Sales & Partnerships Division",
-      "imageAlt": "Portrait of Malu, AI Sales Representative"
+      "agents": {
+        "malu": {
+          "name": "Malu — AI Sales Representative",
+          "tagline": "Malu is not a chatbot. She is a sales employee.",
+          "cta": "Meet Malu",
+          "badgeSub": "Sales & Partnerships Division",
+          "imageAlt": "Portrait of Malu, AI Sales Representative",
+          "features": {
+            "warm": {
+              "title": "Warm & empathetic",
+              "description": "Connects with customers on a human level, understanding their needs."
+            },
+            "negotiator": {
+              "title": "Confident negotiator",
+              "description": "Guides conversations towards conversion without being pushy."
+            },
+            "expert": {
+              "title": "Knowledgeable expert",
+              "description": "Learns your entire catalogue instantly and recalls it flawlessly."
+            }
+          }
+        },
+        "ana": {
+          "name": "Ana — AI Scheduling Assistant",
+          "tagline": "Ana is not a booking form. She's the employee who runs your calendar.",
+          "cta": "Meet Ana",
+          "badgeSub": "Scheduling & Operations Division",
+          "features": {
+            "punctual": {
+              "title": "Organized & punctual",
+              "description": "Checks your calendar in real time and never double-books, so every appointment holds."
+            },
+            "availability": {
+              "title": "Reliable follow-through",
+              "description": "Books appointments your customers can count on, with no back-and-forth to lock in a time."
+            }
+          }
+        }
+      }
     },
     "flow": {
       "heading": "Hire. Teach. Connect. Work.",
@@ -82,20 +104,20 @@
       "stepLabel": "Step {number}",
       "steps": {
         "hire": {
-          "title": "Hire Malu",
-          "description": "Select your first agent from our roster of specialized AI professionals."
+          "title": "Hire your first employee",
+          "description": "Select your first professional from our roster of specialized AI talent."
         },
         "teach": {
-          "title": "Teach Malu",
+          "title": "Teach your team",
           "description": "Upload your product catalogue, FAQs, and business policies for instant learning."
         },
         "connect": {
-          "title": "Connect WhatsApp",
-          "description": "Seamlessly link her directly to your primary customer communication channel."
+          "title": "Connect your channel",
+          "description": "Seamlessly link them directly to your primary customer communication channel."
         },
         "work": {
-          "title": "Let Malu work",
-          "description": "She handles conversations, qualifies leads, and tracks buying intent 24/7."
+          "title": "Let your team work",
+          "description": "They handle conversations, qualify leads, and track buying intent 24/7."
         }
       }
     },
@@ -117,7 +139,7 @@
       },
       "checkout": {
         "title": "Checkout clicks",
-        "description": "Track direct conversions originating from WhatsApp interactions."
+        "description": "Track direct conversions originating from customer conversations."
       },
       "imageAlt": "Preview of the Staffra performance dashboard"
     },
@@ -138,7 +160,7 @@
       "rights": "© {year} Staffra AI. All rights reserved."
     },
     "demo": {
-      "transcriptLabel": "Example conversation between a customer and Malu on WhatsApp",
+      "transcriptLabel": "Example conversation between a customer and Malu",
       "customerLabel": "Customer",
       "online": "online",
       "messages": [

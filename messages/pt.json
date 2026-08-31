@@ -40,7 +40,7 @@
     },
     "nav": {
       "features": "Recursos",
-      "employees": "Nossas funcionárias de IA",
+      "employees": "Nossos funcionários de IA",
       "pricing": "Preços",
       "login": "Entrar",
       "cta": "Começar agora",
@@ -48,54 +48,76 @@
     },
     "hero": {
       "badge": "Contratando talentos de IA especializados",
-      "headline": "Funcionárias de IA para o seu negócio.",
-      "sub": "Contrate talentos de IA especializados que entendem o seu negócio, ajudam os seus clientes e impulsionam as vendas naturalmente no WhatsApp.",
-      "primaryCta": "Contrate sua primeira funcionária",
+      "headline": "Funcionários de IA para o seu negócio.",
+      "sub": "Contrate talentos de IA especializados que entendem o seu negócio, ajudam os seus clientes e impulsionam as vendas naturalmente no seu canal de comunicação.",
+      "primaryCta": "Contrate o seu primeiro funcionário",
       "secondaryCta": "Ver equipe",
-      "imageAlt": "Uma funcionária de IA da Staffra trabalhando"
+      "imageAlt": "Um funcionário de IA da Staffra trabalhando"
     },
     "spotlight": {
-      "title": "Malu — Representante de Vendas de IA",
-      "tagline": "A Malu não é um chatbot. Ela é uma funcionária de vendas.",
-      "features": {
-        "warm": {
-          "title": "Acolhedora e empática",
-          "description": "Conecta-se com os clientes num nível humano, entendendo as suas necessidades."
-        },
-        "negotiator": {
-          "title": "Negociadora confiante",
-          "description": "Conduz as conversas para a conversão sem ser insistente."
-        },
-        "expert": {
-          "title": "Especialista que domina o assunto",
-          "description": "Aprende todo o seu catálogo instantaneamente e lembra de tudo com precisão."
-        }
-      },
-      "cta": "Conheça a Malu",
+      "heading": "Conheça a sua equipe",
+      "sub": "Cada funcionário da Staffra tem um papel definido e uma personalidade que combina com ele — não é uma assistente genérica que você precisa configurar.",
       "badge": "IA Centrada no Humano Verificada",
-      "badgeSub": "Divisão de Vendas e Parcerias",
-      "imageAlt": "Retrato da Malu, Representante de Vendas de IA"
+      "agents": {
+        "malu": {
+          "name": "Malu — Representante de Vendas de IA",
+          "tagline": "A Malu não é um chatbot. Ela é uma funcionária de vendas.",
+          "cta": "Conheça a Malu",
+          "badgeSub": "Divisão de Vendas e Parcerias",
+          "imageAlt": "Retrato da Malu, Representante de Vendas de IA",
+          "features": {
+            "warm": {
+              "title": "Acolhedora e empática",
+              "description": "Conecta-se com os clientes num nível humano, entendendo as suas necessidades."
+            },
+            "negotiator": {
+              "title": "Negociadora confiante",
+              "description": "Conduz as conversas para a conversão sem ser insistente."
+            },
+            "expert": {
+              "title": "Especialista que domina o assunto",
+              "description": "Aprende todo o seu catálogo instantaneamente e lembra de tudo com precisão."
+            }
+          }
+        },
+        "ana": {
+          "name": "Ana — Assistente de Agendamentos de IA",
+          "tagline": "A Ana não é um formulário de agendamento. Ela é a funcionária que cuida da sua agenda.",
+          "cta": "Conheça a Ana",
+          "badgeSub": "Divisão de Agendamentos e Operações",
+          "features": {
+            "punctual": {
+              "title": "Organizada e pontual",
+              "description": "Confere a sua agenda em tempo real e nunca marca dois horários juntos, então cada agendamento vale."
+            },
+            "availability": {
+              "title": "Acompanhamento confiável",
+              "description": "Marca horários que os seus clientes podem confiar, sem idas e vindas para fechar um horário."
+            }
+          }
+        }
+      }
     },
     "flow": {
       "heading": "Contrate. Ensine. Conecte. Trabalhe.",
-      "sub": "Começar com uma funcionária de IA da Staffra é mais simples do que integrar uma pessoa, e igualmente eficaz.",
+      "sub": "Começar com um funcionário de IA da Staffra é mais simples do que integrar uma pessoa, e igualmente eficaz.",
       "stepLabel": "Passo {number}",
       "steps": {
         "hire": {
-          "title": "Contrate a Malu",
-          "description": "Escolha a sua primeira agente na nossa equipe de profissionais de IA especializados."
+          "title": "Contrate o seu primeiro funcionário",
+          "description": "Escolha o primeiro talento da nossa equipe de profissionais de IA especializados."
         },
         "teach": {
-          "title": "Ensine a Malu",
+          "title": "Ensine a sua equipe",
           "description": "Envie o seu catálogo de produtos, perguntas frequentes e políticas do negócio para aprendizado instantâneo."
         },
         "connect": {
-          "title": "Conecte o WhatsApp",
-          "description": "Ligue-a diretamente ao seu principal canal de comunicação com clientes."
+          "title": "Conecte o seu canal",
+          "description": "Ligue diretamente ao seu principal canal de comunicação com clientes."
         },
         "work": {
-          "title": "Deixe a Malu trabalhar",
-          "description": "Ela cuida das conversas, qualifica leads e acompanha a intenção de compra 24 horas por dia."
+          "title": "Deixe a sua equipe trabalhar",
+          "description": "Sua equipe cuida das conversas, qualifica leads e acompanha a intenção de compra 24 horas por dia."
         }
       }
     },
@@ -117,7 +139,7 @@
       },
       "checkout": {
         "title": "Cliques no checkout",
-        "description": "Acompanhe as conversões diretas originadas nas interações do WhatsApp."
+        "description": "Acompanhe as conversões diretas originadas nas conversas com clientes."
       },
       "imageAlt": "Prévia do painel de desempenho da Staffra"
     },
@@ -138,7 +160,7 @@
       "rights": "© {year} Staffra AI. Todos os direitos reservados."
     },
     "demo": {
-      "transcriptLabel": "Exemplo de conversa entre um cliente e a Malu no WhatsApp",
+      "transcriptLabel": "Exemplo de conversa entre um cliente e a Malu",
       "customerLabel": "Cliente",
       "online": "online",
       "messages": [
