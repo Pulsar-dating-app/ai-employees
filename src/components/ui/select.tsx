@@ -13,8 +13,11 @@ type SelectProps = Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "children
 };
 
 // Custom chevron (Stitch) since we strip the native appearance for a
-// consistent filled-field look across browsers.
-const CHEVRON =
+// consistent filled-field look across browsers. Exported for the one screen
+// that needs a differently-sized select of its own (the bookings toolbar,
+// which follows its Stitch screen's control chrome rather than this app's
+// form-field chrome) — the data URI itself should never be pasted twice.
+export const CHEVRON =
   "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 width=%2224%22 height=%2224%22><path fill=%22%23464555%22 d=%22M7 10l5 5 5-5z%22/></svg>')] bg-[length:20px] bg-[right_0.75rem_center] bg-no-repeat pr-10 appearance-none";
 
 export function Select({ label, error, id, className, options, ...props }: SelectProps) {

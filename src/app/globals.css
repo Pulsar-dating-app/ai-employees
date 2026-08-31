@@ -36,6 +36,7 @@
   --color-secondary-container: #6cf8bb;
   --color-on-secondary-container: #00714d;
 
+  --color-tertiary: #005523;
   --color-tertiary-container: #007030;
   --color-on-tertiary-container: #59f986;
   --color-tertiary-fixed-dim: #3de273;
@@ -238,6 +239,27 @@ select:not(:disabled) {
   .v2-bubble-in,
   .v2-typing-dot {
     animation: none;
+  }
+}
+
+/* Stitch's own `.card-hover` (the "Bookings & Appointments Dashboard" screen
+   defines it inline in its <style> block): a card lifts 2px and its ambient
+   shadow spreads on hover. Reproduced verbatim rather than approximated with
+   a shadow-only utility, since the booking cards are meant to read exactly
+   as that screen does. */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-hover {
+    transition: box-shadow 0.3s ease;
+  }
+  .card-hover:hover {
+    transform: none;
   }
 }
 

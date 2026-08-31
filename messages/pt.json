@@ -578,12 +578,17 @@
         "upcoming": "Próximos",
         "past": "Anteriores"
       },
+      "calendarView": "Ver calendário",
+      "listView": "Ver lista",
+      "previousMonth": "Mês anterior",
+      "nextMonth": "Próximo mês",
       "statusFilterLabel": "Status",
       "statusFilterAll": "Todos os status",
       "previousPage": "Anterior",
       "nextPage": "Próxima",
       "pageOf": "Página {page} de {totalPages}",
       "emptyState": "Nada marcado nesse período ainda.",
+      "emptyHint": "Novos agendamentos aparecem aqui assim que sua equipe os marca.",
       "status": {
         "requested": "Aguardando aprovação",
         "confirmed": "Confirmado",
@@ -591,21 +596,27 @@
         "completed": "Concluído",
         "no_show": "Não compareceu"
       },
+      "summary": {
+        "todayTitle": "Resumo de hoje",
+        "bookedToday": "Total de agendamentos",
+        "completedToday": "Concluídos",
+        "teamTitle": "Em atividade",
+        "verified": "Integrante verificado",
+        "currentStatus": "Status atual",
+        "statusActive": "Recebendo agendamentos",
+        "statusPaused": "Pausado"
+      },
       "list": {
-        "whenColumn": "Quando",
-        "serviceColumn": "Serviço",
-        "customerColumn": "Cliente",
-        "statusColumn": "Status",
-        "actionsColumn": "Ações",
+        "serviceLabel": "Serviço:",
         "serviceRemoved": "Serviço removido",
-        "unnamedCustomer": "Sem nome",
-        "noActions": "—"
+        "unnamedCustomer": "Sem nome"
       },
       "actions": {
-        "complete": "Concluído",
+        "complete": "Concluir",
         "noShow": "Não compareceu",
         "cancel": "Cancelar",
-        "confirmCancel": "Clique novamente para cancelar — o horário do cliente fica livre",
+        "cancelPrompt": "Cancelar este agendamento? O horário do cliente fica livre.",
+        "confirmCancel": "Sim, cancelar",
         "keep": "Manter"
       }
     }
