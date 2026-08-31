@@ -33,6 +33,32 @@ describe("GET/POST /api/companies", () => {
     const result = await api("POST", "/api/companies", owner.cookieHeader, {});
     expect(result.status).toBe(400);
   });
+
+  // create_company_with_owner used to 500 here: generate_unique_company_slug
+  // checks for a free slug and then inserts, which isn't atomic, so two
+  // callers racing on the same name both picked the same candidate and the
+  // loser tripped companies_slug_unique. The RPC now retries on
+  // unique_violation (migration 20260831120000). Six at once because the
+  // window is small — a single pair reproduces it only sometimes.
+  it("survives concurrent creates that slugify to the same name", async () => {
+    const owners = await Promise.all(
+      Array.from({ length: 6 }, () => signUpTestUser("slug-race")),
+    );
+
+    const results = await Promise.all(
+      owners.map((owner) =>
+        api<{ company: { id: string; slug: string } }>("POST", "/api/companies", owner.cookieHeader, {
+          name: "Slug Race Co",
+        }),
+      ),
+    );
+
+    expect(results.map((r) => r.status)).toEqual(Array(owners.length).fill(201));
+    const slugs = results.map((r) => r.json.company.slug);
+    expect(new Set(slugs).size).toBe(owners.length);
+    // First one keeps the clean slug; the rest fall back to -2, -3, ...
+    expect(slugs).toContain("slug-race-co");
+  });
 });
 
 describe("POST /api/companies/:id/members", () => {
