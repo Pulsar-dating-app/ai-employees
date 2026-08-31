@@ -91,6 +91,7 @@ export default async function setup() {
         META_GRAPH_API_BASE_URL: graphApiMock.url,
         INSTAGRAM_API_BASE_URL: instagramApiMock.url,
         INSTAGRAM_GRAPH_BASE_URL: instagramApiMock.url,
+        INSTAGRAM_WEBHOOK_VERIFY_TOKEN: "test-instagram-verify-token",
         GOOGLE_CLIENT_ID: "test-google-client-id",
         GOOGLE_CLIENT_SECRET: "test-google-client-secret",
         GOOGLE_OAUTH_TOKEN_URL: googleOAuthMock.url,

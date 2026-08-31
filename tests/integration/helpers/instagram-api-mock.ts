@@ -15,6 +15,10 @@ import type { AddressInfo } from "node:net";
 // - code === "trigger-token-failure" -> the short-lived code exchange fails
 // - code === "trigger-exchange-failure" -> the long-lived token exchange fails
 // - code === "trigger-subscribe-failure" -> the webhook subscribe step fails
+// - recipient.id === "trigger-send-failure" -> POST .../messages 500s on
+//   both the first attempt and the one retry (N5's sendInstagramMessage)
+// - recipient.id === "trigger-send-unauthorized" -> POST .../messages 401s
+//   (simulates a dead/revoked token, no retry -- only 5xx is retried)
 // A short-lived token's user_id is derived from the code so a test can
 // assert which IGSID a given connect attempt produced without threading
 // extra state through the mock.
@@ -58,6 +62,23 @@ export function startInstagramApiMock(): Promise<{ url: string; stop: () => Prom
         return send(400, { error: { message: "mock: subscribe failed" } });
       }
       return send(200, { success: true });
+    }
+
+    const messagesMatch = url.pathname.match(/^\/v25\.0\/([^/]+)\/messages$/);
+    if (messagesMatch && req.method === "POST") {
+      let raw = "";
+      req.on("data", (chunk) => (raw += chunk));
+      req.on("end", () => {
+        const recipientId = JSON.parse(raw || "{}")?.recipient?.id ?? "";
+        if (recipientId === "trigger-send-unauthorized") {
+          return send(401, { error: { message: "mock: invalid token" } });
+        }
+        if (recipientId === "trigger-send-failure") {
+          return send(500, { error: { message: "mock: send failed" } });
+        }
+        return send(200, { message_id: `mock-message-${recipientId}` });
+      });
+      return;
     }
 
     const lookupMatch = url.pathname.match(/^\/v25\.0\/([^/]+)$/);

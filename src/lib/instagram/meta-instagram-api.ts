@@ -158,3 +158,49 @@ export async function connectInstagramAccount(code: string) {
 
   return { instagramUserId: userId, username, accessToken, tokenExpiresAt };
 }
+
+// Trello N5 -- delivery, the other end of N4's inbound webhook. `<IG_ID>` in
+// the path is OUR business account (the sender, i.e. instagramUserId); the
+// customer being replied to is `recipientId`, in the body. Text is capped
+// at Instagram's own 2000-character limit -- hard-truncated rather than
+// split across multiple messages, a deliberate simplification for a first
+// version (Ana/Malu's replies are short conversational text; splitting a
+// rare long one loses nothing today's ticket needs).
+const MAX_MESSAGE_LENGTH = 2000;
+
+export type SendInstagramMessageResult =
+  | { ok: true }
+  // tokenInvalid distinguishes "the token itself is dead" (401/403 -- N4's
+  // caller should flip the connection so N3's card reflects reality) from
+  // any other failure (network blip, Meta 5xx after the one retry already
+  // failed -- transient, log and move on, the connection is still fine).
+  | { ok: false; tokenInvalid: boolean };
+
+export async function sendInstagramMessage(
+  accessToken: string,
+  instagramUserId: string,
+  recipientId: string,
+  text: string,
+): Promise<SendInstagramMessageResult> {
+  const body = JSON.stringify({
+    recipient: { id: recipientId },
+    message: { text: text.slice(0, MAX_MESSAGE_LENGTH) },
+  });
+
+  const attempt = () =>
+    fetch(graphUrl(`/${instagramUserId}/messages`), {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+      body,
+    });
+
+  let res = await attempt();
+  // Retry once on a transient failure only -- a 4xx (bad token, bad
+  // recipient) will fail identically on retry, so don't waste the call.
+  if (!res.ok && res.status >= 500) {
+    res = await attempt();
+  }
+
+  if (res.ok) return { ok: true };
+  return { ok: false, tokenInvalid: res.status === 401 || res.status === 403 };
+}
