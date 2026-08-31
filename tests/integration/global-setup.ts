@@ -71,6 +71,13 @@ export default async function setup() {
       cwd: ROOT_DIR,
       env: {
         ...process.env,
+        // Read by next.config.ts. Next 16 takes an exclusive lock on
+        // `<distDir>/dev`, so sharing `.next` with a developer's own running
+        // `next dev` kills this spawn on startup ("Another next dev server is
+        // already running") and the whole suite dies in global setup. A
+        // separate build dir means a separate lock — and no cache-thrash
+        // between two servers running with different env vars.
+        NEXT_TEST_DIST_DIR: ".next-test",
         // Overrides whatever's in .env.local (which points at the real
         // Supabase project) for this spawned process only.
         NEXT_PUBLIC_SUPABASE_URL: status.API_URL,

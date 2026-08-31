@@ -9,16 +9,23 @@ import {
   SearchIcon,
   UsersIcon,
   PackageIcon,
+  CalendarIcon,
   BarChartIcon,
   SettingsIcon,
   LogoutIcon,
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
+// `requiresAgent` gates a tab on having hired the agent it exists to serve:
+// a barbershop running only Ana has no use for a Products tab, and a shop
+// running only Malu has nothing to schedule. Items without it are always
+// shown. The data stays company-scoped either way (products.company_id /
+// services.company_id) — this is purely about what's worth showing.
 const NAV_ITEMS = [
   { href: "/dashboard", key: "marketplace" as const, icon: SearchIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
   { href: "/dashboard/my-agents", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p.startsWith("/dashboard/my-agents") },
-  { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, match: (p: string) => p.startsWith("/dashboard/products") },
+  { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, requiresAgent: "malu", match: (p: string) => p.startsWith("/dashboard/products") },
+  { href: "/dashboard/scheduling", key: "scheduling" as const, icon: CalendarIcon, requiresAgent: "ana", match: (p: string) => p.startsWith("/dashboard/scheduling") },
   { href: "/dashboard/metrics", key: "metrics" as const, icon: BarChartIcon, match: (p: string) => p.startsWith("/dashboard/metrics") },
   { href: "/dashboard/settings", key: "settings" as const, icon: SettingsIcon, match: (p: string) => p.startsWith("/dashboard/settings") },
 ];
@@ -65,16 +72,26 @@ export function Sidebar({
   companyName,
   email,
   locale,
+  hiredAgentSlugs,
 }: {
   companyName: string | null;
   email: string | null;
   locale: "en" | "pt";
+  hiredAgentSlugs: string[];
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
   const tDash = useTranslations("Dashboard");
 
   const identityLabel = companyName ?? email ?? "";
+
+  // Kept as one derived list so the desktop rail and the mobile tab bar can't
+  // disagree about which tabs exist — the same reason they already share
+  // NAV_ITEMS. A merchant who is *on* a hidden tab's URL still sees the page
+  // itself; this only controls the navigation.
+  const navItems = NAV_ITEMS.filter(
+    (item) => !item.requiresAgent || hiredAgentSlugs.includes(item.requiresAgent),
+  );
 
   return (
     <>
@@ -83,7 +100,7 @@ export function Sidebar({
         <SidebarHeader identityLabel={identityLabel} workspaceLabel={tDash("workspaceLabel")} />
 
         <nav className="flex flex-1 flex-col gap-1 px-3 pt-4">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive = item.match(pathname);
             const Icon = item.icon;
             return (
@@ -138,7 +155,7 @@ export function Sidebar({
 
       {/* Mobile bottom tab bar */}
       <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-outline-variant bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive = item.match(pathname);
           const Icon = item.icon;
           return (

@@ -24,5 +24,15 @@ export async function api<T = unknown>(
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   const json = (await res.json().catch(() => null)) as T;
+
+  // A 500 is never an expected outcome in this suite — 502 is (the Graph API
+  // and Google mocks return it deliberately), so only 500 throws. Without
+  // this, a server error surfaced three frames later as "Cannot read
+  // properties of undefined (reading 'id')" wherever the caller reached into
+  // the body, which is how a CI failure stayed unexplained for two days.
+  if (res.status === 500) {
+    throw new Error(`${method} ${path} -> 500 ${JSON.stringify(json)}`);
+  }
+
   return { status: res.status, json };
 }

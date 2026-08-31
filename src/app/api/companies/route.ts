@@ -57,6 +57,16 @@ export async function POST(request: Request) {
   });
 
   if (error) {
+    // Logged, not just returned: a 500 out of this RPC was showing up as an
+    // occasional CI failure with nothing anywhere naming the cause — the
+    // test only saw a body without `company` in it. PostgREST puts the real
+    // reason in code/details/hint, so print all of it.
+    console.error("create_company_with_owner failed", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

@@ -9,6 +9,7 @@ tests/integration/.test-env.json
 
 # next.js
 /.next/
+/.next-test/
 /out/
 
 # production

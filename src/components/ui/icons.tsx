@@ -67,6 +67,56 @@ export function PackageIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// The Scheduling area's tab and the Appointments page header (K4/K5).
+export function CalendarIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+      <path d="M3.5 9.75h17" />
+      <path d="M8.25 3.5v3M15.75 3.5v3" />
+    </svg>
+  );
+}
+
+// The Appointments screen's view switch: the calendar button flips back to
+// the list, so it needs the list's own mark (K4).
+export function ListIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <path d="M9 6.5h11.5M9 12h11.5M9 17.5h11.5" />
+      <path d="M4.25 6.5h.01M4.25 12h.01M4.25 17.5h.01" />
+    </svg>
+  );
+}
+
+// Month navigation on the same screen's calendar view.
+export function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <path d="m14.5 5-7 7 7 7" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <path d="m9.5 5 7 7-7 7" />
+    </svg>
+  );
+}
+
+// Services are "products, but the thing being sold is time" (H1's own
+// framing) — hence a clock where the catalog gets a package.
+export function ClockIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.4V12l3.1 1.9" />
+    </svg>
+  );
+}
+
 export function SettingsIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...NAV_ICON_PROPS} {...props}>

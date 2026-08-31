@@ -36,6 +36,7 @@
   --color-secondary-container: #6cf8bb;
   --color-on-secondary-container: #00714d;
 
+  --color-tertiary: #005523;
   --color-tertiary-container: #007030;
   --color-on-tertiary-container: #59f986;
   --color-tertiary-fixed-dim: #3de273;
@@ -241,6 +242,27 @@ select:not(:disabled) {
   }
 }
 
+/* Stitch's own `.card-hover` (the "Bookings & Appointments Dashboard" screen
+   defines it inline in its <style> block): a card lifts 2px and its ambient
+   shadow spreads on hover. Reproduced verbatim rather than approximated with
+   a shadow-only utility, since the booking cards are meant to read exactly
+   as that screen does. */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-hover {
+    transition: box-shadow 0.3s ease;
+  }
+  .card-hover:hover {
+    transform: none;
+  }
+}
+
 /* ============================================================
    Metrics dashboard (src/app/dashboard/metrics/)
    ============================================================ */
@@ -261,9 +283,11 @@ select:not(:disabled) {
   animation: metrics-spark-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Indeterminate progress sweep shown across the metrics grid while a new
-   range is loading (paired with a dim + blur on the content itself). */
-@keyframes metrics-sweep {
+/* Indeterminate progress sweep, shown while a surface swaps its data under
+   the user (paired with a dim on the stale content itself): the metrics grid
+   changing range, the bookings list/calendar changing scope, status, page or
+   month. Named for the job, not for one screen — it is shared. */
+@keyframes progress-sweep {
   from {
     transform: translateX(-100%);
   }
@@ -271,8 +295,8 @@ select:not(:disabled) {
     transform: translateX(400%);
   }
 }
-.animate-metrics-sweep {
-  animation: metrics-sweep 1s linear infinite;
+.animate-progress-sweep {
+  animation: progress-sweep 1s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -281,7 +305,7 @@ select:not(:disabled) {
     stroke-dasharray: none;
     stroke-dashoffset: 0;
   }
-  .animate-metrics-sweep {
+  .animate-progress-sweep {
     animation: none;
   }
 }

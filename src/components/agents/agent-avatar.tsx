@@ -10,7 +10,16 @@ const ROLE_CLASSES: Record<AgentAvatarRole, { bg: string; fg: string }> = {
 
 const SIZE_CLASSES = {
   md: "h-12 w-12",
+  // The Stitch bookings rail's persona thumbnail sits between the two.
+  ml: "h-16 w-16",
   lg: "h-20 w-20",
+};
+
+// Circular only where a design asks for it (the bookings rail); everywhere
+// else the mark stays a rounded tile.
+const SHAPE_CLASSES = {
+  square: "rounded-lg",
+  circle: "rounded-full",
 };
 
 // Real portraits (Stitch) are used where we have one — see
@@ -20,12 +29,14 @@ const SIZE_CLASSES = {
 export function AgentAvatar({
   role,
   size = "md",
+  shape = "square",
   photoSrc,
   alt = "",
   className,
 }: {
   role: AgentAvatarRole;
   size?: keyof typeof SIZE_CLASSES;
+  shape?: keyof typeof SHAPE_CLASSES;
   photoSrc?: string | null;
   alt?: string;
   className?: string;
@@ -35,7 +46,8 @@ export function AgentAvatar({
   return (
     <div
       className={clsx(
-        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-lg",
+        "relative flex shrink-0 items-center justify-center overflow-hidden",
+        SHAPE_CLASSES[shape],
         bg,
         SIZE_CLASSES[size],
         className,

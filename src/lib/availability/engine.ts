@@ -88,7 +88,12 @@ function tzOffsetMsAt(tz: string, utcGuess: Date): number {
 // guess in the target zone to measure the offset, correct once, then
 // re-measure at the corrected instant to catch a DST-transition edge case
 // where the offset itself changed between the guess and the answer.
-function zonedTimeToUtc(dateOnly: string, timeOnly: string, tz: string): Date {
+//
+// Exported because "midnight where the business is" is not only a slot
+// problem: the Appointments screen's today-counters need the same boundary,
+// and a second hand-rolled copy of this would be one more thing to get
+// wrong twice a year.
+export function zonedTimeToUtc(dateOnly: string, timeOnly: string, tz: string): Date {
   const guess = new Date(`${dateOnly}T${timeOnly.length === 5 ? `${timeOnly}:00` : timeOnly}Z`);
   const offset1 = tzOffsetMsAt(tz, guess);
   const corrected = new Date(guess.getTime() - offset1);

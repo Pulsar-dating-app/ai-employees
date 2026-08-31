@@ -49,6 +49,17 @@ function parsePositiveInt(value: string | null, fallback: number, max?: number):
 // this is forward-looking scheduling data (unlike products'/services'
 // created_at-desc catalog ordering). ?status=/&from=/&to= (both ISO
 // datetimes, filtering on starts_at) /&page=/&pageSize= are all optional.
+//
+// Extended by K4 (the Appointments view), the way F3 extended B3's products
+// list for the same reason — the shipped shape couldn't render a useful
+// screen:
+//   - embeds `services(name)` / `customers(name, phone)`, since a bare
+//     service_id/customer_id is unreadable in a list. Both are to-one, so
+//     PostgREST returns an object (or null — service_id is nullable and
+//     survives a service being soft-deleted).
+//   - `?order=desc` flips to latest-first, which is what "past bookings"
+//     needs; ascending stays the default for the forward-looking case.
+// (`?status=` was already validated against VALID_STATUSES here — left as is.)
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ companyId: string }> },
@@ -70,6 +81,7 @@ export async function GET(
   const status = searchParams.get("status");
   const from = searchParams.get("from");
   const to = searchParams.get("to");
+  const ascending = searchParams.get("order") !== "desc";
   const page = parsePositiveInt(searchParams.get("page"), 1);
   const pageSize = parsePositiveInt(searchParams.get("pageSize"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
 
@@ -80,14 +92,17 @@ export async function GET(
     );
   }
 
-  let query = supabase.from("appointments").select("*", { count: "exact" }).eq("company_id", companyId);
+  let query = supabase
+    .from("appointments")
+    .select("*, services(name), customers(name, phone)", { count: "exact" })
+    .eq("company_id", companyId);
   if (status) query = query.eq("status", status);
   if (from) query = query.gte("starts_at", from);
   if (to) query = query.lte("starts_at", to);
 
   const fromIndex = (page - 1) * pageSize;
   const { data, error, count } = await query
-    .order("starts_at", { ascending: true })
+    .order("starts_at", { ascending })
     .range(fromIndex, fromIndex + pageSize - 1);
 
   if (error) {

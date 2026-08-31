@@ -9,6 +9,11 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // The integration harness's own build dir (NEXT_TEST_DIST_DIR in
+    // next.config.ts) — same generated output as `.next`, so it gets the
+    // same treatment; without this, `npm run lint` walks the compiled
+    // server bundle and reports on it.
+    ".next-test/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
