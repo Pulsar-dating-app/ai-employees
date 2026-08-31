@@ -8,11 +8,13 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // `c/` (Trello E1's checkout redirect), `api/chat/` (Trello M3's public
-    // chat API), and `talk/` (Trello M4's standalone hosted chat page) are
-    // excluded deliberately: all three are public, unauthenticated surfaces
-    // a customer with no Sidde session calls directly, so running
-    // updateSession's supabase.auth.getUser() round-trip on them would add
-    // latency for nothing.
-    "/((?!_next/static|_next/image|favicon.ico|c/|api/chat/|talk/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // chat API), `talk/` (Trello M4's standalone hosted chat page), and
+    // `api/webhooks/` (Trello N4's Instagram inbound webhook) are excluded
+    // deliberately: all four are public, unauthenticated surfaces called
+    // directly by a customer or by Meta itself with no Sidde session, so
+    // running updateSession's supabase.auth.getUser() round-trip on them
+    // would add latency for nothing -- Meta's webhook caller has no cookie
+    // to refresh in the first place.
+    "/((?!_next/static|_next/image|favicon.ico|c/|api/chat/|talk/|api/webhooks/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

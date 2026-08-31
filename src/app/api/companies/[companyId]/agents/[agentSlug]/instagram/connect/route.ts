@@ -3,14 +3,17 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { connectInstagramAccount } from "@/lib/instagram/meta-instagram-api";
 
-// Trello N2 -- finishes what Business Login for Instagram starts. N3's (not
-// yet built) dashboard screen redirects the merchant to buildAuthorizeUrl();
-// on return the browser has `code` and posts it here along with the exact
-// `redirectUri` it was sent with (Instagram's token exchange requires the
-// same redirect_uri that was used to obtain the code). This route does the
-// server-to-server work: exchange the code for a long-lived access token,
-// subscribe our app to the account's message webhooks (so N4's inbound
-// webhook has something to receive), and persist the result.
+// Trello N2 -- finishes what Business Login for Instagram starts. N3's
+// callback route (src/app/dashboard/my-agents/instagram-callback/route.ts)
+// redirects the merchant through buildAuthorizeUrl() and, on return, POSTs
+// the resulting `code` here. This route does the server-to-server work:
+// exchange the code for a long-lived access token, subscribe our app to the
+// account's message webhooks (so N4's inbound webhook has something to
+// receive), and persist the result. redirect_uri itself is never a
+// parameter here -- meta-instagram-api.ts always resolves it to the one
+// shared callback URL (instagramCallbackUrl()), since Meta requires it to
+// exactly match what was used to obtain the code, and with a single shared
+// callback there is only ever one correct value.
 const SAFE_COLUMNS = "instagram_user_id, username, status, connected_at, token_expires_at";
 
 async function requireAdmin(
@@ -73,7 +76,7 @@ async function resolveAgent(
   return { error: null, agent };
 }
 
-// POST: admin-only. Body: { code, redirectUri, force? }. Upserts on
+// POST: admin-only. Body: { code, force? }. Upserts on
 // (company_id, agent_id), so reconnecting is idempotent -- same convention
 // as D1's connect route.
 //
@@ -110,11 +113,10 @@ export async function POST(
 
   const body = await request.json().catch(() => null);
   const code = typeof body?.code === "string" ? body.code : "";
-  const redirectUri = typeof body?.redirectUri === "string" ? body.redirectUri : "";
   const force = body?.force === true;
 
-  if (!code || !redirectUri) {
-    return NextResponse.json({ error: "code and redirectUri are required" }, { status: 400 });
+  if (!code) {
+    return NextResponse.json({ error: "code is required" }, { status: 400 });
   }
 
   let instagramUserId: string;
@@ -122,7 +124,7 @@ export async function POST(
   let accessToken: string;
   let tokenExpiresAt: string | null;
   try {
-    ({ instagramUserId, username, accessToken, tokenExpiresAt } = await connectInstagramAccount(code, redirectUri));
+    ({ instagramUserId, username, accessToken, tokenExpiresAt } = await connectInstagramAccount(code));
   } catch {
     // Never leak Meta's raw error text to the merchant-facing UI.
     return NextResponse.json({ error: "Failed to connect Instagram" }, { status: 502 });

@@ -1,3 +1,5 @@
+import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
+
 // Shared Meta calls for Trello N2's Instagram connect flow. A sibling of
 // src/lib/whatsapp/meta-graph-api.ts, not a parameter on it -- Instagram's
 // Business Login flow hits different hosts (api.instagram.com for the code
@@ -13,6 +15,24 @@ const API_BASE_URL = process.env.INSTAGRAM_API_BASE_URL ?? "https://api.instagra
 const GRAPH_BASE_URL = process.env.INSTAGRAM_GRAPH_BASE_URL ?? "https://graph.instagram.com";
 const GRAPH_API_VERSION = "v25.0";
 
+// Trello N3 -- one shared callback for every agent's connect flow (the
+// merchant clicks "Connect Instagram" on Ana's page or Malu's, but both
+// land here; ./instagram/oauth-state.ts's `state` payload carries which
+// agent). A single redirect URI means it only has to be registered once in
+// the Meta App Dashboard, rather than re-registered for every agent slug a
+// company hires.
+//
+// Reuses resolveCheckoutBaseUrl() rather than adding a third base-URL
+// resolver -- same precedent M6 already established for exactly this
+// ("this app's own base URL, server-only, throws in production if unset").
+// Meta's Business Login rejects a plain http redirect URI outright, so
+// local testing needs `npm run dev:https` AND SIDDE_CHECKOUT_BASE_URL set
+// to an https URL (see .env.example) -- otherwise this builds an http:// URL
+// that will never match what's registered.
+export function instagramCallbackUrl(): string {
+  return `${resolveCheckoutBaseUrl()}/dashboard/my-agents/instagram-callback`;
+}
+
 function graphUrl(path: string, params?: Record<string, string>) {
   const url = new URL(`${GRAPH_BASE_URL}/${GRAPH_API_VERSION}${path}`);
   for (const [key, value] of Object.entries(params ?? {})) {
@@ -22,11 +42,15 @@ function graphUrl(path: string, params?: Record<string, string>) {
 }
 
 // Step 1 of Business Login for Instagram: the authorize URL the merchant is
-// redirected to. N3 builds the "Connect Instagram" button around this.
-export function buildAuthorizeUrl(redirectUri: string, state: string) {
+// redirected to (src/app/api/.../instagram/connect/start/route.ts builds
+// the "Connect Instagram" link around this). redirect_uri is always
+// instagramCallbackUrl() -- Meta requires it to exactly match what's
+// registered in the App Dashboard, and with one shared callback there is
+// only ever one correct value, so no caller has to supply or duplicate it.
+export function buildAuthorizeUrl(state: string) {
   const url = new URL(`${API_BASE_URL}/oauth/authorize`);
   url.searchParams.set("client_id", process.env.META_APP_ID!);
-  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("redirect_uri", instagramCallbackUrl());
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "instagram_business_basic,instagram_business_manage_messages");
   url.searchParams.set("state", state);
@@ -34,12 +58,12 @@ export function buildAuthorizeUrl(redirectUri: string, state: string) {
 }
 
 // Step 2: code -> short-lived (1h) token + the app-scoped Instagram user id.
-async function exchangeCodeForShortLivedToken(code: string, redirectUri: string) {
+async function exchangeCodeForShortLivedToken(code: string) {
   const body = new URLSearchParams({
     client_id: process.env.META_APP_ID!,
     client_secret: process.env.META_APP_SECRET!,
     grant_type: "authorization_code",
-    redirect_uri: redirectUri,
+    redirect_uri: instagramCallbackUrl(),
     code,
   });
   const res = await fetch(`${API_BASE_URL}/oauth/access_token`, { method: "POST", body });
@@ -126,11 +150,57 @@ async function fetchUsername(accessToken: string, instagramUserId: string) {
 // since Instagram's steps have no independent reuse the way WhatsApp's
 // manual-connect-test route needed (finishConnection alone, skipping the
 // code exchange) -- nothing here has a second caller yet.
-export async function connectInstagramAccount(code: string, redirectUri: string) {
-  const { accessToken: shortLivedToken, userId } = await exchangeCodeForShortLivedToken(code, redirectUri);
+export async function connectInstagramAccount(code: string) {
+  const { accessToken: shortLivedToken, userId } = await exchangeCodeForShortLivedToken(code);
   const { accessToken, tokenExpiresAt } = await exchangeForLongLivedToken(shortLivedToken);
   await subscribeToMessaging(accessToken, userId);
   const username = await fetchUsername(accessToken, userId);
 
   return { instagramUserId: userId, username, accessToken, tokenExpiresAt };
+}
+
+// Trello N5 -- delivery, the other end of N4's inbound webhook. `<IG_ID>` in
+// the path is OUR business account (the sender, i.e. instagramUserId); the
+// customer being replied to is `recipientId`, in the body. Text is capped
+// at Instagram's own 2000-character limit -- hard-truncated rather than
+// split across multiple messages, a deliberate simplification for a first
+// version (Ana/Malu's replies are short conversational text; splitting a
+// rare long one loses nothing today's ticket needs).
+const MAX_MESSAGE_LENGTH = 2000;
+
+export type SendInstagramMessageResult =
+  | { ok: true }
+  // tokenInvalid distinguishes "the token itself is dead" (401/403 -- N4's
+  // caller should flip the connection so N3's card reflects reality) from
+  // any other failure (network blip, Meta 5xx after the one retry already
+  // failed -- transient, log and move on, the connection is still fine).
+  | { ok: false; tokenInvalid: boolean };
+
+export async function sendInstagramMessage(
+  accessToken: string,
+  instagramUserId: string,
+  recipientId: string,
+  text: string,
+): Promise<SendInstagramMessageResult> {
+  const body = JSON.stringify({
+    recipient: { id: recipientId },
+    message: { text: text.slice(0, MAX_MESSAGE_LENGTH) },
+  });
+
+  const attempt = () =>
+    fetch(graphUrl(`/${instagramUserId}/messages`), {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+      body,
+    });
+
+  let res = await attempt();
+  // Retry once on a transient failure only -- a 4xx (bad token, bad
+  // recipient) will fail identically on retry, so don't waste the call.
+  if (!res.ok && res.status >= 500) {
+    res = await attempt();
+  }
+
+  if (res.ok) return { ok: true };
+  return { ok: false, tokenInvalid: res.status === 401 || res.status === 403 };
 }

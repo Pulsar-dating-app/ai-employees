@@ -1,0 +1,20 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+// Trello N4 -- every Meta webhook (WhatsApp, Instagram, Messenger alike)
+// signs its POST body with the app secret. Verifying this BEFORE parsing
+// the payload is what stops anyone who finds the URL from injecting fake
+// "customer" messages that get answered by the real Agent Engine.
+export function verifyInstagramSignature(rawBody: string, signatureHeader: string | null): boolean {
+  if (!signatureHeader?.startsWith("sha256=")) return false;
+
+  const expected = createHmac("sha256", process.env.META_APP_SECRET!).update(rawBody).digest("hex");
+  const provided = signatureHeader.slice("sha256=".length);
+
+  // timingSafeEqual throws on length mismatch rather than returning false --
+  // a malformed/short header must not throw out of a webhook handler.
+  const expectedBuf = Buffer.from(expected, "hex");
+  const providedBuf = Buffer.from(provided, "hex");
+  if (expectedBuf.length !== providedBuf.length) return false;
+
+  return timingSafeEqual(expectedBuf, providedBuf);
+}

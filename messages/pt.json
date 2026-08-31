@@ -322,6 +322,24 @@
       "stepTwoTitle": "Comece a falar com os clientes",
       "stepTwoDescription": "Depois de conectado, sua equipe responde no WhatsApp automaticamente — dia e noite."
     },
+    "instagram": {
+      "title": "Instagram",
+      "description": "Conecte sua conta profissional do Instagram para que os clientes possam começar a conversar.",
+      "loading": "Carregando…",
+      "connectedBadge": "Conectado",
+      "connectedNoUsername": "Conectado",
+      "connectedBanner": "Instagram conectado.",
+      "notConnected": "Ainda não conectado.",
+      "prereqProfessional": "Sua conta do Instagram precisa ser uma conta profissional (empresa ou criador de conteúdo).",
+      "prereqAllowMessages": "No app do Instagram, ative Configurações → Mensagens → Ferramentas conectadas → Permitir acesso às mensagens.",
+      "connectButton": "Conectar Instagram",
+      "disconnectButton": "Desconectar",
+      "disconnectConfirm": "Desconectar esta conta do Instagram?",
+      "disconnectConfirmButton": "Sim, desconectar",
+      "cancel": "Cancelar",
+      "connectError": "Algo deu errado ao conectar o Instagram. Tente novamente.",
+      "disconnectError": "Algo deu errado ao desconectar. Tente novamente."
+    },
     "webChat": {
       "title": "Chat do site",
       "description": "Compartilhe um link direto ou incorpore uma bolha de chat no seu próprio site.",
