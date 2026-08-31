@@ -7,6 +7,18 @@ import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 // token lifecycle (60-day long-lived tokens that can be refreshed, vs.
 // WhatsApp's which this codebase never renews).
 //
+// INSTAGRAM_APP_ID/INSTAGRAM_APP_SECRET are NOT the same as
+// META_APP_ID/META_APP_SECRET (the top-level Meta app credentials D1's
+// WhatsApp Embedded Signup uses). Business Login for Instagram is issued
+// its own separate credential pair, shown at App Dashboard > Instagram >
+// API setup with Instagram login > 3. Set up Instagram business login >
+// Business login settings -- sending the top-level Meta App ID as
+// client_id here gets rejected with "Invalid platform app" (found live,
+// 2026-08-31). The webhook's X-Hub-Signature-256 (webhook-signature.ts) is
+// the one place that correctly stays on META_APP_SECRET -- Meta signs
+// every webhook payload with the app-level secret regardless of which
+// product/login-type triggered it.
+//
 // INSTAGRAM_API_BASE_URL/INSTAGRAM_GRAPH_BASE_URL let tests point this at a
 // local mock instead of the real endpoints -- same reasoning as
 // META_GRAPH_API_BASE_URL: the spawned test Next.js server can't share an
@@ -49,7 +61,7 @@ function graphUrl(path: string, params?: Record<string, string>) {
 // only ever one correct value, so no caller has to supply or duplicate it.
 export function buildAuthorizeUrl(state: string) {
   const url = new URL(`${API_BASE_URL}/oauth/authorize`);
-  url.searchParams.set("client_id", process.env.META_APP_ID!);
+  url.searchParams.set("client_id", process.env.INSTAGRAM_APP_ID!);
   url.searchParams.set("redirect_uri", instagramCallbackUrl());
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "instagram_business_basic,instagram_business_manage_messages");
@@ -60,8 +72,8 @@ export function buildAuthorizeUrl(state: string) {
 // Step 2: code -> short-lived (1h) token + the app-scoped Instagram user id.
 async function exchangeCodeForShortLivedToken(code: string) {
   const body = new URLSearchParams({
-    client_id: process.env.META_APP_ID!,
-    client_secret: process.env.META_APP_SECRET!,
+    client_id: process.env.INSTAGRAM_APP_ID!,
+    client_secret: process.env.INSTAGRAM_APP_SECRET!,
     grant_type: "authorization_code",
     redirect_uri: instagramCallbackUrl(),
     code,
@@ -84,7 +96,7 @@ async function exchangeForLongLivedToken(shortLivedToken: string) {
   const res = await fetch(
     graphUrl("/access_token", {
       grant_type: "ig_exchange_token",
-      client_secret: process.env.META_APP_SECRET!,
+      client_secret: process.env.INSTAGRAM_APP_SECRET!,
       access_token: shortLivedToken,
     }),
   );
