@@ -135,7 +135,10 @@ describe("list_services", () => {
       name: "Haircut",
       description: "A trim",
       duration_minutes: 30,
-      price: "50.00",
+      // A number on the way in (H1's route rejects a string outright), a
+      // string on the way back out — Postgres numeric always deserialises as
+      // one. The two are not interchangeable; sending "50.00" here 400s.
+      price: 50,
       currency: "BRL",
       category: "Hair",
     });
@@ -153,7 +156,10 @@ describe("list_services", () => {
     }[];
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ name: "Haircut", durationMinutes: 30, price: "50.00" });
+    // `price decimal(12,2)` reaches the model as a JSON number — PostgREST
+    // emits `50.00` unquoted and JSON.parse hands back 50, so this is not
+    // the string the dashboard's own `Number(price)` calls imply.
+    expect(result[0]).toMatchObject({ name: "Haircut", durationMinutes: 30, price: 50 });
   });
 });
 
@@ -434,7 +440,10 @@ describe("through a full AgentEngine.run", () => {
       { supabase: getTestServiceClient(), openai },
     );
 
-    expect(result.responseText).toBe("Perfect, you're booked for 9am 😊");
+    // Must match the third mocked response verbatim — the digit-free wording
+    // above is deliberate (it keeps C7's grounding check quiet), and this
+    // assertion was left behind on the older "9am" text when it changed.
+    expect(result.responseText).toBe("Perfect, you're all set — see you then 😊");
 
     const bookOutput = JSON.parse(responsesCreate.mock.calls[2][0].input[0].output);
     expect(bookOutput.booked).toBe(true);

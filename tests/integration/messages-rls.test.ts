@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
+import { getTestServiceClient } from "./helpers/service-client";
 
 // Trello M2 -- `messages` has no HTTP route yet (M3 adds the public chat
 // API that writes to it); this tests the RLS policies themselves directly
@@ -92,20 +93,34 @@ describe("messages RLS: company-member read/insert, cross-company denied, no upd
       .single();
     expect(insertError).toBeNull();
 
+    const messageId = (message as { id: string }).id;
+
+    // A missing UPDATE/DELETE policy does NOT raise. 42501 comes from a
+    // failed WITH CHECK (the cross-company insert above) or from a revoked
+    // table grant (company_whatsapp_connections' access_token column) --
+    // whereas an absent policy means RLS's USING clause simply filters the
+    // row out of the statement's scope, so the write succeeds against zero
+    // rows and reports no error. The guarantee worth asserting is therefore
+    // that nothing changed, not that an error came back.
     const update = await owner.client
       .from("messages")
       .update({ content: "Edited" })
-      .eq("id", (message as { id: string }).id)
+      .eq("id", messageId)
       .select();
-    expect(update.error).not.toBeNull();
-    expect(update.error?.code).toBe("42501");
+    expect(update.error).toBeNull();
+    expect(update.data).toEqual([]);
 
-    const del = await owner.client
+    const del = await owner.client.from("messages").delete().eq("id", messageId).select();
+    expect(del.error).toBeNull();
+    expect(del.data).toEqual([]);
+
+    // Read back past RLS: the row is still there, still saying what it said.
+    const after = await getTestServiceClient()
       .from("messages")
-      .delete()
-      .eq("id", (message as { id: string }).id)
-      .select();
-    expect(del.error).not.toBeNull();
-    expect(del.error?.code).toBe("42501");
+      .select("content")
+      .eq("id", messageId)
+      .single();
+    expect(after.error).toBeNull();
+    expect((after.data as { content: string }).content).toBe("Original");
   });
 });
