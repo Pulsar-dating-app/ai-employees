@@ -589,6 +589,7 @@
       "pageOf": "Page {page} of {totalPages}",
       "emptyState": "Nothing booked in this range yet.",
       "emptyHint": "New bookings land here the moment your team takes them.",
+      "loading": "Loading…",
       "status": {
         "requested": "Awaiting approval",
         "confirmed": "Confirmed",

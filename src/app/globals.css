@@ -283,9 +283,11 @@ select:not(:disabled) {
   animation: metrics-spark-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Indeterminate progress sweep shown across the metrics grid while a new
-   range is loading (paired with a dim + blur on the content itself). */
-@keyframes metrics-sweep {
+/* Indeterminate progress sweep, shown while a surface swaps its data under
+   the user (paired with a dim on the stale content itself): the metrics grid
+   changing range, the bookings list/calendar changing scope, status, page or
+   month. Named for the job, not for one screen — it is shared. */
+@keyframes progress-sweep {
   from {
     transform: translateX(-100%);
   }
@@ -293,8 +295,8 @@ select:not(:disabled) {
     transform: translateX(400%);
   }
 }
-.animate-metrics-sweep {
-  animation: metrics-sweep 1s linear infinite;
+.animate-progress-sweep {
+  animation: progress-sweep 1s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -303,7 +305,7 @@ select:not(:disabled) {
     stroke-dasharray: none;
     stroke-dashoffset: 0;
   }
-  .animate-metrics-sweep {
+  .animate-progress-sweep {
     animation: none;
   }
 }

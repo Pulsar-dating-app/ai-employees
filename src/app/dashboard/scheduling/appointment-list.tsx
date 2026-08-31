@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
 import { CalendarIcon, ClockIcon, XIcon } from "@/components/ui/icons";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Appointment, AppointmentStatus } from "./appointment-types";
 
 type AppointmentListProps = {
@@ -72,14 +73,23 @@ export function AppointmentList({
     );
   }
 
+  // A scope/status/page change replaces the whole list, so dimming the old
+  // rows would leave the merchant reading data that's about to be wrong.
+  // Skeletons in the cards' own geometry say "this is being rebuilt" without
+  // the list collapsing to nothing and jumping the page.
+  if (isLoading) {
+    const placeholders = Math.min(Math.max(appointments.length, 3), 5);
+    return (
+      <ul aria-busy className="flex flex-col gap-4">
+        {Array.from({ length: placeholders }, (_, i) => (
+          <AppointmentCardSkeleton key={i} />
+        ))}
+      </ul>
+    );
+  }
+
   return (
-    <ul
-      aria-busy={isLoading}
-      className={clsx(
-        "flex flex-col gap-4 transition-opacity duration-200",
-        isLoading && "pointer-events-none opacity-60",
-      )}
-    >
+    <ul className="flex flex-col gap-4">
       {appointments.map((appointment) => (
         <AppointmentCard
           key={appointment.id}
@@ -91,6 +101,37 @@ export function AppointmentList({
         />
       ))}
     </ul>
+  );
+}
+
+// The booking card's silhouette: accent bar, date tile, three text lines and
+// the action stack, so the real cards land in place instead of shifting
+// everything when they arrive.
+function AppointmentCardSkeleton() {
+  return (
+    <li className={clsx(CARD_CLASSES, "pointer-events-none")}>
+      <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-outline-variant/40" />
+      <div className="flex flex-col justify-between gap-4 sm:flex-row">
+        <div className="flex gap-4">
+          <Skeleton className="hidden h-[62px] w-[70px] rounded-lg sm:block" />
+          <div className="flex flex-col gap-2 py-0.5">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-5 w-24 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+        </div>
+        <div className="flex items-end justify-between gap-2 sm:flex-col sm:justify-start">
+          <Skeleton className="h-9 w-28 rounded-lg" />
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-28 rounded-md" />
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
+        </div>
+      </div>
+    </li>
   );
 }
 

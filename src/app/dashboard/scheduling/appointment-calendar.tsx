@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
+import { SpinnerIcon } from "@/components/ui/icons";
 import type { Appointment, AppointmentStatus } from "./appointment-types";
 
 // The month grid behind the header's calendar button. Everything here is
@@ -101,12 +102,21 @@ export function AppointmentCalendar({
   return (
     <div
       aria-busy={isLoading}
-      className={clsx(
-        "overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-level1 transition-opacity duration-200",
-        isLoading && "pointer-events-none opacity-60",
-      )}
+      className="relative overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-level1"
     >
-      <div className="grid grid-cols-7 gap-px">
+      {/* The month grid's structure doesn't change while a new month loads —
+          only what's in the cells — so it stays put under a scrim instead of
+          being replaced by skeletons the way the list is. */}
+      {isLoading ? (
+        <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 bg-surface-container-lowest/70 backdrop-blur-[1px]">
+          <SpinnerIcon className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-label-md font-medium text-on-surface-variant">
+            {t("loading")}
+          </span>
+        </div>
+      ) : null}
+
+      <div className={clsx("grid grid-cols-7 gap-px", isLoading && "opacity-60")}>
         {weekdayNames.map((name) => (
           <div
             key={name}
@@ -117,7 +127,12 @@ export function AppointmentCalendar({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg bg-outline-variant/30">
+      <div
+        className={clsx(
+          "grid grid-cols-7 gap-px overflow-hidden rounded-lg bg-outline-variant/30",
+          isLoading && "opacity-60",
+        )}
+      >
         {cells.map((cell) => {
           const dayAppointments = byDate.get(cell.date) ?? [];
           const isToday = cell.date === today;

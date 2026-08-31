@@ -589,6 +589,7 @@
       "pageOf": "Página {page} de {totalPages}",
       "emptyState": "Nada marcado nesse período ainda.",
       "emptyHint": "Novos agendamentos aparecem aqui assim que sua equipe os marca.",
+      "loading": "Carregando…",
       "status": {
         "requested": "Aguardando aprovação",
         "confirmed": "Confirmado",

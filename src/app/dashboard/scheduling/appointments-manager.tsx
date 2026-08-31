@@ -305,7 +305,20 @@ export function AppointmentsManager({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Indeterminate sweep over the content column while it re-fetches —
+            the same signal the metrics grid gives when its range changes, so
+            "the screen is working" reads the same everywhere. */}
+        <div
+          aria-hidden
+          className={clsx(
+            "pointer-events-none absolute -top-3 left-0 right-0 h-0.5 overflow-hidden rounded-full transition-opacity duration-200 lg:right-1/3",
+            isLoading ? "opacity-100" : "opacity-0",
+          )}
+        >
+          <div className="animate-progress-sweep h-full w-1/3 rounded-full bg-gradient-to-r from-transparent via-primary to-transparent" />
+        </div>
+
         <div className="flex flex-col gap-4 lg:col-span-8">
           {!canEdit ? (
             <p className="rounded-xl border border-outline-variant/30 bg-surface-container px-4 py-3 text-label-md text-on-surface-variant">
