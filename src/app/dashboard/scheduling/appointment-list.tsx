@@ -283,6 +283,30 @@ function AppointmentCard({
                   </button>
                 </div>
               </div>
+            ) : appointment.status === "requested" ? (
+              <>
+                {/* Approval toggle is on (companies.requires_appointment_approval),
+                    so a customer booking lands here as `requested`. Approve
+                    flips it to `confirmed` (H3 PATCH; I3 then creates the
+                    Google event). Declining is the same Cancel every row has —
+                    capturing a decline reason is K7. */}
+                <button
+                  type="button"
+                  disabled={isWorking}
+                  onClick={() => setStatus("confirmed")}
+                  className="h-9 rounded-lg bg-primary px-4 text-label-sm font-semibold text-on-primary shadow-sm transition-all hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {t("actions.approve")}
+                </button>
+                <button
+                  type="button"
+                  disabled={isWorking}
+                  onClick={() => setConfirmingCancel(true)}
+                  className={SECONDARY_ACTION_CLASSES}
+                >
+                  {t("actions.decline")}
+                </button>
+              </>
             ) : (
               <>
                 <button

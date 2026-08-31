@@ -5,7 +5,12 @@ import {
   syncAppointmentRescheduled,
   syncAppointmentCancelled,
 } from "@/lib/google-calendar/appointment-sync";
-import { isWithinBusinessHours, type BusinessHourWindow } from "@/lib/availability/engine";
+import {
+  isWithinBusinessHours,
+  isDuringTimeOff,
+  type BusinessHourWindow,
+  type TimeOffBlock,
+} from "@/lib/availability/engine";
 import { isValidTimeZone } from "@/lib/analytics/load";
 
 // Trello H3 — update/cancel a single appointment. Reschedule (changing
@@ -182,22 +187,30 @@ export async function PATCH(
     // Same H3 gap fix as the create route: reject a reschedule whose new
     // time falls outside every active business_hours window for that local
     // day, rather than only guarding this at creation.
-    const [{ data: company, error: companyError }, { data: businessHours, error: businessHoursError }] =
-      await Promise.all([
-        supabase.from("companies").select("timezone").eq("id", companyId).single(),
-        supabase.from("business_hours").select("day_of_week, start_time, end_time").eq("company_id", companyId).eq("is_active", true),
-      ]);
+    const [
+      { data: company, error: companyError },
+      { data: businessHours, error: businessHoursError },
+      { data: timeOffRows, error: timeOffError },
+    ] = await Promise.all([
+      supabase.from("companies").select("timezone").eq("id", companyId).single(),
+      supabase.from("business_hours").select("day_of_week, start_time, end_time").eq("company_id", companyId).eq("is_active", true),
+      supabase.from("company_time_off").select("start_date, end_date").eq("company_id", companyId),
+    ]);
     if (companyError) {
       return NextResponse.json({ error: companyError.message }, { status: 500 });
     }
     if (businessHoursError) {
       return NextResponse.json({ error: businessHoursError.message }, { status: 500 });
     }
+    if (timeOffError) {
+      return NextResponse.json({ error: timeOffError.message }, { status: 500 });
+    }
+
+    const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
 
     // No configured hours means "not set up yet," not "never open" -- see
     // the matching comment in appointments/route.ts.
     if (businessHours && businessHours.length > 0) {
-      const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
       const withinHours = isWithinBusinessHours({
         timezone,
         businessHours: businessHours as BusinessHourWindow[],
@@ -207,6 +220,12 @@ export async function PATCH(
       if (!withinHours) {
         return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
       }
+    }
+
+    // Merchant-registered time off (K3) -- always applies, no permissive
+    // default. Same rejection as the create route.
+    if (isDuringTimeOff((timeOffRows ?? []) as TimeOffBlock[], timezone, startsAt.toISOString())) {
+      return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
     }
 
     update.service_id = effectiveServiceId;

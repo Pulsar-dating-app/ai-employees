@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { syncAppointmentConfirmed } from "@/lib/google-calendar/appointment-sync";
-import { isWithinBusinessHours, type BusinessHourWindow } from "@/lib/availability/engine";
+import {
+  isWithinBusinessHours,
+  isDuringTimeOff,
+  type BusinessHourWindow,
+  type TimeOffBlock,
+} from "@/lib/availability/engine";
 import { isValidTimeZone } from "@/lib/analytics/load";
 
 // Trello H3 — appointments CRUD, scoped to company_id. The booking record
@@ -229,12 +234,13 @@ export async function POST(
     return NextResponse.json({ error: businessHoursError.message }, { status: 500 });
   }
 
+  const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
+
   // No configured hours means "not set up yet," not "never open" -- only
   // enforce once the merchant has actually defined at least one window.
   // Otherwise a brand-new company (business_hours starts empty, H2) couldn't
   // accept any booking until someone filled hours in first.
   if (businessHours && businessHours.length > 0) {
-    const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
     const withinHours = isWithinBusinessHours({
       timezone,
       businessHours: businessHours as BusinessHourWindow[],
@@ -244,6 +250,20 @@ export async function POST(
     if (!withinHours) {
       return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
     }
+  }
+
+  // Merchant-registered time off (K3). Unlike business hours this has no
+  // "unconfigured = permissive" default -- a block only exists because the
+  // merchant added it, so it always applies.
+  const { data: timeOffRows, error: timeOffError } = await supabase
+    .from("company_time_off")
+    .select("start_date, end_date")
+    .eq("company_id", companyId);
+  if (timeOffError) {
+    return NextResponse.json({ error: timeOffError.message }, { status: 500 });
+  }
+  if (isDuringTimeOff((timeOffRows ?? []) as TimeOffBlock[], timezone, startsAt.toISOString())) {
+    return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
   }
 
   const endsAt = new Date(startsAt.getTime() + (service.duration_minutes + service.buffer_minutes) * 60_000);

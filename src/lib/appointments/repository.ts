@@ -2,7 +2,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isValidTimeZone } from "@/lib/analytics/load";
 import { loadAvailableSlots, ServiceNotFoundError } from "@/lib/availability/load";
-import { isWithinBusinessHours, type BusinessHourWindow } from "@/lib/availability/engine";
+import {
+  isWithinBusinessHours,
+  isDuringTimeOff,
+  type BusinessHourWindow,
+  type TimeOffBlock,
+} from "@/lib/availability/engine";
 import {
   syncAppointmentConfirmed,
   syncAppointmentCancelled,
@@ -62,6 +67,12 @@ export type FindAvailableSlotsResult =
       // The real result had more than MAX_SLOTS_RETURNED; the customer
       // should narrow the date range or state a preference.
       truncated: boolean;
+      // Merchant time off overlapping the requested window (inclusive local
+      // dates + the merchant's own `reason`, which may be null). When
+      // `slots` is empty and this isn't, that's why -- the agent can tell
+      // the customer the business is away then instead of just "nothing's
+      // free".
+      timeOff: { start: string; end: string; reason: string | null }[];
     };
 
 export type BookResult =
@@ -117,7 +128,7 @@ async function findAvailableSlots(
   const client = supabaseClient ?? createServiceClient();
 
   try {
-    const { slots, googleCalendarChecked } = await loadAvailableSlots({
+    const { slots, googleCalendarChecked, timeOff } = await loadAvailableSlots({
       supabase: client,
       companyId,
       serviceId,
@@ -139,6 +150,7 @@ async function findAvailableSlots(
       googleCalendarChecked,
       slots: slots.slice(0, MAX_SLOTS_RETURNED),
       truncated: slots.length > MAX_SLOTS_RETURNED,
+      timeOff,
     };
   } catch (err) {
     // A missing/inactive service, or one belonging to another company, is
@@ -227,6 +239,19 @@ async function book(
       durationMinutes: service.duration_minutes,
     });
     if (!withinHours) return { booked: false, reason: "outside_business_hours" };
+  }
+
+  // Merchant-registered time off (K3). find_available_slots already excludes
+  // these dates; this catches a stale slot or a hand-picked time. Reuses the
+  // outside_business_hours reason -- "the business isn't available then"
+  // covers both, and it keeps the tool contract unchanged.
+  const { data: timeOff, error: timeOffError } = await client
+    .from("company_time_off")
+    .select("start_date, end_date")
+    .eq("company_id", companyId);
+  if (timeOffError) throw timeOffError;
+  if (isDuringTimeOff((timeOff ?? []) as TimeOffBlock[], timezone, startDate.toISOString())) {
+    return { booked: false, reason: "outside_business_hours" };
   }
 
   const endsAt = new Date(

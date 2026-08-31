@@ -2,7 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isValidTimeZone, addDays } from "@/lib/analytics/load";
 import { getValidAccessToken } from "@/lib/google-calendar/connection";
 import { queryFreeBusy } from "@/lib/google-calendar/freebusy";
-import { computeAvailableSlots, type BusinessHourWindow, type BusyInterval } from "./engine";
+import {
+  computeAvailableSlots,
+  timeOffToBusyIntervals,
+  type BusinessHourWindow,
+  type BusyInterval,
+  type TimeOffBlock,
+} from "./engine";
 
 // Trello I2 -- the IO half of the availability engine: reads the real
 // service/company/business_hours/appointments/calendar-connection rows,
@@ -34,6 +40,11 @@ export type LoadAvailableSlotsResult = {
   // alone rather than blocking the whole request on an external outage.
   // See the 2026-08-29 decisions.md entry for the accepted tradeoff.
   googleCalendarChecked: boolean;
+  // Merchant-registered time off overlapping [from, to] (inclusive local
+  // dates). Non-empty means part of the requested window is blocked off --
+  // when it's why `slots` is empty, a caller can say *why* (and `reason`,
+  // if the merchant gave one) instead of a bare "nothing available".
+  timeOff: { start: string; end: string; reason: string | null }[];
 };
 
 export async function loadAvailableSlots(
@@ -85,6 +96,19 @@ export async function loadAvailableSlots(
     end: a.ends_at,
   }));
 
+  // Merchant-registered time off (K3's time-off card). Stored as inclusive
+  // local date ranges; a range overlaps the query window when it ends on or
+  // after `from` and starts on or before `to`.
+  const { data: timeOffRows, error: timeOffError } = await supabase
+    .from("company_time_off")
+    .select("start_date, end_date, reason")
+    .eq("company_id", companyId)
+    .gte("end_date", addDays(from, -1))
+    .lte("start_date", addDays(to, 1));
+  if (timeOffError) throw new Error(timeOffError.message);
+  const timeOffRowsSafe = (timeOffRows ?? []) as (TimeOffBlock & { reason: string | null })[];
+  const timeOffBusy = timeOffToBusyIntervals(timeOffRowsSafe, timezone);
+
   const { googleBusy, googleCalendarChecked } = await loadGoogleBusy(
     companyId,
     windowStartUtc,
@@ -98,11 +122,19 @@ export async function loadAvailableSlots(
     durationMinutes: service.duration_minutes,
     bufferMinutes: service.buffer_minutes,
     businessHours: (businessHoursRows ?? []) as BusinessHourWindow[],
-    busy: [...appointmentBusy, ...googleBusy],
+    busy: [...appointmentBusy, ...timeOffBusy, ...googleBusy],
     now,
   });
 
-  return { slots, googleCalendarChecked };
+  return {
+    slots,
+    googleCalendarChecked,
+    timeOff: timeOffRowsSafe.map((r) => ({
+      start: r.start_date,
+      end: r.end_date,
+      reason: r.reason,
+    })),
+  };
 }
 
 // Never throws -- any failure here (not connected, refresh failed, the

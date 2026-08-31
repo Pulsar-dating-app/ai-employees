@@ -5,16 +5,17 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 
-// Trello K5 — Scheduling is an area, not a page: K1 (services) and K4
-// (appointments) both live under it, and K2 (calendar connect) / K3
-// (business hours) are the next two to fold in. The sidebar gets one
-// top-level tab; these sub-tabs switch between the area's screens, the way
-// the settings shell splits its own sections.
+// Trello K5 — Scheduling is an area, not a page: K1 (services), K4
+// (appointments) and K3 (settings — business hours + approval) all live
+// under it, with K2 (calendar connect) next to fold in. The sidebar gets
+// one top-level tab; these sub-tabs switch between the area's screens, the
+// way the settings shell splits its own sections.
 //
 // Exact-match on the index route so /scheduling/services doesn't light both.
 const TABS = [
   { href: "/dashboard/scheduling", key: "appointments" as const, exact: true },
   { href: "/dashboard/scheduling/services", key: "services" as const, exact: false },
+  { href: "/dashboard/scheduling/settings", key: "settings" as const, exact: false },
 ];
 
 export function SchedulingTabs() {
