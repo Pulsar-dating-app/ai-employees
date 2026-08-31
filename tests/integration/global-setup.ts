@@ -88,6 +88,14 @@ export default async function setup() {
         SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
         META_APP_ID: "test-meta-app-id",
         META_APP_SECRET: "test-meta-app-secret",
+        // Deliberately different literal strings from META_APP_ID/SECRET
+        // above -- Business Login for Instagram uses its own separate
+        // credential pair, not the top-level Meta app's (see
+        // meta-instagram-api.ts). The mock doesn't validate these values,
+        // but keeping them distinct in the test env catches a regression
+        // back to reusing META_APP_ID/SECRET before it reaches production.
+        INSTAGRAM_APP_ID: "test-instagram-app-id",
+        INSTAGRAM_APP_SECRET: "test-instagram-app-secret",
         META_GRAPH_API_BASE_URL: graphApiMock.url,
         INSTAGRAM_API_BASE_URL: instagramApiMock.url,
         INSTAGRAM_GRAPH_BASE_URL: instagramApiMock.url,
