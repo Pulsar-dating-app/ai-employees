@@ -19,7 +19,7 @@ async function requireMember(
     .maybeSingle();
 
   if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
+    return { error: NextResponse.json({ error: error.message }, { status: 500 }), role: null };
   }
 
   if (!membership) {
@@ -28,11 +28,40 @@ async function requireMember(
         { error: "Not a member of this company" },
         { status: 403 },
       ),
+      role: null,
     };
   }
 
-  return { error: null };
+  return { error: null, role: membership.role as string };
 }
+
+// PATCH (pause/activate a hire) is admin-gated at the app layer, matching the
+// companies PATCH route and the old WhatsApp connect/disconnect: RLS still
+// lets any member UPDATE company_agents, so this check is what actually keeps
+// a plain member from silencing the team. Hiring (POST) stays member-level —
+// unchanged.
+async function requireAdmin(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+  userId: string,
+) {
+  const membership = await requireMember(supabase, companyId, userId);
+  if (membership.error) return membership;
+
+  if (!["owner", "admin"].includes(membership.role!)) {
+    return {
+      error: NextResponse.json(
+        { error: "Only company owners/admins can change this" },
+        { status: 403 },
+      ),
+      role: membership.role,
+    };
+  }
+
+  return membership;
+}
+
+const VALID_STATUSES = ["active", "paused"] as const;
 
 async function getAgentBySlug(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -159,4 +188,63 @@ export async function POST(
   }
 
   return NextResponse.json({ companyAgent: data }, { status: 201 });
+}
+
+// PATCH: pause or re-activate an already-hired team member (Trello K6). This
+// is the only write path for company_agents.status after the initial hire.
+// Body: { status: "active" | "paused" }. Pausing sets the whole hire off —
+// M3's chat route (and any future channel) gates on status === "active", so a
+// paused hire stops answering customers everywhere. Not a router: sibling
+// hires are untouched. No schema change — the enum already has both values.
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ companyId: string; agentSlug: string }> },
+) {
+  const { companyId, agentSlug } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const adminCheck = await requireAdmin(supabase, companyId, user.id);
+  if (adminCheck.error) return adminCheck.error;
+
+  const agentLookup = await getAgentBySlug(supabase, agentSlug);
+  if (agentLookup.error) return agentLookup.error;
+
+  const body = await request.json().catch(() => null);
+  const status = body?.status;
+  if (!VALID_STATUSES.includes(status)) {
+    return NextResponse.json(
+      { error: `status must be one of: ${VALID_STATUSES.join(", ")}` },
+      { status: 400 },
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("company_agents")
+    .update({ status })
+    .eq("company_id", companyId)
+    .eq("agent_id", agentLookup.agentId)
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Can't pause/activate a hire that was never made — caller-supplied slug,
+  // so a miss is a client error (same reasoning as the 404 on unknown slug).
+  if (!data) {
+    return NextResponse.json(
+      { error: "This team member hasn't been hired" },
+      { status: 404 },
+    );
+  }
+
+  return NextResponse.json({ companyAgent: data });
 }

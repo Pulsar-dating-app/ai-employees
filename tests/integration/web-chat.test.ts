@@ -62,10 +62,15 @@ describe("Public chat API GET/POST /api/chat/:companySlug/:agentSlug", () => {
     const owner = await signUpTestUser("owner");
     const company = await createCompany(owner.cookieHeader, "Paused Agent Chat Co");
     await hireMalu(owner.cookieHeader, company.id);
-    await getTestServiceClient()
-      .from("company_agents")
-      .update({ status: "paused" })
-      .eq("company_id", company.id);
+    // Pause through the real K6 toggle endpoint, not a direct DB write —
+    // this also asserts that pausing a hire actually silences the chat.
+    const paused = await api(
+      "PATCH",
+      `/api/companies/${company.id}/agents/malu`,
+      owner.cookieHeader,
+      { status: "paused" },
+    );
+    expect(paused.status).toBe(200);
 
     const res = await api("POST", `/api/chat/${company.slug}/malu`, undefined, {
       sessionId: randomUUID(),

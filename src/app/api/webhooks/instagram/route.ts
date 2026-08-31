@@ -112,6 +112,17 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (!connection) continue;
 
+    // K6: a paused hire is silent on every channel. The connection can stay
+    // "connected" while the merchant has toggled the agent off -- match M3's
+    // chat gate and skip before persisting anything or calling the engine.
+    const { data: companyAgent } = await supabase
+      .from("company_agents")
+      .select("status")
+      .eq("company_id", connection.company_id)
+      .eq("agent_id", connection.agent_id)
+      .maybeSingle();
+    if (!companyAgent || companyAgent.status !== "active") continue;
+
     let session;
     try {
       session = await resolveInstagramSession(supabase, connection.company_id, connection.agent_id, senderId);
