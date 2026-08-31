@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { AgentPersonaCard } from "../agent-persona-card";
 import { WebChatChannelCard } from "./web-chat-channel-card";
+import { InstagramConnectCard } from "./instagram-connect-card";
 import { DevChatTest } from "../../dev-chat-test";
 
 // A hired team member's own page is scoped to *how customers reach them* —
@@ -30,7 +32,7 @@ export default async function AgentConnectionsPage({
   const supabase = await createClient();
   const t = await getTranslations("MyAgents");
 
-  const [{ data: agent }, { data: companies }] = await Promise.all([
+  const [{ data: agent }, { data: companies }, { data: userData }] = await Promise.all([
     supabase
       .from("agents")
       .select("id, slug, role, description")
@@ -38,9 +40,11 @@ export default async function AgentConnectionsPage({
       .eq("is_active", true)
       .maybeSingle(),
     supabase.from("companies").select("id, slug"),
+    supabase.auth.getUser(),
   ]);
   if (!agent) notFound();
   const company = companies?.[0] ?? null;
+  const user = userData.user;
   const name = defaultAgentName(agentSlug);
 
   if (!company) {
@@ -53,16 +57,20 @@ export default async function AgentConnectionsPage({
     );
   }
 
-  // The caller's `company_users.role` was fetched here too, purely to gate
-  // the WhatsApp card's connect/disconnect buttons. Nothing on this page is
-  // admin-only while that card is unmounted, so the query goes with it — the
-  // Instagram connect card (epic N) brings both back.
-  const { data: companyAgent } = await supabase
-    .from("company_agents")
-    .select("id, status")
-    .eq("company_id", company.id)
-    .eq("agent_id", agent.id)
-    .maybeSingle();
+  const [{ data: companyAgent }, { data: membership }] = await Promise.all([
+    supabase
+      .from("company_agents")
+      .select("id, status")
+      .eq("company_id", company.id)
+      .eq("agent_id", agent.id)
+      .maybeSingle(),
+    supabase
+      .from("company_users")
+      .select("role")
+      .eq("company_id", company.id)
+      .eq("user_id", user!.id)
+      .maybeSingle(),
+  ]);
 
   if (!companyAgent) {
     return (
@@ -76,6 +84,8 @@ export default async function AgentConnectionsPage({
       </div>
     );
   }
+
+  const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
 
   const baseUrl = resolveCheckoutBaseUrl();
   const chatUrl = `${baseUrl}/talk/${company.slug}/${agentSlug}`;
@@ -104,6 +114,9 @@ export default async function AgentConnectionsPage({
           className="lg:col-span-4"
         />
         <div className="flex flex-col gap-6 lg:col-span-8">
+          <Suspense fallback={null}>
+            <InstagramConnectCard companyId={company.id} agentSlug={agentSlug} canEdit={canEdit} />
+          </Suspense>
           <WebChatChannelCard chatUrl={chatUrl} embedSnippet={embedSnippet} />
           {process.env.NODE_ENV !== "production" ? (
             <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />

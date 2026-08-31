@@ -1,3 +1,5 @@
+import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
+
 // Shared Meta calls for Trello N2's Instagram connect flow. A sibling of
 // src/lib/whatsapp/meta-graph-api.ts, not a parameter on it -- Instagram's
 // Business Login flow hits different hosts (api.instagram.com for the code
@@ -13,6 +15,24 @@ const API_BASE_URL = process.env.INSTAGRAM_API_BASE_URL ?? "https://api.instagra
 const GRAPH_BASE_URL = process.env.INSTAGRAM_GRAPH_BASE_URL ?? "https://graph.instagram.com";
 const GRAPH_API_VERSION = "v25.0";
 
+// Trello N3 -- one shared callback for every agent's connect flow (the
+// merchant clicks "Connect Instagram" on Ana's page or Malu's, but both
+// land here; ./instagram/oauth-state.ts's `state` payload carries which
+// agent). A single redirect URI means it only has to be registered once in
+// the Meta App Dashboard, rather than re-registered for every agent slug a
+// company hires.
+//
+// Reuses resolveCheckoutBaseUrl() rather than adding a third base-URL
+// resolver -- same precedent M6 already established for exactly this
+// ("this app's own base URL, server-only, throws in production if unset").
+// Meta's Business Login rejects a plain http redirect URI outright, so
+// local testing needs `npm run dev:https` AND SIDDE_CHECKOUT_BASE_URL set
+// to an https URL (see .env.example) -- otherwise this builds an http:// URL
+// that will never match what's registered.
+export function instagramCallbackUrl(): string {
+  return `${resolveCheckoutBaseUrl()}/dashboard/my-agents/instagram-callback`;
+}
+
 function graphUrl(path: string, params?: Record<string, string>) {
   const url = new URL(`${GRAPH_BASE_URL}/${GRAPH_API_VERSION}${path}`);
   for (const [key, value] of Object.entries(params ?? {})) {
@@ -22,11 +42,15 @@ function graphUrl(path: string, params?: Record<string, string>) {
 }
 
 // Step 1 of Business Login for Instagram: the authorize URL the merchant is
-// redirected to. N3 builds the "Connect Instagram" button around this.
-export function buildAuthorizeUrl(redirectUri: string, state: string) {
+// redirected to (src/app/api/.../instagram/connect/start/route.ts builds
+// the "Connect Instagram" link around this). redirect_uri is always
+// instagramCallbackUrl() -- Meta requires it to exactly match what's
+// registered in the App Dashboard, and with one shared callback there is
+// only ever one correct value, so no caller has to supply or duplicate it.
+export function buildAuthorizeUrl(state: string) {
   const url = new URL(`${API_BASE_URL}/oauth/authorize`);
   url.searchParams.set("client_id", process.env.META_APP_ID!);
-  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("redirect_uri", instagramCallbackUrl());
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "instagram_business_basic,instagram_business_manage_messages");
   url.searchParams.set("state", state);
@@ -34,12 +58,12 @@ export function buildAuthorizeUrl(redirectUri: string, state: string) {
 }
 
 // Step 2: code -> short-lived (1h) token + the app-scoped Instagram user id.
-async function exchangeCodeForShortLivedToken(code: string, redirectUri: string) {
+async function exchangeCodeForShortLivedToken(code: string) {
   const body = new URLSearchParams({
     client_id: process.env.META_APP_ID!,
     client_secret: process.env.META_APP_SECRET!,
     grant_type: "authorization_code",
-    redirect_uri: redirectUri,
+    redirect_uri: instagramCallbackUrl(),
     code,
   });
   const res = await fetch(`${API_BASE_URL}/oauth/access_token`, { method: "POST", body });
@@ -126,8 +150,8 @@ async function fetchUsername(accessToken: string, instagramUserId: string) {
 // since Instagram's steps have no independent reuse the way WhatsApp's
 // manual-connect-test route needed (finishConnection alone, skipping the
 // code exchange) -- nothing here has a second caller yet.
-export async function connectInstagramAccount(code: string, redirectUri: string) {
-  const { accessToken: shortLivedToken, userId } = await exchangeCodeForShortLivedToken(code, redirectUri);
+export async function connectInstagramAccount(code: string) {
+  const { accessToken: shortLivedToken, userId } = await exchangeCodeForShortLivedToken(code);
   const { accessToken, tokenExpiresAt } = await exchangeForLongLivedToken(shortLivedToken);
   await subscribeToMessaging(accessToken, userId);
   const username = await fetchUsername(accessToken, userId);

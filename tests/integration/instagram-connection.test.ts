@@ -10,8 +10,6 @@ import { signUpTestUser } from "./helpers/auth";
 // Postgres rows, the account-uniqueness index from N1) goes through the
 // real local Supabase stack.
 describe("Instagram connection (GET/DELETE .../instagram, POST .../instagram/connect)", () => {
-  const REDIRECT_URI = "http://localhost:3100/dashboard/my-agents/malu";
-
   async function createCompany(ownerCookie: string, name: string) {
     const created = await api<{ company: { id: string } }>("POST", "/api/companies", ownerCookie, { name });
     return created.json.company.id;
@@ -37,8 +35,8 @@ describe("Instagram connection (GET/DELETE .../instagram, POST .../instagram/con
   // code per test doubles as a unique, predictable account id -- this is
   // how tests get a specific account "held" without threading extra state
   // through the mock.
-  function connectBody(code: string, overrides: Partial<{ redirectUri: string; force: boolean }> = {}) {
-    return { code, redirectUri: REDIRECT_URI, ...overrides };
+  function connectBody(code: string, overrides: Partial<{ force: boolean }> = {}) {
+    return { code, ...overrides };
   }
 
   it("requires authentication", async () => {
@@ -91,12 +89,12 @@ describe("Instagram connection (GET/DELETE .../instagram, POST .../instagram/con
     expect((await api("GET", statusPath(companyId, "ana"), owner.cookieHeader)).status).toBe(400);
   });
 
-  it("rejects a body missing code/redirectUri", async () => {
+  it("rejects a body missing code", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Bad Body IG Co");
     await hireAgent(owner.cookieHeader, companyId, "malu");
 
-    const result = await api("POST", connectPath(companyId, "malu"), owner.cookieHeader, { code: "only-code" });
+    const result = await api("POST", connectPath(companyId, "malu"), owner.cookieHeader, {});
     expect(result.status).toBe(400);
   });
 
