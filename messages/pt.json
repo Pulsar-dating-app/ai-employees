@@ -303,6 +303,19 @@
     "viewAgent": "Ver {name}",
     "conversationsToday": "Conversas hoje",
     "activeBadge": "Ativa",
+    "pausedBadge": "Pausada",
+    "availability": {
+      "title": "Atendimento",
+      "description": "Ligue ou desligue {name} em todos os canais de uma vez. Enquanto estiver pausada, {name} para de responder os clientes em qualquer lugar.",
+      "activeStatus": "Respondendo os clientes em todos os canais",
+      "pausedStatus": "Pausada — sem responder em nenhum canal",
+      "pauseButton": "Pausar",
+      "activateButton": "Reativar",
+      "pauseConfirm": "Pausar {name}? Vai parar de responder em todos os canais até você reativar.",
+      "pauseConfirmButton": "Sim, pausar",
+      "cancel": "Cancelar",
+      "updateError": "Algo deu errado. Tente novamente."
+    },
     "channels": {
       "title": "WhatsApp",
       "description": "Conecte seu número do WhatsApp Business para que os clientes possam começar a conversar.",

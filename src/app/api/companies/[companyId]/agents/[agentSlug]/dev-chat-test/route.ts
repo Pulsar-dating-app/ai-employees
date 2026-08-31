@@ -94,7 +94,7 @@ export async function POST(
 
   const { data: companyAgent, error: companyAgentError } = await supabase
     .from("company_agents")
-    .select("id")
+    .select("id, status")
     .eq("company_id", companyId)
     .eq("agent_id", agent.id)
     .maybeSingle();
@@ -103,6 +103,14 @@ export async function POST(
   }
   if (!companyAgent) {
     return NextResponse.json({ error: "This company hasn't hired this agent" }, { status: 400 });
+  }
+  // K6: a paused hire is silent on every channel -- match the public chat
+  // route's gate so this test panel doesn't contradict the toggle.
+  if (companyAgent.status !== "active") {
+    return NextResponse.json(
+      { error: "This team member is paused — turn them back on to test." },
+      { status: 403 },
+    );
   }
 
   // Reuse the same synthetic customer/conversation across messages so the

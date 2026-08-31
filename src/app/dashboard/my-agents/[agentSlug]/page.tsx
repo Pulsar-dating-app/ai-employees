@@ -11,6 +11,7 @@ import { BackLink } from "../../back-link";
 import { AgentPersonaCard } from "../agent-persona-card";
 import { WebChatChannelCard } from "./web-chat-channel-card";
 import { InstagramConnectCard } from "./instagram-connect-card";
+import { AvailabilityCard } from "./availability-card";
 import { DevChatTest } from "../../dev-chat-test";
 
 // A hired team member's own page is scoped to *how customers reach them* —
@@ -57,6 +58,8 @@ export default async function AgentConnectionsPage({
     );
   }
 
+  // The caller's role gates the K6 pause/activate control and the Instagram
+  // connect card (both admin-only). Fetched alongside the hire row.
   const [{ data: companyAgent }, { data: membership }] = await Promise.all([
     supabase
       .from("company_agents")
@@ -114,6 +117,13 @@ export default async function AgentConnectionsPage({
           className="lg:col-span-4"
         />
         <div className="flex flex-col gap-6 lg:col-span-8">
+          <AvailabilityCard
+            companyId={company.id}
+            agentSlug={agentSlug}
+            agentName={name}
+            initialActive={companyAgent.status === "active"}
+            canEdit={canEdit}
+          />
           <Suspense fallback={null}>
             <InstagramConnectCard companyId={company.id} agentSlug={agentSlug} canEdit={canEdit} />
           </Suspense>

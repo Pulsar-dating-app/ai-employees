@@ -41,7 +41,12 @@ export async function AgentPersonaCard({
             <span className="h-2 w-2 rounded-full bg-tertiary-container" />
             {t("activeBadge")}
           </span>
-        ) : null}
+        ) : (
+          <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-surface-container-lowest/90 px-3 py-1 text-label-sm font-semibold text-on-surface-variant backdrop-blur">
+            <span className="h-2 w-2 rounded-full bg-on-surface-variant" />
+            {t("pausedBadge")}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-4 p-6">
