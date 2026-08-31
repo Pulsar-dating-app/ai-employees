@@ -15,18 +15,18 @@
   var companySlug = currentScript.getAttribute("data-company");
   var agentSlug = currentScript.getAttribute("data-agent");
   if (!companySlug || !agentSlug) {
-    console.error("Sidde widget: data-company and data-agent are required on the <script> tag.");
+    console.error("Staffra widget: data-company and data-agent are required on the <script> tag.");
     return;
   }
 
-  // The Sidde origin is derived from the script's own src, never
+  // The Staffra origin is derived from the script's own src, never
   // hardcoded -- the same file works unmodified in local dev and
   // production, whatever domain it's actually served from.
-  var siddeOrigin = new URL(currentScript.src).origin;
-  var chatUrl = siddeOrigin + "/talk/" + encodeURIComponent(companySlug) + "/" + encodeURIComponent(agentSlug) + "?embedded=1";
+  var staffraOrigin = new URL(currentScript.src).origin;
+  var chatUrl = staffraOrigin + "/talk/" + encodeURIComponent(companySlug) + "/" + encodeURIComponent(agentSlug) + "?embedded=1";
 
-  var LAUNCHER_ID = "sidde-widget-launcher";
-  var PANEL_ID = "sidde-widget-panel";
+  var LAUNCHER_ID = "staffra-widget-launcher";
+  var PANEL_ID = "staffra-widget-panel";
 
   var style = document.createElement("style");
   style.textContent = [
@@ -47,7 +47,7 @@
     "  box-shadow: 0 20px 50px rgba(0,0,0,0.25);",
     "  border: none; display: none;",
     "}",
-    "#" + PANEL_ID + ".sidde-widget-open { display: block; }",
+    "#" + PANEL_ID + ".staffra-widget-open { display: block; }",
     "#" + PANEL_ID + " iframe { width: 100%; height: 100%; border: none; display: block; }",
     "@media (max-width: 480px) {",
     "  #" + PANEL_ID + " {",
@@ -82,15 +82,15 @@
       iframe.title = "Chat";
       panel.appendChild(iframe);
     }
-    panel.classList.add("sidde-widget-open");
+    panel.classList.add("staffra-widget-open");
   }
 
   function close() {
-    panel.classList.remove("sidde-widget-open");
+    panel.classList.remove("staffra-widget-open");
   }
 
   function toggle() {
-    if (panel.classList.contains("sidde-widget-open")) {
+    if (panel.classList.contains("staffra-widget-open")) {
       close();
     } else {
       open();
@@ -104,8 +104,8 @@
   // postMessage traffic on someone else's page should always check
   // event.origin, not just event.data.
   window.addEventListener("message", function (event) {
-    if (event.origin !== siddeOrigin) return;
-    if (event.data && event.data.type === "sidde-chat:close") close();
+    if (event.origin !== staffraOrigin) return;
+    if (event.data && event.data.type === "staffra-chat:close") close();
   });
 
   document.body.appendChild(panel);

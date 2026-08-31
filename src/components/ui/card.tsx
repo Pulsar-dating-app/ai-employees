@@ -2,7 +2,7 @@ import clsx from "clsx";
 
 type DivProps = React.HTMLAttributes<HTMLDivElement>;
 
-// Sidde "Human-Centric AI" (Stitch): rounded-xl surface card, hairline
+// Staffra "Human-Centric AI" (Stitch): rounded-xl surface card, hairline
 // outline, soft ambient elevation (level1), lifting to level2 on hover for
 // interactive cards. The two exports are reused on the marketplace / my-team
 // link cards, which are <Link>s rather than <Card>s.

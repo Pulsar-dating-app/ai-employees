@@ -7,7 +7,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   isLoading?: boolean;
 };
 
-// Sidde "Human-Centric AI" (Stitch): 48px-tall primary actions, filled
+// Staffra "Human-Centric AI" (Stitch): 48px-tall primary actions, filled
 // indigo primary, tonal secondary, no-chrome ghost.
 const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary: "bg-primary text-on-primary hover:brightness-90",

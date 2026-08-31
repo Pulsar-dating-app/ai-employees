@@ -48,7 +48,7 @@ function SidebarHeader({
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-on-primary">
           S
         </span>
-        <span className="text-lg font-bold tracking-tight text-primary">Sidde</span>
+        <span className="text-lg font-bold tracking-tight text-primary">Staffra</span>
       </div>
       <div className="flex items-center gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-fixed text-sm font-semibold text-primary">
@@ -65,7 +65,7 @@ function SidebarHeader({
   );
 }
 
-// Sidde "Human-Centric AI" admin shell (Stitch): a light persistent rail on
+// Staffra "Human-Centric AI" admin shell (Stitch): a light persistent rail on
 // desktop, a slim top bar + thumb-reachable bottom tab bar on mobile. All
 // three read the same NAV_ITEMS so active state never drifts.
 export function Sidebar({
@@ -141,7 +141,7 @@ export function Sidebar({
           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-on-primary">
             S
           </span>
-          <span className="text-base font-bold tracking-tight text-primary">Sidde</span>
+          <span className="text-base font-bold tracking-tight text-primary">Staffra</span>
         </div>
         <div className="flex items-center gap-2">
           <LanguageSwitcher currentLocale={locale} />

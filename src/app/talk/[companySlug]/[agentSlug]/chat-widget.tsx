@@ -8,7 +8,7 @@ import { SendIcon, XIcon } from "@/components/ui/icons";
 
 type ChatMessage = { role: "customer" | "agent"; content: string; created_at: string };
 
-const SESSION_STORAGE_PREFIX = "sidde-chat-session";
+const SESSION_STORAGE_PREFIX = "staffra-chat-session";
 
 // Client-generated, stored in localStorage, never a cookie -- this page is
 // always same-origin to its own API even once embedded (M5), so
@@ -180,7 +180,7 @@ export function ChatWidget({
   // check itself has to work this way), and the payload carries nothing
   // sensitive.
   function handleClose() {
-    window.parent.postMessage({ type: "sidde-chat:close" }, "*");
+    window.parent.postMessage({ type: "staffra-chat:close" }, "*");
   }
 
   let lastDayLabel: string | null = null;

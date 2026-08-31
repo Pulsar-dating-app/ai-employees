@@ -2,7 +2,7 @@
 
 ## Structure
 
-- `src/app/` — Next.js (App Router) app: the Sidde admin dashboard and API routes.
+- `src/app/` — Next.js (App Router) app: the Staffra admin dashboard and API routes.
 - `supabase/` — Supabase project (functions, migrations, config).
 - `.claude/docs/` — living documentation (knowledge, architecture, decisions). See [CLAUDE.md](CLAUDE.md) for the rules governing how it's kept up to date.
 

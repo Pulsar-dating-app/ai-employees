@@ -9,13 +9,13 @@ import maluImg from "../../../public/landing-v2/malu.jpg";
 import dashboardImg from "../../../public/landing-v2/dashboard.jpg";
 
 // Version B of the public landing — a faithful reproduction of the Stitch
-// "Sidde Human-Centric AI" mockup (Corporate Modern + tactile warmth: soft
+// "Staffra Human-Centric AI" mockup (Corporate Modern + tactile warmth: soft
 // off-white surfaces, Professional Indigo, generous whitespace, 2xl rounded
 // cards, ambient shadows). Palette + type scale are taken straight from that
 // design system. Lives on its own route so none of it leaks into Version A;
 // the fixed <LandingSwitcher> at the bottom flips between the two.
 //
-// Design tokens (Sidde Human-Centric AI):
+// Design tokens (Staffra Human-Centric AI):
 //   surface #f8f9fa · container-lowest #ffffff · container-low #f3f4f5
 //   container-high #e7e8e9 · on-surface #191c1d · on-surface-variant #464555
 //   primary #3525cd · primary-container #4f46e5 · primary-fixed #e2dfff
@@ -126,7 +126,7 @@ export async function LandingPageV2() {
       {/* Top nav */}
       <nav className="sticky top-0 z-50 border-b border-[#edeeef] bg-[#f8f9fa]/80 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center justify-between px-4 md:px-10">
-          <span className="text-[24px] font-bold text-[#3525cd]">Sidde</span>
+          <span className="text-[24px] font-bold text-[#3525cd]">Staffra</span>
           <div className="hidden items-center gap-6 md:flex">
             <a
               href="#spotlight"
@@ -343,12 +343,12 @@ export async function LandingPageV2() {
                   ]}
                 />
               </div>
-              {/* The Sidde way — the live, typing thread */}
+              {/* The Staffra way — the live, typing thread */}
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-3">
                   <div className="h-3 w-3 rounded-full bg-[#3de272]" />
                   <h3 className="text-[24px] font-semibold leading-[32px] text-[#3525cd]">
-                    {t("comparison.siddeWay")}
+                    {t("comparison.staffraWay")}
                   </h3>
                 </div>
                 <WhatsAppThread
@@ -412,7 +412,7 @@ export async function LandingPageV2() {
       <footer className="border-t border-[#e7e8e9] bg-white">
         <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 py-8 md:grid-cols-4 md:px-10">
           <div className="flex flex-col gap-4">
-            <span className="text-[24px] font-bold text-[#3525cd]">Sidde</span>
+            <span className="text-[24px] font-bold text-[#3525cd]">Staffra</span>
             <p className="max-w-xs text-[16px] leading-[24px] text-[#464555]">
               {t("footer.blurb")}
             </p>

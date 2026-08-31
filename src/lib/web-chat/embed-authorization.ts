@@ -4,9 +4,9 @@
 // analytics/aggregate.ts).
 //
 // Architecturally necessary, not a shortcut: the chat page's own fetch()
-// calls to the API are same-origin to Sidde regardless of iframe nesting, so
+// calls to the API are same-origin to Staffra regardless of iframe nesting, so
 // the raw Origin/Referer headers on the API request itself are always
-// Sidde's own URL, never the embedding site's -- there is no way to observe
+// Staffra's own URL, never the embedding site's -- there is no way to observe
 // "what site embedded this" from the API call alone. The only place that
 // information exists is client-side, at iframe-load time
 // (window.self !== window.top + document.referrer) -- M4/M5 capture that and

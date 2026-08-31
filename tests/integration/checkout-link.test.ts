@@ -15,7 +15,7 @@ import { getTestServiceClient } from "./helpers/service-client";
 const BASE_URL = "https://checkout-test.example";
 
 beforeAll(() => {
-  process.env.SIDDE_CHECKOUT_BASE_URL = BASE_URL;
+  process.env.STAFFRA_CHECKOUT_BASE_URL = BASE_URL;
 });
 
 function textResponse(text: string) {

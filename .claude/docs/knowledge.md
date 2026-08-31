@@ -4,7 +4,7 @@ Domain knowledge, glossary, and context that isn't obvious from the code itself.
 
 ## Overview
 
-**Sidde** — platform where businesses "hire" pre-built AI employees. Full spec: `Sidde_MVP_Specification.md` (repo root); original table sketch: `Sidde_MVP_Database_Tables.md` (repo root).
+**Staffra** — platform where businesses "hire" pre-built AI employees. Full spec: `Staffra_MVP_Specification.md` (repo root); original table sketch: `Staffra_MVP_Database_Tables.md` (repo root).
 
 The spec was written around one employee, **Malu** (AI sales rep), on one channel, **WhatsApp**. Both have moved since, and the spec has not been rewritten — trust this file and the code over it on either point:
 
@@ -19,7 +19,7 @@ Product framing matters: this is "hire an employee," not "configure an AI system
 ## Glossary
 
 - **Buying intent** — event fired when Malu detects the customer is ready to buy (e.g. "I'll take it", "send me the link"). Tracked, not treated as a sale.
-- **Checkout click** — event fired when a customer clicks a Sidde-tracked link (`sidde.link/c/{tracking-id}`) that redirects to the merchant's own checkout/product page. The MVP does not process payments or in-chat checkout, and a checkout click must never be reported as a completed sale.
+- **Checkout click** — event fired when a customer clicks a Staffra-tracked link (`staffra.link/c/{tracking-id}`) that redirects to the merchant's own checkout/product page. The MVP does not process payments or in-chat checkout, and a checkout click must never be reported as a completed sale.
 - **Agent Engine** — the reusable runtime that loads agent config + company/customer/conversation context, retrieves knowledge/products, calls the LLM, executes tools, and validates the response. Conceptual interface: `AgentEngine.run({ agent, company, customer, conversation, message })`.
 - **ProductRepository** — abstraction Malu uses to search/get products (`search(query)`, `get(productId)`) regardless of source (CSV/XLSX import today; Shopify/WooCommerce/Nuvemshop/VTEX/API later). Malu must never know where products came from.
 - **Grounding** — Malu must never invent prices, stock, policies, or product characteristics; factual answers must come from deterministic, database-backed tools (`search_products`, `get_product`, `get_business_information`, `get_policy_information`, `create_checkout_link`, `request_human`), not be hallucinated by the LLM.

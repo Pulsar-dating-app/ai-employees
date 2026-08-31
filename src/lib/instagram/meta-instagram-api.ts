@@ -38,7 +38,7 @@ const GRAPH_API_VERSION = "v25.0";
 // resolver -- same precedent M6 already established for exactly this
 // ("this app's own base URL, server-only, throws in production if unset").
 // Meta's Business Login rejects a plain http redirect URI outright, so
-// local testing needs `npm run dev:https` AND SIDDE_CHECKOUT_BASE_URL set
+// local testing needs `npm run dev:https` AND STAFFRA_CHECKOUT_BASE_URL set
 // to an https URL (see .env.example) -- otherwise this builds an http:// URL
 // that will never match what's registered.
 export function instagramCallbackUrl(): string {

@@ -36,7 +36,7 @@ This project keeps living documentation under [.claude/docs/](.claude/docs/):
 - Interpolate dynamic values with ICU placeholders (`"Hire {name}"`), never string concatenation.
 - **Exception — don't translate data, only copy around it.** Agent names/roles/descriptions (`agents.slug`/`role`/`description`), company names, and other merchant-entered or DB-sourced content are data, not UI chrome — they stay as stored, in whichever language they were entered in. Only the surrounding interface text (labels, buttons, headings, instructions) goes through the message files.
 - Adding a third language later: a third `messages/<locale>.json` file plus one entry in `SUPPORTED_LOCALES` (`src/i18n/request.ts`) — no routing changes needed.
-- Merchant-facing copy (translated or not) must still follow the product-language rules in `Sidde_MVP_Specification.md` §4/§28 — never expose "agent," "prompt," "LLM," "AI," "embeddings," or similar implementation jargon, in either language.
+- Merchant-facing copy (translated or not) must still follow the product-language rules in `Staffra_MVP_Specification.md` §4/§28 — never expose "agent," "prompt," "LLM," "AI," "embeddings," or similar implementation jargon, in either language.
 
 ## Testing
 

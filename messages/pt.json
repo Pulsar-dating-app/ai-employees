@@ -3,7 +3,7 @@
     "close": "Fechar",
     "login": {
       "title": "Entrar",
-      "subtitle": "Bem-vindo de volta ao Sidde.",
+      "subtitle": "Bem-vindo de volta ao Staffra.",
       "emailLabel": "E-mail",
       "passwordLabel": "Senha",
       "submit": "Entrar",
@@ -12,7 +12,7 @@
     },
     "signUp": {
       "title": "Criar conta",
-      "subtitle": "Crie sua conta no Sidde.",
+      "subtitle": "Crie sua conta no Staffra.",
       "emailLabel": "E-mail",
       "passwordLabel": "Senha",
       "passwordHint": "Pelo menos 6 caracteres.",
@@ -52,7 +52,7 @@
       "sub": "Contrate talentos de IA especializados que entendem o seu negócio, ajudam os seus clientes e impulsionam as vendas naturalmente no WhatsApp.",
       "primaryCta": "Contrate sua primeira funcionária",
       "secondaryCta": "Ver equipe",
-      "imageAlt": "Uma funcionária de IA da Sidde trabalhando"
+      "imageAlt": "Uma funcionária de IA da Staffra trabalhando"
     },
     "spotlight": {
       "title": "Malu — Representante de Vendas de IA",
@@ -78,7 +78,7 @@
     },
     "flow": {
       "heading": "Contrate. Ensine. Conecte. Trabalhe.",
-      "sub": "Começar com uma funcionária de IA da Sidde é mais simples do que integrar uma pessoa, e igualmente eficaz.",
+      "sub": "Começar com uma funcionária de IA da Staffra é mais simples do que integrar uma pessoa, e igualmente eficaz.",
       "stepLabel": "Passo {number}",
       "steps": {
         "hire": {
@@ -103,7 +103,7 @@
       "heading": "Conversas humanizadas",
       "sub": "Os clientes querem falar com pessoas, não com menus de telefone.",
       "oldWay": "O jeito antigo",
-      "siddeWay": "O jeito Sidde",
+      "staffraWay": "O jeito Staffra",
       "oldContact": "Atendente virtual",
       "customerMessage": "Oi! Tô procurando um presente pra minha namorada.",
       "botReply": "Selecione uma opção:\n1. Ver catálogo\n2. Horário da loja\n3. Falar com um atendente"
@@ -119,7 +119,7 @@
         "title": "Cliques no checkout",
         "description": "Acompanhe as conversões diretas originadas nas interações do WhatsApp."
       },
-      "imageAlt": "Prévia do painel de desempenho da Sidde"
+      "imageAlt": "Prévia do painel de desempenho da Staffra"
     },
     "footer": {
       "blurb": "Construindo o futuro da força de trabalho de IA para negócios modernos.",
@@ -135,7 +135,7 @@
         "privacy": "Política de privacidade",
         "terms": "Termos de serviço"
       },
-      "rights": "© {year} Sidde AI. Todos os direitos reservados."
+      "rights": "© {year} Staffra AI. Todos os direitos reservados."
     },
     "demo": {
       "transcriptLabel": "Exemplo de conversa entre um cliente e a Malu no WhatsApp",
@@ -659,7 +659,7 @@
   "Chat": {
     "inputPlaceholder": "Responder para {name}…",
     "sendButton": "Enviar",
-    "poweredBy": "Desenvolvido por Sidde",
+    "poweredBy": "Desenvolvido por Staffra",
     "emptyState": "Envie uma mensagem para começar a conversa.",
     "activeNow": "Ativo agora",
     "today": "Hoje",

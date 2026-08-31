@@ -12,7 +12,7 @@ export function SignUpPanel() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1 pr-8">
-        <span className="text-sm font-bold tracking-tight text-primary">Sidde</span>
+        <span className="text-sm font-bold tracking-tight text-primary">Staffra</span>
         <h2 id="auth-modal-title" className="text-xl font-semibold text-on-surface">
           {t("title")}
         </h2>

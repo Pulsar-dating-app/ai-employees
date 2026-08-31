@@ -28,7 +28,7 @@ const MAX_TRACKING_ID_ATTEMPTS = 3;
 // Trello ticket C4 -- spec §14. Mints the trackable URL Malu sends a customer
 // once they're ready to buy. The customer taps it in WhatsApp; E1 (not built
 // yet) resolves it, records the real click, and redirects to the merchant's
-// own product page. Sidde never processes the payment.
+// own product page. Staffra never processes the payment.
 //
 // The row written here is typed `product_recommendation`, NOT `checkout_click`
 // -- deliberately correcting A1's original "how to apply" note. Spec §15

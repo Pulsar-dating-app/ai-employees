@@ -11,7 +11,7 @@ vi.mock("@/lib/products/repository", () => ({
 
 import { ProductRepository } from "@/lib/products/repository";
 
-process.env.SIDDE_CHECKOUT_BASE_URL = "https://app.example.com";
+process.env.STAFFRA_CHECKOUT_BASE_URL = "https://app.example.com";
 
 type InsertCall = Record<string, unknown>;
 

@@ -9,7 +9,7 @@ import { resolveLocale } from "@/i18n/request";
 // so it must always end in either a redirect or a friendly page -- never a
 // stack trace or a raw JSON error.
 //
-// Public and unauthenticated by design (the customer has no Sidde account and
+// Public and unauthenticated by design (the customer has no Staffra account and
 // isn't in auth.users), so it uses the service-role client: `events` RLS is
 // company-membership scoped and would deny both the lookup and the insert.
 // The tracking id from the URL is the only untrusted input, and it's used

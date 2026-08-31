@@ -1,10 +1,10 @@
-# Sidde MVP — Product & Development Specification
+# Staffra MVP — Product & Development Specification
 
 ## 1. Product Overview
 
-**Product:** Sidde
+**Product:** Staffra
 
-Sidde is a platform where businesses can hire pre-built AI employees with defined personalities, roles, and capabilities.
+Staffra is a platform where businesses can hire pre-built AI employees with defined personalities, roles, and capabilities.
 
 Long-term vision:
 
@@ -72,7 +72,7 @@ Malu must not contain WhatsApp-specific business logic.
 Future architecture:
 
 ```text
-                    SIDDE
+                    STAFFRA
                       |
                 Agent Engine
                       |
@@ -146,7 +146,7 @@ MALU SENDS CHECKOUT LINK
 CUSTOMER CLICKS LINK
    |
    v
-SIDDE TRACKS CHECKOUT CLICK
+STAFFRA TRACKS CHECKOUT CLICK
 ```
 
 The merchant should not need to understand prompts, LLMs, embeddings, agents, or other AI implementation details.
@@ -247,7 +247,7 @@ Malu should feel like a genuinely good salesperson working for the business.
 
 # 7. Humanized Conversation
 
-Sidde should not position Malu as a chatbot.
+Staffra should not position Malu as a chatbot.
 
 The customer should feel:
 
@@ -577,7 +577,7 @@ Customer
 Malu
    |
    v
-Tracked Sidde URL
+Tracked Staffra URL
    |
    v
 Merchant product / checkout page
@@ -586,10 +586,10 @@ Merchant product / checkout page
 Example:
 
 ```text
-sidde.link/c/{tracking-id}
+staffra.link/c/{tracking-id}
 ```
 
-On click, Sidde records the event and redirects.
+On click, Staffra records the event and redirects.
 
 Suggested event fields:
 
@@ -950,7 +950,7 @@ Merchant perception:
 
 > "I hired someone who is helping me sell."
 
-Sidde should therefore feel like hiring and onboarding an employee, not configuring an AI system.
+Staffra should therefore feel like hiring and onboarding an employee, not configuring an AI system.
 
 The core experience:
 

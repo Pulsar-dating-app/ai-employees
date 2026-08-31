@@ -3,7 +3,7 @@
     "close": "Close",
     "login": {
       "title": "Log in",
-      "subtitle": "Welcome back to Sidde.",
+      "subtitle": "Welcome back to Staffra.",
       "emailLabel": "Email",
       "passwordLabel": "Password",
       "submit": "Log in",
@@ -12,7 +12,7 @@
     },
     "signUp": {
       "title": "Sign up",
-      "subtitle": "Create your Sidde account.",
+      "subtitle": "Create your Staffra account.",
       "emailLabel": "Email",
       "passwordLabel": "Password",
       "passwordHint": "At least 6 characters.",
@@ -52,7 +52,7 @@
       "sub": "Hire specialized AI talent that understands your business, helps your customers, and drives sales naturally on WhatsApp.",
       "primaryCta": "Hire your first employee",
       "secondaryCta": "View roster",
-      "imageAlt": "A Sidde AI employee at work"
+      "imageAlt": "A Staffra AI employee at work"
     },
     "spotlight": {
       "title": "Malu — AI Sales Representative",
@@ -78,7 +78,7 @@
     },
     "flow": {
       "heading": "Hire. Teach. Connect. Work.",
-      "sub": "Getting started with a Sidde AI employee is simpler than onboarding a human, but just as effective.",
+      "sub": "Getting started with a Staffra AI employee is simpler than onboarding a human, but just as effective.",
       "stepLabel": "Step {number}",
       "steps": {
         "hire": {
@@ -103,7 +103,7 @@
       "heading": "Humanized conversations",
       "sub": "Customers want to talk to people, not phone menus.",
       "oldWay": "The old way",
-      "siddeWay": "The Sidde way",
+      "staffraWay": "The Staffra way",
       "oldContact": "Virtual assistant",
       "customerMessage": "Hi! Looking for a gift for my girlfriend.",
       "botReply": "Please select an option:\n1. Browse catalogue\n2. Store hours\n3. Speak to an agent"
@@ -119,7 +119,7 @@
         "title": "Checkout clicks",
         "description": "Track direct conversions originating from WhatsApp interactions."
       },
-      "imageAlt": "Preview of the Sidde performance dashboard"
+      "imageAlt": "Preview of the Staffra performance dashboard"
     },
     "footer": {
       "blurb": "Building the future of AI workforce for modern businesses.",
@@ -135,7 +135,7 @@
         "privacy": "Privacy policy",
         "terms": "Terms of service"
       },
-      "rights": "© {year} Sidde AI. All rights reserved."
+      "rights": "© {year} Staffra AI. All rights reserved."
     },
     "demo": {
       "transcriptLabel": "Example conversation between a customer and Malu on WhatsApp",
@@ -659,7 +659,7 @@
   "Chat": {
     "inputPlaceholder": "Reply to {name}…",
     "sendButton": "Send",
-    "poweredBy": "Powered by Sidde",
+    "poweredBy": "Powered by Staffra",
     "emptyState": "Send a message to start the conversation.",
     "activeNow": "Active now",
     "today": "Today",

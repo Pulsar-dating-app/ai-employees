@@ -74,7 +74,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { companySlug, agentSlug } = await params;
   const resolved = await resolveChat(companySlug, agentSlug);
-  if (resolved.kind === "not-found") return { title: "Sidde" };
+  if (resolved.kind === "not-found") return { title: "Staffra" };
 
   const name = resolved.kind === "active" ? resolved.agentName : defaultAgentName(agentSlug);
   return { title: `${name} · ${resolved.companyName}` };

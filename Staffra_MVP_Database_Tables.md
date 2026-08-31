@@ -1,4 +1,4 @@
-# Sidde MVP --- Database Tables
+# Staffra MVP --- Database Tables
 
 ## users
 

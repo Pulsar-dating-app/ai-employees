@@ -30,7 +30,7 @@ let shared: {
 };
 
 beforeAll(async () => {
-  process.env.SIDDE_CHECKOUT_BASE_URL = "https://checkout-test.example";
+  process.env.STAFFRA_CHECKOUT_BASE_URL = "https://checkout-test.example";
 
   const owner = await signUpTestUser("owner");
   const created = await api<{ company: { id: string } }>("POST", "/api/companies", owner.cookieHeader, {

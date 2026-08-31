@@ -4,7 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import "./globals.css";
 
-// Inter is the Sidde "Human-Centric AI" design-system typeface (Stitch).
+// Inter is the Staffra "Human-Centric AI" design-system typeface (Stitch).
 // Geist Mono stays wired as --font-mono; no surface uses it yet.
 const inter = Inter({
   variable: "--font-inter",
@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sidde",
+  title: "Staffra",
   description: "Hire Malu and get her ready to sell for your business.",
 };
 

@@ -11,7 +11,7 @@ export const config = {
     // chat API), `talk/` (Trello M4's standalone hosted chat page), and
     // `api/webhooks/` (Trello N4's Instagram inbound webhook) are excluded
     // deliberately: all four are public, unauthenticated surfaces called
-    // directly by a customer or by Meta itself with no Sidde session, so
+    // directly by a customer or by Meta itself with no Staffra session, so
     // running updateSession's supabase.auth.getUser() round-trip on them
     // would add latency for nothing -- Meta's webhook caller has no cookie
     // to refresh in the first place.

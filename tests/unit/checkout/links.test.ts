@@ -6,7 +6,7 @@ import {
   resolveCheckoutBaseUrl,
 } from "@/lib/checkout/links";
 
-const ORIGINAL_BASE_URL = process.env.SIDDE_CHECKOUT_BASE_URL;
+const ORIGINAL_BASE_URL = process.env.STAFFRA_CHECKOUT_BASE_URL;
 const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
 
 // NODE_ENV is readonly in @types/node; these tests deliberately drive the
@@ -16,7 +16,7 @@ function setNodeEnv(value: string | undefined) {
 }
 
 afterEach(() => {
-  process.env.SIDDE_CHECKOUT_BASE_URL = ORIGINAL_BASE_URL;
+  process.env.STAFFRA_CHECKOUT_BASE_URL = ORIGINAL_BASE_URL;
   setNodeEnv(ORIGINAL_NODE_ENV);
 });
 
@@ -40,29 +40,29 @@ describe("generateTrackingId", () => {
 
 describe("resolveCheckoutBaseUrl", () => {
   it("uses the configured value", () => {
-    process.env.SIDDE_CHECKOUT_BASE_URL = "https://app.example.com";
+    process.env.STAFFRA_CHECKOUT_BASE_URL = "https://app.example.com";
     expect(resolveCheckoutBaseUrl()).toBe("https://app.example.com");
   });
 
   it("strips trailing slashes so the joined path never doubles up", () => {
-    process.env.SIDDE_CHECKOUT_BASE_URL = "https://app.example.com///";
+    process.env.STAFFRA_CHECKOUT_BASE_URL = "https://app.example.com///";
     expect(buildCheckoutUrl("abc")).toBe("https://app.example.com/c/abc");
   });
 
   it("falls back to localhost outside production", () => {
-    delete process.env.SIDDE_CHECKOUT_BASE_URL;
+    delete process.env.STAFFRA_CHECKOUT_BASE_URL;
     setNodeEnv("test");
     expect(resolveCheckoutBaseUrl()).toBe("http://localhost:3000");
   });
 
   it("throws in production rather than emitting a localhost link to a real customer", () => {
-    delete process.env.SIDDE_CHECKOUT_BASE_URL;
+    delete process.env.STAFFRA_CHECKOUT_BASE_URL;
     setNodeEnv("production");
     expect(() => resolveCheckoutBaseUrl()).toThrow(CheckoutBaseUrlMissingError);
   });
 
   it("treats a blank value as unset", () => {
-    process.env.SIDDE_CHECKOUT_BASE_URL = "   ";
+    process.env.STAFFRA_CHECKOUT_BASE_URL = "   ";
     setNodeEnv("production");
     expect(() => resolveCheckoutBaseUrl()).toThrow(CheckoutBaseUrlMissingError);
   });
@@ -70,7 +70,7 @@ describe("resolveCheckoutBaseUrl", () => {
 
 describe("buildCheckoutUrl", () => {
   it("builds the spec §14 /c/{tracking-id} shape", () => {
-    process.env.SIDDE_CHECKOUT_BASE_URL = "https://app.example.com";
+    process.env.STAFFRA_CHECKOUT_BASE_URL = "https://app.example.com";
     expect(buildCheckoutUrl("aB3xK9")).toBe("https://app.example.com/c/aB3xK9");
   });
 });
