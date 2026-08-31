@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
@@ -45,9 +46,7 @@ function SidebarHeader({
   return (
     <div className="flex flex-col gap-4 border-b border-outline-variant px-6 py-5">
       <div className="flex items-center gap-2.5">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-on-primary">
-          S
-        </span>
+        <Image src="/logo-icon.png" alt="" width={36} height={36} className="shrink-0 rounded-md" />
         <span className="text-lg font-bold tracking-tight text-primary">Staffra</span>
       </div>
       <div className="flex items-center gap-3">
@@ -138,9 +137,7 @@ export function Sidebar({
       {/* Mobile top bar */}
       <header className="fixed inset-x-0 top-0 z-20 flex h-14 items-center justify-between border-b border-outline-variant bg-surface px-4 sm:hidden">
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-on-primary">
-            S
-          </span>
+          <Image src="/logo-icon.png" alt="" width={32} height={32} className="shrink-0 rounded-md" />
           <span className="text-base font-bold tracking-tight text-primary">Staffra</span>
         </div>
         <div className="flex items-center gap-2">

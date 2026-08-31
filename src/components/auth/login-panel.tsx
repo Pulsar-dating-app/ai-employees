@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LoginForm } from "./login-form";
+import logo from "../../../public/logo.png";
 
 export function LoginPanel() {
   const t = useTranslations("Auth.login");
@@ -12,7 +14,7 @@ export function LoginPanel() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1 pr-8">
-        <span className="text-sm font-bold tracking-tight text-primary">Staffra</span>
+        <Image src={logo} alt="Staffra" className="h-9 w-auto self-start" priority />
         <h2 id="auth-modal-title" className="text-xl font-semibold text-on-surface">
           {t("title")}
         </h2>

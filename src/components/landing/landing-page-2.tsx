@@ -7,6 +7,7 @@ import { landingV2Sans } from "./fonts";
 import heroImg from "../../../public/landing-v2/hero.jpg";
 import maluImg from "../../../public/landing-v2/malu.jpg";
 import dashboardImg from "../../../public/landing-v2/dashboard.jpg";
+import logo from "../../../public/logo.png";
 
 // Version B of the public landing — a faithful reproduction of the Stitch
 // "Staffra Human-Centric AI" mockup (Corporate Modern + tactile warmth: soft
@@ -126,7 +127,7 @@ export async function LandingPageV2() {
       {/* Top nav */}
       <nav className="sticky top-0 z-50 border-b border-[#edeeef] bg-[#f8f9fa]/80 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center justify-between px-4 md:px-10">
-          <span className="text-[24px] font-bold text-[#3525cd]">Staffra</span>
+          <Image src={logo} alt="Staffra" className="h-11 w-auto" priority />
           <div className="hidden items-center gap-6 md:flex">
             <a
               href="#spotlight"
@@ -412,7 +413,7 @@ export async function LandingPageV2() {
       <footer className="border-t border-[#e7e8e9] bg-white">
         <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 py-8 md:grid-cols-4 md:px-10">
           <div className="flex flex-col gap-4">
-            <span className="text-[24px] font-bold text-[#3525cd]">Staffra</span>
+            <Image src={logo} alt="Staffra" className="h-11 w-auto self-start" />
             <p className="max-w-xs text-[16px] leading-[24px] text-[#464555]">
               {t("footer.blurb")}
             </p>
