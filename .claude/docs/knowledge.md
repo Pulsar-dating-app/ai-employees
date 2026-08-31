@@ -9,7 +9,8 @@ Domain knowledge, glossary, and context that isn't obvious from the code itself.
 The spec was written around one employee, **Malu** (AI sales rep), on one channel, **WhatsApp**. Both have moved since, and the spec has not been rewritten — trust this file and the code over it on either point:
 
 - **Agents**: `agents` holds several real, hireable, active rows (Malu, John, Ana the scheduling assistant). Nothing may assume Malu is the only one, or that an agent's name implies a gender.
-- **Channels**: `conversation_channel` is `whatsapp` | `web_chat`, and epic N adds `instagram`. **Web chat** (epic M) shipped and is live. **Instagram** is the messaging channel now being built (epic N, decided 2026-08-31). **WhatsApp** (epic D) is built but dormant — reachable in code, unmounted from the UI.
+- **Channels**: `conversation_channel` is `whatsapp` | `web_chat` | `instagram`. **Web chat** (epic M) shipped and is live. **Instagram** is the messaging channel now being built (epic N, decided 2026-08-31); its schema landed with N1. **WhatsApp** (epic D) is built but dormant — reachable in code, unmounted from the UI.
+- **A channel connection belongs to an agent, not to the company** (N1). Web chat always worked that way (`/talk/{company}/{agent}`) and Instagram now does too, so one Instagram account answers exactly one hired employee. This is why there is no "which agent responds?" router in the product.
 
 Core principle, unchanged and now load-bearing: an agent is channel-agnostic and must contain no channel-specific logic. A channel is a "workplace" plugged into a generic Conversation/Agent Engine — which is exactly why swapping WhatsApp for web chat and then Instagram touched no agent code at all.
 

@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { writeFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { startGraphApiMock } from "./helpers/graph-api-mock";
+import { startInstagramApiMock } from "./helpers/instagram-api-mock";
 import { startGoogleOAuthMock } from "./helpers/google-oauth-mock";
 import { startGoogleCalendarMock } from "./helpers/google-calendar-mock";
 
@@ -59,6 +60,8 @@ export default async function setup() {
   // Stands in for the real Meta Graph API (Trello D1's WhatsApp connect
   // route) -- see graph-api-mock.ts for why this can't just be a fetch spy.
   const graphApiMock = await startGraphApiMock();
+  // Same reasoning, for Trello N2's Instagram connect flow.
+  const instagramApiMock = await startInstagramApiMock();
   // Same reasoning, for Trello I1's Google Calendar connect route.
   const googleOAuthMock = await startGoogleOAuthMock();
   // Same reasoning, for Trello I2's freeBusy.query call.
@@ -86,6 +89,8 @@ export default async function setup() {
         META_APP_ID: "test-meta-app-id",
         META_APP_SECRET: "test-meta-app-secret",
         META_GRAPH_API_BASE_URL: graphApiMock.url,
+        INSTAGRAM_API_BASE_URL: instagramApiMock.url,
+        INSTAGRAM_GRAPH_BASE_URL: instagramApiMock.url,
         GOOGLE_CLIENT_ID: "test-google-client-id",
         GOOGLE_CLIENT_SECRET: "test-google-client-secret",
         GOOGLE_OAUTH_TOKEN_URL: googleOAuthMock.url,
@@ -113,6 +118,7 @@ export default async function setup() {
   } catch (err) {
     killProcessTree(nextProcess);
     await graphApiMock.stop();
+    await instagramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
     throw err;
@@ -135,6 +141,7 @@ export default async function setup() {
   return async () => {
     killProcessTree(nextProcess);
     await graphApiMock.stop();
+    await instagramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
     try {
