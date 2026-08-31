@@ -430,4 +430,80 @@ describe("Appointments CRUD /api/companies/:id/appointments", () => {
     );
     expect(statusFiltered.json.appointments).toEqual([]);
   });
+
+  // Trello K4 extended this endpoint so the Appointments view could render
+  // something readable — both additions are asserted here rather than left
+  // to the UI, which has no test surface of its own in this project.
+  it("embeds the service and customer names each appointment points at", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Embed Co");
+    const serviceId = await createService(owner.cookieHeader, companyId, {
+      name: "Deep Clean",
+      duration_minutes: 45,
+    });
+    const customerId = await createCustomer(owner, companyId, "Alice Embed");
+
+    await createAppointment(owner.cookieHeader, companyId, {
+      service_id: serviceId,
+      customer_id: customerId,
+      starts_at: "2027-04-01T10:00:00.000Z",
+    });
+
+    const list = await api<{
+      appointments: {
+        services: { name: string } | null;
+        customers: { name: string | null; phone: string | null } | null;
+      }[];
+    }>("GET", `/api/companies/${companyId}/appointments`, owner.cookieHeader);
+
+    expect(list.status).toBe(200);
+    expect(list.json.appointments).toHaveLength(1);
+    // to-one embeds come back as objects, not arrays — the view indexes
+    // straight into `.name`, so an array here would silently render nothing.
+    expect(list.json.appointments[0].services).toEqual({ name: "Deep Clean" });
+    expect(list.json.appointments[0].customers).toEqual({
+      name: "Alice Embed",
+      phone: "+15550000000",
+    });
+  });
+
+  it("reverses to latest-first with ?order=desc, which is what the past view needs", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Order Co");
+    const serviceId = await createService(owner.cookieHeader, companyId, { name: "Trim", duration_minutes: 30 });
+    const customerId = await createCustomer(owner, companyId, "Bob");
+
+    const later = await createAppointment(owner.cookieHeader, companyId, {
+      service_id: serviceId,
+      customer_id: customerId,
+      starts_at: "2027-05-02T10:00:00.000Z",
+    });
+    const sooner = await createAppointment(owner.cookieHeader, companyId, {
+      service_id: serviceId,
+      customer_id: customerId,
+      starts_at: "2027-05-01T10:00:00.000Z",
+    });
+
+    const desc = await api<{ appointments: { id: string }[] }>(
+      "GET",
+      `/api/companies/${companyId}/appointments?order=desc`,
+      owner.cookieHeader,
+    );
+    expect(desc.json.appointments.map((a) => a.id)).toEqual([
+      later.json.appointment.id,
+      sooner.json.appointment.id,
+    ]);
+
+    // Anything other than the literal "desc" keeps the soonest-first default,
+    // so a typo can't silently invert a merchant's upcoming list.
+    const bogus = await api<{ appointments: { id: string }[] }>(
+      "GET",
+      `/api/companies/${companyId}/appointments?order=DESCENDING`,
+      owner.cookieHeader,
+    );
+    expect(bogus.json.appointments.map((a) => a.id)).toEqual([
+      sooner.json.appointment.id,
+      later.json.appointment.id,
+    ]);
+  });
 });

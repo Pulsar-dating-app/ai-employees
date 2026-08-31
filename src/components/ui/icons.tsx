@@ -67,6 +67,28 @@ export function PackageIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// The Scheduling area's tab and the Appointments page header (K4/K5).
+export function CalendarIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+      <path d="M3.5 9.75h17" />
+      <path d="M8.25 3.5v3M15.75 3.5v3" />
+    </svg>
+  );
+}
+
+// Services are "products, but the thing being sold is time" (H1's own
+// framing) — hence a clock where the catalog gets a package.
+export function ClockIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.4V12l3.1 1.9" />
+    </svg>
+  );
+}
+
 export function SettingsIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...NAV_ICON_PROPS} {...props}>

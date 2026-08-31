@@ -366,6 +366,50 @@ The tool Malu calls once a customer is ready to buy (spec §14). Sidde never pro
 - Product `price`/`stock` come back from Postgres as `string`/`number` — `price` specifically as a numeric string (e.g. `"25.50"`), always run through `Number()` before formatting or arithmetic, never compared/concatenated raw.
 - **`Input`/`Select`/`Textarea` now set `w-full min-w-0`** on their actual form-control element (they didn't before) — surfaced as horizontal scrolling inside the new edit dialog: three fields in a `flex-row` group (price/currency/stock, etc.) each rendered at the browser's default intrinsic input width instead of sharing the row, overflowing a narrow container. It was latent on every other page too (just invisible there, since a wide page has room to spare), so the fix is in the shared primitives, not a dialog-specific patch. **Passing `className="flex-1"` (or similar) to `Input` only reaches the inner `<input>`, not the wrapper `<div>` those components render around label+field — that wrapper is the actual flex item.** To let a field share/shrink in a flex row, wrap the whole `Input`/`Select` call in `<div className="min-w-0 flex-1">...</div>` at the call site (see `product-form.tsx`'s price/currency/stock row and `key-values-editor.tsx`'s value-input row) — a flex item's default `min-width: auto` otherwise refuses to shrink below its content's natural size regardless of what width class lands on a descendant.
 
+### Scheduling area — appointments, services, sidebar (Trello K1, K4, K5)
+
+**Scheduling is an area, not a page.** `src/app/dashboard/scheduling/` holds a `layout.tsx` + `scheduling-tabs.tsx` sub-navigation with the area's screens under it; the sidebar gets exactly one top-level entry (K5), and K2 (calendar connect) / K3 (business hours) fold in as further sub-tabs rather than new rails.
+
+- `/dashboard/scheduling` → **Appointments** (K4), the index route — it's what a merchant checks daily.
+- `/dashboard/scheduling/services` → **Services catalog** (K1).
+- The sub-tab for the index route matches on **exact** pathname; `startsWith` would light both tabs on the services route.
+
+#### Services catalog (K1)
+
+Built as a deliberate close relative of F3's Products page (same `page.tsx` Server-Component fetch → `ServicesManager` hydrate shape, the same filters/table/edit-dialog trio, the same `Dialog`/`Card`/`Input`/`Select` primitives, a `Services` i18n namespace mirroring `Products`' nesting).
+
+- **No import panel**, unlike Products — H1 has no CSV/XLSX counterpart to B4, and services are typed in a handful at a time rather than synced from a store.
+- **No `PRODUCT_PUBLIC_COLUMNS` equivalent is needed.** `products` has `embedding`/`search_vector` columns that must be kept out of `select`; `services` has neither, so `select("*")` is already safe here. Don't add a column allowlist "for symmetry" — it would be dead weight.
+- **`canEdit` is member-level, not owner/admin** — same reasoning as Products: H1's routes only ever call `requireMember`, so an admin gate here would invent a restriction the API doesn't enforce.
+- **`buffer_minutes` is never sent as `null`.** The POST route tolerates a missing/null buffer, but `PATCH`'s `validateBuffer` is strict whenever the key is present (`typeof !== "number"` → 400) — and the form always sends the full field set. So blank in the UI normalizes to `0` before the request, not `null`. The list only renders the buffer line when it's `> 0`.
+- **The form validates duration and the price/currency pairing client-side** rather than letting them fall through to the generic `saveError`. Both are easy to trip and H1's 400 messages (`"duration_minutes must be a positive integer"`) are developer-facing English, not merchant copy.
+- **`ClockIcon`** was added to `src/components/ui/icons.tsx` for the page header — services are "products, but the thing being sold is time" (H1's own framing), so a clock where the catalog gets a package.
+- **Token classes, not `neutral-*`.** `product-filters.tsx` mixes `border-neutral-200`/`text-neutral-700` into an otherwise token-based system; the services equivalents use `border-outline-variant`/`text-on-surface-variant` throughout. If Products is ever touched again, it should be brought in line rather than the drift being copied forward.
+- Service `price` comes back from Postgres as a numeric **string** (same as products) — always `Number()` it before formatting.
+- **Verifying a dashboard page by fetching its HTML is a trap:** `next-intl` serializes the whole message namespace into the RSC payload, so grepping raw HTML for a label finds strings that are *not* rendered (it briefly looked like the read-only banner was showing for an owner). Strip `<script>` blocks before asserting anything about what the page actually displays.
+
+#### Appointments view (K4)
+
+- **H3's list endpoint was extended here**, the way F3 extended B3's for the same reason — the shipped shape couldn't render a readable screen. `GET .../appointments` now embeds `services(name)` and `customers(name, phone)` (both to-one, so PostgREST returns an object or `null` — `service_id` is nullable and survives a service being soft-deleted, which the UI shows as "Service removed"), and accepts `?order=desc`. Both are covered by integration tests in `appointments.test.ts`; the UI itself has none, per this project's no-frontend-tests rule.
+- **`?order=desc` exists because "past bookings" reads latest-first.** Only the literal string `desc` flips it, so a typo can't silently invert a merchant's upcoming list.
+- **"Upcoming" vs "past" is one endpoint with the `starts_at` window flipped** (`from=now` / `to=now`), not two code paths.
+- **Times render in the *company's* timezone, not the viewer's** — a booking is an event at the business. Uses the same `company.timezone && isValidTimeZone(...) ? ... : "UTC"` fallback as `availability/load.ts` and `analytics/load.ts`. Passing an explicit `timeZone` to `Intl.DateTimeFormat` also keeps server and client output identical, so this can't hydrate-mismatch — **don't** switch it to the browser default.
+- **Actions are `completed` / `no_show` / `cancelled`, all plain `PATCH { status }`.** Approve/decline on `requested` rows is deliberately absent — that's K7, which also has to record a `cancellation_reason` on decline. Cancel *is* offered on `requested` because it's the same plain status change every other row gets.
+- **A status change re-fetches rather than patching local state**, since the changed row may no longer match the active filter (cancel something while filtered to "confirmed" and an in-place patch would keep displaying it).
+- Terminal statuses (`cancelled`/`completed`/`no_show`) render muted with no actions. Google Calendar sync is H3/I3's business and fires inside the route — the UI never touches it.
+
+- **Never export a plain value from a `"use client"` module and import it into a Server Component.** `APPOINTMENT_SELECT` originally lived in `appointments-manager.tsx`; Next turns client-module exports into *client reference proxies*, so the page handed supabase-js a proxy and died at request time with `(intermediate value).split is not a function` inside `.select()`. Types line up and `next build` passes — it only fails when the page is actually requested. Shared constants/types now live in `appointment-types.ts`, which deliberately has no `"use client"` directive.
+
+#### Sidebar entry (K5)
+
+One `NAV_ITEMS` row in `sidebar.tsx` (`CalendarIcon`, matching `startsWith("/dashboard/scheduling")`), which the desktop rail and the mobile bottom tab bar both read — they share the same array, so nothing drifts. Label lives at `Dashboard.tabs.scheduling`.
+
+**Tabs are gated on which agents the company has hired.** `NAV_ITEMS` entries carry an optional `requiresAgent` slug (`products` → `malu`, `scheduling` → `ana`); `layout.tsx` fetches `company_agents.select("agents(slug)")` (already scoped by that table's `is_company_member` select policy, so it needs no company id) and passes the slugs down, and `Sidebar` filters once into `navItems` that both renderers use.
+
+- **Gated on *hired*, not *active*.** Pausing an agent must not make the merchant's own catalog or schedule vanish from the nav.
+- **This is navigation only** — the pages themselves stay reachable by URL and the data stays company-scoped (`products.company_id`, `services.company_id`). Nothing was moved into the agent cards; those keep holding genuinely per-agent config (channel connections). The user's reasoning, when this came up: a barbershop running only Ana has no business seeing a Products tab.
+- The `agents` embed needs the same `as unknown as { agents: { slug: string } | null }[]` cast the metrics and my-agents pages already make — PostgREST returns a to-one embed as an object while the generated types widen it to an array.
+
 ### Scheduling foundations — services, business hours, appointments (Trello H1–H3)
 
 The first slice of the "Ana" scheduling agent epic (H–L): pure backend/schema, no UI yet (that's K-epic). Deliberately shaped to mirror B3's products routes wherever the domain allows, so H1's ticket text ("mirror the products CRUD conventions") holds literally, not just in spirit.

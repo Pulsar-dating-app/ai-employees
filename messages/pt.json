@@ -168,6 +168,7 @@
       "marketplace": "Marketplace",
       "myAgents": "Minha equipe",
       "products": "Produtos",
+      "scheduling": "Agendamentos",
       "metrics": "Desempenho",
       "settings": "Configurações"
     }
@@ -486,6 +487,127 @@
       "skippedTableReasonHeader": "Motivo",
       "genericError": "Algo deu errado ao importar o arquivo. Tente novamente.",
       "fileRequired": "Escolha um arquivo primeiro."
+    }
+  },
+  "Services": {
+    "pageTitle": "Catálogo de serviços",
+    "pageSubtitle": "Os serviços que sua equipe pode agendar para os clientes.",
+    "noCompany": "Contrate o primeiro integrante da sua equipe para começar a gerenciar seus serviços.",
+    "browseMarketplace": "Ver marketplace",
+    "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "saveError": "Algo deu errado. Tente novamente.",
+    "closeDialogLabel": "Fechar",
+    "filters": {
+      "searchLabel": "Buscar por nome",
+      "searchPlaceholder": "Buscar serviços…",
+      "searchButton": "Buscar",
+      "categoryLabel": "Categoria",
+      "categoryPlaceholder": "Filtrar por categoria…",
+      "includeInactiveLabel": "Mostrar serviços desativados",
+      "previousPage": "Anterior",
+      "nextPage": "Próxima",
+      "pageOf": "Página {page} de {totalPages}",
+      "emptyState": "Nenhum serviço corresponde aos seus filtros ainda."
+    },
+    "form": {
+      "addButton": "Adicionar serviço",
+      "editButton": "Editar",
+      "editDialogTitle": "Editar serviço",
+      "cancelButton": "Cancelar",
+      "nameLabel": "Nome",
+      "namePlaceholder": "ex.: Corte de cabelo",
+      "descriptionLabel": "Descrição",
+      "durationLabel": "Duração (minutos)",
+      "durationPlaceholder": "ex.: 30",
+      "bufferLabel": "Intervalo (minutos)",
+      "bufferPlaceholder": "ex.: 10",
+      "bufferHint": "Tempo extra bloqueado depois de cada agendamento — para limpeza, anotações ou deslocamento. Deixe em branco para nenhum.",
+      "priceLabel": "Preço",
+      "pricePlaceholder": "Deixe em branco se varia",
+      "currencyLabel": "Moeda",
+      "currencyPlaceholder": "Selecione uma moeda",
+      "currencyOptions": {
+        "USD": "USD — Dólar americano",
+        "BRL": "BRL — Real brasileiro",
+        "EUR": "EUR — Euro"
+      },
+      "categoryLabel": "Categoria",
+      "categoryPlaceholder": "ex.: Cabelo",
+      "nameRequired": "O nome é obrigatório.",
+      "durationRequired": "A duração é obrigatória e deve ser um número inteiro de minutos maior que zero.",
+      "bufferInvalid": "O intervalo deve ser um número inteiro de minutos, ou ficar em branco.",
+      "priceInvalid": "O preço deve ser um número maior ou igual a zero.",
+      "currencyRequiredWithPrice": "Escolha uma moeda para acompanhar o preço."
+    },
+    "list": {
+      "nameColumn": "Nome",
+      "durationColumn": "Duração",
+      "priceColumn": "Preço",
+      "categoryColumn": "Categoria",
+      "statusColumn": "Status",
+      "actionsColumn": "Ações",
+      "durationValue": "{minutes} min",
+      "bufferValue": "+{minutes} min de intervalo",
+      "activeLabel": "Ativo",
+      "inactiveLabel": "Inativo",
+      "empty": "—"
+    },
+    "delete": {
+      "deactivateButton": "Desativar",
+      "confirmButton": "Clique novamente para desativar — esconde dos clientes, mantém os agendamentos existentes",
+      "cancelButton": "Cancelar",
+      "reactivateButton": "Reativar"
+    }
+  },
+  "Scheduling": {
+    "tabs": {
+      "ariaLabel": "Seções de agendamento",
+      "appointments": "Agendamentos",
+      "services": "Serviços"
+    },
+    "appointments": {
+      "pageTitle": "Agendamentos",
+      "pageSubtitle": "Tudo o que sua equipe marcou, e o que já passou.",
+      "noCompany": "Contrate o primeiro integrante da sua equipe para começar a receber agendamentos.",
+      "browseMarketplace": "Ver marketplace",
+      "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+      "scopeLabel": "Período",
+      "scope": {
+        "upcoming": "Próximos",
+        "past": "Anteriores"
+      },
+      "statusFilterLabel": "Status",
+      "statusFilterAll": "Todos os status",
+      "previousPage": "Anterior",
+      "nextPage": "Próxima",
+      "pageOf": "Página {page} de {totalPages}",
+      "emptyState": "Nada marcado nesse período ainda.",
+      "status": {
+        "requested": "Aguardando aprovação",
+        "confirmed": "Confirmado",
+        "cancelled": "Cancelado",
+        "completed": "Concluído",
+        "no_show": "Não compareceu"
+      },
+      "list": {
+        "whenColumn": "Quando",
+        "serviceColumn": "Serviço",
+        "customerColumn": "Cliente",
+        "statusColumn": "Status",
+        "actionsColumn": "Ações",
+        "serviceRemoved": "Serviço removido",
+        "unnamedCustomer": "Sem nome",
+        "noActions": "—"
+      },
+      "actions": {
+        "complete": "Concluído",
+        "noShow": "Não compareceu",
+        "cancel": "Cancelar",
+        "confirmCancel": "Clique novamente para cancelar — o horário do cliente fica livre",
+        "keep": "Manter"
+      }
     }
   },
   "LanguageSwitcher": {
