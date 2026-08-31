@@ -268,7 +268,7 @@
     "confirming": "Contratando…",
     "cancel": "Cancelar",
     "hiredBadge": "{name} está contratada",
-    "hiredDescription": "{name} já faz parte da sua equipe — acesse as configurações para ensinar {name} sobre o seu negócio e conectar o WhatsApp.",
+    "hiredDescription": "{name} já faz parte da sua equipe — acesse as configurações para ensinar {name} sobre o seu negócio e definir onde {name} conversa com os seus clientes.",
     "goToSettings": "Ir para configurações",
     "hireError": "Algo deu errado ao contratar {name}. Tente novamente."
   },

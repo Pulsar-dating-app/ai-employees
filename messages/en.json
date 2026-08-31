@@ -268,7 +268,7 @@
     "confirming": "Hiring…",
     "cancel": "Cancel",
     "hiredBadge": "{name} is hired",
-    "hiredDescription": "{name} is on your team — head to settings to teach them about your business and connect WhatsApp.",
+    "hiredDescription": "{name} is on your team — head to settings to teach them about your business and set up where they talk to your customers.",
     "goToSettings": "Go to settings",
     "hireError": "Something went wrong hiring {name}. Please try again."
   },
