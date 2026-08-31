@@ -618,7 +618,64 @@
     "tabs": {
       "ariaLabel": "Scheduling sections",
       "appointments": "Appointments",
-      "services": "Services"
+      "services": "Services",
+      "settings": "Settings"
+    },
+    "settings": {
+      "pageTitle": "Scheduling settings",
+      "pageSubtitle": "Set when your team is available for bookings, and how new appointment requests are handled.",
+      "noCompany": "Hire your first team member to start taking bookings.",
+      "browseMarketplace": "Browse the marketplace",
+      "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
+      "businessHours": {
+        "title": "Business hours",
+        "subtitle": "Set your weekly availability for appointments.",
+        "closed": "Closed",
+        "to": "to",
+        "openLabel": "{day} open",
+        "addRange": "Add hours",
+        "removeRange": "Remove this time range",
+        "save": "Save business hours",
+        "saving": "Saving…",
+        "saved": "Business hours saved.",
+        "invalidRange": "Each time range needs an end later than its start.",
+        "overlap": "The time ranges for {day} can't overlap.",
+        "saveError": "Something went wrong saving your hours. Please try again.",
+        "days": {
+          "monday": "Monday",
+          "tuesday": "Tuesday",
+          "wednesday": "Wednesday",
+          "thursday": "Thursday",
+          "friday": "Friday",
+          "saturday": "Saturday",
+          "sunday": "Sunday"
+        }
+      },
+      "approval": {
+        "title": "Appointment controls",
+        "subtitle": "Manage rules for incoming booking requests.",
+        "toggleLabel": "Require approval before confirming appointments",
+        "toggleHelp": "When on, new bookings stay pending until you confirm them yourself.",
+        "saveError": "Something went wrong saving that setting. Please try again."
+      },
+      "timeOff": {
+        "title": "Time off & closures",
+        "subtitle": "Block whole days when nobody's available for appointments — holidays, travel, anything.",
+        "empty": "No time off scheduled.",
+        "startLabel": "From",
+        "endLabel": "To",
+        "reasonLabel": "Reason (optional)",
+        "reasonPlaceholder": "e.g. Holiday",
+        "reasonHint": "If you fill in a reason, a customer who asks about a blocked date may be told it.",
+        "addButton": "Add time off",
+        "adding": "Adding…",
+        "removeLabel": "Remove this time off",
+        "rangeSeparator": "–",
+        "missingDates": "Pick a start and end date.",
+        "invalidRange": "The end date can't be before the start date.",
+        "overlap": "Those dates overlap an entry you already have ({range}). Remove it first, or pick dates outside it.",
+        "saveError": "Something went wrong. Please try again."
+      }
     },
     "appointments": {
       "pageTitle": "Appointments",
@@ -666,6 +723,8 @@
         "unnamedCustomer": "Unnamed"
       },
       "actions": {
+        "approve": "Approve",
+        "decline": "Decline",
         "complete": "Mark complete",
         "noShow": "No-show",
         "cancel": "Cancel",

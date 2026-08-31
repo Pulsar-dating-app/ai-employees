@@ -25,9 +25,17 @@ export const findAvailableSlotsTool: AgentTool = {
     "If `truncated` is true there were more slots than shown, so narrow the range or ask the " +
     "customer's preference. If `googleCalendarChecked` is false the business's live calendar " +
     "couldn't be consulted: still offer the slots, but don't promise the time is definitely " +
-    "free. If the list is empty, say nothing is open in that range and offer to try another -- " +
-    "never invent a slot that isn't in the result. `available: false` means that service " +
-    "isn't something this business offers.",
+    "free.\n\n" +
+    "`timeOff` lists date ranges (`start`/`end`, inclusive `YYYY-MM-DD`) the business has " +
+    "blocked off within the window you asked about. If it's non-empty -- especially when " +
+    "`slots` is empty because of it -- tell the customer the business is closed/away on those " +
+    "dates rather than a bare \"nothing's available\": name the dates, and if a range has a " +
+    "`reason` you may share it naturally (e.g. \"they're on holiday until the 15th\"); if " +
+    "`reason` is null just say they're closed then. Then offer to look at a date after the " +
+    "block ends.\n\n" +
+    "If the list is empty and there's no `timeOff` explaining it, say nothing is open in that " +
+    "range and offer to try another -- never invent a slot that isn't in the result. " +
+    "`available: false` means that service isn't something this business offers.",
   parameters: {
     type: "object",
     properties: {

@@ -618,7 +618,64 @@
     "tabs": {
       "ariaLabel": "Seções de agendamento",
       "appointments": "Agendamentos",
-      "services": "Serviços"
+      "services": "Serviços",
+      "settings": "Configurações"
+    },
+    "settings": {
+      "pageTitle": "Configurações de agendamento",
+      "pageSubtitle": "Defina quando sua equipe está disponível para agendamentos e como novos pedidos de horário são tratados.",
+      "noCompany": "Contrate o primeiro integrante da sua equipe para começar a receber agendamentos.",
+      "browseMarketplace": "Ver marketplace",
+      "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+      "businessHours": {
+        "title": "Horário de funcionamento",
+        "subtitle": "Defina a disponibilidade semanal para agendamentos.",
+        "closed": "Fechado",
+        "to": "às",
+        "openLabel": "{day} aberto",
+        "addRange": "Adicionar horário",
+        "removeRange": "Remover este intervalo",
+        "save": "Salvar horários",
+        "saving": "Salvando…",
+        "saved": "Horários salvos.",
+        "invalidRange": "Cada intervalo precisa de um fim depois do início.",
+        "overlap": "Os horários de {day} não podem se sobrepor.",
+        "saveError": "Algo deu errado ao salvar os horários. Tente novamente.",
+        "days": {
+          "monday": "Segunda",
+          "tuesday": "Terça",
+          "wednesday": "Quarta",
+          "thursday": "Quinta",
+          "friday": "Sexta",
+          "saturday": "Sábado",
+          "sunday": "Domingo"
+        }
+      },
+      "approval": {
+        "title": "Controles de agendamento",
+        "subtitle": "Defina as regras para novos pedidos de agendamento.",
+        "toggleLabel": "Exigir aprovação antes de confirmar agendamentos",
+        "toggleHelp": "Quando ativado, novos agendamentos ficam pendentes até você confirmar.",
+        "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
+      },
+      "timeOff": {
+        "title": "Ausências e feriados",
+        "subtitle": "Bloqueie dias inteiros em que ninguém está disponível para agendamentos — férias, viagens, o que for.",
+        "empty": "Nenhuma ausência cadastrada.",
+        "startLabel": "De",
+        "endLabel": "Até",
+        "reasonLabel": "Motivo (opcional)",
+        "reasonPlaceholder": "ex.: Feriado",
+        "reasonHint": "Se você preencher um motivo, quem perguntar sobre uma data bloqueada pode ver esse texto.",
+        "addButton": "Adicionar ausência",
+        "adding": "Adicionando…",
+        "removeLabel": "Remover esta ausência",
+        "rangeSeparator": "–",
+        "missingDates": "Escolha uma data inicial e final.",
+        "invalidRange": "A data final não pode ser antes da inicial.",
+        "overlap": "Essas datas se sobrepõem a uma ausência que você já tem ({range}). Remova ela antes ou escolha datas fora dela.",
+        "saveError": "Algo deu errado. Tente novamente."
+      }
     },
     "appointments": {
       "pageTitle": "Agendamentos",
@@ -666,6 +723,8 @@
         "unnamedCustomer": "Sem nome"
       },
       "actions": {
+        "approve": "Aprovar",
+        "decline": "Recusar",
         "complete": "Concluir",
         "noShow": "Não compareceu",
         "cancel": "Cancelar",

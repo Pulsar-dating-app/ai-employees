@@ -176,6 +176,39 @@ export function isWithinBusinessHours(input: BusinessHoursCheckInput): boolean {
     });
 }
 
+// Merchant-registered time off (vacation, travel — reason irrelevant),
+// stored as an inclusive local date range (`company_time_off`, migration
+// 20260831170000). Both helpers below turn a range into the same half-open
+// UTC shape everything else in `busy` already uses:
+// [local 00:00 of start_date, local 00:00 of the day AFTER end_date).
+export type TimeOffBlock = { start_date: string; end_date: string };
+
+export function timeOffToBusyIntervals(
+  blocks: readonly TimeOffBlock[],
+  timezone: string,
+): BusyInterval[] {
+  return blocks.map((b) => ({
+    start: zonedTimeToUtc(b.start_date, "00:00", timezone).toISOString(),
+    end: zonedTimeToUtc(addDays(b.end_date, 1), "00:00", timezone).toISOString(),
+  }));
+}
+
+// True if `startsAt` (ISO UTC) falls on a day the merchant blocked off. Used
+// by the two booking write paths (Ana's repository.book and H3's POST route)
+// as defense in depth — find_available_slots already won't offer a slot
+// inside a block, this catches a stale/hand-picked time.
+export function isDuringTimeOff(
+  blocks: readonly TimeOffBlock[],
+  timezone: string,
+  startsAt: string,
+): boolean {
+  const startMs = new Date(startsAt).getTime();
+  if (Number.isNaN(startMs)) return false;
+  return timeOffToBusyIntervals(blocks, timezone).some(
+    (iv) => startMs >= new Date(iv.start).getTime() && startMs < new Date(iv.end).getTime(),
+  );
+}
+
 export function computeAvailableSlots(input: ComputeAvailableSlotsInput): AvailableSlot[] {
   const {
     timezone,
