@@ -843,7 +843,8 @@
       "list": {
         "serviceLabel": "Serviço:",
         "serviceRemoved": "Serviço removido",
-        "unnamedCustomer": "Sem nome"
+        "unnamedCustomer": "Sem nome",
+        "intakeToggle": "{count, plural, one {# dado do cliente} other {# dados do cliente}}"
       },
       "actions": {
         "approve": "Aprovar",
