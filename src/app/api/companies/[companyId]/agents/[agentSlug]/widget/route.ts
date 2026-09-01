@@ -26,7 +26,11 @@ const IMAGE_MIME_EXT: Record<string, string> = {
   "image/gif": "gif",
 };
 
-const VALID_LAUNCHER_TYPES = ["default", "video", "image"] as const;
+// 'mascot' (BETA) behaves like 'default' server-side: no upload, no asset
+// URL -- widget.js loads a bundled shared file. Only 'video'/'image' take a
+// merchant file.
+const VALID_LAUNCHER_TYPES = ["default", "video", "image", "mascot"] as const;
+const ASSETLESS_LAUNCHER_TYPES = new Set(["default", "mascot"]);
 type LauncherType = (typeof VALID_LAUNCHER_TYPES)[number];
 
 const BUCKET = "widget-assets";
@@ -135,7 +139,7 @@ export async function POST(
   const previousAssetUrl = existing.widget_launcher_asset_url as string | null;
   let newAssetUrl: string | null = previousAssetUrl;
 
-  if (launcherType === "default") {
+  if (ASSETLESS_LAUNCHER_TYPES.has(launcherType)) {
     newAssetUrl = null;
   } else if (file instanceof File) {
     const mimeMap = launcherType === "video" ? VIDEO_MIME_EXT : IMAGE_MIME_EXT;

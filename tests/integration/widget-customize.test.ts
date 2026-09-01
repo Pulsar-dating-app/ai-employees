@@ -192,4 +192,27 @@ describe("Widget customization POST /api/companies/:id/agents/malu/widget", () =
     expect(resaved.json.companyAgent?.widget_launcher_asset_url).toBe(assetUrl);
     expect(resaved.json.companyAgent?.widget_greeting).toBe("Updated greeting only");
   });
+
+  it("saves the mascot launcher (BETA) with no file, and switching to it clears a previous upload", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Widget Mascot Co");
+    await hireMalu(owner.cookieHeader, companyId);
+
+    // Upload an image first so there's an asset that should be cleared.
+    const uploaded = await saveWidget(owner.cookieHeader, companyId, {
+      launcherType: "image",
+      file: pngFile(),
+    });
+    expect(uploaded.json.companyAgent?.widget_launcher_asset_url).toBeTruthy();
+
+    const mascot = await saveWidget(owner.cookieHeader, companyId, {
+      launcherType: "mascot",
+      greeting: "Precisa de ajuda?",
+    });
+    expect(mascot.status).toBe(200);
+    expect(mascot.json.companyAgent?.widget_launcher_type).toBe("mascot");
+    // Bundled asset -- no upload, no stored URL, exactly like "default".
+    expect(mascot.json.companyAgent?.widget_launcher_asset_url).toBeNull();
+    expect(mascot.json.companyAgent?.widget_greeting).toBe("Precisa de ajuda?");
+  });
 });

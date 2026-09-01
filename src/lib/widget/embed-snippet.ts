@@ -1,6 +1,6 @@
 export type WidgetCustomization = {
   greeting: string | null;
-  launcherType: "default" | "video" | "image";
+  launcherType: "default" | "video" | "image" | "mascot";
   launcherAssetUrl: string | null;
 };
 
@@ -32,7 +32,12 @@ export function buildEmbedSnippet(
     attrs.push(`data-greeting="${escapeAttr(customization.greeting)}"`);
   }
 
-  if (customization.launcherType !== "default" && customization.launcherAssetUrl) {
+  if (customization.launcherType === "mascot") {
+    // Bundled shared asset (public/mascot-greeting-with-bubble.*), not a
+    // merchant upload -- widget.js resolves the file itself, so there's no
+    // src to emit, only the type.
+    attrs.push(`data-launcher-type="mascot"`);
+  } else if (customization.launcherType !== "default" && customization.launcherAssetUrl) {
     attrs.push(`data-launcher-type="${customization.launcherType}"`);
     attrs.push(`data-launcher-src="${escapeAttr(customization.launcherAssetUrl)}"`);
   }

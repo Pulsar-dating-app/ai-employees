@@ -47,6 +47,28 @@ describe("buildEmbedSnippet", () => {
     expect(snippet).toContain(`data-launcher-type="image"`);
   });
 
+  it("emits data-launcher-type=mascot with no src -- it's a bundled asset, not an upload", () => {
+    const snippet = buildEmbedSnippet(BASE_URL, "acme", "malu", {
+      greeting: null,
+      launcherType: "mascot",
+      launcherAssetUrl: null,
+    });
+
+    expect(snippet).toContain(`data-launcher-type="mascot"`);
+    expect(snippet).not.toContain("data-launcher-src");
+  });
+
+  it("still carries the greeting alongside the mascot launcher (used if the merchant switches back)", () => {
+    const snippet = buildEmbedSnippet(BASE_URL, "acme", "malu", {
+      greeting: "Precisa de ajuda?",
+      launcherType: "mascot",
+      launcherAssetUrl: null,
+    });
+
+    expect(snippet).toContain(`data-greeting="Precisa de ajuda?"`);
+    expect(snippet).toContain(`data-launcher-type="mascot"`);
+  });
+
   it("omits launcher attributes when the type is custom but no asset was ever saved", () => {
     // Defensive: shouldn't happen given the API route's own validation, but
     // the snippet builder should never emit a launcher-type with no src.

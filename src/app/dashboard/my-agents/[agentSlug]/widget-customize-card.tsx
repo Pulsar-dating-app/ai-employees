@@ -7,7 +7,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { VideoIcon, ImageIcon } from "@/components/ui/icons";
 
-type LauncherType = "default" | "video" | "image";
+type LauncherType = "default" | "video" | "image" | "mascot";
+
+// The bundled mascot clip, shown in the preview. widget.js loads the same
+// file (plus a Safari-only .mov sibling) on the merchant's own site.
+const MASCOT_PREVIEW_SRC = "/mascot-greeting-with-bubble.webm";
 
 const VIDEO_ACCEPT = "video/webm,video/mp4";
 const IMAGE_ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
@@ -63,7 +67,15 @@ export function WidgetCustomizeCard({
   }, [localPreviewUrl]);
 
   const previewSrc =
-    launcherType === "default" ? "/widget-launcher.webm" : (localPreviewUrl ?? launcherAssetUrl);
+    launcherType === "default"
+      ? "/widget-launcher.webm"
+      : launcherType === "mascot"
+        ? MASCOT_PREVIEW_SRC
+        : (localPreviewUrl ?? launcherAssetUrl);
+
+  // Only "video" / "image" take a merchant upload. "default" and "mascot"
+  // both use a bundled shared asset.
+  const needsFile = launcherType === "video" || launcherType === "image";
 
   function chooseLauncher(next: LauncherType) {
     setLauncherType(next);
@@ -93,7 +105,7 @@ export function WidgetCustomizeCard({
   }
 
   async function save() {
-    if (launcherType !== "default" && !selectedFile && !launcherAssetUrl) {
+    if (needsFile && !selectedFile && !launcherAssetUrl) {
       setError(t("chooseFileError"));
       return;
     }
@@ -131,10 +143,17 @@ export function WidgetCustomizeCard({
     }
   }
 
-  const launcherOptions: { value: LauncherType; icon: typeof VideoIcon; label: string; hint: string }[] = [
+  const launcherOptions: {
+    value: LauncherType;
+    icon: typeof VideoIcon;
+    label: string;
+    hint: string;
+    beta?: boolean;
+  }[] = [
     { value: "default", icon: VideoIcon, label: t("launcherDefault"), hint: t("launcherDefaultHint", { name: agentName }) },
     { value: "video", icon: VideoIcon, label: t("launcherVideo"), hint: t("launcherVideoHint") },
     { value: "image", icon: ImageIcon, label: t("launcherImage"), hint: t("launcherImageHint") },
+    { value: "mascot", icon: VideoIcon, label: t("launcherMascot"), hint: t("launcherMascotHint"), beta: true },
   ];
 
   return (
@@ -148,7 +167,7 @@ export function WidgetCustomizeCard({
           <div className="flex flex-col gap-6">
             <div>
               <p className="mb-3 text-sm font-semibold text-on-surface">{t("launcherSectionTitle")}</p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {launcherOptions.map((option) => {
                   const Icon = option.icon;
                   const selected = launcherType === option.value;
@@ -170,14 +189,21 @@ export function WidgetCustomizeCard({
                         onChange={() => chooseLauncher(option.value)}
                       />
                       <Icon className={`h-5 w-5 ${selected ? "text-primary" : "text-on-surface-variant"}`} />
-                      <span className="text-sm font-medium text-on-surface">{option.label}</span>
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-on-surface">
+                        {option.label}
+                        {option.beta ? (
+                          <span className="rounded-full bg-tertiary-container px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide text-on-tertiary-container">
+                            {t("launcherBetaBadge")}
+                          </span>
+                        ) : null}
+                      </span>
                       <span className="text-xs text-on-surface-variant">{option.hint}</span>
                     </label>
                   );
                 })}
               </div>
 
-              {launcherType !== "default" ? (
+              {needsFile ? (
                 <div className="mt-3 flex items-center gap-3">
                   <Button
                     type="button"
@@ -250,26 +276,43 @@ export function WidgetCustomizeCard({
               className="relative h-64 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low"
               style={{ backgroundImage: "radial-gradient(#d9dadb 1px, transparent 1px)", backgroundSize: "14px 14px" }}
             >
-              <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2">
-                {greeting ? (
-                  <div className="max-w-[180px] rounded-2xl rounded-br-sm border border-outline-variant bg-surface-container-lowest px-3 py-2 text-xs text-on-surface shadow-level1">
-                    {greeting}
-                  </div>
-                ) : null}
-                <div className="h-16 w-16 overflow-hidden rounded-full border border-outline-variant bg-surface-container-lowest shadow-level1">
-                  {previewSrc ? (
-                    launcherType === "image" ? (
-                      // Arbitrary merchant-uploaded/blob-preview source, not a static
-                      // build asset next/image can optimize.
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={previewSrc} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <video src={previewSrc} autoPlay loop muted playsInline className="h-full w-full object-cover" />
-                    )
+              {launcherType === "mascot" ? (
+                // The mascot fills the corner rather than sitting in the
+                // launcher circle -- its own baked speech bubble replaces
+                // the greeting bubble, so that's hidden here too.
+                <video
+                  src={previewSrc ?? undefined}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute bottom-0 right-0 h-full w-auto max-w-full object-contain object-right-bottom"
+                />
+              ) : (
+                <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2">
+                  {greeting ? (
+                    <div className="max-w-[180px] rounded-2xl rounded-br-sm border border-outline-variant bg-surface-container-lowest px-3 py-2 text-xs text-on-surface shadow-level1">
+                      {greeting}
+                    </div>
                   ) : null}
+                  <div className="h-16 w-16 overflow-hidden rounded-full border border-outline-variant bg-surface-container-lowest shadow-level1">
+                    {previewSrc ? (
+                      launcherType === "image" ? (
+                        // Arbitrary merchant-uploaded/blob-preview source, not a static
+                        // build asset next/image can optimize.
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={previewSrc} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <video src={previewSrc} autoPlay loop muted playsInline className="h-full w-full object-cover" />
+                      )
+                    ) : null}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
+            {launcherType === "mascot" ? (
+              <p className="mt-2 text-xs text-on-surface-variant">{t("launcherMascotNote")}</p>
+            ) : null}
           </div>
         </div>
       </CardContent>

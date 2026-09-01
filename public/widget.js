@@ -36,6 +36,23 @@
   var launcherSrc = currentScript.getAttribute("data-launcher-src");
   var useCustomLauncher = (launcherType === "video" || launcherType === "image") && !!launcherSrc;
 
+  // BETA "mascot" launcher: a full-body character that walks in along the
+  // bottom of the page and greets the visitor, instead of the corner
+  // bubble. It needs desktop room and motion, so it falls back to the
+  // normal circular launcher on a narrow viewport or when the visitor has
+  // asked for reduced motion -- in that case launcherType stays "mascot"
+  // but there's no data-launcher-src, so the code below renders the shared
+  // default character video exactly as an un-customized widget would.
+  var prefersReducedMotion = false;
+  var isNarrowViewport = false;
+  try {
+    prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    isNarrowViewport = window.matchMedia("(max-width: 640px)").matches;
+  } catch {
+    // matchMedia unavailable -- treat as no reduced-motion, not narrow.
+  }
+  var mascotMode = launcherType === "mascot" && !prefersReducedMotion && !isNarrowViewport;
+
   // The Staffra origin is derived from the script's own src, never
   // hardcoded -- the same file works unmodified in local dev and
   // production, whatever domain it's actually served from.
@@ -45,6 +62,8 @@
   var LAUNCHER_ID = "staffra-widget-launcher";
   var PANEL_ID = "staffra-widget-panel";
   var TEASER_ID = "staffra-widget-teaser";
+  var MASCOT_ID = "staffra-widget-mascot";
+  var MASCOT_SEEN_KEY = "staffra-widget-mascot-seen:" + companySlug + ":" + agentSlug;
 
   var style = document.createElement("style");
   style.textContent = [
@@ -94,6 +113,15 @@
     "  align-items: center; justify-content: center;",
     "}",
     "#" + TEASER_ID + "-close:hover { background: #f3f4f5; }",
+    "#" + MASCOT_ID + " {",
+    "  position: fixed; bottom: 0; right: 0; z-index: 2147483000;",
+    "  width: min(640px, 74vw); border: none; background: transparent;",
+    "  padding: 0; margin: 0; cursor: pointer; line-height: 0;",
+    "  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.14));",
+    "  transition: opacity 0.2s ease;",
+    "}",
+    "#" + MASCOT_ID + " video { width: 100%; height: auto; display: block; pointer-events: none; }",
+    "#" + MASCOT_ID + ".staffra-widget-hidden { opacity: 0; pointer-events: none; }",
     "@media (max-width: 480px) {",
     "  #" + PANEL_ID + " {",
     "    inset: 0; bottom: 0; right: 0; width: 100%; height: 100%; max-width: 100%;",
@@ -194,6 +222,90 @@
     } else {
       open();
     }
+  }
+
+  if (mascotMode) {
+    // A full-body character instead of the corner button + teaser bubble.
+    // The whole choreography (walks in from the right, stops, greets) is
+    // baked into the clip, so there's nothing to animate here -- just place
+    // it, play it once, and let it hold on its last frame.
+    var mascot = document.createElement("button");
+    mascot.id = MASCOT_ID;
+    mascot.type = "button";
+    mascot.setAttribute("aria-label", "Open chat");
+
+    var mascotVideo = document.createElement("video");
+    // HEVC-with-alpha is the only transparent-video format Safari accepts,
+    // so it's listed first -- Safari would otherwise play the WebM opaque.
+    // Every other browser skips the codec it can't decode and uses the WebM.
+    var sourceMov = document.createElement("source");
+    sourceMov.src = staffraOrigin + "/mascot-greeting-with-bubble.mov";
+    sourceMov.type = 'video/quicktime; codecs="hvc1"';
+    var sourceWebm = document.createElement("source");
+    sourceWebm.src = staffraOrigin + "/mascot-greeting-with-bubble.webm";
+    sourceWebm.type = "video/webm";
+    mascotVideo.appendChild(sourceMov);
+    mascotVideo.appendChild(sourceWebm);
+    mascotVideo.muted = true;
+    mascotVideo.playsInline = true;
+    mascotVideo.loop = false;
+    mascotVideo.setAttribute("aria-hidden", "true");
+
+    var mascotSeen = false;
+    try {
+      mascotSeen = !!window.localStorage.getItem(MASCOT_SEEN_KEY);
+    } catch {
+      // Storage unavailable -- treat as a first visit; worst case the
+      // walk-in just plays once more than it strictly needed to.
+    }
+    if (mascotSeen) {
+      // A returning visitor skips the walk-in -- jump to the last frame,
+      // where the mascot is already standing there mid-greet.
+      mascotVideo.addEventListener("loadedmetadata", function () {
+        try {
+          mascotVideo.currentTime = Math.max(0, mascotVideo.duration - 0.05);
+        } catch {
+          // A seek before the first frame decodes is refused in some
+          // browsers -- harmless, it just plays from the start instead.
+        }
+      });
+    } else {
+      mascotVideo.autoplay = true;
+      mascotVideo.addEventListener(
+        "playing",
+        function () {
+          try {
+            window.localStorage.setItem(MASCOT_SEEN_KEY, "1");
+          } catch {
+            // Fine -- the walk-in simply replays next visit.
+          }
+        },
+        { once: true },
+      );
+    }
+
+    mascot.appendChild(mascotVideo);
+
+    // The mascot is large and sits exactly where the panel opens, so it's
+    // hidden while the chat is open and brought back (holding its end pose)
+    // on close. In mascot mode the only close path is the chat iframe's own
+    // button posting back to us -- there's no corner launcher to toggle.
+    mascot.addEventListener("click", function () {
+      mascot.classList.add("staffra-widget-hidden");
+      open();
+    });
+
+    window.addEventListener("message", function (event) {
+      if (event.origin !== staffraOrigin) return;
+      if (event.data && event.data.type === "staffra-chat:close") {
+        close();
+        mascot.classList.remove("staffra-widget-hidden");
+      }
+    });
+
+    document.body.appendChild(panel);
+    document.body.appendChild(mascot);
+    return;
   }
 
   launcher.addEventListener("click", toggle);
