@@ -28,6 +28,15 @@
       "passwordTooShort": "A senha deve ter pelo menos 6 caracteres."
     }
   },
+  "Onboarding": {
+    "title": "Configure seu negócio",
+    "subtitle": "É isso que sua equipe representa ao falar com seus clientes. Você pode mudar quando quiser nas configurações.",
+    "nameLabel": "Nome do negócio",
+    "namePlaceholder": "ex.: Jorginho & Cia",
+    "nameMissing": "Digite o nome do seu negócio.",
+    "continue": "Continuar",
+    "error": "Algo deu errado ao criar seu negócio. Tente novamente."
+  },
   "CheckoutLink": {
     "title": "Este link não está mais disponível",
     "body": "O link que você abriu é inválido ou expirou. Mande uma mensagem para a loja de novo que eles enviam um novo."
@@ -300,10 +309,6 @@
     "hireButton": "Contratar {name}",
     "mockPaymentTitle": "Confirme e pague",
     "mockPaymentSubtitle": "Esta é uma prévia do fluxo de contratação — nenhum pagamento é cobrado ainda.",
-    "businessNameLabel": "Nome do negócio",
-    "businessNamePlaceholder": "ex.: Luna Cosméticos",
-    "businessNameMissing": "Informe o nome do seu negócio para começar.",
-    "companyCreateError": "Não foi possível salvar o nome do seu negócio. Tente novamente.",
     "cardNumberLabel": "Número do cartão",
     "cardNameLabel": "Nome no cartão",
     "cardExpiryLabel": "Validade",
@@ -319,8 +324,6 @@
   "Settings": {
     "pageTitle": "Configurações do negócio",
     "pageSubtitle": "O que sua equipe sabe ao conversar com os clientes.",
-    "noCompany": "Contrate o primeiro integrante da sua equipe para começar a configurar o seu negócio.",
-    "browseMarketplace": "Ver marketplace",
     "completeness": "{filled} de {total} seções preenchidas",
     "completenessHint": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
     "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",

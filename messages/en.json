@@ -28,6 +28,15 @@
       "passwordTooShort": "Password must be at least 6 characters."
     }
   },
+  "Onboarding": {
+    "title": "Set up your business",
+    "subtitle": "This is what your team represents when they talk to your customers. You can change it any time in settings.",
+    "nameLabel": "Business name",
+    "namePlaceholder": "e.g. Jorginho & Cia",
+    "nameMissing": "Enter your business name.",
+    "continue": "Continue",
+    "error": "Something went wrong creating your business. Please try again."
+  },
   "CheckoutLink": {
     "title": "This link is no longer available",
     "body": "The link you opened is invalid or has expired. Send a message to the store again and they will share a new one."
@@ -300,10 +309,6 @@
     "hireButton": "Hire {name}",
     "mockPaymentTitle": "Confirm and pay",
     "mockPaymentSubtitle": "This is a preview of the hiring flow — no payment is actually charged yet.",
-    "businessNameLabel": "Business name",
-    "businessNamePlaceholder": "e.g. Luna Skincare",
-    "businessNameMissing": "Enter your business name to get started.",
-    "companyCreateError": "Couldn't save your business name. Please try again.",
     "cardNumberLabel": "Card number",
     "cardNameLabel": "Name on card",
     "cardExpiryLabel": "Expiry",
@@ -319,8 +324,6 @@
   "Settings": {
     "pageTitle": "Business settings",
     "pageSubtitle": "What your team knows when they talk to your customers.",
-    "noCompany": "Hire your first team member to start setting up your business.",
-    "browseMarketplace": "Browse the marketplace",
     "completeness": "{filled} of {total} sections filled in",
     "completenessHint": "The more detail you add here, the better your team can help your customers — just like onboarding a new employee in person.",
     "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",

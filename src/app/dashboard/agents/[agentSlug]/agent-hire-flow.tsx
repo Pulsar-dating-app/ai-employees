@@ -44,7 +44,7 @@ export function AgentHireFlow({
   should: string[];
   never: string[];
   monthlyPriceBRL: number;
-  companyId: string | null;
+  companyId: string;
   initialIsHired: boolean;
   showDevChatTest: boolean;
 }) {
@@ -55,41 +55,14 @@ export function AgentHireFlow({
   const router = useRouter();
 
   const [stage, setStage] = useState<Stage>(initialIsHired ? "hired" : "browsing");
-  const [businessName, setBusinessName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleConfirmHire() {
     setErrorMessage(null);
-    let effectiveCompanyId = companyId;
+    setIsSubmitting(true);
 
-    if (!effectiveCompanyId) {
-      const trimmed = businessName.trim();
-      if (!trimmed) {
-        setErrorMessage(t("businessNameMissing"));
-        return;
-      }
-
-      setIsSubmitting(true);
-      const companyRes = await fetch("/api/companies", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmed }),
-      });
-
-      if (!companyRes.ok) {
-        setErrorMessage(t("companyCreateError"));
-        setIsSubmitting(false);
-        return;
-      }
-
-      const { company } = await companyRes.json();
-      effectiveCompanyId = company.id;
-    } else {
-      setIsSubmitting(true);
-    }
-
-    const hireRes = await fetch(`/api/companies/${effectiveCompanyId}/agents/${agentSlug}`, {
+    const hireRes = await fetch(`/api/companies/${companyId}/agents/${agentSlug}`, {
       method: "POST",
     });
 
@@ -178,18 +151,9 @@ export function AgentHireFlow({
                 <p className="mt-1 text-sm text-on-surface-variant">{t("mockPaymentSubtitle")}</p>
               </div>
 
-              {!companyId ? (
-                <Input
-                  label={t("businessNameLabel")}
-                  placeholder={t("businessNamePlaceholder")}
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                />
-              ) : null}
-
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Input label={t("cardNumberLabel")} value="4242 4242 4242 4242" disabled />
-                <Input label={t("cardNameLabel")} value={businessName || name} disabled />
+                <Input label={t("cardNameLabel")} value={name} disabled />
                 <Input label={t("cardExpiryLabel")} value="12/30" disabled />
                 <Input label={t("cardCvcLabel")} value="123" disabled />
               </div>

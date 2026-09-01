@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "./sidebar";
@@ -30,6 +31,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     supabase.from("company_agents").select("agents(slug)"),
     getLocale(),
   ]);
+
+  // The single guarantee that every /dashboard/* page can assume a company
+  // exists: a signed-in user without one is sent to set it up first.
+  // Company creation lives only in /onboarding now — not the hire flow, not
+  // Settings.
+  if (user && (!companies || companies.length === 0)) {
+    redirect("/onboarding");
+  }
 
   const hiredAgentSlugs = ((hired ?? []) as unknown as { agents: { slug: string } | null }[])
     .map((row) => row.agents?.slug)
