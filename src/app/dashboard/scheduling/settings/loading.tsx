@@ -11,6 +11,7 @@ export default function SchedulingSettingsLoading() {
         <Skeleton className="h-[28rem] w-full" />
         <Skeleton className="h-40 w-full" />
         <Skeleton className="h-56 w-full" />
+        <Skeleton className="h-48 w-full" />
       </div>
     </div>
   );

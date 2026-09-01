@@ -13,15 +13,26 @@ export function SettingsSection({
   title,
   subtitle,
   children,
+  id,
 }: {
   icon: IconComponent;
   iconTone?: "primary" | "secondary";
   title: string;
   subtitle: string;
   children: React.ReactNode;
+  // When set, the section is an anchor target (e.g. the Appointments rail
+  // links to #google-calendar) — `scroll-mt` keeps it clear of the sticky
+  // top bar after the jump.
+  id?: string;
 }) {
   return (
-    <section className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-level1">
+    <section
+      id={id}
+      className={clsx(
+        "rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-level1",
+        id && "scroll-mt-24",
+      )}
+    >
       <div className="mb-5 flex items-center gap-3 border-b border-outline-variant/40 pb-4">
         <span
           className={clsx(

@@ -29,6 +29,7 @@ declare global {
             scope: string;
             ux_mode: "popup";
             callback: (response: { code?: string; error?: string }) => void;
+            error_callback?: (error: { type?: string }) => void;
           }): GoogleCodeClient;
         };
       };
