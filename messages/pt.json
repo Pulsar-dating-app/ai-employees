@@ -193,6 +193,14 @@
       "conversations": "Conversas",
       "metrics": "Desempenho",
       "settings": "Configurações"
+    },
+    "locked": {
+      "title": "{name} ainda não faz parte da sua equipe",
+      "body": "Esta página faz parte do que {name} faz. Contrate {name} para desbloqueá-la.",
+      "cta": "Conhecer {name}",
+      "metricsTitle": "Contrate alguém para ver o desempenho",
+      "metricsBody": "Depois de contratar um integrante da equipe, é aqui que você acompanha o desempenho dele.",
+      "metricsCta": "Explorar o marketplace"
     }
   },
   "Metrics": {
@@ -226,6 +234,18 @@
       "checkoutClicks": {
         "label": "Cliques para o checkout",
         "caption": "Cliques em um link para a sua loja"
+      },
+      "appointmentsBooked": {
+        "label": "Agendamentos feitos",
+        "caption": "Agendamentos criados no período"
+      },
+      "appointmentsCompleted": {
+        "label": "Concluídos",
+        "caption": "Agendamentos marcados como concluídos"
+      },
+      "appointmentsCancelled": {
+        "label": "Cancelados",
+        "caption": "Agendamentos que foram cancelados"
       }
     },
     "notASale": "Um clique para o checkout significa que o cliente abriu sua loja, não que uma venda foi concluída.",
@@ -241,7 +261,8 @@
       "notHiredCta": "Ir para o marketplace"
     },
     "noCompany": "Crie sua empresa para começar a acompanhar o desempenho.",
-    "browseMarketplace": "Explorar o marketplace"
+    "browseMarketplace": "Explorar o marketplace",
+    "agentSelectLabel": "Integrante"
   },
   "Marketplace": {
     "pageTitle": "Conheça sua equipe",

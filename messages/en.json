@@ -193,6 +193,14 @@
       "conversations": "Conversations",
       "metrics": "Performance",
       "settings": "Settings"
+    },
+    "locked": {
+      "title": "{name} isn't on your team yet",
+      "body": "This page is part of what {name} does. Hire {name} to unlock it.",
+      "cta": "Meet {name}",
+      "metricsTitle": "Hire someone to see how they are doing",
+      "metricsBody": "Once you've hired a team member, this is where you'll follow their performance.",
+      "metricsCta": "Browse the marketplace"
     }
   },
   "Metrics": {
@@ -226,6 +234,18 @@
       "checkoutClicks": {
         "label": "Checkout clicks",
         "caption": "Taps on a link through to your store"
+      },
+      "appointmentsBooked": {
+        "label": "Appointments booked",
+        "caption": "Bookings made in this period"
+      },
+      "appointmentsCompleted": {
+        "label": "Completed",
+        "caption": "Bookings marked completed"
+      },
+      "appointmentsCancelled": {
+        "label": "Cancelled",
+        "caption": "Bookings that were cancelled"
       }
     },
     "notASale": "A checkout click means a customer opened your store, not that a sale was completed.",
@@ -241,7 +261,8 @@
       "notHiredCta": "Go to marketplace"
     },
     "noCompany": "Create your business to start tracking performance.",
-    "browseMarketplace": "Browse the marketplace"
+    "browseMarketplace": "Browse the marketplace",
+    "agentSelectLabel": "Team member"
   },
   "Marketplace": {
     "pageTitle": "Meet your team",
