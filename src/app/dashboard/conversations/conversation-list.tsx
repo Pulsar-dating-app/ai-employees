@@ -70,7 +70,12 @@ export function ConversationList({
               className="cursor-pointer border-b border-outline-variant/60 hover:bg-surface-container-low"
             >
               <td className="py-3 pr-3">
-                <div className="font-medium text-on-surface">{c.customer.displayName}</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-on-surface">{c.customer.displayName}</span>
+                  <span className="inline-flex items-center rounded-full bg-surface-container px-2 py-0.5 text-label-sm text-on-surface-variant">
+                    {t(`channel.${c.channel}`)}
+                  </span>
+                </div>
                 {c.lastMessage ? (
                   <div className="mt-0.5 max-w-md truncate text-on-surface-variant">{c.lastMessage.content}</div>
                 ) : null}

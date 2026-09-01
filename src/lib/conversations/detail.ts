@@ -9,6 +9,7 @@ import { agentPhoto } from "@/lib/agents/media";
 export type ConversationDetail = {
   id: string;
   status: string;
+  channel: string;
   createdAt: string;
   updatedAt: string;
   customer: { id: string; displayName: string };
@@ -30,7 +31,6 @@ export async function getConversationDetail(
     )
     .eq("id", conversationId)
     .eq("company_id", companyId)
-    .eq("channel", "web_chat")
     .maybeSingle();
   if (convError) return { error: convError.message, status: 500 };
   if (!conv) return { error: "Not found", status: 404 };
@@ -64,6 +64,7 @@ export async function getConversationDetail(
     conversation: {
       id: conv.id,
       status: conv.status as string,
+      channel: conv.channel as string,
       createdAt: conv.created_at,
       updatedAt: conv.updated_at,
       customer: {

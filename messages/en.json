@@ -866,10 +866,14 @@
   },
   "Conversations": {
     "pageTitle": "Conversations",
-    "pageSubtitle": "See what your team is telling customers on web chat, and step in when needed.",
+    "pageSubtitle": "See what your team is telling customers, and step in when needed.",
     "noCompany": "Hire your first team member to start seeing conversations.",
     "browseMarketplace": "Browse the marketplace",
     "backToConversations": "Back to conversations",
+    "channel": {
+      "web_chat": "Website chat",
+      "instagram": "Instagram"
+    },
     "filters": {
       "status": {
         "all": "All",
@@ -880,7 +884,7 @@
       "searchLabel": "Search",
       "searchPlaceholder": "Search by customer name or phone…",
       "searchButton": "Search",
-      "searchHint": "Search only matches a customer's name or phone — most web chat visitors haven't shared either yet, so this won't find much until they do.",
+      "searchHint": "Search only matches a customer's name or phone — most customers haven't shared either yet, so this won't find much until they do.",
       "emptyState": "No conversations yet.",
       "previousPage": "Previous",
       "nextPage": "Next",
@@ -907,13 +911,17 @@
       "inputPlaceholder": "Write a reply…",
       "sendButton": "Send",
       "sendError": "Something went wrong sending that. Please try again.",
+      "deliveryFailed": "Your reply was saved, but we couldn't deliver it to the customer — this can happen if it's been more than 24 hours since they last messaged.",
       "detailsTitle": "Details",
       "detailsCustomer": "Customer",
       "detailsChannel": "Channel",
       "detailsAgent": "Agent",
       "detailsMessageCount": "Messages",
       "detailsNoAgent": "None",
-      "channelWebChat": "Website chat"
+      "channel": {
+        "web_chat": "Website chat",
+        "instagram": "Instagram"
+      }
     }
   },
   "Chat": {
