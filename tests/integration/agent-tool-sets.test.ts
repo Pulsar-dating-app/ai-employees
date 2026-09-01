@@ -129,6 +129,26 @@ describe("per-agent tool sets (J2)", () => {
     }
   });
 
+  it("drops request_human from every agent's tools when the company disables handoff", async () => {
+    await shared.owner.client
+      .from("companies")
+      .update({ allow_human_handoff: false })
+      .eq("id", shared.companyId);
+
+    try {
+      for (const slug of ["malu", "ana"]) {
+        const names = await toolNamesOfferedTo(slug);
+        expect(names, slug).not.toContain("request_human");
+        expect(names, slug).toContain("get_business_information");
+      }
+    } finally {
+      await shared.owner.client
+        .from("companies")
+        .update({ allow_human_handoff: true })
+        .eq("id", shared.companyId);
+    }
+  });
+
   it("still lets deps.tools override the per-agent set entirely", async () => {
     // How every other test in the suite drives the loop with fakes -- if the
     // slug filter applied on top of an explicit list, those would break.

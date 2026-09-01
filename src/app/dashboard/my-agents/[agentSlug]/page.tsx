@@ -12,6 +12,7 @@ import { AgentPersonaCard } from "../agent-persona-card";
 import { WebChatChannelCard } from "./web-chat-channel-card";
 import { InstagramConnectCard } from "./instagram-connect-card";
 import { AvailabilityCard } from "./availability-card";
+import { HumanHandoffCard } from "./human-handoff-card";
 import { DevChatTest } from "../../dev-chat-test";
 
 // A hired team member's own page is scoped to *how customers reach them* —
@@ -40,7 +41,7 @@ export default async function AgentConnectionsPage({
       .eq("slug", agentSlug)
       .eq("is_active", true)
       .maybeSingle(),
-    supabase.from("companies").select("id, slug"),
+    supabase.from("companies").select("id, slug, allow_human_handoff"),
     supabase.auth.getUser(),
   ]);
   if (!agent) notFound();
@@ -123,6 +124,12 @@ export default async function AgentConnectionsPage({
             agentName={name}
             initialActive={companyAgent.status === "active"}
             canEdit={canEdit}
+          />
+          <HumanHandoffCard
+            companyId={company.id}
+            agentName={name}
+            canEdit={canEdit}
+            initialAllowHumanHandoff={company.allow_human_handoff}
           />
           <Suspense fallback={null}>
             <InstagramConnectCard companyId={company.id} agentSlug={agentSlug} canEdit={canEdit} />

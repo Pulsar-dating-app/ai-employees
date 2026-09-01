@@ -14,6 +14,7 @@ import {
   BarChartIcon,
   SettingsIcon,
   LogoutIcon,
+  ChatIcon,
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
@@ -25,6 +26,9 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 const NAV_ITEMS = [
   { href: "/dashboard", key: "marketplace" as const, icon: SearchIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
   { href: "/dashboard/my-agents", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p.startsWith("/dashboard/my-agents") },
+  // F5 -- not gated by requiresAgent: conversations aren't specific to one
+  // agent the way Products (Malu) / Scheduling (Ana) are.
+  { href: "/dashboard/conversations", key: "conversations" as const, icon: ChatIcon, match: (p: string) => p.startsWith("/dashboard/conversations") },
   { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, requiresAgent: "malu", match: (p: string) => p.startsWith("/dashboard/products") },
   { href: "/dashboard/scheduling", key: "scheduling" as const, icon: CalendarIcon, requiresAgent: "ana", match: (p: string) => p.startsWith("/dashboard/scheduling") },
   { href: "/dashboard/metrics", key: "metrics" as const, icon: BarChartIcon, match: (p: string) => p.startsWith("/dashboard/metrics") },

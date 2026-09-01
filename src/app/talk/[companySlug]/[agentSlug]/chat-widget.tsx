@@ -6,7 +6,14 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { SendIcon, XIcon } from "@/components/ui/icons";
 
-type ChatMessage = { role: "customer" | "agent"; content: string; created_at: string };
+// F5 -- 'merchant' is a human teammate replying manually from the
+// Conversations dashboard (as opposed to 'agent', the AI's own reply).
+// Rendered identically to 'agent' here -- the customer sees one consistent
+// "business" bubble style regardless of who's actually typing; the only
+// visible sign a human joined is the one-time banner below.
+type ChatMessage = { role: "customer" | "agent" | "merchant"; content: string; created_at: string };
+
+const POLL_INTERVAL_MS = 5000;
 
 const SESSION_STORAGE_PREFIX = "staffra-chat-session";
 
@@ -111,32 +118,49 @@ export function ChatWidget({
     sessionIdRef.current = sessionId;
     let cancelled = false;
 
-    const embeddedOnParam = isEmbedded ? `&embeddedOn=${encodeURIComponent(document.referrer)}` : "";
+    function fetchHistory() {
+      const embeddedOnParam = isEmbedded ? `&embeddedOn=${encodeURIComponent(document.referrer)}` : "";
 
-    fetch(`/api/chat/${companySlug}/${agentSlug}?sessionId=${sessionId}${embeddedOnParam}`)
-      .then((res) => {
-        // page.tsx already confirmed the agent is actively hired before
-        // ChatWidget ever rendered -- once embedded, the only new reason
-        // this specific request can 403 is the domain allowlist (M1/M3),
-        // so a 403 here is unambiguous, no error-message-text parsing
-        // needed.
-        if (isEmbedded && res.status === 403) {
-          if (!cancelled) setIsBlockedHere(true);
-          return { messages: [] };
-        }
-        return res.ok ? res.json() : { messages: [] };
-      })
-      .then((data) => {
-        if (!cancelled) setMessages(data.messages ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) setMessages([]);
-      });
+      return fetch(`/api/chat/${companySlug}/${agentSlug}?sessionId=${sessionId}${embeddedOnParam}`)
+        .then((res) => {
+          // page.tsx already confirmed the agent is actively hired before
+          // ChatWidget ever rendered -- once embedded, the only new reason
+          // this specific request can 403 is the domain allowlist (M1/M3),
+          // so a 403 here is unambiguous, no error-message-text parsing
+          // needed.
+          if (isEmbedded && res.status === 403) {
+            if (!cancelled) setIsBlockedHere(true);
+            return { messages: [] };
+          }
+          return res.ok ? res.json() : { messages: [] };
+        })
+        .then((data) => {
+          if (!cancelled) setMessages(data.messages ?? []);
+        })
+        .catch(() => {
+          if (!cancelled) setMessages([]);
+        });
+    }
+
+    // F5 -- a merchant's manual reply is sent from an entirely separate
+    // dashboard session, so it can only ever reach this page by polling.
+    // Both the immediate call and the recurring interval are skipped while
+    // a send is in flight (isSending), so a poll can never race the
+    // optimistic-append-then-POST sequence in handleSend.
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    if (isSending) {
+      // Nothing to do -- handleSend owns the message list until its own
+      // POST resolves; this effect re-runs once isSending flips back.
+    } else {
+      fetchHistory();
+      intervalId = setInterval(fetchHistory, POLL_INTERVAL_MS);
+    }
 
     return () => {
       cancelled = true;
+      if (intervalId) clearInterval(intervalId);
     };
-  }, [companySlug, agentSlug, isEmbedded]);
+  }, [companySlug, agentSlug, isEmbedded, isSending]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -170,8 +194,13 @@ export function ChatWidget({
       return;
     }
 
+    // `reply` is null when the conversation is paused (F5) -- a human is
+    // expected to handle it, so there's genuinely no AI reply to show. The
+    // customer's own message (already appended above, and persisted
+    // server-side regardless) is the only thing that changes; polling will
+    // pick up a merchant's eventual manual reply.
     const { reply } = await res.json();
-    setMessages((prev) => [...(prev ?? []), reply]);
+    if (reply) setMessages((prev) => [...(prev ?? []), reply]);
   }
 
   // "*" as the target origin is correct here, not a shortcut -- the widget
@@ -184,6 +213,7 @@ export function ChatWidget({
   }
 
   let lastDayLabel: string | null = null;
+  let teamJoinedShown = false;
 
   return (
     <div className="flex h-screen flex-col bg-surface">
@@ -226,6 +256,12 @@ export function ChatWidget({
               const showDivider = label !== lastDayLabel;
               lastDayLabel = label;
 
+              // F5 -- shown once, immediately before the first human reply
+              // in the whole history. Never re-shown for later merchant
+              // messages in the same conversation.
+              const showTeamJoined = m.role === "merchant" && !teamJoinedShown;
+              if (showTeamJoined) teamJoinedShown = true;
+
               return (
                 <div key={i} className="flex flex-col gap-6">
                   {showDivider ? (
@@ -236,7 +272,15 @@ export function ChatWidget({
                     </div>
                   ) : null}
 
-                  {m.role === "agent" ? (
+                  {showTeamJoined ? (
+                    <div className="flex justify-center">
+                      <span className="rounded-full bg-tertiary-container/10 px-3 py-1 text-label-sm text-tertiary-container">
+                        {t("teamJoined")}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {m.role === "agent" || m.role === "merchant" ? (
                     <div className="flex w-full max-w-[85%] gap-3">
                       <AgentAvatarCircle photoSrc={agentPhotoSrc} name={agentName} size="bubble" />
                       <div className="rounded-2xl rounded-tl-sm border border-outline-variant/30 bg-surface-container-lowest p-4 text-body-md text-on-surface shadow-level1">

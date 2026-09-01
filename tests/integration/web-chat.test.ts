@@ -229,4 +229,51 @@ describe("Public chat API GET/POST /api/chat/:companySlug/:agentSlug", () => {
     });
     expect(res.status).toBe(429);
   });
+
+  it("F5 -- a paused conversation gets no AI reply, but the customer's message is still persisted", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Paused Conversation Co");
+    await hireMalu(owner.cookieHeader, company.id);
+
+    const { data: agent } = await getTestServiceClient().from("agents").select("id").eq("slug", "malu").single();
+    const sessionId = randomUUID();
+    const svc = getTestServiceClient();
+
+    const { data: customer } = await svc
+      .from("customers")
+      .insert({ company_id: company.id, channel: "web_chat", web_chat_session_id: sessionId })
+      .select("id")
+      .single();
+    const { data: conversation } = await svc
+      .from("conversations")
+      .insert({
+        company_id: company.id,
+        agent_id: (agent as { id: string }).id,
+        customer_id: (customer as { id: string }).id,
+        channel: "web_chat",
+        status: "paused",
+      })
+      .select("id")
+      .single();
+    const conversationId = (conversation as { id: string }).id;
+
+    const res = await api<{ reply: null }>("POST", `/api/chat/${company.slug}/malu`, undefined, {
+      sessionId,
+      message: "Are you still there?",
+    });
+    expect(res.status).toBe(200);
+    expect(res.json.reply).toBeNull();
+
+    // The customer's own message is never lost while paused -- a human is
+    // expected to see it, even though the AI didn't reply.
+    expect(await countMessages(conversationId)).toBe(1);
+
+    // And it doesn't get orphaned into a brand-new conversation either --
+    // resolveWebChatSession must still find this same paused one.
+    const { count: conversationCount } = await svc
+      .from("conversations")
+      .select("id", { count: "exact", head: true })
+      .eq("customer_id", (customer as { id: string }).id);
+    expect(conversationCount).toBe(1);
+  });
 });

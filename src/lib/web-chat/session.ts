@@ -36,17 +36,23 @@ export async function resolveWebChatSession(
     customer = newCustomer;
   }
 
-  // Most recent *active* conversation for this customer+agent -- a closed
+  // Most recent *open* conversation for this customer+agent -- a closed
   // one from a past rotation is never picked back up. Same 24h staleness
   // window as dev-chat-test (WhatsApp's own customer-service session
   // window, not an arbitrary number).
+  //
+  // 'paused' (F5) counts as open here, not just 'active': a paused
+  // conversation is awaiting a human, not finished -- excluding it would
+  // mean the customer's very next message silently orphans it into a
+  // brand-new conversation instead of continuing the one a merchant may
+  // already be looking at.
   const { data: activeConversations, error: conversationError } = await supabase
     .from("conversations")
     .select("id, updated_at")
     .eq("company_id", companyId)
     .eq("customer_id", customer.id)
     .eq("agent_id", agentId)
-    .eq("status", "active")
+    .in("status", ["active", "paused"])
     .order("created_at", { ascending: false })
     .limit(1);
   if (conversationError) throw new Error(conversationError.message);
