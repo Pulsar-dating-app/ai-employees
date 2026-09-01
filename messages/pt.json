@@ -32,7 +32,7 @@
     "title": "Configure seu negócio",
     "subtitle": "É isso que sua equipe representa ao falar com seus clientes. Você pode mudar quando quiser nas configurações.",
     "nameLabel": "Nome do negócio",
-    "namePlaceholder": "ex.: Jorginho & Cia",
+    "namePlaceholder": "ex.: abc LTDA",
     "nameMissing": "Digite o nome do seu negócio.",
     "continue": "Continuar",
     "error": "Algo deu errado ao criar seu negócio. Tente novamente."
