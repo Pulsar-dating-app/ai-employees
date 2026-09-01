@@ -873,5 +873,227 @@
     "closeButton": "Fechar chat",
     "unavailableHere": "Este chat ainda não está configurado para aparecer neste site.",
     "teamJoined": "Um integrante da equipe entrou na conversa"
+  },
+  "Legal": {
+    "nav": {
+      "back": "Voltar para o início",
+      "home": "Início"
+    },
+    "toc": "Nesta página",
+    "lastUpdated": "Última atualização em {date}",
+    "privacy": {
+      "title": "Política de Privacidade",
+      "date": "1 de setembro de 2026",
+      "intro": "Esta Política de Privacidade explica como a Staffra AI (\"Staffra\", \"nós\") coleta, usa, compartilha e protege dados pessoais quando você utiliza nosso site, painel e serviços (em conjunto, o \"Serviço\"). Ela também descreve as opções que você tem sobre seus dados. Ao usar o Serviço, você concorda com as práticas descritas aqui.",
+      "sections": [
+        {
+          "heading": "1. Quem esta política abrange",
+          "paragraphs": [
+            "Esta política se aplica a dois grupos. Primeiro, as empresas e os integrantes de suas equipes que criam uma conta na Staffra para contratar e gerenciar funcionários de IA (\"Clientes\"). Segundo, os consumidores finais dessas empresas que trocam mensagens com um funcionário de IA por canais como WhatsApp, Instagram ou chat no site (\"Usuários Finais\").",
+            "Em relação aos dados de Usuários Finais, a empresa que opera o funcionário de IA é a controladora desses dados e a Staffra atua como operadora. A política de privacidade dessa empresa rege como ela usa os dados de conversa que coleta por meio da Staffra."
+          ]
+        },
+        {
+          "heading": "2. Dados que coletamos",
+          "paragraphs": [
+            "Dados de conta: nome, e-mail, senha, nome da empresa e função, fornecidos quando um Cliente se cadastra ou é convidado para uma equipe.",
+            "Informações do negócio: descrições, políticas, catálogo de produtos, preços, horários de atendimento e outros conteúdos que o Cliente adiciona para que seus funcionários de IA respondam com precisão.",
+            "Conteúdo das conversas: as mensagens, anexos e identificadores de contato (como telefone ou usuário de rede social) trocados entre um Usuário Final e um funcionário de IA, além de agendamentos, pedidos ou links de pagamento gerados durante a conversa.",
+            "Dados de conexão: tokens e identificadores de conta que armazenamos quando um Cliente conecta um canal ou ferramenta de terceiros, como uma plataforma de mensagens ou uma agenda.",
+            "Dados de uso e dispositivo: registros de acesso, endereço IP, tipo de navegador, páginas visualizadas e ações realizadas no painel, coletados automaticamente para operar e proteger o Serviço.",
+            "Cookies: usamos cookies estritamente necessários para manter você conectado e lembrar sua preferência de idioma. Não usamos cookies de publicidade."
+          ]
+        },
+        {
+          "heading": "3. Como usamos os dados",
+          "paragraphs": [
+            "Para fornecer, manter e melhorar o Serviço, incluindo permitir que funcionários de IA respondam dúvidas, façam agendamentos e criem links de pagamento em nome do Cliente.",
+            "Para autenticar usuários, proteger contas, prevenir fraudes e abusos e fazer cumprir nossos Termos de Serviço.",
+            "Para prestar suporte, responder solicitações e enviar avisos relacionados ao Serviço, como alertas de segurança e mudanças em nossos termos ou políticas.",
+            "Para analisar o uso de forma agregada e entender quais recursos são úteis, melhorando desempenho e confiabilidade.",
+            "Para cumprir obrigações legais e para exercer ou defender direitos em processos."
+          ]
+        },
+        {
+          "heading": "4. Processamento automatizado por provedores de IA",
+          "paragraphs": [
+            "Os funcionários de IA geram respostas usando modelos de linguagem de grande escala operados por provedores terceiros de confiança. Para produzir uma resposta, o conteúdo da conversa e as informações do negócio necessárias como contexto são enviados a esse provedor para processamento e retornados à Staffra.",
+            "Nossos provedores são obrigados por contrato a processar esses dados apenas para entregar a resposta e a não usá-los para treinar seus modelos gerais. Não vendemos dados pessoais e não usamos o conteúdo das conversas para publicidade."
+          ]
+        },
+        {
+          "heading": "5. Como compartilhamos dados",
+          "paragraphs": [
+            "Prestadores de serviço: hospedagem em nuvem, banco de dados, envio de e-mails, monitoramento de erros e os provedores de IA descritos acima, cada um atuando conforme nossas instruções sob um contrato de tratamento de dados.",
+            "Plataformas de mensagens e agenda: quando um Cliente conecta um canal como WhatsApp ou Instagram, ou uma agenda, trocamos os dados necessários para enviar e receber mensagens ou gerenciar eventos por essa plataforma, sujeitos aos termos dela.",
+            "Processadores de pagamento: quando um link de pagamento é usado, o pagamento é tratado por um processador terceiro; a Staffra não coleta nem armazena números de cartão.",
+            "Dentro da equipe do Cliente: os dados de conta e de conversas ficam visíveis para outros integrantes autorizados da mesma conta empresarial, conforme a função de cada um.",
+            "Questões legais e de segurança: podemos divulgar dados se exigido por lei, regulamento ou processo legal, ou para proteger os direitos, a propriedade ou a segurança da Staffra, de nossos Clientes ou do público.",
+            "Transações societárias: se a Staffra participar de uma fusão, aquisição ou venda de ativos, os dados poderão ser transferidos como parte da operação, sujeitos a esta política."
+          ]
+        },
+        {
+          "heading": "6. Transferências internacionais",
+          "paragraphs": [
+            "A Staffra é operada a partir do Brasil e utiliza infraestrutura e provedores que podem estar localizados em outros países, incluindo Estados Unidos e União Europeia. Quando dados pessoais são transferidos entre países, adotamos salvaguardas adequadas, como cláusulas contratuais padrão e as proteções oferecidas por nossos provedores."
+          ]
+        },
+        {
+          "heading": "7. Retenção de dados",
+          "paragraphs": [
+            "Mantemos os dados de conta e do negócio enquanto a conta do Cliente estiver ativa. Os dados de conversas são mantidos enquanto forem necessários para operar o Serviço e por um período razoável depois, para fins de segurança, resolução de disputas e cumprimento legal.",
+            "O Cliente pode excluir conteúdos do negócio e desconectar canais a qualquer momento pelo painel. Quando uma conta é encerrada, excluímos ou anonimizamos os dados pessoais associados em um prazo razoável, exceto quando precisarmos mantê-los para cumprir uma obrigação legal."
+          ]
+        },
+        {
+          "heading": "8. Segurança",
+          "paragraphs": [
+            "Protegemos os dados com criptografia em trânsito, controles de acesso e políticas de banco de dados em nível de linha que isolam os dados de cada conta empresarial. Credenciais sensíveis de plataformas conectadas são armazenadas com acesso restrito apenas ao servidor.",
+            "Nenhum método de transmissão ou armazenamento é totalmente seguro. Se tomarmos conhecimento de um incidente que afete seus dados pessoais, notificaremos você e as autoridades competentes conforme exigido por lei."
+          ]
+        },
+        {
+          "heading": "9. Seus direitos e escolhas",
+          "paragraphs": [
+            "Dependendo de onde você mora, você pode ter o direito de acessar, corrigir, excluir ou receber uma cópia dos seus dados pessoais, de se opor a certos tratamentos ou restringi-los e de retirar o consentimento. Usuários no Brasil têm esses direitos pela LGPD; usuários no Espaço Econômico Europeu e no Reino Unido os têm pelo GDPR.",
+            "Os Clientes podem exercer a maioria desses direitos diretamente no painel. Para qualquer outra solicitação, ou se você for Usuário Final, entre em contato pelos dados abaixo e responderemos no prazo exigido pela legislação aplicável. Você também tem o direito de apresentar reclamação à autoridade de proteção de dados competente, como a ANPD no Brasil."
+          ]
+        },
+        {
+          "heading": "10. Crianças",
+          "paragraphs": [
+            "O Serviço é destinado a empresas e não é direcionado a crianças. Não coletamos intencionalmente dados pessoais de crianças menores de 13 anos (ou da idade mínima da sua jurisdição). Se você acredita que uma criança nos forneceu dados, entre em contato e os excluiremos."
+          ]
+        },
+        {
+          "heading": "11. Mudanças nesta política",
+          "paragraphs": [
+            "Podemos atualizar esta política periodicamente. Se fizermos uma alteração relevante, avisaremos os Clientes por e-mail ou pelo painel antes de ela entrar em vigor. A data de \"última atualização\" no topo indica quando esta versão foi publicada."
+          ]
+        },
+        {
+          "heading": "12. Fale conosco",
+          "paragraphs": [
+            "Para dúvidas ou solicitações sobre privacidade, escreva para privacy@staffra.ai. Você também pode nos escrever no endereço postal indicado em nosso site."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "title": "Termos de Serviço",
+      "date": "1 de setembro de 2026",
+      "intro": "Estes Termos de Serviço (\"Termos\") são um acordo vinculante entre a Staffra AI (\"Staffra\", \"nós\") e a empresa ou pessoa que usa nosso site, painel e serviços (em conjunto, o \"Serviço\"). Ao criar uma conta ou usar o Serviço, você concorda com estes Termos. Se você estiver concordando em nome de uma empresa, declara ter autorização para vinculá-la.",
+      "sections": [
+        {
+          "heading": "1. O Serviço",
+          "paragraphs": [
+            "A Staffra permite que uma empresa contrate funcionários de IA prontos que conversam com seus clientes em seu nome em canais como WhatsApp, Instagram e chat no site. Dependendo da função, um funcionário de IA pode responder dúvidas com base nas informações fornecidas pela empresa, fazer agendamentos e criar links de pagamento.",
+            "Podemos adicionar, alterar ou remover recursos ao longo do tempo. Não faremos reduções relevantes no núcleo do Serviço para um plano pago ativo sem aviso prévio razoável."
+          ]
+        },
+        {
+          "heading": "2. Contas e elegibilidade",
+          "paragraphs": [
+            "Você deve ter pelo menos 18 anos e capacidade para celebrar um contrato vinculante. Você é responsável pela veracidade das informações de cadastro e por toda atividade em sua conta.",
+            "Você é responsável por manter suas credenciais de acesso seguras e pelas ações de cada integrante da equipe que convidar. Avise-nos imediatamente sobre qualquer uso não autorizado."
+          ]
+        },
+        {
+          "heading": "3. Suas responsabilidades",
+          "paragraphs": [
+            "Você é responsável pelas informações do negócio que fornece e por revisar como seus funcionários de IA representam sua empresa. Mantenha políticas, preços e disponibilidade atualizados.",
+            "Você deve ter base legal para enviar mensagens aos seus clientes e obter qualquer consentimento exigido por lei antes que um funcionário de IA entre em contato com eles. Você é responsável por atender a pedidos de descadastramento.",
+            "Você deve cumprir as regras de qualquer plataforma de terceiros que conectar, incluindo as políticas de mensagens e comércio da Meta (WhatsApp e Instagram) e os termos de qualquer provedor de pagamento.",
+            "Você não deve usar o Serviço para enviar spam ou conteúdo ilícito, enganoso, ofensivo ou prejudicial, nem para tratar categorias de dados sensíveis para as quais o Serviço não foi projetado."
+          ]
+        },
+        {
+          "heading": "4. Conteúdo gerado por IA",
+          "paragraphs": [
+            "As respostas produzidas por um funcionário de IA são geradas automaticamente e podem ser imprecisas, incompletas ou inadequadas para determinada situação. Elas não constituem aconselhamento profissional, jurídico, médico ou financeiro.",
+            "Você é responsável pelas mensagens que seus funcionários de IA enviam. Recomendamos acompanhar as conversas, manter uma pessoa disponível para assumir o atendimento e pausar um funcionário de IA que não estiver se comportando como esperado. A Staffra não se responsabiliza por decisões tomadas ou ações praticadas com base em conteúdo gerado por IA."
+          ]
+        },
+        {
+          "heading": "5. Seu conteúdo e seus dados",
+          "paragraphs": [
+            "Você mantém todos os direitos sobre as informações do negócio, o catálogo e os dados de conversas que você e seus clientes fornecem (\"Conteúdo do Cliente\"). Você concede à Staffra uma licença mundial e não exclusiva para hospedar, processar e transmitir o Conteúdo do Cliente apenas para operar e melhorar o Serviço para você, incluindo o envio aos provedores de IA descritos em nossa Política de Privacidade.",
+            "Você declara ter os direitos necessários para fornecer o Conteúdo do Cliente e que ele não viola direitos de terceiros nem qualquer lei."
+          ]
+        },
+        {
+          "heading": "6. Serviços de terceiros",
+          "paragraphs": [
+            "O Serviço se integra a plataformas de terceiros, como a Meta, provedores de agenda e processadores de pagamento. O uso dessas plataformas é regido pelos termos e políticas de privacidade delas, e não somos responsáveis por sua disponibilidade, mudanças ou ações.",
+            "Uma plataforma de terceiros pode suspender ou limitar o acesso às suas APIs a qualquer momento, o que pode afetar o Serviço. Não nos responsabilizamos por essas interrupções."
+          ]
+        },
+        {
+          "heading": "7. Tarifas e pagamento",
+          "paragraphs": [
+            "Os planos pagos, quando aplicáveis à sua conta, são cobrados antecipadamente no ciclo indicado no checkout e não são reembolsáveis, exceto quando exigido por lei. Podemos alterar os preços com aviso de pelo menos 30 dias antes da próxima renovação.",
+            "Os valores cobrados dos seus clientes por meio de links de pagamento são processados por um provedor de pagamento terceiro e repassados a você conforme os termos desse provedor. A Staffra não é parte dessas transações e não retém seus recursos."
+          ]
+        },
+        {
+          "heading": "8. Uso aceitável",
+          "paragraphs": [
+            "Você não deve: fazer engenharia reversa nem tentar extrair os modelos ou o código-fonte subjacentes; revender ou fornecer o Serviço a terceiros, exceto aos seus próprios clientes finais; sondar ou violar medidas de segurança ou autenticação; usar o Serviço para criar um produto concorrente; ou exceder limites de uso e sobrecarregar de forma desarrazoada nossa infraestrutura.",
+            "Podemos limitar, suspender ou encerrar o acesso em caso de conduta que viole estes Termos ou que ameace a segurança ou a integridade do Serviço."
+          ]
+        },
+        {
+          "heading": "9. Propriedade intelectual",
+          "paragraphs": [
+            "A Staffra e seus licenciadores detêm todos os direitos sobre o Serviço, incluindo o software, os designs dos funcionários de IA, os modelos que disponibilizamos e o nome e o logotipo da Staffra. Estes Termos não concedem a você qualquer direito de usar nossas marcas sem autorização prévia por escrito.",
+            "Sugestões que você nos enviar sobre o Serviço podem ser usadas por nós sem restrição ou obrigação para com você."
+          ]
+        },
+        {
+          "heading": "10. Isenções de garantia",
+          "paragraphs": [
+            "O Serviço é fornecido \"no estado em que se encontra\" e \"conforme disponível\", sem garantias de qualquer tipo, expressas ou implícitas, incluindo garantias implícitas de comercialização, adequação a uma finalidade específica e não violação. Não garantimos que o Serviço será ininterrupto ou livre de erros, nem que o conteúdo gerado por IA será preciso ou adequado às suas finalidades."
+          ]
+        },
+        {
+          "heading": "11. Limitação de responsabilidade",
+          "paragraphs": [
+            "Na máxima extensão permitida por lei, a Staffra não será responsável por danos indiretos, incidentais, especiais, consequenciais ou punitivos, nem por lucros cessantes, perda de receita, dados ou reputação, decorrentes ou relacionados ao Serviço.",
+            "Nossa responsabilidade total por qualquer reivindicação decorrente ou relacionada ao Serviço não excederá o maior valor entre o que você nos pagou pelo Serviço nos 12 meses anteriores ao fato que originou a reivindicação ou USD 100."
+          ]
+        },
+        {
+          "heading": "12. Indenização",
+          "paragraphs": [
+            "Você defenderá, indenizará e isentará a Staffra de qualquer reivindicação, perda ou despesa (incluindo honorários advocatícios razoáveis) decorrente do seu Conteúdo do Cliente, do seu uso do Serviço, da sua violação destes Termos ou da sua violação de qualquer lei ou de direitos de terceiros, incluindo seus clientes."
+          ]
+        },
+        {
+          "heading": "13. Suspensão e rescisão",
+          "paragraphs": [
+            "Você pode parar de usar o Serviço e encerrar sua conta a qualquer momento pelo painel. Podemos suspender ou encerrar seu acesso se você violar substancialmente estes Termos, deixar de pagar ou se exigido por lei ou por uma plataforma de terceiros.",
+            "Com a rescisão, seu direito de usar o Serviço termina. Disponibilizaremos o Conteúdo do Cliente para exportação por um período limitado e depois o excluiremos conforme nossa Política de Privacidade, salvo quando a lei exigir que o mantenhamos."
+          ]
+        },
+        {
+          "heading": "14. Alterações destes Termos",
+          "paragraphs": [
+            "Podemos atualizar estes Termos periodicamente. Se a alteração for relevante, avisaremos você por e-mail ou pelo painel antes de ela entrar em vigor. Continuar usando o Serviço depois disso significa que você aceita os Termos atualizados."
+          ]
+        },
+        {
+          "heading": "15. Legislação aplicável",
+          "paragraphs": [
+            "Estes Termos são regidos pelas leis do Brasil, sem consideração a regras de conflito de leis. O foro da comarca de São Paulo, Brasil, terá jurisdição exclusiva, exceto quando normas cogentes de proteção ao consumidor derem a você o direito de propor a ação no seu local de residência."
+          ]
+        },
+        {
+          "heading": "16. Fale conosco",
+          "paragraphs": [
+            "Dúvidas sobre estes Termos podem ser enviadas para legal@staffra.ai."
+          ]
+        }
+      ]
+    }
   }
 }

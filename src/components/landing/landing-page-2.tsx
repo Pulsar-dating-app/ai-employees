@@ -490,7 +490,10 @@ export async function LandingPageV2() {
           />
           <FooterColumn
             title={t("footer.legal")}
-            links={[t("footer.links.privacy"), t("footer.links.terms")]}
+            links={[
+              { label: t("footer.links.privacy"), href: "/privacy" },
+              { label: t("footer.links.terms"), href: "/terms" },
+            ]}
           />
           <div className="col-span-1 mt-8 border-t border-[#e7e8e9] pt-8 md:col-span-4">
             <p className="text-[16px] leading-[24px] text-[#464555]">
@@ -503,21 +506,27 @@ export async function LandingPageV2() {
   );
 }
 
-function FooterColumn({ title, links }: { title: string; links: string[] }) {
+type FooterLink = string | { label: string; href: string };
+
+function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) {
   return (
     <div className="flex flex-col gap-3">
       <span className="mb-2 text-[12px] font-bold uppercase tracking-wider text-[#191c1d]">
         {title}
       </span>
-      {links.map((label) => (
-        <a
-          key={label}
-          href="#"
-          className="text-[16px] leading-[24px] text-[#464555] transition-colors hover:text-[#3525cd]"
-        >
-          {label}
-        </a>
-      ))}
+      {links.map((link) => {
+        const label = typeof link === "string" ? link : link.label;
+        const href = typeof link === "string" ? "#" : link.href;
+        return (
+          <Link
+            key={label}
+            href={href}
+            className="text-[16px] leading-[24px] text-[#464555] transition-colors hover:text-[#3525cd]"
+          >
+            {label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
