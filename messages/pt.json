@@ -281,6 +281,7 @@
     "availableBadge": "Disponível",
     "viewDetails": "Ver detalhes",
     "searchPlaceholder": "Buscar por nome ou cargo…",
+    "noResults": "Nenhum integrante corresponde a “{query}”.",
     "priceLabel": "R$ {price}/mês",
     "backToMarketplace": "Voltar para o marketplace",
     "traits": {

@@ -11,7 +11,6 @@ import { SearchIcon } from "@/components/ui/icons";
 export default async function MarketplacePage() {
   const supabase = await createClient();
   const t = await getTranslations("Marketplace");
-  const tTraits = await getTranslations("Marketplace.traits");
 
   const [{ data: companies }, { data: agents }] = await Promise.all([
     supabase.from("companies").select("id"),
@@ -39,7 +38,6 @@ export default async function MarketplacePage() {
       name: defaultAgentName(agent.slug),
       role: agent.role ?? "",
       description: agent.description ?? "",
-      traits: (enrichment?.traits ?? []).map((trait) => tTraits(trait)),
       monthlyPriceBRL: enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL,
       isHired: hiredAgentIds.has(agent.id),
       photoSrc: agentPhoto(agent.slug),

@@ -8,133 +8,84 @@ export type MarketplaceAgent = {
   name: string;
   role: string;
   description: string;
-  traits: string[];
   monthlyPriceBRL: number;
   isHired: boolean;
   photoSrc: string | null;
 };
 
-function PhotoPanel({ photoSrc, name, className }: { photoSrc: string | null; name: string; className: string }) {
+// Portrait area. A real photo where one exists (`public/agents/<slug>.jpg`);
+// otherwise a placeholder — the authored silhouette on a soft role tint, the
+// same mark My Team's persona cards use, so a photo-less agent still reads as
+// deliberate rather than unfinished.
+function PortraitPanel({ photoSrc, name }: { photoSrc: string | null; name: string }) {
   return (
-    <div className={`relative overflow-hidden bg-surface-container ${className}`}>
+    <div className="relative h-48 overflow-hidden bg-surface-container">
       {photoSrc ? (
-        <Image src={photoSrc} alt={name} fill sizes="(min-width:1024px) 33vw, 100vw" className="object-cover object-top" />
+        <Image
+          src={photoSrc}
+          alt={name}
+          fill
+          sizes="(min-width:1024px) 30vw, (min-width:768px) 45vw, 100vw"
+          className="object-cover object-top"
+        />
       ) : (
-        <div className="flex h-full w-full items-center justify-center">
-          <AgentAvatar role="intent" size="lg" />
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-fixed via-primary-fixed to-surface-container-high">
+          <AgentAvatar role="intent" size="lg" className="scale-150" />
         </div>
       )}
     </div>
   );
 }
 
-function TraitChip({ children }: { children: React.ReactNode }) {
+function StatusPill({ hired, label }: { hired: boolean; label: string }) {
   return (
-    <span className="rounded bg-surface-container-low px-2 py-1 text-label-sm font-semibold text-on-surface-variant">
-      {children}
-    </span>
-  );
-}
-
-function StatusPill({ hired, hiredLabel, availableLabel }: { hired: boolean; hiredLabel: string; availableLabel: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-low px-3 py-1 text-label-sm font-semibold text-on-surface-variant">
-      <span className="h-2 w-2 rounded-full bg-tertiary-container" />
-      {hired ? hiredLabel : availableLabel}
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-container-lowest/90 px-2.5 py-1 text-label-sm font-semibold text-on-surface-variant shadow-level1 backdrop-blur">
+      <span className={`h-1.5 w-1.5 rounded-full ${hired ? "bg-on-surface-variant" : "bg-tertiary-container"}`} />
+      {label}
     </span>
   );
 }
 
 // One card per real, active row in `agents` — the marketplace is dynamic
-// over the database, not a fixed roster. Traits come from AGENT_ENRICHMENT
-// where a curated entry exists; an agent with none renders without chips,
-// never fabricated. `prominent` renders the Stitch hero card (image-left,
-// two actions); otherwise the standard image-top card.
+// over the database, not a fixed roster, and every agent gets the *same*
+// card (no hero/prominent variant): with a two- or three-person roster an
+// asymmetric layout just reads as "this one matters more".
 export function HireableAgentCard({
   agent,
-  prominent = false,
   style,
 }: {
   agent: MarketplaceAgent;
-  prominent?: boolean;
   style?: React.CSSProperties;
 }) {
   const t = useTranslations("Marketplace");
-  const tDetail = useTranslations("AgentDetail");
-  const href = `/dashboard/agents/${agent.slug}`;
-
-  if (prominent) {
-    return (
-      <article
-        style={style}
-        className="animate-fade-up flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-level1 md:flex-row lg:col-span-2"
-      >
-        <PhotoPanel photoSrc={agent.photoSrc} name={agent.name} className="h-56 md:h-auto md:w-2/5" />
-        <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-headline-md font-bold text-on-surface">{agent.name}</h2>
-              <p className="text-body-md font-medium text-primary">{agent.role}</p>
-            </div>
-            <StatusPill hired={agent.isHired} hiredLabel={t("hiredBadge")} availableLabel={t("availableBadge")} />
-          </div>
-          {agent.description ? (
-            <p className="flex-1 text-body-md text-on-surface-variant">{agent.description}</p>
-          ) : null}
-          {agent.traits.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {agent.traits.map((trait) => (
-                <TraitChip key={trait}>{trait}</TraitChip>
-              ))}
-            </div>
-          ) : null}
-          {/* Both actions lead to the detail page, where hiring happens —
-              once hired the primary already says "view details", so the
-              secondary would just duplicate it. */}
-          <div className="mt-auto flex flex-wrap gap-3">
-            <Link
-              href={href}
-              className="inline-flex h-12 flex-1 cursor-pointer items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-on-primary transition-colors hover:brightness-90"
-            >
-              {agent.isHired ? t("viewDetails") : tDetail("hireButton", { name: agent.name })}
-            </Link>
-            {!agent.isHired ? (
-              <Link
-                href={href}
-                className="inline-flex h-12 cursor-pointer items-center justify-center rounded-md border border-outline-variant bg-surface-container px-6 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-high"
-              >
-                {t("viewDetails")}
-              </Link>
-            ) : null}
-          </div>
-        </div>
-      </article>
-    );
-  }
 
   return (
     <Link
-      href={href}
+      href={`/dashboard/agents/${agent.slug}`}
       style={style}
-      className="animate-fade-up flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-level1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-level2"
+      className="animate-fade-up flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-level1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-level2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
     >
-      <PhotoPanel photoSrc={agent.photoSrc} name={agent.name} className="h-48" />
+      <div className="relative">
+        <PortraitPanel photoSrc={agent.photoSrc} name={agent.name} />
+        <div className="absolute left-3 top-3">
+          <StatusPill
+            hired={agent.isHired}
+            label={agent.isHired ? t("hiredBadge") : t("availableBadge")}
+          />
+        </div>
+      </div>
+
       <div className="flex flex-1 flex-col gap-3 p-6">
         <div>
           <h3 className="text-xl font-bold text-on-surface">{agent.name}</h3>
           <p className="text-sm font-medium text-primary">{agent.role}</p>
         </div>
+
         {agent.description ? (
           <p className="line-clamp-3 flex-1 text-sm text-on-surface-variant">{agent.description}</p>
         ) : null}
-        {agent.traits.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {agent.traits.slice(0, 2).map((trait) => (
-              <TraitChip key={trait}>{trait}</TraitChip>
-            ))}
-          </div>
-        ) : null}
-        <div className="mt-2 flex items-center justify-between gap-3">
+
+        <div className="mt-2 flex items-center justify-between gap-3 border-t border-outline-variant/60 pt-4">
           <span className="text-sm font-semibold text-on-surface">
             {agent.isHired ? t("hiredBadge") : t("priceLabel", { price: agent.monthlyPriceBRL })}
           </span>

@@ -20,31 +20,34 @@ export function MarketplaceGrid({ agents }: { agents: MarketplaceAgent[] }) {
   }, [agents, query]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex justify-end">
-        <div className="relative w-full max-w-xs">
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
-          <Input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("searchPlaceholder")}
-            className="pl-9"
-            aria-label={t("searchPlaceholder")}
-          />
-        </div>
+    <div className="flex max-w-3xl flex-col gap-6">
+      <div className="relative w-full sm:max-w-xs sm:self-end">
+        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
+        <Input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("searchPlaceholder")}
+          className="pl-9"
+          aria-label={t("searchPlaceholder")}
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((agent, index) => (
-          <HireableAgentCard
-            key={agent.slug}
-            agent={agent}
-            prominent={index === 0 && !query.trim()}
-            style={{ animationDelay: `${index * 80}ms` }}
-          />
-        ))}
-      </div>
+      {filtered.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-outline-variant px-6 py-10 text-center text-sm text-on-surface-variant">
+          {t("noResults", { query })}
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {filtered.map((agent, index) => (
+            <HireableAgentCard
+              key={agent.slug}
+              agent={agent}
+              style={{ animationDelay: `${index * 80}ms` }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
