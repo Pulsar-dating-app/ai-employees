@@ -42,6 +42,42 @@ import {
 
 const MAX_SLOTS_RETURNED = 20;
 
+type IntakeField = { label: string; is_required: boolean };
+
+// Trello K8/K9 -- the merchant's configured pre-booking questions, in
+// display order. Shared by findAvailableSlots (surfaces them to the agent)
+// and book (enforces the required ones).
+async function loadIntakeFields(
+  client: SupabaseClient,
+  companyId: string,
+): Promise<IntakeField[]> {
+  const { data, error } = await client
+    .from("appointment_intake_fields")
+    .select("label, is_required")
+    .eq("company_id", companyId)
+    .order("position", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    label: row.label as string,
+    is_required: row.is_required as boolean,
+  }));
+}
+
+// The model keys `intakeAnswers` by the question label; match tolerantly
+// (case- and whitespace-insensitive) so "cpf" answers a "CPF" field.
+function normalizeAnswerKeys(
+  answers: Record<string, unknown> | null | undefined,
+): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const [key, value] of Object.entries(answers ?? {})) {
+    if (typeof value !== "string") continue;
+    const trimmed = value.trim();
+    if (trimmed === "") continue;
+    out.set(key.trim().toLowerCase(), trimmed);
+  }
+  return out;
+}
+
 export type BookableService = {
   id: string;
   name: string;
@@ -73,10 +109,19 @@ export type FindAvailableSlotsResult =
       // the customer the business is away then instead of just "nothing's
       // free".
       timeOff: { start: string; end: string; reason: string | null }[];
+      // Trello K8/K9 -- the customer details this business wants collected
+      // before a booking (appointment_intake_fields). `label` is the raw
+      // data point ("Full name", "CPF", "Idade"); the agent phrases the
+      // actual question. `required` ones must be answered before
+      // book_appointment will go through; optional ones are asked once and
+      // skipped if the customer doesn't answer. Empty when nothing is
+      // configured.
+      intakeQuestions: { label: string; required: boolean }[];
     };
 
 export type BookResult =
   | { booked: false; reason: "invalid_time" | "service_not_found" | "customer_not_found" | "outside_business_hours" | "slot_unavailable" }
+  | { booked: false; reason: "missing_intake_answers"; missingRequired: string[] }
   | {
       booked: true;
       status: "requested" | "confirmed";
@@ -136,11 +181,10 @@ async function findAvailableSlots(
       to,
     });
 
-    const { data: company } = await client
-      .from("companies")
-      .select("timezone")
-      .eq("id", companyId)
-      .maybeSingle();
+    const [{ data: company }, intakeFields] = await Promise.all([
+      client.from("companies").select("timezone").eq("id", companyId).maybeSingle(),
+      loadIntakeFields(client, companyId),
+    ]);
     const timezone =
       company?.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
 
@@ -151,6 +195,7 @@ async function findAvailableSlots(
       slots: slots.slice(0, MAX_SLOTS_RETURNED),
       truncated: slots.length > MAX_SLOTS_RETURNED,
       timeOff,
+      intakeQuestions: intakeFields.map((f) => ({ label: f.label, required: f.is_required })),
     };
   } catch (err) {
     // A missing/inactive service, or one belonging to another company, is
@@ -172,6 +217,7 @@ async function book(
     agentId,
     startsAt,
     notes,
+    intakeAnswers,
   }: {
     companyId: string;
     serviceId: string;
@@ -180,6 +226,10 @@ async function book(
     agentId: string | null;
     startsAt: string;
     notes: string | null;
+    // Trello K9 -- answers the agent collected for the merchant's intake
+    // questions, keyed by question label. Null/omitted when the business has
+    // none configured.
+    intakeAnswers: Record<string, unknown> | null;
   },
   supabaseClient?: SupabaseClient,
 ): Promise<BookResult> {
@@ -192,6 +242,7 @@ async function book(
     { data: service, error: serviceError },
     { data: customer, error: customerError },
     { data: company, error: companyError },
+    intakeFields,
   ] = await Promise.all([
     client
       .from("services")
@@ -210,6 +261,7 @@ async function book(
       .select("timezone, requires_appointment_approval")
       .eq("id", companyId)
       .maybeSingle(),
+    loadIntakeFields(client, companyId),
   ]);
 
   if (serviceError) throw serviceError;
@@ -254,6 +306,25 @@ async function book(
     return { booked: false, reason: "outside_business_hours" };
   }
 
+  // Trello K9 -- the merchant's pre-booking questions. Every required one
+  // must have a non-empty answer before the row is written; the model gets
+  // the labels back so it can ask and retry. Optional questions never block:
+  // an answer is stored if given, ignored if not. Checked after the slot
+  // validations so a bad time surfaces first (more actionable), and so a
+  // retry after collecting the info runs against a known-good slot.
+  const providedAnswers = normalizeAnswerKeys(intakeAnswers);
+  const missingRequired = intakeFields
+    .filter((f) => f.is_required && !providedAnswers.has(f.label.trim().toLowerCase()))
+    .map((f) => f.label);
+  if (missingRequired.length > 0) {
+    return { booked: false, reason: "missing_intake_answers", missingRequired };
+  }
+  const storedIntakeAnswers: Record<string, string> = {};
+  for (const field of intakeFields) {
+    const answer = providedAnswers.get(field.label.trim().toLowerCase());
+    if (answer) storedIntakeAnswers[field.label] = answer;
+  }
+
   const endsAt = new Date(
     startDate.getTime() + (service.duration_minutes + service.buffer_minutes) * 60_000,
   );
@@ -273,6 +344,7 @@ async function book(
       starts_at: startDate.toISOString(),
       ends_at: endsAt.toISOString(),
       notes: notes ?? null,
+      intake_answers: storedIntakeAnswers,
     })
     .select()
     .single();
