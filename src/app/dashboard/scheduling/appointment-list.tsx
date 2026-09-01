@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
-import { CalendarIcon, ClockIcon, XIcon } from "@/components/ui/icons";
+import { CalendarIcon, ChevronRightIcon, ClockIcon, XIcon } from "@/components/ui/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Appointment, AppointmentStatus } from "./appointment-types";
 
@@ -154,6 +154,14 @@ function AppointmentCard({
   const [confirmingDecline, setConfirmingDecline] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [isWorking, setIsWorking] = useState(false);
+  const [showIntake, setShowIntake] = useState(false);
+
+  // Trello K9 — the pre-booking questions Ana actually got an answer for.
+  // Blank / missing values are dropped, so a row with none configured (or an
+  // older booking) shows nothing at all rather than an empty disclosure.
+  const intakeEntries = Object.entries(appointment.intake_answers ?? {}).filter(
+    ([, value]) => typeof value === "string" && value.trim() !== "",
+  );
 
   // Formatted in the *company's* timezone, not the viewer's — a booking is
   // an event at the business, and a merchant travelling shouldn't see their
@@ -260,6 +268,32 @@ function AppointmentCard({
                 ) : null}
               </span>
             </div>
+
+            {intakeEntries.length > 0 ? (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  aria-expanded={showIntake}
+                  onClick={() => setShowIntake((v) => !v)}
+                  className="flex items-center gap-1 text-label-md font-medium text-on-surface-variant transition-colors hover:text-on-surface"
+                >
+                  <ChevronRightIcon
+                    className={clsx("h-4 w-4 transition-transform", showIntake && "rotate-90")}
+                  />
+                  {t("list.intakeToggle", { count: intakeEntries.length })}
+                </button>
+                {showIntake ? (
+                  <dl className="mt-2 flex flex-col gap-1.5 border-l-2 border-outline-variant/40 pl-3">
+                    {intakeEntries.map(([label, value]) => (
+                      <div key={label} className="flex flex-wrap gap-x-1.5 text-label-md">
+                        <dt className="font-semibold text-on-surface">{label}:</dt>
+                        <dd className="text-on-surface-variant">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </div>
 

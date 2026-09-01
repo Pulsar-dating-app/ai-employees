@@ -33,6 +33,9 @@ export type Appointment = {
   google_event_id: string | null;
   notes: string | null;
   cancellation_reason: string | null;
+  // Trello K9 — the label→answer map Ana collected before booking. `{}` when
+  // the business has no intake questions, or the booking predates K9.
+  intake_answers: Record<string, string> | null;
   created_at: string;
   updated_at: string;
   // to-one embeds; `services` is null when the service was soft-deleted

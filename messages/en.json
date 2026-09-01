@@ -842,7 +842,8 @@
       "list": {
         "serviceLabel": "Service:",
         "serviceRemoved": "Service removed",
-        "unnamedCustomer": "Unnamed"
+        "unnamedCustomer": "Unnamed",
+        "intakeToggle": "{count, plural, one {# detail from the customer} other {# details from the customer}}"
       },
       "actions": {
         "approve": "Approve",
