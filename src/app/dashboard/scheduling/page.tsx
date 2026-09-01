@@ -77,6 +77,7 @@ export default async function AppointmentsPage() {
     { count: bookedToday },
     { count: completedToday },
     { data: hired },
+    { data: calendarConnection },
   ] = await Promise.all([
     supabase
       .from("company_users")
@@ -108,9 +109,21 @@ export default async function AppointmentsPage() {
       .lt("starts_at", dayEnd)
       .eq("status", "completed"),
     supabase.from("company_agents").select("status, agents(slug)").eq("company_id", company.id),
+    supabase
+      .from("company_calendar_connections")
+      .select("status")
+      .eq("company_id", company.id)
+      .maybeSingle(),
   ]);
 
   const canEdit = membership !== null;
+
+  // Rail nudge: Google Calendar isn't connected yet, and the workspace
+  // *can* connect it (credentials configured). Links straight to the K2
+  // card on the settings screen.
+  const showCalendarNudge =
+    (calendarConnection as { status?: string } | null)?.status !== "connected" &&
+    Boolean(process.env.GOOGLE_CLIENT_ID);
 
   // PostgREST returns `agents` as one embedded object for this to-one
   // relation; the generated types widen it to an array (same cast the
@@ -142,6 +155,7 @@ export default async function AppointmentsPage() {
           bookedToday={bookedToday ?? 0}
           completedToday={completedToday ?? 0}
           teamMember={teamMember}
+          showCalendarNudge={showCalendarNudge}
         />
       }
     />

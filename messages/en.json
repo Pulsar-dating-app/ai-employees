@@ -675,6 +675,28 @@
         "invalidRange": "The end date can't be before the start date.",
         "overlap": "Those dates overlap an entry you already have ({range}). Remove it first, or pick dates outside it.",
         "saveError": "Something went wrong. Please try again."
+      },
+      "googleCalendar": {
+        "title": "Google Calendar",
+        "subtitle": "Connect a Google Calendar so your team checks it for conflicts before booking.",
+        "loading": "Loading…",
+        "notConfigured": "Google Calendar isn't set up for this workspace yet.",
+        "connectedBadge": "Connected",
+        "connectedSince": "Connected on {date}",
+        "notConnected": "No calendar connected yet.",
+        "adminOnly": "Ask an owner or admin to connect a calendar.",
+        "connectButton": "Connect Google Calendar",
+        "connecting": "Opening Google…",
+        "disconnectButton": "Disconnect",
+        "disconnectConfirm": "Disconnect this Google Calendar?",
+        "disconnectConfirmButton": "Yes, disconnect",
+        "cancel": "Cancel",
+        "connectError": "Something went wrong connecting Google Calendar. Please try again.",
+        "disconnectError": "Something went wrong disconnecting. Please try again.",
+        "sdkNotReady": "Still loading — try again in a moment.",
+        "stepOneTitle": "Connect your Google account",
+        "stepTwoTitle": "Bookings respect your calendar",
+        "stepTwoDescription": "Once connected, your team skips any time you're already busy in Google Calendar when offering slots."
       }
     },
     "appointments": {
@@ -715,7 +737,9 @@
         "verified": "Verified team member",
         "currentStatus": "Current status",
         "statusActive": "Taking bookings",
-        "statusPaused": "Paused"
+        "statusPaused": "Paused",
+        "calendarNudgeTitle": "Connect Google Calendar",
+        "calendarNudgeBody": "Avoid clashes with your own calendar."
       },
       "list": {
         "serviceLabel": "Service:",

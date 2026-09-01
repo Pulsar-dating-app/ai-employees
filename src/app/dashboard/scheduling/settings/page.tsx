@@ -5,21 +5,21 @@ import { Button } from "@/components/ui/button";
 import { BusinessHoursCard, type BusinessHourRow } from "./business-hours-card";
 import { AppointmentControlsCard } from "./appointment-controls-card";
 import { TimeOffCard, type TimeOffEntry } from "./time-off-card";
+import { GoogleCalendarCard } from "./google-calendar-card";
 
-// Trello K3 — the merchant-facing UI for H2 (business_hours) and H3's
-// companies.requires_appointment_approval flag. A third sub-tab of the
-// Scheduling area (K5), sitting beside Services because both are
-// scheduling-specific settings rather than general business facts.
+// The Scheduling area's settings screen (K5 sub-tab). Company-wide
+// scheduling config, one card per concern:
+//  - Business hours (K3, H2) — the weekly template, split shifts supported
+//  - Appointment controls (K3, H3) — requires_appointment_approval
+//  - Time off (K3 extension) — company_time_off one-off closures
+//  - Google Calendar (K2, I1) — connect for live free/busy checks
+// Reproduces the Stitch "Scheduling Settings" screen's main column; its
+// right-hand rail ("Current Services" preview + persona card) is dropped as
+// duplication / K4's territory (see decisions.md).
 //
-// Reproduces the Stitch "Scheduling Settings - Business Hours & Approvals"
-// screen's two main-column cards. The mock's right-hand rail is dropped:
-// its "Current Services" preview duplicates the Services sub-tab one click
-// away, and its persona identity card is K4's (the Appointments screen
-// already carries the scheduling persona rail) and isn't part of this
-// ticket's scope. See decisions.md.
-//
-// No new API and no schema change: GET/PUT /api/companies/[id]/business-hours
-// (H2, whole-week replace) and PATCH /api/companies/[id] (B2) already exist.
+// No new API or schema here: every card sits on an already-shipped route
+// (H2's business-hours PUT, B2's company PATCH, K3's time-off routes, I1's
+// calendar connect/disconnect).
 export default async function SchedulingSettingsPage() {
   const supabase = await createClient();
   const t = await getTranslations("Scheduling.settings");
@@ -73,6 +73,9 @@ export default async function SchedulingSettingsPage() {
   // H2's routes only ever call requireMember, so — like Services (K1) —
   // gating the UI on admin would invent a restriction the API doesn't have.
   const canEdit = membership !== null;
+  // I1's calendar connect/disconnect routes are admin-only, so the K2 card
+  // gates on this instead.
+  const isAdmin = ["owner", "admin"].includes(membership?.role ?? "");
 
   return (
     <div className="flex flex-col gap-8">
@@ -104,6 +107,11 @@ export default async function SchedulingSettingsPage() {
           companyId={company.id}
           canEdit={canEdit}
           initialEntries={(timeOff as TimeOffEntry[] | null) ?? []}
+        />
+        <GoogleCalendarCard
+          companyId={company.id}
+          isAdmin={isAdmin}
+          googleClientId={process.env.GOOGLE_CLIENT_ID ?? null}
         />
       </div>
     </div>
