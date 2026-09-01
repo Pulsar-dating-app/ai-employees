@@ -866,10 +866,14 @@
   },
   "Conversations": {
     "pageTitle": "Conversas",
-    "pageSubtitle": "Veja o que sua equipe está dizendo aos clientes no chat do site e intervenha quando precisar.",
+    "pageSubtitle": "Veja o que sua equipe está dizendo aos clientes e intervenha quando precisar.",
     "noCompany": "Contrate o primeiro integrante da sua equipe para começar a ver conversas.",
     "browseMarketplace": "Ver marketplace",
     "backToConversations": "Voltar para conversas",
+    "channel": {
+      "web_chat": "Chat do site",
+      "instagram": "Instagram"
+    },
     "filters": {
       "status": {
         "all": "Todas",
@@ -880,7 +884,7 @@
       "searchLabel": "Buscar",
       "searchPlaceholder": "Buscar por nome ou telefone do cliente…",
       "searchButton": "Buscar",
-      "searchHint": "A busca encontra apenas nome ou telefone do cliente — a maioria dos visitantes do chat do site ainda não compartilhou nenhum dos dois, então isso não vai encontrar muita coisa por enquanto.",
+      "searchHint": "A busca encontra apenas nome ou telefone do cliente — a maioria dos clientes ainda não compartilhou nenhum dos dois, então isso não vai encontrar muita coisa por enquanto.",
       "emptyState": "Nenhuma conversa ainda.",
       "previousPage": "Anterior",
       "nextPage": "Próxima",
@@ -907,13 +911,17 @@
       "inputPlaceholder": "Escreva uma resposta…",
       "sendButton": "Enviar",
       "sendError": "Algo deu errado ao enviar. Tente novamente.",
+      "deliveryFailed": "Sua resposta foi salva, mas não conseguimos entregá-la ao cliente — isso pode acontecer se já passaram mais de 24 horas desde a última mensagem dele.",
       "detailsTitle": "Detalhes",
       "detailsCustomer": "Cliente",
       "detailsChannel": "Canal",
       "detailsAgent": "Agente",
       "detailsMessageCount": "Mensagens",
       "detailsNoAgent": "Nenhum",
-      "channelWebChat": "Chat do site"
+      "channel": {
+        "web_chat": "Chat do site",
+        "instagram": "Instagram"
+      }
     }
   },
   "Chat": {

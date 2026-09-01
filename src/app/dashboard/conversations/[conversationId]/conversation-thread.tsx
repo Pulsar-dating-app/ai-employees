@@ -102,10 +102,16 @@ export function ConversationThread({
       return;
     }
 
-    const { message } = await res.json();
+    const { message, delivery } = await res.json();
     setDraft("");
     setMessages((prev) => [...prev, message]);
     setConversation((prev) => (prev.status === "paused" ? prev : { ...prev, status: "paused" }));
+    // N10: on a channel that needs an outbound send (Instagram), the reply
+    // is always saved but may not have reached the customer -- e.g. past the
+    // 24h window (N11) or a dead connection. Say so; the text isn't lost.
+    if (delivery && delivery.ok === false) {
+      setErrorMessage(t("deliveryFailed"));
+    }
   }
 
   async function handleResume() {
@@ -215,7 +221,7 @@ export function ConversationThread({
           </div>
           <div>
             <dt className="text-xs text-on-surface-variant">{t("detailsChannel")}</dt>
-            <dd className="text-on-surface">{t("channelWebChat")}</dd>
+            <dd className="text-on-surface">{t(`channel.${conversation.channel}`)}</dd>
           </div>
           <div>
             <dt className="text-xs text-on-surface-variant">{t("detailsAgent")}</dt>

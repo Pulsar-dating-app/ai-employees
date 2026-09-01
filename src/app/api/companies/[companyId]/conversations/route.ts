@@ -2,13 +2,11 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { listConversations } from "@/lib/conversations/list";
 
-// Trello F5 -- the merchant-facing "who's talking to my customers, and do
-// any of them need me" list. Web chat only for now (channel = 'web_chat'
-// hardcoded, inside listConversations): WhatsApp conversations have no
-// local message history to preview here (they rely entirely on OpenAI's
-// own Conversations API), and showing them would need a separate
-// live-fetch code path -- a deliberately separate, larger piece of work,
-// not bundled into this ticket.
+// Trello F5 / N10 -- the merchant-facing "who's talking to my customers,
+// and do any of them need me" list. Every channel with local message
+// history: web chat and (N10) Instagram, both of which write to `messages`.
+// A channel that keeps history only at OpenAI (WhatsApp's parked dev
+// harness) would need a separate live-fetch path and isn't shown here.
 //
 // The actual query/enrichment logic lives in listConversations
 // (src/lib/conversations/list.ts), shared with this page's own initial

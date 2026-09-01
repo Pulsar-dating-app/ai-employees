@@ -13,6 +13,7 @@ import { defaultAgentName } from "@/lib/agents/naming";
 export type ConversationRow = {
   id: string;
   status: string;
+  channel: string;
   updatedAt: string;
   customer: { id: string; displayName: string };
   agentName: string | null;
@@ -31,18 +32,20 @@ export async function listConversations(
   companyId: string,
   filters: ConversationListFilters,
 ): Promise<{ rows: ConversationRow[]; total: number } | { error: string }> {
+  // N10: every channel, not just web chat -- the human-takeover inbox has
+  // to surface a paused Instagram conversation too. F5's original web-chat
+  // scope is gone; `channel` now travels on each row so the UI can badge it.
   let query = supabase
     .from("conversations")
-    .select("id, agent_id, status, updated_at, customer:customers!inner(id, name, phone)", { count: "exact" })
-    .eq("company_id", companyId)
-    .eq("channel", "web_chat");
+    .select("id, agent_id, status, channel, updated_at, customer:customers!inner(id, name, phone)", { count: "exact" })
+    .eq("company_id", companyId);
 
   if (filters.status) query = query.eq("status", filters.status);
-  // customers.name/phone are effectively always null for web chat today (no
-  // name-collection step exists yet) -- this filter is real and correct, it
-  // just won't match anything meaningful until a future ticket adds
-  // identity collection. The list UI discloses this rather than pretending
-  // search is fully functional.
+  // customers.name/phone are effectively always null today (no
+  // name-collection step exists on any channel yet) -- this filter is real
+  // and correct, it just won't match anything meaningful until a future
+  // ticket adds identity collection. The list UI discloses this rather than
+  // pretending search is fully functional.
   if (filters.search) {
     query = query.or(`name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`, {
       referencedTable: "customer",
@@ -95,6 +98,7 @@ export async function listConversations(
     return {
       id: c.id,
       status: c.status as string,
+      channel: c.channel as string,
       updatedAt: c.updated_at,
       customer: {
         id: customer.id,

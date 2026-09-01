@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
 
-// Trello F5 -- a merchant's manual reply. Sending one *is* taking over:
-// this always flips the conversation to 'paused' (unless already there),
-// no separate "take over" step. The AI stays off (src/app/api/chat/...
-// checks this same status) until "Resume AI" (the sibling route's PATCH)
-// hands control back.
+// Trello F5 / N10 -- a merchant's manual reply. Sending one *is* taking
+// over: this always flips the conversation to 'paused' (unless already
+// there), no separate "take over" step. The AI stays off (N9's gate, in
+// src/app/api/chat/... and the Instagram webhook, checks this same status)
+// until "Resume AI" (the sibling route's PATCH) hands control back.
+//
+// N10: the reply is now also *delivered* on the conversation's own channel,
+// not just persisted. Web chat needs nothing (the customer's widget polls
+// and picks it up). Instagram needs an actual outbound send via
+// sendInstagramMessage. The message row is persisted first and always --
+// delivery is reported back as { delivery: { ok } } so the UI can warn
+// without ever losing the merchant's text. Replying past Instagram's 24h
+// window (which needs the HUMAN_AGENT tag) is N11's job, not this ticket's.
 
 const MAX_MESSAGE_LENGTH = 4000;
 
@@ -28,6 +38,57 @@ async function requireMember(
     return { error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }) };
   }
   return { error: null };
+}
+
+// Delivers a just-persisted merchant reply over Instagram. Returns whether
+// it reached the customer; never throws -- the caller has already saved the
+// message and only needs to know if it went out.
+async function deliverOverInstagram(
+  companyId: string,
+  agentId: string | null,
+  customerId: string,
+  text: string,
+): Promise<{ ok: boolean }> {
+  if (!agentId) return { ok: false };
+  const service = createServiceClient();
+
+  const [{ data: connection }, { data: customer }] = await Promise.all([
+    service
+      .from("company_instagram_connections")
+      .select("access_token, instagram_user_id, status")
+      .eq("company_id", companyId)
+      .eq("agent_id", agentId)
+      .maybeSingle(),
+    service.from("customers").select("instagram_user_id").eq("id", customerId).maybeSingle(),
+  ]);
+
+  if (!connection || connection.status !== "connected" || !customer?.instagram_user_id) {
+    return { ok: false };
+  }
+
+  const result = await sendInstagramMessage(
+    connection.access_token,
+    connection.instagram_user_id,
+    customer.instagram_user_id,
+    text,
+  );
+
+  if (!result.ok && result.tokenInvalid) {
+    // Same best-effort dead-token handling as the inbound webhook -- flip
+    // the connection so N3's card stops claiming it's live. Its own failure
+    // never changes what this route returns.
+    try {
+      await service
+        .from("company_instagram_connections")
+        .update({ status: "disconnected", access_token: null, token_expires_at: null })
+        .eq("company_id", companyId)
+        .eq("agent_id", agentId);
+    } catch {
+      // Nothing further to do.
+    }
+  }
+
+  return { ok: result.ok };
 }
 
 export async function POST(
@@ -57,10 +118,9 @@ export async function POST(
 
   const { data: conversation, error: conversationError } = await supabase
     .from("conversations")
-    .select("id, status")
+    .select("id, status, channel, agent_id, customer_id")
     .eq("id", conversationId)
     .eq("company_id", companyId)
-    .eq("channel", "web_chat")
     .maybeSingle();
   if (conversationError) {
     return NextResponse.json({ error: conversationError.message }, { status: 500 });
@@ -92,5 +152,12 @@ export async function POST(
     await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
   }
 
-  return NextResponse.json({ message: reply }, { status: 201 });
+  // Deliver on the channel. Web chat: nothing to do, the widget polls.
+  // Instagram: an actual outbound send.
+  let delivery: { ok: boolean } | null = null;
+  if (conversation.channel === "instagram") {
+    delivery = await deliverOverInstagram(companyId, conversation.agent_id, conversation.customer_id, message);
+  }
+
+  return NextResponse.json({ message: reply, delivery }, { status: 201 });
 }
