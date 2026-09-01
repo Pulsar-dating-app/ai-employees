@@ -236,16 +236,16 @@
         "caption": "Cliques em um link para a sua loja"
       },
       "appointmentsBooked": {
-        "label": "Agendamentos feitos",
-        "caption": "Agendamentos criados no período"
+        "label": "Agendamentos",
+        "caption": "Agendados no período"
       },
       "appointmentsCompleted": {
         "label": "Concluídos",
-        "caption": "Agendamentos marcados como concluídos"
+        "caption": "Já concluídos"
       },
       "appointmentsCancelled": {
         "label": "Cancelados",
-        "caption": "Agendamentos que foram cancelados"
+        "caption": "Já cancelados"
       }
     },
     "notASale": "Um clique para o checkout significa que o cliente abriu sua loja, não que uma venda foi concluída.",

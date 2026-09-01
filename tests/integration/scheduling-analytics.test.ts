@@ -3,10 +3,11 @@ import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { loadSchedulingAnalytics } from "@/lib/analytics/scheduling";
 
-// Per-agent scheduling metrics for the Performance page (src/lib/analytics/
-// scheduling.ts). Real local Postgres + RLS throughout, same as the E2
-// analytics file. Rows are seeded with explicit `created_at` in a fixed past
-// window so bucket totals don't depend on "today".
+// Scheduling metrics for the Performance page (src/lib/analytics/scheduling.ts).
+// Real local Postgres + RLS throughout, same as the E2 analytics file.
+// Appointments are COMPANY-scoped (not agent-scoped) and bucket on
+// `created_at` (when the booking was taken) — so a row's `starts_at` is
+// irrelevant to the counts and these seeds put it well in the future.
 
 const WINDOW_FROM = "2026-06-01";
 const WINDOW_TO = "2026-06-30";
@@ -56,18 +57,17 @@ async function insertAppointment(
   owner: Awaited<ReturnType<typeof signUpTestUser>>,
   args: {
     companyId: string;
-    agentId: string;
+    agentId: string | null;
     customerId: string;
     status: "confirmed" | "completed" | "cancelled" | "requested";
-    // distinct hour on one fixed day, so the EXCLUDE constraint (no
-    // overlapping bookings per company) is never hit. `starts_at` itself is
-    // not read by loadSchedulingAnalytics — it buckets on `created_at`.
-    slot: number;
     createdAt: string;
+    // distinct day in 2027 so the EXCLUDE constraint (no overlapping bookings
+    // per company) is never hit; the slot date itself doesn't affect counts.
+    slotDay: number;
   },
 ) {
-  const startsAt = new Date(Date.UTC(2026, 6, 1, args.slot, 0, 0)).toISOString();
-  const endsAt = new Date(Date.UTC(2026, 6, 1, args.slot, 30, 0)).toISOString();
+  const startsAt = new Date(Date.UTC(2027, 0, args.slotDay, 9, 0, 0)).toISOString();
+  const endsAt = new Date(Date.UTC(2027, 0, args.slotDay, 9, 30, 0)).toISOString();
   const { error } = await owner.client.from("appointments").insert({
     company_id: args.companyId,
     agent_id: args.agentId,
@@ -90,7 +90,7 @@ function total(
 }
 
 describe("loadSchedulingAnalytics", () => {
-  it("counts an agent's conversations and appointments, split by status", async () => {
+  it("counts conversations and appointments booked in the window, split by status", async () => {
     const owner = await signUpTestUser("owner");
     const { companyId, anaId, customerId } = await seed(owner, "Sched Metrics Co");
 
@@ -98,11 +98,13 @@ describe("loadSchedulingAnalytics", () => {
       await insertConversation(owner, companyId, anaId, customerId, `2026-06-${day}T12:00:00.000Z`);
     }
 
-    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", slot: 1, createdAt: "2026-06-05T09:00:00.000Z" });
-    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", slot: 2, createdAt: "2026-06-06T09:00:00.000Z" });
-    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "completed", slot: 3, createdAt: "2026-06-10T09:00:00.000Z" });
-    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "cancelled", slot: 4, createdAt: "2026-06-15T09:00:00.000Z" });
-    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "requested", slot: 5, createdAt: "2026-06-18T09:00:00.000Z" });
+    // All five booked inside the window. Their slots are in 2027 — including
+    // the confirmed ones, which are still "upcoming" — and every one counts.
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", createdAt: "2026-06-05T09:00:00.000Z", slotDay: 1 });
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", createdAt: "2026-06-06T09:00:00.000Z", slotDay: 2 });
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "completed", createdAt: "2026-06-10T09:00:00.000Z", slotDay: 3 });
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "cancelled", createdAt: "2026-06-15T09:00:00.000Z", slotDay: 4 });
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "requested", createdAt: "2026-06-18T09:00:00.000Z", slotDay: 5 });
 
     const res = await loadSchedulingAnalytics({
       supabase: owner.client,
@@ -120,11 +122,35 @@ describe("loadSchedulingAnalytics", () => {
     expect(total(res, "appointments_cancelled")).toBe(1);
   });
 
-  it("excludes another agent's rows and another company's rows", async () => {
+  it("mirrors a real account: one completed + one cancelled + one still-future all count", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId, anaId, customerId } = await seed(owner, "Sched Real Co");
+
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "completed", createdAt: "2026-06-11T09:00:00.000Z", slotDay: 10 });
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "cancelled", createdAt: "2026-06-14T09:00:00.000Z", slotDay: 11 });
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", createdAt: "2026-06-19T09:00:00.000Z", slotDay: 12 });
+
+    const res = await loadSchedulingAnalytics({
+      supabase: owner.client,
+      companyId,
+      agentId: anaId,
+      timezone: "UTC",
+      granularity: "day",
+      from: WINDOW_FROM,
+      to: WINDOW_TO,
+    });
+
+    expect(total(res, "appointments_booked")).toBe(3);
+    expect(total(res, "appointments_completed")).toBe(1);
+    expect(total(res, "appointments_cancelled")).toBe(1);
+  });
+
+  it("scopes appointments to the company (any agent_id) and conversations to the agent", async () => {
     const owner = await signUpTestUser("owner");
     const { companyId, anaId, customerId } = await seed(owner, "Sched Scoping Co");
 
-    // A second agent in the same company (Malu), with her own activity.
+    // Second agent in the same company. Her conversation must NOT count; a
+    // Malu-tagged appointment and one with no agent_id both SHOULD.
     const hireMalu = await api<{ companyAgent: { agent_id: string } }>(
       "POST",
       `/api/companies/${companyId}/agents/malu`,
@@ -132,16 +158,17 @@ describe("loadSchedulingAnalytics", () => {
     );
     const maluId = hireMalu.json.companyAgent.agent_id;
     await insertConversation(owner, companyId, maluId, customerId, "2026-06-07T12:00:00.000Z");
-    await insertAppointment(owner, { companyId, agentId: maluId, customerId, status: "confirmed", slot: 8, createdAt: "2026-06-07T09:00:00.000Z" });
+    await insertAppointment(owner, { companyId, agentId: maluId, customerId, status: "confirmed", createdAt: "2026-06-07T09:00:00.000Z", slotDay: 20 });
+    await insertAppointment(owner, { companyId, agentId: null, customerId, status: "confirmed", createdAt: "2026-06-08T09:00:00.000Z", slotDay: 21 });
 
-    // A whole other company, also running Ana.
+    // Other company — nothing from it counts.
     const other = await seed(owner, "Sched Other Co");
     await insertConversation(owner, other.companyId, other.anaId, other.customerId, "2026-06-08T12:00:00.000Z");
-    await insertAppointment(owner, { companyId: other.companyId, agentId: other.anaId, customerId: other.customerId, status: "completed", slot: 9, createdAt: "2026-06-08T09:00:00.000Z" });
+    await insertAppointment(owner, { companyId: other.companyId, agentId: other.anaId, customerId: other.customerId, status: "completed", createdAt: "2026-06-08T09:00:00.000Z", slotDay: 22 });
 
-    // Ana's own single booking + conversation in the target company.
+    // Ana's own booking + conversation in the target company.
     await insertConversation(owner, companyId, anaId, customerId, "2026-06-09T12:00:00.000Z");
-    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", slot: 10, createdAt: "2026-06-09T09:00:00.000Z" });
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", createdAt: "2026-06-09T09:00:00.000Z", slotDay: 23 });
 
     const res = await loadSchedulingAnalytics({
       supabase: owner.client,
@@ -154,10 +181,39 @@ describe("loadSchedulingAnalytics", () => {
     });
 
     expect(total(res, "conversations")).toBe(1);
-    expect(total(res, "appointments_booked")).toBe(1);
+    expect(total(res, "appointments_booked")).toBe(3);
   });
 
-  it("zero-fills every day in the range for an agent with no activity", async () => {
+  it("ignores a booking taken outside the window even if its slot is inside", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId, anaId, customerId } = await seed(owner, "Sched Outside Co");
+
+    // Booked in May, slot in June: created_at is what's checked, so it drops.
+    const { error } = await owner.client.from("appointments").insert({
+      company_id: companyId,
+      agent_id: anaId,
+      customer_id: customerId,
+      status: "completed",
+      starts_at: new Date(Date.UTC(2026, 5, 10, 9, 0, 0)).toISOString(),
+      ends_at: new Date(Date.UTC(2026, 5, 10, 9, 30, 0)).toISOString(),
+      created_at: "2026-05-20T09:00:00.000Z",
+    });
+    if (error) throw error;
+
+    const res = await loadSchedulingAnalytics({
+      supabase: owner.client,
+      companyId,
+      agentId: anaId,
+      timezone: "UTC",
+      granularity: "day",
+      from: WINDOW_FROM,
+      to: WINDOW_TO,
+    });
+
+    expect(total(res, "appointments_booked")).toBe(0);
+  });
+
+  it("zero-fills every day in the range for a company with no activity", async () => {
     const owner = await signUpTestUser("owner");
     const { companyId, anaId } = await seed(owner, "Sched Empty Co");
 

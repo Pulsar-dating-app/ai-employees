@@ -55,12 +55,25 @@ type SchedulingLoadOptions = Pick<
   "companyId" | "timezone" | "granularity" | "from" | "to"
 > & { supabase: SupabaseClient; agentId: string };
 
-// Per-agent scheduling read for the Performance page: the conversations this
-// agent had + the appointments they booked, split by the appointment's
-// current status. Bucketed on `created_at` (when the booking was made), like
-// every other metric on that page; `status` being the *current* status is an
-// accepted approximation until per-status-change events exist (follow-up
-// ticket — see .claude/docs/decisions.md).
+// Scheduling read for the Performance page.
+//
+// - **Appointments are company-scoped, not agent-scoped**, and bucket on
+//   **`created_at`** (when the booking was made). Company-scoped so this
+//   matches the Scheduling page exactly — that page lists every `company_id`
+//   appointment, and bookings created from the dashboard (or before
+//   `agent_id` was populated) have no `agent_id`, so an `agent_id` filter
+//   would silently undercount (this is why Cancelled/Completed read 0 for a
+//   company that clearly had them). Ana is the only scheduling agent, so "her"
+//   numbers and the company's are the same set today — revisit if a second is
+//   added. `created_at` (not the slot's `starts_at`) so a booking counts in
+//   the period it was *taken*: a slot scheduled for next month still shows up
+//   this month, which is what "how much did the assistant do this period"
+//   means. `status` is the row's *current* status (no per-status-change
+//   events exist yet — follow-up ticket, see .claude/docs/decisions.md), so
+//   `appointments_booked` ≥ completed + cancelled and a still-future booking
+//   sits in `booked` only.
+// - **Conversations stay agent-scoped** (bucketed on `created_at`) — those
+//   genuinely are this agent's threads.
 export async function loadSchedulingAnalytics(
   opts: SchedulingLoadOptions,
 ): Promise<SchedulingAnalyticsResult> {
@@ -80,7 +93,6 @@ export async function loadSchedulingAnalytics(
       .from("appointments")
       .select("created_at, status")
       .eq("company_id", opts.companyId)
-      .eq("agent_id", opts.agentId)
       .gte("created_at", startUtc)
       .lt("created_at", endUtc),
   ]);
@@ -95,8 +107,8 @@ export async function loadSchedulingAnalytics(
     appointments_cancelled: zeroed(),
   };
 
-  const tally = (createdAt: string, metric: string) => {
-    const localDate = localDateOf(createdAt);
+  const tally = (instant: string, metric: string) => {
+    const localDate = localDateOf(instant);
     // Widened DB window can pull in rows just outside [from, to] — drop them
     // once their real local date is known (same guard as aggregateAnalytics).
     if (localDate < from || localDate > to) return;

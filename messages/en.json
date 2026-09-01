@@ -236,16 +236,16 @@
         "caption": "Taps on a link through to your store"
       },
       "appointmentsBooked": {
-        "label": "Appointments booked",
-        "caption": "Bookings made in this period"
+        "label": "Appointments",
+        "caption": "Booked in this period"
       },
       "appointmentsCompleted": {
         "label": "Completed",
-        "caption": "Bookings marked completed"
+        "caption": "Now marked completed"
       },
       "appointmentsCancelled": {
         "label": "Cancelled",
-        "caption": "Bookings that were cancelled"
+        "caption": "Now cancelled"
       }
     },
     "notASale": "A checkout click means a customer opened your store, not that a sale was completed.",
