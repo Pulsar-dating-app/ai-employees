@@ -383,13 +383,46 @@
       "connectError": "Algo deu errado ao conectar o Instagram. Tente novamente.",
       "disconnectError": "Algo deu errado ao desconectar. Tente novamente."
     },
+    "widgetCustomize": {
+      "title": "Personalize seu widget",
+      "description": "Escolha a aparência da bolha de chat de {name} e o que ela diz ao cumprimentar um visitante.",
+      "launcherSectionTitle": "Aparência da bolha",
+      "launcherDefault": "Animação padrão",
+      "launcherDefaultHint": "O personagem animado padrão de {name}.",
+      "launcherVideo": "Vídeo personalizado",
+      "launcherVideoHint": "WebM ou MP4, até 4MB.",
+      "launcherImage": "Imagem personalizada",
+      "launcherImageHint": "PNG, JPEG, WebP ou GIF, até 2MB.",
+      "chooseFileButton": "Escolher arquivo",
+      "noFileChosen": "Nenhum arquivo escolhido",
+      "currentFileHint": "Usando um arquivo enviado anteriormente.",
+      "greetingLabel": "Mensagem de saudação",
+      "greetingPlaceholder": "Oi! 👋 Posso ajudar a encontrar o que você procura?",
+      "greetingHint": "Aparece numa bolha de fala ao lado do botão alguns segundos depois que um visitante chega.",
+      "previewTitle": "Prévia ao vivo",
+      "saveButton": "Salvar",
+      "savingButton": "Salvando…",
+      "saved": "Salvo",
+      "chooseFileError": "Escolha um arquivo para enviar.",
+      "unsupportedFileVideo": "Use um arquivo WebM ou MP4.",
+      "unsupportedFileImage": "Use um arquivo PNG, JPEG, WebP ou GIF.",
+      "fileTooLargeVideo": "O vídeo deve ter no máximo 4MB.",
+      "fileTooLargeImage": "A imagem deve ter no máximo 2MB.",
+      "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
+    },
     "webChat": {
       "title": "Chat do site",
-      "description": "Compartilhe um link direto ou incorpore uma bolha de chat no seu próprio site.",
-      "linkLabel": "Link direto",
-      "embedLabel": "Código de incorporação",
-      "embedHint": "Cole este trecho logo antes da tag de fechamento do body do seu site.",
-      "copyButton": "Copiar"
+      "description": "Compartilhe um link direto ou incorpore uma bolha de chat no seu próprio site."
+    },
+    "shareEmbed": {
+      "directLinkLabel": "Link direto",
+      "directLinkDescription": "Compartilhe este link diretamente com clientes para conversar com {name}.",
+      "copyLinkButton": "Copiar link",
+      "copiedButton": "Copiado!",
+      "embedSectionLabel": "Incorporar no seu site",
+      "htmlSnippetLabel": "Trecho HTML",
+      "copyScriptButton": "Copiar script",
+      "embedInfoText": "Cole este código no seu site, logo antes da tag de fechamento do body, para começar a compartilhar o chat de {name}. A bolha aparece automaticamente no canto inferior direito."
     }
   },
   "Teach": {

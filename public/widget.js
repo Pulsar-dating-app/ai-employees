@@ -26,6 +26,16 @@
   var greeting = currentScript.getAttribute("data-greeting") || "Hi! 👋 Need help finding what you're looking for?";
   var TEASER_DISMISSED_KEY = "staffra-widget-teaser-dismissed:" + companySlug + ":" + agentSlug;
 
+  // Merchant-uploaded launcher, set via data-launcher-type ("video" or
+  // "image") + data-launcher-src on the script tag -- both generated
+  // together from the Customize screen, never hand-written. Any other/no
+  // value for data-launcher-type (including an older snippet pasted before
+  // this existed) falls back to the shared default character video, so a
+  // snippet copied before this feature shipped keeps working unmodified.
+  var launcherType = currentScript.getAttribute("data-launcher-type");
+  var launcherSrc = currentScript.getAttribute("data-launcher-src");
+  var useCustomLauncher = (launcherType === "video" || launcherType === "image") && !!launcherSrc;
+
   // The Staffra origin is derived from the script's own src, never
   // hardcoded -- the same file works unmodified in local dev and
   // production, whatever domain it's actually served from.
@@ -52,7 +62,7 @@
     "  transition: transform 0.15s ease;",
     "}",
     "#" + LAUNCHER_ID + ":hover { transform: scale(1.06); }",
-    "#" + LAUNCHER_ID + " video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }",
+    "#" + LAUNCHER_ID + " video, #" + LAUNCHER_ID + " img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }",
     "#" + PANEL_ID + " {",
     "  position: fixed; bottom: 92px; right: 20px; z-index: 2147483000;",
     "  width: 380px; height: min(600px, 80vh); max-width: calc(100vw - 40px);",
@@ -101,21 +111,31 @@
   launcher.id = LAUNCHER_ID;
   launcher.type = "button";
   launcher.setAttribute("aria-label", "Open chat");
-  // Looping character video instead of a static icon. Built via DOM
-  // properties, not an innerHTML string, so autoplay/loop/muted are real
-  // IDL properties the browser respects immediately (a muted+autoplay
-  // video is exempt from browser autoplay-blocking policies everywhere).
-  // The launcher button's own white background (above) is what a visitor
-  // sees if this video can't play at all -- still a clean, functional
-  // button, never a blank/broken box.
-  var launcherVideo = document.createElement("video");
-  launcherVideo.src = staffraOrigin + "/widget-launcher.webm";
-  launcherVideo.autoplay = true;
-  launcherVideo.loop = true;
-  launcherVideo.muted = true;
-  launcherVideo.playsInline = true;
-  launcherVideo.setAttribute("aria-hidden", "true");
-  launcher.appendChild(launcherVideo);
+  if (useCustomLauncher && launcherType === "image") {
+    // A merchant-uploaded static image -- same circular treatment as the
+    // video, just no autoplay/loop to manage.
+    var launcherImg = document.createElement("img");
+    launcherImg.src = launcherSrc;
+    launcherImg.alt = "";
+    launcher.appendChild(launcherImg);
+  } else {
+    // Looping character video: the shared default, or a merchant-uploaded
+    // replacement when data-launcher-type="video". Built via DOM
+    // properties, not an innerHTML string, so autoplay/loop/muted are real
+    // IDL properties the browser respects immediately (a muted+autoplay
+    // video is exempt from browser autoplay-blocking policies everywhere).
+    // The launcher button's own white background (above) is what a visitor
+    // sees if this video can't play at all -- still a clean, functional
+    // button, never a blank/broken box.
+    var launcherVideo = document.createElement("video");
+    launcherVideo.src = useCustomLauncher ? launcherSrc : staffraOrigin + "/widget-launcher.webm";
+    launcherVideo.autoplay = true;
+    launcherVideo.loop = true;
+    launcherVideo.muted = true;
+    launcherVideo.playsInline = true;
+    launcherVideo.setAttribute("aria-hidden", "true");
+    launcher.appendChild(launcherVideo);
+  }
 
   var panel = document.createElement("div");
   panel.id = PANEL_ID;

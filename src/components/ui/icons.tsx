@@ -267,6 +267,46 @@ export function SendIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// The Customize screen's two launcher-appearance choices.
+export function VideoIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <rect x="3" y="6" width="13" height="12" rx="2.5" />
+      <path d="m16 10.5 4.3-2.6a.7.7 0 0 1 1.05.6v6.9a.7.7 0 0 1-1.05.61L16 13.5" />
+    </svg>
+  );
+}
+
+export function ImageIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+      <circle cx="9" cy="10" r="1.75" />
+      <path d="m5 18 5.5-5.5a2 2 0 0 1 2.8 0L19 18" />
+    </svg>
+  );
+}
+
+// The Share & Embed dialog's two sections.
+export function CodeIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <path d="m8.5 8-4 4 4 4" />
+      <path d="m15.5 8 4 4-4 4" />
+    </svg>
+  );
+}
+
+export function InfoIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5.5" />
+      <path d="M12 8v.01" />
+    </svg>
+  );
+}
+
 export function SpinnerIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg

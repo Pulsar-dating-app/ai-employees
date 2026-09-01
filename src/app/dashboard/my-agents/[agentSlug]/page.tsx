@@ -6,10 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { agentPhoto } from "@/lib/agents/media";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
+import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { AgentPersonaCard } from "../agent-persona-card";
 import { WebChatChannelCard } from "./web-chat-channel-card";
+import { WidgetCustomizeCard } from "./widget-customize-card";
 import { InstagramConnectCard } from "./instagram-connect-card";
 import { AvailabilityCard } from "./availability-card";
 import { HumanHandoffCard } from "./human-handoff-card";
@@ -64,7 +66,7 @@ export default async function AgentConnectionsPage({
   const [{ data: companyAgent }, { data: membership }] = await Promise.all([
     supabase
       .from("company_agents")
-      .select("id, status")
+      .select("id, status, widget_greeting, widget_launcher_type, widget_launcher_asset_url")
       .eq("company_id", company.id)
       .eq("agent_id", agent.id)
       .maybeSingle(),
@@ -93,7 +95,11 @@ export default async function AgentConnectionsPage({
 
   const baseUrl = resolveCheckoutBaseUrl();
   const chatUrl = `${baseUrl}/talk/${company.slug}/${agentSlug}`;
-  const embedSnippet = `<script src="${baseUrl}/widget.js" data-company="${company.slug}" data-agent="${agentSlug}"></script>`;
+  const embedSnippet = buildEmbedSnippet(baseUrl, company.slug, agentSlug, {
+    greeting: companyAgent.widget_greeting,
+    launcherType: companyAgent.widget_launcher_type,
+    launcherAssetUrl: companyAgent.widget_launcher_asset_url,
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -134,7 +140,18 @@ export default async function AgentConnectionsPage({
           <Suspense fallback={null}>
             <InstagramConnectCard companyId={company.id} agentSlug={agentSlug} canEdit={canEdit} />
           </Suspense>
-          <WebChatChannelCard chatUrl={chatUrl} embedSnippet={embedSnippet} />
+          <WidgetCustomizeCard
+            companyId={company.id}
+            agentSlug={agentSlug}
+            agentName={name}
+            canEdit={canEdit}
+            initial={{
+              greeting: companyAgent.widget_greeting,
+              launcherType: companyAgent.widget_launcher_type,
+              launcherAssetUrl: companyAgent.widget_launcher_asset_url,
+            }}
+          />
+          <WebChatChannelCard agentName={name} chatUrl={chatUrl} embedSnippet={embedSnippet} />
           {process.env.NODE_ENV !== "production" ? (
             <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />
           ) : null}

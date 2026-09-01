@@ -383,13 +383,46 @@
       "connectError": "Something went wrong connecting Instagram. Please try again.",
       "disconnectError": "Something went wrong disconnecting. Please try again."
     },
+    "widgetCustomize": {
+      "title": "Customize your widget",
+      "description": "Choose how {name}'s chat bubble looks and what it says when it greets a visitor.",
+      "launcherSectionTitle": "Launcher appearance",
+      "launcherDefault": "Default animation",
+      "launcherDefaultHint": "{name}'s built-in animated character.",
+      "launcherVideo": "Custom video",
+      "launcherVideoHint": "WebM or MP4, up to 4MB.",
+      "launcherImage": "Custom image",
+      "launcherImageHint": "PNG, JPEG, WebP, or GIF, up to 2MB.",
+      "chooseFileButton": "Choose file",
+      "noFileChosen": "No file chosen",
+      "currentFileHint": "Using a previously uploaded file.",
+      "greetingLabel": "Greeting message",
+      "greetingPlaceholder": "Hi! 👋 Need help finding what you're looking for?",
+      "greetingHint": "Shown in a speech bubble beside the launcher a few seconds after a visitor arrives.",
+      "previewTitle": "Live preview",
+      "saveButton": "Save",
+      "savingButton": "Saving…",
+      "saved": "Saved",
+      "chooseFileError": "Choose a file to upload.",
+      "unsupportedFileVideo": "Use a WebM or MP4 file.",
+      "unsupportedFileImage": "Use a PNG, JPEG, WebP, or GIF file.",
+      "fileTooLargeVideo": "Video must be 4MB or smaller.",
+      "fileTooLargeImage": "Image must be 2MB or smaller.",
+      "saveError": "Something went wrong saving that setting. Please try again."
+    },
     "webChat": {
       "title": "Website chat",
-      "description": "Share a direct link, or embed a chat bubble right on your own site.",
-      "linkLabel": "Direct link",
-      "embedLabel": "Embed code",
-      "embedHint": "Paste this snippet right before your site's closing body tag.",
-      "copyButton": "Copy"
+      "description": "Share a direct link, or embed a chat bubble right on your own site."
+    },
+    "shareEmbed": {
+      "directLinkLabel": "Direct Link",
+      "directLinkDescription": "Share this link directly with customers to chat with {name}.",
+      "copyLinkButton": "Copy Link",
+      "copiedButton": "Copied!",
+      "embedSectionLabel": "Embed on your site",
+      "htmlSnippetLabel": "HTML Snippet",
+      "copyScriptButton": "Copy Script",
+      "embedInfoText": "Paste this code into your website, right before the closing body tag, to start sharing {name}'s chat. The bubble will appear automatically in the bottom-right corner."
     }
   },
   "Teach": {
