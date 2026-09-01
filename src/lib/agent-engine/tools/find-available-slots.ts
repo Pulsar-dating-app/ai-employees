@@ -35,7 +35,12 @@ export const findAvailableSlotsTool: AgentTool = {
     "block ends.\n\n" +
     "If the list is empty and there's no `timeOff` explaining it, say nothing is open in that " +
     "range and offer to try another -- never invent a slot that isn't in the result. " +
-    "`available: false` means that service isn't something this business offers.",
+    "`available: false` means that service isn't something this business offers.\n\n" +
+    "`intakeQuestions` lists customer details this business wants before a booking (each with a " +
+    "`label` and whether it's `required`). If it's non-empty, collect those from the customer -- " +
+    "phrase each `label` as a natural question in your own words -- and pass the answers to " +
+    "book_appointment as `intakeAnswers`. You must have every required one before booking; ask " +
+    "for an optional one once and move on if they'd rather not say.",
   parameters: {
     type: "object",
     properties: {

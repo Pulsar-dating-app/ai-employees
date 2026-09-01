@@ -776,8 +776,9 @@
       "intake": {
         "title": "Perguntas iniciais",
         "subtitle": "Dados a coletar do cliente antes de marcar um agendamento.",
+        "hint": "Cadastre só um rótulo para o dado — o nome da informação, não uma frase inteira. Por exemplo: Nome, Idade, CPF. Sua equipe pergunta com as próprias palavras.",
         "empty": "Nenhuma pergunta ainda — os agendamentos seguem sem coletar dados extras.",
-        "labelPlaceholder": "ex.: Nome completo",
+        "labelPlaceholder": "ex.: Nome",
         "labelAria": "Nome da pergunta {position}",
         "required": "Obrigatória",
         "requiredAria": "Tornar \"{label}\" obrigatória",

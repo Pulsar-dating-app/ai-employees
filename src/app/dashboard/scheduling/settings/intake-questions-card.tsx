@@ -135,6 +135,9 @@ export function IntakeQuestionsCard({
 
   return (
     <SettingsSection icon={ListIcon} title={t("title")} subtitle={t("subtitle")}>
+      <p className="mb-4 rounded-lg bg-surface-container-low px-3 py-2 text-label-md text-on-surface-variant">
+        {t("hint")}
+      </p>
       <div className="flex flex-col gap-2">
         {rows.length === 0 ? (
           <p className="text-sm text-on-surface-variant">{t("empty")}</p>

@@ -319,6 +319,127 @@ describe("book_appointment", () => {
   });
 });
 
+describe("intake questions (Trello K9)", () => {
+  async function setIntakeFields(
+    companyId: string,
+    fields: { label: string; is_required: boolean }[],
+  ) {
+    await api("PUT", `/api/companies/${companyId}/intake-fields`, owner.cookieHeader, {
+      intakeFields: fields,
+    });
+  }
+
+  it("find_available_slots surfaces the configured questions (and [] when none)", async () => {
+    const seed = await seedConversation(owner, "Intake Slots Co");
+    const serviceId = await createService(owner, seed.companyId, {
+      name: "Consult",
+      duration_minutes: 30,
+    });
+    await setBusinessHours(owner, seed.companyId);
+
+    const before = (await findAvailableSlotsTool.execute(
+      { serviceId, from: BOOKING_DATE, to: BOOKING_DATE },
+      toolCtxFor(seed),
+    )) as { intakeQuestions: unknown[] };
+    expect(before.intakeQuestions).toEqual([]);
+
+    await setIntakeFields(seed.companyId, [
+      { label: "Full name", is_required: true },
+      { label: "Age", is_required: false },
+    ]);
+
+    const after = (await findAvailableSlotsTool.execute(
+      { serviceId, from: BOOKING_DATE, to: BOOKING_DATE },
+      toolCtxFor(seed),
+    )) as { intakeQuestions: { label: string; required: boolean }[] };
+    expect(after.intakeQuestions).toEqual([
+      { label: "Full name", required: true },
+      { label: "Age", required: false },
+    ]);
+  });
+
+  it("book_appointment refuses until every required answer is supplied", async () => {
+    const seed = await seedConversation(owner, "Intake Required Co");
+    const serviceId = await createService(owner, seed.companyId, {
+      name: "Screening",
+      duration_minutes: 30,
+    });
+    await setBusinessHours(owner, seed.companyId);
+    await setIntakeFields(seed.companyId, [
+      { label: "Full name", is_required: true },
+      { label: "CPF", is_required: true },
+      { label: "Notes", is_required: false },
+    ]);
+    const ctx = toolCtxFor(seed);
+
+    const missing = await bookAppointmentTool.execute(
+      { serviceId, startsAt: `${BOOKING_DATE}T09:00:00Z`, intakeAnswers: { "Full name": "Ana Souza" } },
+      ctx,
+    );
+    expect(missing).toEqual({ booked: false, reason: "missing_intake_answers", missingRequired: ["CPF"] });
+
+    // No row was written.
+    const { data: none } = await getTestServiceClient()
+      .from("appointments")
+      .select("id")
+      .eq("conversation_id", seed.conversationId);
+    expect(none).toHaveLength(0);
+
+    // Case-insensitive key match; optional "Notes" left blank is fine.
+    const booked = (await bookAppointmentTool.execute(
+      {
+        serviceId,
+        startsAt: `${BOOKING_DATE}T09:00:00Z`,
+        intakeAnswers: { "full name": "Ana Souza", cpf: "123.456.789-00" },
+      },
+      ctx,
+    )) as { booked: true; appointmentId: string };
+    expect(booked.booked).toBe(true);
+
+    const { data: row } = await getTestServiceClient()
+      .from("appointments")
+      .select("intake_answers")
+      .eq("id", booked.appointmentId)
+      .single();
+    // Stored under the canonical labels; the unanswered optional is absent.
+    expect(row!.intake_answers).toEqual({ "Full name": "Ana Souza", CPF: "123.456.789-00" });
+  });
+
+  it("stores an answered optional question and still books when it's blank", async () => {
+    const seed = await seedConversation(owner, "Intake Optional Co");
+    const serviceId = await createService(owner, seed.companyId, {
+      name: "Visit",
+      duration_minutes: 30,
+    });
+    await setBusinessHours(owner, seed.companyId);
+    await setIntakeFields(seed.companyId, [{ label: "Referral source", is_required: false }]);
+
+    const answered = (await bookAppointmentTool.execute(
+      {
+        serviceId,
+        startsAt: `${BOOKING_DATE}T10:00:00Z`,
+        intakeAnswers: { "Referral source": "Instagram" },
+      },
+      toolCtxFor(seed),
+    )) as { booked: true; appointmentId: string };
+    expect(answered.booked).toBe(true);
+
+    const skipped = (await bookAppointmentTool.execute(
+      { serviceId, startsAt: `${BOOKING_DATE}T11:00:00Z` },
+      toolCtxFor(seed),
+    )) as { booked: true; appointmentId: string };
+    expect(skipped.booked).toBe(true);
+
+    const { data: rows } = await getTestServiceClient()
+      .from("appointments")
+      .select("id, intake_answers")
+      .in("id", [answered.appointmentId, skipped.appointmentId]);
+    const byId = Object.fromEntries((rows ?? []).map((r) => [r.id, r.intake_answers]));
+    expect(byId[answered.appointmentId]).toEqual({ "Referral source": "Instagram" });
+    expect(byId[skipped.appointmentId]).toEqual({});
+  });
+});
+
 describe("cancel_appointment", () => {
   it("soft-cancels this customer's appointment and is idempotent", async () => {
     const seed = await seedConversation(owner, "Cancel Co");

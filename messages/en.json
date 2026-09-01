@@ -776,8 +776,9 @@
       "intake": {
         "title": "Intake questions",
         "subtitle": "Details to collect from the customer before an appointment is booked.",
+        "hint": "Enter just a label for the detail — the name of the data, not a full sentence. For example: Name, Age, CPF. Your team asks for it in its own words.",
         "empty": "No questions yet — bookings go ahead without collecting extra details.",
-        "labelPlaceholder": "e.g. Full name",
+        "labelPlaceholder": "e.g. Name",
         "labelAria": "Question {position} label",
         "required": "Required",
         "requiredAria": "Make \"{label}\" required",
