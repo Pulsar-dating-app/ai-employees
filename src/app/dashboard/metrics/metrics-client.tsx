@@ -5,11 +5,14 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import {
   BarChartIcon,
+  CalendarIcon,
   CartIcon,
   ChatIcon,
+  CheckIcon,
   LightbulbIcon,
   TargetIcon,
   UsersIcon,
+  XIcon,
 } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 import { MetricCard } from "./metric-card";
@@ -24,14 +27,9 @@ const METRIC_ICON: Record<string, IconComponent> = {
   product_recommendations: LightbulbIcon,
   buying_intent: TargetIcon,
   checkout_clicks: CartIcon,
-};
-
-const METRIC_SIZE: Record<string, "lg" | "md"> = {
-  conversations: "lg",
-  customers: "lg",
-  product_recommendations: "md",
-  buying_intent: "md",
-  checkout_clicks: "md",
+  appointments_booked: CalendarIcon,
+  appointments_completed: CheckIcon,
+  appointments_cancelled: XIcon,
 };
 
 export type MetricCardData = {
@@ -44,10 +42,13 @@ export type MetricCardData = {
 
 export type MetricsClientProps = {
   rangeValue: string;
+  agentOptions: { value: string; label: string }[];
+  selectedAgent: string;
   header: { title: string; subtitle: string };
   overview: { title: string; subtitle: string };
   rangeLabels: Record<string, string>;
   rangeGroupLabel: string;
+  agentGroupLabel: string;
   cards: MetricCardData[];
   notASale: string;
   health: {
@@ -64,10 +65,13 @@ export type MetricsClientProps = {
 // redraws itself left-to-right.
 export function MetricsClient({
   rangeValue,
+  agentOptions,
+  selectedAgent,
   header,
   overview,
   rangeLabels,
   rangeGroupLabel,
+  agentGroupLabel,
   cards,
   notASale,
   health,
@@ -84,6 +88,13 @@ export function MetricsClient({
     startTransition(() => router.push(`${pathname}?${params.toString()}`));
   }
 
+  function changeAgent(slug: string) {
+    if (slug === selectedAgent) return;
+    const params = new URLSearchParams(searchParams);
+    params.set("agent", slug);
+    startTransition(() => router.push(`${pathname}?${params.toString()}`));
+  }
+
   const dim = clsx(
     "transition-[opacity,filter] duration-300",
     isPending && "pointer-events-none opacity-40 blur-[1px] saturate-[0.6]",
@@ -96,13 +107,32 @@ export function MetricsClient({
         title={header.title}
         subtitle={header.subtitle}
         action={
-          <RangeToggle
-            value={rangeValue}
-            labels={rangeLabels}
-            groupLabel={rangeGroupLabel}
-            onChange={changeRange}
-            busy={isPending}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            {agentOptions.length > 1 ? (
+              <label className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low py-1 pl-3 pr-1 text-sm">
+                <span className="text-on-surface-variant">{agentGroupLabel}</span>
+                <select
+                  value={selectedAgent}
+                  disabled={isPending}
+                  onChange={(e) => changeAgent(e.target.value)}
+                  className="rounded-md bg-surface-container-lowest px-2 py-1 text-sm font-medium text-on-surface shadow-level1 outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed"
+                >
+                  {agentOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            <RangeToggle
+              value={rangeValue}
+              labels={rangeLabels}
+              groupLabel={rangeGroupLabel}
+              onChange={changeRange}
+              busy={isPending}
+            />
+          </div>
         }
       />
 
@@ -125,20 +155,18 @@ export function MetricsClient({
         </div>
 
         <div
-          key={rangeValue}
+          key={`${selectedAgent}-${rangeValue}`}
           aria-busy={isPending}
-          className={clsx("grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-6", dim)}
+          className={clsx("grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4", dim)}
         >
           {cards.map((card) => (
             <MetricCard
               key={card.key}
-              icon={METRIC_ICON[card.key]}
+              icon={METRIC_ICON[card.key] ?? BarChartIcon}
               label={card.label}
               caption={card.caption}
               value={card.value}
               series={card.series}
-              size={METRIC_SIZE[card.key]}
-              className={METRIC_SIZE[card.key] === "lg" ? "lg:col-span-3" : "lg:col-span-2"}
             />
           ))}
         </div>

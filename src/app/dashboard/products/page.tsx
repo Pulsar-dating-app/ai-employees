@@ -2,10 +2,15 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
+import { defaultAgentName } from "@/lib/agents/naming";
 import { Button } from "@/components/ui/button";
 import { PackageIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
+import { LockedPage } from "../locked-page";
 import { ProductsManager } from "./products-manager";
+
+// Products exists to serve Malu — no catalog, nothing for her to sell from.
+const REQUIRED_AGENT_SLUG = "malu";
 
 const PAGE_SIZE = 20;
 
@@ -36,15 +41,16 @@ export default async function ProductsPage() {
     );
   }
 
-  // Membership and the first page of products both only depend on
-  // company.id, not on each other — parallelize.
-  const [{ data: membership }, { data: products, count }] = await Promise.all([
+  // Membership, hire status, and the first page of products all only depend
+  // on company.id, not on each other — parallelize.
+  const [{ data: membership }, { data: hiredAgents }, { data: products, count }] = await Promise.all([
     supabase
       .from("company_users")
       .select("role")
       .eq("company_id", company.id)
       .eq("user_id", user!.id)
       .maybeSingle(),
+    supabase.from("company_agents").select("agents(slug)").eq("company_id", company.id),
     supabase
       .from("products")
       .select(PRODUCT_PUBLIC_COLUMNS, { count: "exact" })
@@ -53,6 +59,26 @@ export default async function ProductsPage() {
       .order("created_at", { ascending: false })
       .range(0, PAGE_SIZE - 1),
   ]);
+
+  const hiredSlugs = ((hiredAgents ?? []) as unknown as { agents: { slug: string } | null }[])
+    .map((r) => r.agents?.slug)
+    .filter((s): s is string => Boolean(s));
+
+  if (!hiredSlugs.includes(REQUIRED_AGENT_SLUG)) {
+    const tl = await getTranslations("Dashboard.locked");
+    const name = defaultAgentName(REQUIRED_AGENT_SLUG);
+    return (
+      <LockedPage
+        icon={PackageIcon}
+        pageTitle={t("pageTitle")}
+        pageSubtitle={t("pageSubtitle")}
+        title={tl("title", { name })}
+        body={tl("body", { name })}
+        ctaLabel={tl("cta", { name })}
+        ctaHref={`/dashboard/agents/${REQUIRED_AGENT_SLUG}`}
+      />
+    );
+  }
 
   // Deliberately not owner/admin-gated like Settings' canEdit — B3's product
   // routes only ever call requireMember, never requireAdmin, so any member

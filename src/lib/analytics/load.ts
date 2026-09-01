@@ -74,10 +74,14 @@ async function fetchWindow(
   companyId: string,
   startUtc: string,
   endUtc: string,
+  // When set, restrict to rows belonging to one hired agent. Only
+  // `conversations` and `events` carry `agent_id`; `customers` does not, so
+  // the caller skips this fetch entirely for a per-agent read.
+  agentId?: string | null,
 ): Promise<Row[]> {
   const rows: Row[] = [];
   for (let offset = 0; ; offset += PAGE_SIZE) {
-    const { data, error } = await supabase
+    let query = supabase
       .from(table)
       .select(columns)
       .eq("company_id", companyId)
@@ -85,6 +89,10 @@ async function fetchWindow(
       .lt("created_at", endUtc)
       .order("created_at", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
+
+    if (agentId) query = query.eq("agent_id", agentId);
+
+    const { data, error } = await query;
 
     if (error) throw new Error(error.message);
     const batch = (data ?? []) as unknown as Row[];
@@ -109,12 +117,28 @@ export type LoadAnalyticsOptions = {
   granularity?: string | null;
   from?: string | null;
   to?: string | null;
+  // When set, scope conversations + events to this hired agent. The
+  // company-wide `customers` metric has no agent link and is skipped for a
+  // per-agent read (see src/app/dashboard/metrics — the per-agent metric
+  // set doesn't include it).
+  agentId?: string | null;
 };
 
-// Resolves the range, reads the windows, and aggregates. Throws
-// InvalidRangeError for `from` after `to`; any Supabase failure surfaces as
-// a plain Error for the caller to map to a 500.
-export async function loadCompanyAnalytics(opts: LoadAnalyticsOptions): Promise<AnalyticsResult> {
+export type ResolvedRange = {
+  granularity: Granularity;
+  timezone: string;
+  from: string;
+  to: string;
+  startUtc: string;
+  endUtc: string;
+};
+
+// Range resolution shared by loadCompanyAnalytics and the per-agent
+// scheduling aggregator (src/lib/analytics/scheduling.ts) so both bucket
+// over identical windows. Throws InvalidRangeError for `from` after `to`.
+export function resolveAnalyticsRange(
+  opts: Pick<LoadAnalyticsOptions, "timezone" | "granularity" | "from" | "to">,
+): ResolvedRange {
   const granularity: Granularity = opts.granularity === "week" ? "week" : "day";
   const timezone =
     opts.timezone && isValidTimeZone(opts.timezone) ? opts.timezone : DEFAULT_TIMEZONE;
@@ -132,14 +156,26 @@ export async function loadCompanyAnalytics(opts: LoadAnalyticsOptions): Promise<
   const from = fromRaw < minFrom ? minFrom : fromRaw;
 
   // The DB query is in UTC; widen by a day on each side so no local-tz
-  // calendar day in [from, to] is missed. aggregateAnalytics re-filters.
+  // calendar day in [from, to] is missed. The aggregator re-filters.
   const startUtc = `${addDays(from, -1)}T00:00:00.000Z`;
   const endUtc = `${addDays(to, 2)}T00:00:00.000Z`;
 
+  return { granularity, timezone, from, to, startUtc, endUtc };
+}
+
+// Resolves the range, reads the windows, and aggregates. Throws
+// InvalidRangeError for `from` after `to`; any Supabase failure surfaces as
+// a plain Error for the caller to map to a 500.
+export async function loadCompanyAnalytics(opts: LoadAnalyticsOptions): Promise<AnalyticsResult> {
+  const { granularity, timezone, from, to, startUtc, endUtc } = resolveAnalyticsRange(opts);
+  const agentId = opts.agentId ?? null;
+
   const [conversations, customers, events] = await Promise.all([
-    fetchWindow(opts.supabase, "conversations", "created_at", opts.companyId, startUtc, endUtc),
-    fetchWindow(opts.supabase, "customers", "created_at", opts.companyId, startUtc, endUtc),
-    fetchWindow(opts.supabase, "events", "created_at, type", opts.companyId, startUtc, endUtc),
+    fetchWindow(opts.supabase, "conversations", "created_at", opts.companyId, startUtc, endUtc, agentId),
+    agentId
+      ? Promise.resolve([] as Row[])
+      : fetchWindow(opts.supabase, "customers", "created_at", opts.companyId, startUtc, endUtc),
+    fetchWindow(opts.supabase, "events", "created_at, type", opts.companyId, startUtc, endUtc, agentId),
   ]);
 
   const metrics = aggregateAnalytics({

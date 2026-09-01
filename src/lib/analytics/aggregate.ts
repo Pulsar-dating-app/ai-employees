@@ -48,7 +48,9 @@ export type AggregateInput = {
 // Built from `formatToParts` (with the always-present `en-US` locale) so it
 // stays ISO-shaped regardless of which locale data the Node build ships —
 // the `en-CA` short-date trick silently produces other formats without it.
-function makeLocalDateFn(tz: string): (isoInstant: string) => string {
+// Exported so a per-agent aggregator (src/lib/analytics/scheduling.ts) can
+// reuse the exact same bucketing primitives as the company-wide one.
+export function makeLocalDateFn(tz: string): (isoInstant: string) => string {
   const fmt = new Intl.DateTimeFormat("en-US", {
     timeZone: tz,
     year: "numeric",

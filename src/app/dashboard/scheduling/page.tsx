@@ -6,6 +6,8 @@ import { zonedTimeToUtc } from "@/lib/availability/engine";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { agentPhoto } from "@/lib/agents/media";
 import { Button } from "@/components/ui/button";
+import { CalendarIcon } from "@/components/ui/icons";
+import { LockedPage } from "../locked-page";
 import { AppointmentsManager } from "./appointments-manager";
 import { AppointmentsSummary, type SchedulingTeamMember } from "./appointments-summary";
 import { APPOINTMENT_SELECT } from "./appointment-types";
@@ -144,6 +146,25 @@ export default async function AppointmentsPage() {
     agents: { slug: string } | null;
   }[];
   const schedulingRow = hiredRows.find((row) => row.agents?.slug === SCHEDULING_AGENT_SLUG);
+
+  // Scheduling exists to serve Ana — with her not hired there are no
+  // bookings to manage. The tab stays visible; this is where it lands.
+  if (!schedulingRow) {
+    const tl = await getTranslations("Dashboard.locked");
+    const name = defaultAgentName(SCHEDULING_AGENT_SLUG);
+    return (
+      <LockedPage
+        icon={CalendarIcon}
+        pageTitle={t("pageTitle")}
+        pageSubtitle={t("pageSubtitle")}
+        title={tl("title", { name })}
+        body={tl("body", { name })}
+        ctaLabel={tl("cta", { name })}
+        ctaHref={`/dashboard/agents/${SCHEDULING_AGENT_SLUG}`}
+      />
+    );
+  }
+
   const teamMember: SchedulingTeamMember | null = schedulingRow?.agents
     ? {
         name: schedulingRow.name ?? defaultAgentName(schedulingRow.agents.slug),

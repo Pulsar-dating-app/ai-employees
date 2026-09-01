@@ -18,19 +18,17 @@ import {
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
-// `requiresAgent` gates a tab on having hired the agent it exists to serve:
-// a barbershop running only Ana has no use for a Products tab, and a shop
-// running only Malu has nothing to schedule. Items without it are always
-// shown. The data stays company-scoped either way (products.company_id /
-// services.company_id) — this is purely about what's worth showing.
+// Every tab is always shown, even one whose team member the company hasn't
+// hired (Products → Malu, Scheduling → Ana, Performance → any) — a merchant
+// should be able to see the capability exists. Clicking such a tab lands on
+// the page's locked state (`LockedPage`) instead of its content; each page
+// owns that check, so there's no per-agent config here.
 const NAV_ITEMS = [
   { href: "/dashboard", key: "marketplace" as const, icon: SearchIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
   { href: "/dashboard/my-agents", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p.startsWith("/dashboard/my-agents") },
-  // F5 -- not gated by requiresAgent: conversations aren't specific to one
-  // agent the way Products (Malu) / Scheduling (Ana) are.
   { href: "/dashboard/conversations", key: "conversations" as const, icon: ChatIcon, match: (p: string) => p.startsWith("/dashboard/conversations") },
-  { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, requiresAgent: "malu", match: (p: string) => p.startsWith("/dashboard/products") },
-  { href: "/dashboard/scheduling", key: "scheduling" as const, icon: CalendarIcon, requiresAgent: "ana", match: (p: string) => p.startsWith("/dashboard/scheduling") },
+  { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, match: (p: string) => p.startsWith("/dashboard/products") },
+  { href: "/dashboard/scheduling", key: "scheduling" as const, icon: CalendarIcon, match: (p: string) => p.startsWith("/dashboard/scheduling") },
   { href: "/dashboard/metrics", key: "metrics" as const, icon: BarChartIcon, match: (p: string) => p.startsWith("/dashboard/metrics") },
   { href: "/dashboard/settings", key: "settings" as const, icon: SettingsIcon, match: (p: string) => p.startsWith("/dashboard/settings") },
 ];
@@ -75,12 +73,10 @@ export function Sidebar({
   companyName,
   email,
   locale,
-  hiredAgentSlugs,
 }: {
   companyName: string | null;
   email: string | null;
   locale: "en" | "pt";
-  hiredAgentSlugs: string[];
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
@@ -88,13 +84,7 @@ export function Sidebar({
 
   const identityLabel = companyName ?? email ?? "";
 
-  // Kept as one derived list so the desktop rail and the mobile tab bar can't
-  // disagree about which tabs exist — the same reason they already share
-  // NAV_ITEMS. A merchant who is *on* a hidden tab's URL still sees the page
-  // itself; this only controls the navigation.
-  const navItems = NAV_ITEMS.filter(
-    (item) => !item.requiresAgent || hiredAgentSlugs.includes(item.requiresAgent),
-  );
+  const navItems = NAV_ITEMS;
 
   return (
     <>
