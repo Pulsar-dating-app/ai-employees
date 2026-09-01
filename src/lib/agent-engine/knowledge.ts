@@ -35,3 +35,21 @@ export async function loadCompanyTimezone(
   if (error) throw error;
   return data?.timezone ?? null;
 }
+
+// A merchant-facing switch: whether the agent may hand off to a human at
+// all (the request_human tool -- C5, now actually enforced by F5). Defaults
+// true (companies.allow_human_handoff is NOT NULL DEFAULT true) so no
+// existing company loses the capability it already had. `data` is null
+// only if the company row itself is somehow missing, which shouldn't
+// happen this deep into a conversation already resolved against it --
+// fails open (true) rather than silently stripping an escalation path a
+// merchant never chose to remove.
+export async function loadHumanHandoffEnabled(supabase: SupabaseClient, companyId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("companies")
+    .select("allow_human_handoff")
+    .eq("id", companyId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.allow_human_handoff ?? true;
+}

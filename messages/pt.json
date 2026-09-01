@@ -191,6 +191,7 @@
       "myAgents": "Minha equipe",
       "products": "Produtos",
       "scheduling": "Agendamentos",
+      "conversations": "Conversas",
       "metrics": "Desempenho",
       "settings": "Configurações"
     }
@@ -338,6 +339,13 @@
       "cancel": "Cancelar",
       "updateError": "Algo deu errado. Tente novamente."
     },
+    "humanHandoff": {
+      "title": "Transferência para humano",
+      "description": "Se {name} — e qualquer outro funcionário que você contratar — pode oferecer trazer alguém da sua empresa quando um cliente precisa falar com uma pessoa.",
+      "toggleLabel": "Permitir transferência para uma pessoa",
+      "toggleHelp": "Quando ativado, seus funcionários podem oferecer envolver alguém da empresa, e você pode assumir uma conversa a qualquer momento pela página de Conversas. Quando desativado, eles sempre atendem as conversas sozinhos.",
+      "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
+    },
     "channels": {
       "title": "WhatsApp",
       "description": "Conecte seu número do WhatsApp Business para que os clientes possam começar a conversar.",
@@ -380,7 +388,7 @@
       "description": "Compartilhe um link direto ou incorpore uma bolha de chat no seu próprio site.",
       "linkLabel": "Link direto",
       "embedLabel": "Código de incorporação",
-      "embedHint": "Cole este trecho logo antes da tag de fechamento </body> do seu site.",
+      "embedHint": "Cole este trecho logo antes da tag de fechamento do body do seu site.",
       "copyButton": "Copiar"
     }
   },
@@ -765,6 +773,58 @@
   "LanguageSwitcher": {
     "label": "Idioma"
   },
+  "Conversations": {
+    "pageTitle": "Conversas",
+    "pageSubtitle": "Veja o que sua equipe está dizendo aos clientes no chat do site e intervenha quando precisar.",
+    "noCompany": "Contrate o primeiro integrante da sua equipe para começar a ver conversas.",
+    "browseMarketplace": "Ver marketplace",
+    "backToConversations": "Voltar para conversas",
+    "filters": {
+      "status": {
+        "all": "Todas",
+        "paused": "Precisa de atenção",
+        "active": "Ativa",
+        "closed": "Resolvida"
+      },
+      "searchLabel": "Buscar",
+      "searchPlaceholder": "Buscar por nome ou telefone do cliente…",
+      "searchButton": "Buscar",
+      "searchHint": "A busca encontra apenas nome ou telefone do cliente — a maioria dos visitantes do chat do site ainda não compartilhou nenhum dos dois, então isso não vai encontrar muita coisa por enquanto.",
+      "emptyState": "Nenhuma conversa ainda.",
+      "previousPage": "Anterior",
+      "nextPage": "Próxima",
+      "pageOf": "Página {page} de {totalPages}"
+    },
+    "list": {
+      "customerColumn": "Cliente e prévia da mensagem",
+      "statusColumn": "Status",
+      "agentColumn": "Agente",
+      "updatedColumn": "Última atualização",
+      "noAgent": "—"
+    },
+    "detail": {
+      "withAgent": "Conversando com {name}",
+      "status": {
+        "paused": "Precisa de atenção",
+        "active": "IA gerenciando",
+        "closed": "Resolvida"
+      },
+      "resumeButton": "Retomar IA",
+      "emptyState": "Nenhuma mensagem ainda.",
+      "teamLabel": "Equipe",
+      "aiLabel": "IA",
+      "inputPlaceholder": "Escreva uma resposta…",
+      "sendButton": "Enviar",
+      "sendError": "Algo deu errado ao enviar. Tente novamente.",
+      "detailsTitle": "Detalhes",
+      "detailsCustomer": "Cliente",
+      "detailsChannel": "Canal",
+      "detailsAgent": "Agente",
+      "detailsMessageCount": "Mensagens",
+      "detailsNoAgent": "Nenhum",
+      "channelWebChat": "Chat do site"
+    }
+  },
   "Chat": {
     "inputPlaceholder": "Responder para {name}…",
     "sendButton": "Enviar",
@@ -778,6 +838,7 @@
     "errorRateLimited": "Você está enviando mensagens muito rápido — tente novamente em instantes.",
     "errorGeneric": "Algo deu errado. Tente novamente.",
     "closeButton": "Fechar chat",
-    "unavailableHere": "Este chat ainda não está configurado para aparecer neste site."
+    "unavailableHere": "Este chat ainda não está configurado para aparecer neste site.",
+    "teamJoined": "Um integrante da equipe entrou na conversa"
   }
 }

@@ -3,10 +3,12 @@
 import clsx from "clsx";
 
 // Trello K3 — the pill switch the Stitch "Scheduling Settings" screen leans
-// on (7 day rows + the approval row). First switch control in the app, kept
-// local to this screen rather than promoted to src/components/ui until a
-// second screen needs one. Renders as a real `role="switch"` button so it's
-// keyboard- and screen-reader-operable, unlike the mock's styled checkbox.
+// on (7 day rows + the approval row). Originally kept local to that screen
+// "until a second screen needs one" (its own words) — F5's human-handoff
+// toggle on the main Settings page is that second screen, so it's promoted
+// here rather than duplicated. Renders as a real `role="switch"` button so
+// it's keyboard- and screen-reader-operable, unlike the mock's styled
+// checkbox.
 export function Toggle({
   checked,
   onChange,

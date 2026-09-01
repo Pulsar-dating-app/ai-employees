@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { ClockIcon, PlusIcon, XIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { SettingsSection } from "./settings-section";
-import { Toggle } from "./toggle";
+import { Toggle } from "@/components/ui/toggle";
 
 export type BusinessHourRow = {
   day_of_week: number;

@@ -187,6 +187,24 @@ export async function POST(
     return NextResponse.json({ error: customerMessageError.message }, { status: 500 });
   }
 
+  // F5 -- a 'paused' conversation (set by Malu's own request_human tool, or
+  // by a merchant sending a manual reply from the dashboard) means a human
+  // is expected to handle this, not the AI. The customer's message above is
+  // still persisted either way -- they're always heard -- but the engine is
+  // never called while paused, closing a real gap: before this, `paused`
+  // was set but never actually enforced anywhere.
+  const { data: conversation, error: conversationStatusError } = await supabase
+    .from("conversations")
+    .select("status")
+    .eq("id", session.conversationId)
+    .single();
+  if (conversationStatusError) {
+    return NextResponse.json({ error: conversationStatusError.message }, { status: 500 });
+  }
+  if (conversation.status === "paused") {
+    return NextResponse.json({ reply: null });
+  }
+
   let result;
   try {
     result = await AgentEngine.run({ companyId, conversationId: session.conversationId, message });

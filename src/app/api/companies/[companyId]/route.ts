@@ -269,6 +269,17 @@ export async function PATCH(
     updates.requires_appointment_approval = value;
   }
 
+  // Trello F5 follow-up — whether any agent may hand off to a human at all
+  // (the request_human tool, C5). Same "not nullable, boolean has no unset
+  // state" shape as requires_appointment_approval above.
+  if ("allow_human_handoff" in body) {
+    const value = (body as Record<string, unknown>).allow_human_handoff;
+    if (typeof value !== "boolean") {
+      return NextResponse.json({ error: "allow_human_handoff must be a boolean" }, { status: 400 });
+    }
+    updates.allow_human_handoff = value;
+  }
+
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }

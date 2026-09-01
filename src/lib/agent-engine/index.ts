@@ -5,7 +5,7 @@ import { DEFAULT_MAX_TOOL_ITERATIONS, DEFAULT_MODEL, UNGROUNDED_FALLBACK_TEXT } 
 import { discardConversationItems, loadConversation, resolveOpenAiConversationId } from "./conversation";
 import { loadAgentConfig } from "./config";
 import { loadCustomer } from "./customer";
-import { loadBusinessName, loadCompanyTimezone } from "./knowledge";
+import { loadBusinessName, loadCompanyTimezone, loadHumanHandoffEnabled } from "./knowledge";
 import { isValidTimeZone } from "@/lib/analytics/load";
 import { determineIntent } from "./stubs";
 import { buildInitialInput, buildSystemPrompt } from "./prompt";
@@ -57,18 +57,29 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   // "load customer context," and inventing a shape (e.g. "greet by name")
   // isn't this ticket's call to make. Available for the next ticket that
   // needs it.
-  const [agentConfig, , businessName, companyTimezone] = await Promise.all([
+  const [agentConfig, , businessName, companyTimezone, humanHandoffEnabled] = await Promise.all([
     loadAgentConfig(supabase, { companyId: input.companyId, agentId: conversation.agent_id! }),
     loadCustomer(supabase, { companyId: input.companyId, customerId: conversation.customer_id }),
     loadBusinessName(supabase, input.companyId),
     loadCompanyTimezone(supabase, input.companyId),
+    loadHumanHandoffEnabled(supabase, input.companyId),
   ]);
 
   // Trello J2 -- resolved here, not at the top of run(), because it depends
   // on which agent this conversation belongs to. deps.tools still overrides
   // everything (that's how tests drive the loop with fake single-purpose
-  // tools), so an explicit list is never silently filtered by slug.
-  const tools = deps.tools ?? resolveToolsForAgent(agentConfig.slug);
+  // tools), so an explicit list is never silently filtered by slug or by
+  // this company setting -- an explicit deps.tools list means exactly what
+  // it says.
+  //
+  // F5 follow-up -- request_human is stripped out entirely, not left in
+  // with instructions not to use it: a tool the model can see is a tool it
+  // will eventually reach for (the same reasoning J2 itself documents at
+  // the top of tool-sets.ts), so "don't offer it" has to mean it's actually
+  // absent from what's sent to the model, not a prompt-level suggestion.
+  const tools =
+    deps.tools ??
+    resolveToolsForAgent(agentConfig.slug).filter((tool) => humanHandoffEnabled || tool.name !== "request_human");
 
   // Step 2
   const openAiConversationId = await resolveOpenAiConversationId(openai, supabase, conversation);

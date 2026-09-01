@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { SettingsIcon } from "@/components/ui/icons";
+import { Toggle } from "@/components/ui/toggle";
 import { SettingsSection } from "./settings-section";
-import { Toggle } from "./toggle";
 
 // Trello K3 — the "Appointment Controls" card. One setting:
 // companies.requires_appointment_approval, saved through B2's existing

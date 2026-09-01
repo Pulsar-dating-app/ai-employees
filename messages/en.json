@@ -191,6 +191,7 @@
       "myAgents": "My team",
       "products": "Products",
       "scheduling": "Scheduling",
+      "conversations": "Conversations",
       "metrics": "Performance",
       "settings": "Settings"
     }
@@ -337,6 +338,13 @@
       "pauseConfirmButton": "Yes, pause",
       "cancel": "Cancel",
       "updateError": "Something went wrong. Please try again."
+    },
+    "humanHandoff": {
+      "title": "Human handoff",
+      "description": "Whether {name} — and every other employee you hire — can offer to bring in someone from your business when a customer needs a person.",
+      "toggleLabel": "Allow handing off to a person",
+      "toggleHelp": "When on, your employees can offer to get someone from your business involved, and you can step into a conversation yourself from the Conversations page. When off, they always handle conversations on their own.",
+      "saveError": "Something went wrong saving that setting. Please try again."
     },
     "channels": {
       "title": "WhatsApp",
@@ -765,6 +773,58 @@
   "LanguageSwitcher": {
     "label": "Language"
   },
+  "Conversations": {
+    "pageTitle": "Conversations",
+    "pageSubtitle": "See what your team is telling customers on web chat, and step in when needed.",
+    "noCompany": "Hire your first team member to start seeing conversations.",
+    "browseMarketplace": "Browse the marketplace",
+    "backToConversations": "Back to conversations",
+    "filters": {
+      "status": {
+        "all": "All",
+        "paused": "Needs attention",
+        "active": "Active",
+        "closed": "Resolved"
+      },
+      "searchLabel": "Search",
+      "searchPlaceholder": "Search by customer name or phone…",
+      "searchButton": "Search",
+      "searchHint": "Search only matches a customer's name or phone — most web chat visitors haven't shared either yet, so this won't find much until they do.",
+      "emptyState": "No conversations yet.",
+      "previousPage": "Previous",
+      "nextPage": "Next",
+      "pageOf": "Page {page} of {totalPages}"
+    },
+    "list": {
+      "customerColumn": "Customer & message preview",
+      "statusColumn": "Status",
+      "agentColumn": "Agent",
+      "updatedColumn": "Last updated",
+      "noAgent": "—"
+    },
+    "detail": {
+      "withAgent": "Chatting with {name}",
+      "status": {
+        "paused": "Needs attention",
+        "active": "AI managing",
+        "closed": "Resolved"
+      },
+      "resumeButton": "Resume AI",
+      "emptyState": "No messages yet.",
+      "teamLabel": "Team",
+      "aiLabel": "AI",
+      "inputPlaceholder": "Write a reply…",
+      "sendButton": "Send",
+      "sendError": "Something went wrong sending that. Please try again.",
+      "detailsTitle": "Details",
+      "detailsCustomer": "Customer",
+      "detailsChannel": "Channel",
+      "detailsAgent": "Agent",
+      "detailsMessageCount": "Messages",
+      "detailsNoAgent": "None",
+      "channelWebChat": "Website chat"
+    }
+  },
   "Chat": {
     "inputPlaceholder": "Reply to {name}…",
     "sendButton": "Send",
@@ -778,6 +838,7 @@
     "errorRateLimited": "You're sending messages a bit fast — try again in a moment.",
     "errorGeneric": "Something went wrong. Please try again.",
     "closeButton": "Close chat",
-    "unavailableHere": "This chat isn't set up to appear on this site yet."
+    "unavailableHere": "This chat isn't set up to appear on this site yet.",
+    "teamJoined": "A team member has joined the chat"
   }
 }

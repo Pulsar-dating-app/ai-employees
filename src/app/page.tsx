@@ -29,7 +29,7 @@ export default async function Home() {
           company's allowed_embed_domains needs "localhost" for this to
           work -- that's per-company, not global). */}
       {process.env.NODE_ENV !== "production" ? (
-        <Script src="/widget.js" data-company="jorginho-e-cia" data-agent="malu" strategy="afterInteractive" />
+        <Script src="/widget.js" data-company="jorginho-e-cia" data-agent="malu" data-greeting="Oi!👋 Posso te ajudar a achar o produto ideal?" strategy="afterInteractive" />
       ) : null}
     </>
   );
