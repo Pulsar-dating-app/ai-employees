@@ -281,6 +281,7 @@
     "availableBadge": "Available",
     "viewDetails": "View details",
     "searchPlaceholder": "Search by name or role…",
+    "noResults": "No team members match “{query}”.",
     "priceLabel": "R$ {price}/month",
     "backToMarketplace": "Back to marketplace",
     "traits": {
