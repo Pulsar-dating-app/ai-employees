@@ -38,11 +38,12 @@
 
   // BETA "mascot" launcher: a full-body character that walks in along the
   // bottom of the page and greets the visitor, instead of the corner
-  // bubble. It needs desktop room and motion, so it falls back to the
-  // normal circular launcher on a narrow viewport or when the visitor has
-  // asked for reduced motion -- in that case launcherType stays "mascot"
-  // but there's no data-launcher-src, so the code below renders the shared
-  // default character video exactly as an un-customized widget would.
+  // bubble. It needs desktop room, so on a narrow viewport it falls back to
+  // the normal circular launcher (launcherType stays "mascot" but there's
+  // no data-launcher-src, so the code below renders the shared default
+  // character video, exactly as an un-customized widget would). A visitor
+  // who asked for reduced motion still gets the mascot -- it just skips the
+  // walk-in and holds on its final frame (see mascotStatic below).
   var prefersReducedMotion = false;
   var isNarrowViewport = false;
   try {
@@ -51,7 +52,8 @@
   } catch {
     // matchMedia unavailable -- treat as no reduced-motion, not narrow.
   }
-  var mascotMode = launcherType === "mascot" && !prefersReducedMotion && !isNarrowViewport;
+  var mascotMode = launcherType === "mascot" && !isNarrowViewport;
+  var mascotStatic = prefersReducedMotion;
 
   // The Staffra origin is derived from the script's own src, never
   // hardcoded -- the same file works unmodified in local dev and
@@ -115,9 +117,12 @@
     "#" + TEASER_ID + "-close:hover { background: #f3f4f5; }",
     "#" + MASCOT_ID + " {",
     "  position: fixed; bottom: 0; right: 0; z-index: 2147483000;",
-    "  width: min(640px, 74vw); border: none; background: transparent;",
+    // The clip is 16:9 with the character occupying roughly its middle
+    // third, so the rendered box is deliberately wider/taller than the
+    // mascot looks -- keep it modest or it dominates the corner.
+    "  width: min(340px, 56vw); border: none; background: transparent;",
     "  padding: 0; margin: 0; cursor: pointer; line-height: 0;",
-    "  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.14));",
+    "  filter: drop-shadow(0 8px 14px rgba(0,0,0,0.14));",
     "  transition: opacity 0.2s ease;",
     "}",
     "#" + MASCOT_ID + " video { width: 100%; height: auto; display: block; pointer-events: none; }",
@@ -258,9 +263,10 @@
       // Storage unavailable -- treat as a first visit; worst case the
       // walk-in just plays once more than it strictly needed to.
     }
-    if (mascotSeen) {
-      // A returning visitor skips the walk-in -- jump to the last frame,
-      // where the mascot is already standing there mid-greet.
+    if (mascotSeen || mascotStatic) {
+      // A returning visitor -- or anyone who asked for reduced motion --
+      // skips the walk-in: jump straight to the last frame, where the
+      // mascot is already standing there mid-greet.
       mascotVideo.addEventListener("loadedmetadata", function () {
         try {
           mascotVideo.currentTime = Math.max(0, mascotVideo.duration - 0.05);

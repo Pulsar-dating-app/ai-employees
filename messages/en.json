@@ -430,7 +430,7 @@
       "launcherImageHint": "PNG, JPEG, WebP, or GIF, up to 2MB.",
       "launcherMascot": "Walking mascot",
       "launcherMascotHint": "An animated character walks in along the bottom of the page and greets visitors.",
-      "launcherMascotNote": "Desktop only — on phones and for visitors who prefer reduced motion, the standard launcher is shown instead. The greeting text is part of the animation and currently reads “Can I help you?” in English.",
+      "launcherMascotNote": "Desktop only — on phones the standard launcher is shown instead. Visitors who prefer reduced motion see the mascot without the walk-in animation. The greeting text is part of the animation and currently reads “Can I help you?” in English.",
       "launcherBetaBadge": "Beta",
       "chooseFileButton": "Choose file",
       "noFileChosen": "No file chosen",

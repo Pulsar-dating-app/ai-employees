@@ -430,7 +430,7 @@
       "launcherImageHint": "PNG, JPEG, WebP ou GIF, até 2MB.",
       "launcherMascot": "Mascote animado",
       "launcherMascotHint": "Um personagem animado entra caminhando pela base da página e cumprimenta os visitantes.",
-      "launcherMascotNote": "Só no computador — em celulares e para visitantes que preferem menos animação, a bolha padrão aparece no lugar. O texto do cumprimento faz parte da animação e no momento diz “Can I help you?” em inglês.",
+      "launcherMascotNote": "Só no computador — em celulares a bolha padrão aparece no lugar. Visitantes que preferem menos animação veem o mascote sem a animação de entrada. O texto do cumprimento faz parte da animação e no momento diz “Can I help you?” em inglês.",
       "launcherBetaBadge": "Beta",
       "chooseFileButton": "Escolher arquivo",
       "noFileChosen": "Nenhum arquivo escolhido",
