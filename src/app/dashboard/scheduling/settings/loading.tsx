@@ -7,11 +7,11 @@ export default function SchedulingSettingsLoading() {
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-4 w-96" />
       </div>
-      <div className="flex max-w-3xl flex-col gap-8">
-        <Skeleton className="h-[28rem] w-full" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-56 w-full" />
-        <Skeleton className="h-48 w-full" />
+      {/* The sections render collapsed (K8) — a stack of compact rows. */}
+      <div className="flex max-w-3xl flex-col gap-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-[5.5rem] w-full rounded-xl" />
+        ))}
       </div>
     </div>
   );
