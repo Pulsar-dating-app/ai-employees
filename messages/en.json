@@ -192,7 +192,8 @@
       "scheduling": "Scheduling",
       "conversations": "Conversations",
       "metrics": "Performance",
-      "settings": "Settings"
+      "settings": "Settings",
+      "locked": "locked"
     },
     "locked": {
       "title": "{name} isn't on your team yet",

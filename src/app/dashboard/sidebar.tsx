@@ -14,22 +14,24 @@ import {
   BarChartIcon,
   SettingsIcon,
   LogoutIcon,
+  LockIcon,
   ChatIcon,
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
-// Every tab is always shown, even one whose team member the company hasn't
-// hired (Products → Malu, Scheduling → Ana, Performance → any) — a merchant
-// should be able to see the capability exists. Clicking such a tab lands on
-// the page's locked state (`LockedPage`) instead of its content; each page
-// owns that check, so there's no per-agent config here.
+// Every tab is always shown. Products → Malu, Scheduling → Ana, Performance
+// → any hire: while that team member isn't hired the tab is **muted + gets a
+// lock icon** (via `isLocked`), and clicking it lands on the page's own
+// `LockedPage` ("hire X to unlock"). The page check is the real gate — this
+// is presentation only. Settings / Marketplace / My Team / Conversations are
+// never gated (company-wide, useful with zero agents).
 const NAV_ITEMS = [
   { href: "/dashboard", key: "marketplace" as const, icon: SearchIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
   { href: "/dashboard/my-agents", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p.startsWith("/dashboard/my-agents") },
   { href: "/dashboard/conversations", key: "conversations" as const, icon: ChatIcon, match: (p: string) => p.startsWith("/dashboard/conversations") },
-  { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, match: (p: string) => p.startsWith("/dashboard/products") },
-  { href: "/dashboard/scheduling", key: "scheduling" as const, icon: CalendarIcon, match: (p: string) => p.startsWith("/dashboard/scheduling") },
-  { href: "/dashboard/metrics", key: "metrics" as const, icon: BarChartIcon, match: (p: string) => p.startsWith("/dashboard/metrics") },
+  { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, match: (p: string) => p.startsWith("/dashboard/products"), isLocked: (s: string[]) => !s.includes("malu") },
+  { href: "/dashboard/scheduling", key: "scheduling" as const, icon: CalendarIcon, match: (p: string) => p.startsWith("/dashboard/scheduling"), isLocked: (s: string[]) => !s.includes("ana") },
+  { href: "/dashboard/metrics", key: "metrics" as const, icon: BarChartIcon, match: (p: string) => p.startsWith("/dashboard/metrics"), isLocked: (s: string[]) => s.length === 0 },
   { href: "/dashboard/settings", key: "settings" as const, icon: SettingsIcon, match: (p: string) => p.startsWith("/dashboard/settings") },
 ];
 
@@ -73,10 +75,12 @@ export function Sidebar({
   companyName,
   email,
   locale,
+  hiredAgentSlugs,
 }: {
   companyName: string | null;
   email: string | null;
   locale: "en" | "pt";
+  hiredAgentSlugs: string[];
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
@@ -84,7 +88,10 @@ export function Sidebar({
 
   const identityLabel = companyName ?? email ?? "";
 
-  const navItems = NAV_ITEMS;
+  const navItems = NAV_ITEMS.map((item) => ({
+    ...item,
+    locked: item.isLocked?.(hiredAgentSlugs) ?? false,
+  }));
 
   return (
     <>
@@ -106,10 +113,17 @@ export function Sidebar({
                   isActive
                     ? "bg-secondary-container font-bold text-on-secondary-container"
                     : "font-medium text-on-surface-variant hover:bg-surface-container hover:text-on-surface",
+                  item.locked && !isActive && "opacity-55 hover:opacity-100",
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                {t(item.key)}
+                <span className="truncate">{t(item.key)}</span>
+                {item.locked ? (
+                  <>
+                    <LockIcon className="ml-auto h-3.5 w-3.5 shrink-0" />
+                    <span className="sr-only">{t("locked")}</span>
+                  </>
+                ) : null}
               </Link>
             );
           })}
@@ -154,14 +168,22 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               aria-current={isActive ? "page" : undefined}
-              className="flex flex-1 flex-col items-center gap-1 py-2.5"
+              className={clsx(
+                "flex flex-1 flex-col items-center gap-1 py-2.5",
+                item.locked && !isActive && "opacity-55",
+              )}
             >
-              <Icon
-                className={clsx(
-                  "h-5 w-5 transition-colors duration-150",
-                  isActive ? "text-primary" : "text-on-surface-variant",
-                )}
-              />
+              <span className="relative">
+                <Icon
+                  className={clsx(
+                    "h-5 w-5 transition-colors duration-150",
+                    isActive ? "text-primary" : "text-on-surface-variant",
+                  )}
+                />
+                {item.locked ? (
+                  <LockIcon className="absolute -right-1.5 -top-1 h-3 w-3 text-on-surface-variant" />
+                ) : null}
+              </span>
               <span
                 className={clsx(
                   "text-[11px] font-medium transition-colors duration-150",

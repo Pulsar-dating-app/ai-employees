@@ -18,12 +18,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
       data: { user },
     },
     { data: companies },
+    { data: hired },
     locale,
   ] = await Promise.all([
     supabase.auth.getUser(),
     supabase.from("companies").select("name"),
+    // Only used to mute + lock-icon the tabs whose team member isn't hired
+    // (the page itself is the real gate). `company_agents`' select policy is
+    // `is_company_member`, so this is already scoped to the user's companies.
+    // Hired regardless of status — a paused agent shouldn't re-lock its tab.
+    supabase.from("company_agents").select("agents(slug)"),
     getLocale(),
   ]);
+
+  const hiredAgentSlugs = ((hired ?? []) as unknown as { agents: { slug: string } | null }[])
+    .map((row) => row.agents?.slug)
+    .filter((slug): slug is string => Boolean(slug));
 
   return (
     <div className="relative min-h-screen bg-surface">
@@ -32,6 +42,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         companyName={companies?.[0]?.name ?? null}
         email={user?.email ?? null}
         locale={locale as "en" | "pt"}
+        hiredAgentSlugs={hiredAgentSlugs}
       />
       <div className="relative z-10 sm:pl-64">
         <TopBar locale={locale as "en" | "pt"} />

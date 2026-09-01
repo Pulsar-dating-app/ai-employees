@@ -192,7 +192,8 @@
       "scheduling": "Agendamentos",
       "conversations": "Conversas",
       "metrics": "Desempenho",
-      "settings": "Configurações"
+      "settings": "Configurações",
+      "locked": "bloqueado"
     },
     "locked": {
       "title": "{name} ainda não faz parte da sua equipe",
