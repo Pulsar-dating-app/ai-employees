@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
@@ -29,18 +29,18 @@ export default async function AgentDetailPage({
     supabase.from("companies").select("id"),
   ]);
   if (!agent) notFound();
+  // The dashboard shell already redirects a company-less account to
+  // /onboarding; this is the belt-and-braces for a direct hit.
   const company = companies?.[0] ?? null;
+  if (!company) redirect("/onboarding");
 
-  let isHired = false;
-  if (company) {
-    const { data: companyAgent } = await supabase
-      .from("company_agents")
-      .select("id")
-      .eq("company_id", company.id)
-      .eq("agent_id", agent.id)
-      .maybeSingle();
-    isHired = Boolean(companyAgent);
-  }
+  const { data: companyAgent } = await supabase
+    .from("company_agents")
+    .select("id")
+    .eq("company_id", company.id)
+    .eq("agent_id", agent.id)
+    .maybeSingle();
+  const isHired = Boolean(companyAgent);
 
   const enrichment = AGENT_ENRICHMENT[agent.slug];
 
@@ -58,7 +58,7 @@ export default async function AgentDetailPage({
         should={enrichment?.should ?? []}
         never={enrichment?.never ?? []}
         monthlyPriceBRL={enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL}
-        companyId={company?.id ?? null}
+        companyId={company.id}
         initialIsHired={isHired}
         showDevChatTest={process.env.NODE_ENV !== "production"}
       />

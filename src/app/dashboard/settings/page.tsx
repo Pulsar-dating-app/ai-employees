@@ -1,7 +1,6 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
 import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
@@ -42,17 +41,10 @@ export default async function SettingsPage() {
   ] = await Promise.all([supabase.auth.getUser(), supabase.from("companies").select("*")]);
   const company = companies?.[0] ?? null;
 
-  if (!company) {
-    return (
-      <div className="flex flex-col gap-4">
-        <PageHeader icon={SettingsIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
-        <p className="text-sm text-on-surface-variant">{t("noCompany")}</p>
-        <Link href="/dashboard">
-          <Button type="button">{t("browseMarketplace")}</Button>
-        </Link>
-      </div>
-    );
-  }
+  // Every account has a company by the time it reaches /dashboard (the shell
+  // layout redirects to /onboarding otherwise). This is just belt-and-braces
+  // for a direct hit mid-signup.
+  if (!company) redirect("/onboarding");
 
   const { data: membership } = await supabase
     .from("company_users")
