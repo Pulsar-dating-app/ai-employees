@@ -23,6 +23,8 @@ type AppointmentsManagerProps = {
    * viewer's. */
   today: string;
   canEdit: boolean;
+  /** Bookings still in `requested` (approval toggle on). 0 hides the chip. */
+  pendingCount: number;
   initialAppointments: Appointment[];
   initialTotal: number;
   pageSize: number;
@@ -66,6 +68,7 @@ export function AppointmentsManager({
   timezone,
   today,
   canEdit,
+  pendingCount,
   initialAppointments,
   initialTotal,
   pageSize,
@@ -197,7 +200,23 @@ export function AppointmentsManager({
           <p className="mt-1 text-body-md text-on-surface-variant">{t("pageSubtitle")}</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* K7: a live count of bookings awaiting approval, one tap to the
+              filter. Hidden when the approval toggle is off (pendingCount is
+              forced to 0) or once the filter is already on `requested`. */}
+          {pendingCount > 0 && status !== "requested" ? (
+            <button
+              type="button"
+              onClick={() => changeStatus("requested")}
+              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-primary/30 bg-primary-fixed/60 px-3 text-label-md font-semibold text-primary shadow-level1 transition-colors hover:bg-primary-fixed"
+            >
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">
+                {pendingCount}
+              </span>
+              {t("pendingApproval")}
+            </button>
+          ) : null}
+
           {/* Not in the mock, which has no status filter at all — but K4
               ships one, so it takes that screen's control chrome (h-10,
               rounded-lg, hairline border) rather than this app's taller

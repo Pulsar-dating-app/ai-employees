@@ -716,6 +716,7 @@
       "nextMonth": "Próximo mês",
       "statusFilterLabel": "Status",
       "statusFilterAll": "Todos os status",
+      "pendingApproval": "aguardando aprovação",
       "previousPage": "Anterior",
       "nextPage": "Próxima",
       "pageOf": "Página {page} de {totalPages}",
@@ -749,6 +750,9 @@
       "actions": {
         "approve": "Aprovar",
         "decline": "Recusar",
+        "declinePrompt": "Recusar este pedido? O horário do cliente fica livre.",
+        "declineReasonPlaceholder": "Motivo (opcional, interno)",
+        "confirmDecline": "Recusar",
         "complete": "Concluir",
         "noShow": "Não compareceu",
         "cancel": "Cancelar",

@@ -151,6 +151,8 @@ function AppointmentCard({
   const t = useTranslations("Scheduling.appointments");
   const locale = useLocale();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [confirmingDecline, setConfirmingDecline] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
   const [isWorking, setIsWorking] = useState(false);
 
   // Formatted in the *company's* timezone, not the viewer's — a booking is
@@ -169,15 +171,18 @@ function AppointmentCard({
     minute: "2-digit",
   })}`;
 
-  async function setStatus(status: AppointmentStatus) {
+  // `extra` carries the decline path's cancellation_reason — a decline is a
+  // `cancelled` status with a reason recorded (K7), not a status of its own.
+  async function setStatus(status: AppointmentStatus, extra?: Record<string, unknown>) {
     setIsWorking(true);
     const res = await fetch(`/api/companies/${companyId}/appointments/${appointment.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...extra }),
     });
     setIsWorking(false);
     setConfirmingCancel(false);
+    setConfirmingDecline(false);
     if (res.ok) onPatched();
   }
 
@@ -283,13 +288,50 @@ function AppointmentCard({
                   </button>
                 </div>
               </div>
+            ) : confirmingDecline ? (
+              <div className="flex flex-col items-stretch gap-2 sm:items-end">
+                <p className="max-w-[15rem] text-label-md text-on-surface-variant sm:text-right">
+                  {t("actions.declinePrompt")}
+                </p>
+                <input
+                  type="text"
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  placeholder={t("actions.declineReasonPlaceholder")}
+                  maxLength={500}
+                  className="h-8 w-full rounded-md border border-outline-variant/40 bg-surface-container-lowest px-2 text-label-sm text-on-surface outline-none transition-colors placeholder:text-outline focus:ring-2 focus:ring-primary/40 sm:w-56"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={isWorking}
+                    onClick={() =>
+                      setStatus("cancelled", {
+                        cancellation_reason: declineReason.trim() || null,
+                      })
+                    }
+                    className="h-8 rounded-md border border-error/40 bg-error-container/40 px-3 text-label-sm font-semibold text-error transition-all hover:bg-error-container disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {t("actions.confirmDecline")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmingDecline(false);
+                      setDeclineReason("");
+                    }}
+                    className="h-8 px-3 text-label-sm font-medium text-on-surface-variant transition-colors hover:text-on-surface"
+                  >
+                    {t("actions.keep")}
+                  </button>
+                </div>
+              </div>
             ) : appointment.status === "requested" ? (
               <>
                 {/* Approval toggle is on (companies.requires_appointment_approval),
                     so a customer booking lands here as `requested`. Approve
                     flips it to `confirmed` (H3 PATCH; I3 then creates the
-                    Google event). Declining is the same Cancel every row has —
-                    capturing a decline reason is K7. */}
+                    Google event); Decline records a cancellation_reason (K7). */}
                 <button
                   type="button"
                   disabled={isWorking}
@@ -301,7 +343,7 @@ function AppointmentCard({
                 <button
                   type="button"
                   disabled={isWorking}
-                  onClick={() => setConfirmingCancel(true)}
+                  onClick={() => setConfirmingDecline(true)}
                   className={SECONDARY_ACTION_CLASSES}
                 >
                   {t("actions.decline")}
