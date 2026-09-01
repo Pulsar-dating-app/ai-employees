@@ -26,9 +26,9 @@ const SCHEDULING_AGENT_SLUG = "ana";
 // toggle is client state and that screen puts it above the whole grid; the
 // rail is server-rendered here and passed down as a prop.
 //
-// Deliberately no approve/decline on `requested` rows — that's K7, which
-// also has to record a cancellation_reason on decline. Cancel is available
-// here because it's the same plain status change every other row gets.
+// Approve/decline on `requested` rows and the "N awaiting approval" chip are
+// K7. Decline is a `cancelled` PATCH carrying a `cancellation_reason`, not a
+// status of its own.
 export default async function AppointmentsPage() {
   const supabase = await createClient();
   const t = await getTranslations("Scheduling.appointments");
@@ -77,6 +77,8 @@ export default async function AppointmentsPage() {
     { count: bookedToday },
     { count: completedToday },
     { data: hired },
+    { data: calendarConnection },
+    { count: pendingRequested },
   ] = await Promise.all([
     supabase
       .from("company_users")
@@ -108,9 +110,30 @@ export default async function AppointmentsPage() {
       .lt("starts_at", dayEnd)
       .eq("status", "completed"),
     supabase.from("company_agents").select("status, agents(slug)").eq("company_id", company.id),
+    supabase
+      .from("company_calendar_connections")
+      .select("status")
+      .eq("company_id", company.id)
+      .maybeSingle(),
+    // K7: count of bookings still waiting on the merchant's approval. Only
+    // surfaced when the approval toggle is on — otherwise nothing ever lands
+    // in `requested` and the chip would be dead weight.
+    supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", company.id)
+      .eq("status", "requested"),
   ]);
 
   const canEdit = membership !== null;
+  const pendingCount = company.requires_appointment_approval ? (pendingRequested ?? 0) : 0;
+
+  // Rail nudge: Google Calendar isn't connected yet, and the workspace
+  // *can* connect it (credentials configured). Links straight to the K2
+  // card on the settings screen.
+  const showCalendarNudge =
+    (calendarConnection as { status?: string } | null)?.status !== "connected" &&
+    Boolean(process.env.GOOGLE_CLIENT_ID);
 
   // PostgREST returns `agents` as one embedded object for this to-one
   // relation; the generated types widen it to an array (same cast the
@@ -134,6 +157,7 @@ export default async function AppointmentsPage() {
       timezone={timezone}
       today={today}
       canEdit={canEdit}
+      pendingCount={pendingCount}
       initialAppointments={appointments ?? []}
       initialTotal={count ?? 0}
       pageSize={PAGE_SIZE}
@@ -142,6 +166,7 @@ export default async function AppointmentsPage() {
           bookedToday={bookedToday ?? 0}
           completedToday={completedToday ?? 0}
           teamMember={teamMember}
+          showCalendarNudge={showCalendarNudge}
         />
       }
     />

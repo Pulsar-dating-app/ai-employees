@@ -683,6 +683,28 @@
         "invalidRange": "A data final não pode ser antes da inicial.",
         "overlap": "Essas datas se sobrepõem a uma ausência que você já tem ({range}). Remova ela antes ou escolha datas fora dela.",
         "saveError": "Algo deu errado. Tente novamente."
+      },
+      "googleCalendar": {
+        "title": "Google Calendar",
+        "subtitle": "Conecte um Google Calendar para sua equipe checar conflitos antes de agendar.",
+        "loading": "Carregando…",
+        "notConfigured": "O Google Calendar ainda não está configurado para este espaço de trabalho.",
+        "connectedBadge": "Conectado",
+        "connectedSince": "Conectado em {date}",
+        "notConnected": "Nenhum calendário conectado ainda.",
+        "adminOnly": "Peça a um proprietário ou administrador para conectar um calendário.",
+        "connectButton": "Conectar Google Calendar",
+        "connecting": "Abrindo o Google…",
+        "disconnectButton": "Desconectar",
+        "disconnectConfirm": "Desconectar este Google Calendar?",
+        "disconnectConfirmButton": "Sim, desconectar",
+        "cancel": "Cancelar",
+        "connectError": "Algo deu errado ao conectar o Google Calendar. Tente novamente.",
+        "disconnectError": "Algo deu errado ao desconectar. Tente novamente.",
+        "sdkNotReady": "Ainda carregando — tente novamente em instantes.",
+        "stepOneTitle": "Conecte sua conta Google",
+        "stepTwoTitle": "Os agendamentos respeitam sua agenda",
+        "stepTwoDescription": "Depois de conectado, sua equipe ignora qualquer horário em que você já está ocupado no Google Calendar ao oferecer horários."
       }
     },
     "appointments": {
@@ -702,6 +724,7 @@
       "nextMonth": "Próximo mês",
       "statusFilterLabel": "Status",
       "statusFilterAll": "Todos os status",
+      "pendingApproval": "aguardando aprovação",
       "previousPage": "Anterior",
       "nextPage": "Próxima",
       "pageOf": "Página {page} de {totalPages}",
@@ -723,7 +746,9 @@
         "verified": "Integrante verificado",
         "currentStatus": "Status atual",
         "statusActive": "Recebendo agendamentos",
-        "statusPaused": "Pausado"
+        "statusPaused": "Pausado",
+        "calendarNudgeTitle": "Conectar Google Calendar",
+        "calendarNudgeBody": "Evite conflitos com a sua própria agenda."
       },
       "list": {
         "serviceLabel": "Serviço:",
@@ -733,6 +758,9 @@
       "actions": {
         "approve": "Aprovar",
         "decline": "Recusar",
+        "declinePrompt": "Recusar este pedido? O horário do cliente fica livre.",
+        "declineReasonPlaceholder": "Motivo (opcional, interno)",
+        "confirmDecline": "Recusar",
         "complete": "Concluir",
         "noShow": "Não compareceu",
         "cancel": "Cancelar",
