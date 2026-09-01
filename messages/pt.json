@@ -772,6 +772,27 @@
         "stepOneTitle": "Conecte sua conta Google",
         "stepTwoTitle": "Os agendamentos respeitam sua agenda",
         "stepTwoDescription": "Depois de conectado, sua equipe ignora qualquer horário em que você já está ocupado no Google Calendar ao oferecer horários."
+      },
+      "intake": {
+        "title": "Perguntas iniciais",
+        "subtitle": "Dados a coletar do cliente antes de marcar um agendamento.",
+        "empty": "Nenhuma pergunta ainda — os agendamentos seguem sem coletar dados extras.",
+        "labelPlaceholder": "ex.: Nome completo",
+        "labelAria": "Nome da pergunta {position}",
+        "required": "Obrigatória",
+        "requiredAria": "Tornar \"{label}\" obrigatória",
+        "thisQuestion": "esta pergunta",
+        "moveUp": "Mover pergunta para cima",
+        "moveDown": "Mover pergunta para baixo",
+        "removeLabel": "Remover esta pergunta",
+        "add": "Adicionar pergunta",
+        "save": "Salvar alterações",
+        "saving": "Salvando…",
+        "saved": "Perguntas iniciais salvas.",
+        "cancel": "Cancelar",
+        "unsaved": "Alterações não salvas",
+        "blankLabel": "Dê um nome a cada pergunta, ou remova as vazias.",
+        "saveError": "Algo deu errado ao salvar suas perguntas. Tente novamente."
       }
     },
     "appointments": {

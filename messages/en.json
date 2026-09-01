@@ -772,6 +772,27 @@
         "stepOneTitle": "Connect your Google account",
         "stepTwoTitle": "Bookings respect your calendar",
         "stepTwoDescription": "Once connected, your team skips any time you're already busy in Google Calendar when offering slots."
+      },
+      "intake": {
+        "title": "Intake questions",
+        "subtitle": "Details to collect from the customer before an appointment is booked.",
+        "empty": "No questions yet — bookings go ahead without collecting extra details.",
+        "labelPlaceholder": "e.g. Full name",
+        "labelAria": "Question {position} label",
+        "required": "Required",
+        "requiredAria": "Make \"{label}\" required",
+        "thisQuestion": "this question",
+        "moveUp": "Move question up",
+        "moveDown": "Move question down",
+        "removeLabel": "Remove this question",
+        "add": "Add question",
+        "save": "Save changes",
+        "saving": "Saving…",
+        "saved": "Intake questions saved.",
+        "cancel": "Cancel",
+        "unsaved": "Unsaved changes",
+        "blankLabel": "Give every question a name, or remove the empty ones.",
+        "saveError": "Something went wrong saving your questions. Please try again."
       }
     },
     "appointments": {

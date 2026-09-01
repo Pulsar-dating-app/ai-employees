@@ -6,13 +6,18 @@ import { BusinessHoursCard, type BusinessHourRow } from "./business-hours-card";
 import { AppointmentControlsCard } from "./appointment-controls-card";
 import { TimeOffCard, type TimeOffEntry } from "./time-off-card";
 import { GoogleCalendarCard } from "./google-calendar-card";
+import { IntakeQuestionsCard, type IntakeField } from "./intake-questions-card";
 
 // The Scheduling area's settings screen (K5 sub-tab). Company-wide
-// scheduling config, one card per concern:
+// scheduling config, one collapsible section per concern (K8 — the screen
+// grew past a plain stack, so each section now opens on demand; see
+// settings-section.tsx):
 //  - Business hours (K3, H2) — the weekly template, split shifts supported
 //  - Appointment controls (K3, H3) — requires_appointment_approval
 //  - Time off (K3 extension) — company_time_off one-off closures
 //  - Google Calendar (K2, I1) — connect for live free/busy checks
+//  - Intake questions (K8) — appointment_intake_fields the agent collects
+//    from the customer before booking
 // Reproduces the Stitch "Scheduling Settings" screen's main column; its
 // right-hand rail ("Current Services" preview + persona card) is dropped as
 // duplication / K4's territory (see decisions.md).
@@ -49,26 +54,32 @@ export default async function SchedulingSettingsPage() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const [{ data: membership }, { data: businessHours }, { data: timeOff }] = await Promise.all([
-    supabase
-      .from("company_users")
-      .select("role")
-      .eq("company_id", company.id)
-      .eq("user_id", user!.id)
-      .maybeSingle(),
-    supabase
-      .from("business_hours")
-      .select("day_of_week, start_time, end_time, is_active")
-      .eq("company_id", company.id)
-      .order("day_of_week", { ascending: true })
-      .order("start_time", { ascending: true }),
-    supabase
-      .from("company_time_off")
-      .select("id, start_date, end_date, reason")
-      .eq("company_id", company.id)
-      .gte("end_date", today)
-      .order("start_date", { ascending: true }),
-  ]);
+  const [{ data: membership }, { data: businessHours }, { data: timeOff }, { data: intakeFields }] =
+    await Promise.all([
+      supabase
+        .from("company_users")
+        .select("role")
+        .eq("company_id", company.id)
+        .eq("user_id", user!.id)
+        .maybeSingle(),
+      supabase
+        .from("business_hours")
+        .select("day_of_week, start_time, end_time, is_active")
+        .eq("company_id", company.id)
+        .order("day_of_week", { ascending: true })
+        .order("start_time", { ascending: true }),
+      supabase
+        .from("company_time_off")
+        .select("id, start_date, end_date, reason")
+        .eq("company_id", company.id)
+        .gte("end_date", today)
+        .order("start_date", { ascending: true }),
+      supabase
+        .from("appointment_intake_fields")
+        .select("id, label, is_required, position")
+        .eq("company_id", company.id)
+        .order("position", { ascending: true }),
+    ]);
 
   // H2's routes only ever call requireMember, so — like Services (K1) —
   // gating the UI on admin would invent a restriction the API doesn't have.
@@ -92,7 +103,7 @@ export default async function SchedulingSettingsPage() {
         </p>
       ) : null}
 
-      <div className="flex max-w-3xl flex-col gap-8">
+      <div className="flex max-w-3xl flex-col gap-4">
         <BusinessHoursCard
           companyId={company.id}
           canEdit={canEdit}
@@ -107,6 +118,11 @@ export default async function SchedulingSettingsPage() {
           companyId={company.id}
           canEdit={canEdit}
           initialEntries={(timeOff as TimeOffEntry[] | null) ?? []}
+        />
+        <IntakeQuestionsCard
+          companyId={company.id}
+          canEdit={canEdit}
+          initialFields={(intakeFields as IntakeField[] | null) ?? []}
         />
         <GoogleCalendarCard
           companyId={company.id}
