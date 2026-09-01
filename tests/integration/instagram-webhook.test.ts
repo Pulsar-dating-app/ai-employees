@@ -192,5 +192,55 @@ describe("Instagram inbound webhook (GET verify, POST receive)", () => {
       expect(rows[0].external_message_id).toBe("mid-new-message");
       expect(rows[0].content).toBe("Hi, do you have anything nice?");
     });
+
+    // Trello N9 -- once C5's request_human has paused a conversation, a human
+    // has taken over: the customer's next DM must still be persisted (so that
+    // human sees it) but the agent must not reply. Two things have to hold
+    // for this to work: resolveInstagramSession must *reuse* the paused
+    // conversation rather than orphan it into a fresh 'active' one, and the
+    // webhook must then skip the engine on 'paused'. No OpenAI key needed --
+    // the gate short-circuits before AgentEngine.run().
+    it("stays silent on a paused conversation but still persists the inbound message", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Webhook Paused Co");
+      const recipientId = await connectedAgent(owner.cookieHeader, companyId, "malu", "webhook-paused");
+
+      const { data: customer } = await service
+        .from("customers")
+        .insert({ company_id: companyId, channel: "instagram", instagram_user_id: "sender-paused" })
+        .select("id")
+        .single();
+      const { data: agentRow } = await service.from("agents").select("id").eq("slug", "malu").single();
+      const { data: conversation } = await service
+        .from("conversations")
+        .insert({
+          company_id: companyId,
+          agent_id: (agentRow as { id: string }).id,
+          customer_id: (customer as { id: string }).id,
+          channel: "instagram",
+          status: "paused",
+        })
+        .select("id")
+        .single();
+      const pausedConversationId = (conversation as { id: string }).id;
+
+      const body = messagingPayload(recipientId, "sender-paused", "are you there?", "mid-paused-1");
+      const res = await postWebhook(body, sign(body));
+      expect(res.status).toBe(200);
+
+      // Reused the paused conversation -- not orphaned into a new one.
+      const { data: conversations } = await service
+        .from("conversations")
+        .select("id, status")
+        .eq("company_id", companyId);
+      expect(conversations).toEqual([{ id: pausedConversationId, status: "paused" }]);
+
+      // Inbound message stored; no agent reply.
+      const { data: messages } = await service
+        .from("messages")
+        .select("role, content")
+        .eq("conversation_id", pausedConversationId);
+      expect(messages).toEqual([{ role: "customer", content: "are you there?" }]);
+    });
   });
 });
