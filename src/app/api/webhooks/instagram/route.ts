@@ -151,6 +151,23 @@ export async function POST(request: Request) {
       continue;
     }
 
+    // N9: a 'paused' conversation means C5's request_human fired and a human
+    // has taken this thread over -- the agent stays silent until someone
+    // resumes it (the 24h rotation never auto-reactivates a paused row, see
+    // decisions.md 2026-08-27). The inbound message is already persisted
+    // above so a human sees it; we just skip the engine and the reply. Same
+    // shape as the K6 hire-paused gate above, and mirrors M3's web chat route.
+    const { data: conversation, error: conversationStatusError } = await supabase
+      .from("conversations")
+      .select("status")
+      .eq("id", session.conversationId)
+      .single();
+    if (conversationStatusError) {
+      console.error("Instagram webhook: failed to read conversation status", conversationStatusError);
+      continue;
+    }
+    if (conversation.status === "paused") continue;
+
     let result;
     try {
       result = await AgentEngine.run({ companyId: connection.company_id, conversationId: session.conversationId, message: text });

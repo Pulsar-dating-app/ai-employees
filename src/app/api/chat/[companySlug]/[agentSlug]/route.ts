@@ -187,12 +187,12 @@ export async function POST(
     return NextResponse.json({ error: customerMessageError.message }, { status: 500 });
   }
 
-  // F5 -- a 'paused' conversation (set by Malu's own request_human tool, or
-  // by a merchant sending a manual reply from the dashboard) means a human
+  // F5 / N9 -- a 'paused' conversation (set by Malu's own request_human tool,
+  // or by a merchant sending a manual reply from the dashboard) means a human
   // is expected to handle this, not the AI. The customer's message above is
   // still persisted either way -- they're always heard -- but the engine is
-  // never called while paused, closing a real gap: before this, `paused`
-  // was set but never actually enforced anywhere.
+  // never called while paused. The Instagram webhook applies the same gate
+  // (N9); this is the shared shape both channels follow.
   const { data: conversation, error: conversationStatusError } = await supabase
     .from("conversations")
     .select("status")

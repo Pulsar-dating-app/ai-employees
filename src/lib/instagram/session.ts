@@ -36,20 +36,26 @@ export async function resolveInstagramSession(
     customer = newCustomer;
   }
 
-  // Most recent *active* conversation for this customer+agent -- a closed
+  // Most recent *open* conversation for this customer+agent -- a closed
   // one from a past rotation is never picked back up. Same 24h staleness
   // window web chat and dev-chat-test both use (WhatsApp's own
   // customer-service session window, not an arbitrary number) -- and not a
   // coincidence here either: it's also exactly Instagram's own messaging
   // window, so a conversation rotates right as the ability to freely reply
   // to it would otherwise lapse.
+  //
+  // N9: 'paused' (C5's request_human) counts as open here, not just
+  // 'active' -- same fix F5 made to resolveWebChatSession. A paused
+  // conversation is awaiting a human, not finished; excluding it would mean
+  // the customer's very next DM silently orphans it into a brand-new
+  // 'active' conversation, and the webhook's paused-gate would never fire.
   const { data: activeConversations, error: conversationError } = await supabase
     .from("conversations")
     .select("id, updated_at")
     .eq("company_id", companyId)
     .eq("customer_id", customer.id)
     .eq("agent_id", agentId)
-    .eq("status", "active")
+    .in("status", ["active", "paused"])
     .order("created_at", { ascending: false })
     .limit(1);
   if (conversationError) throw new Error(conversationError.message);
