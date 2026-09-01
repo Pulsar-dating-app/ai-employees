@@ -486,7 +486,7 @@ export async function LandingPageV2() {
           />
           <FooterColumn
             title={t("footer.company")}
-            links={[t("footer.links.careers"), t("footer.links.support")]}
+            links={[t("footer.links.support")]}
           />
           <FooterColumn
             title={t("footer.legal")}
