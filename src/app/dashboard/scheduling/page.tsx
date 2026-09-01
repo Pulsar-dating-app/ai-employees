@@ -109,7 +109,7 @@ export default async function AppointmentsPage() {
       .gte("starts_at", dayStart)
       .lt("starts_at", dayEnd)
       .eq("status", "completed"),
-    supabase.from("company_agents").select("status, agents(slug)").eq("company_id", company.id),
+    supabase.from("company_agents").select("status, name, agents(slug)").eq("company_id", company.id),
     supabase
       .from("company_calendar_connections")
       .select("status")
@@ -140,12 +140,13 @@ export default async function AppointmentsPage() {
   // metrics, my-agents and dashboard-layout reads already make).
   const hiredRows = (hired ?? []) as unknown as {
     status: string;
+    name: string | null;
     agents: { slug: string } | null;
   }[];
   const schedulingRow = hiredRows.find((row) => row.agents?.slug === SCHEDULING_AGENT_SLUG);
   const teamMember: SchedulingTeamMember | null = schedulingRow?.agents
     ? {
-        name: defaultAgentName(schedulingRow.agents.slug),
+        name: schedulingRow.name ?? defaultAgentName(schedulingRow.agents.slug),
         photoSrc: agentPhoto(schedulingRow.agents.slug),
         isActive: schedulingRow.status === "active",
       }

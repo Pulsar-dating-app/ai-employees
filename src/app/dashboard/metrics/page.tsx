@@ -69,17 +69,18 @@ export default async function MetricsPage({
 
   const [analytics, { data: agentRowsRaw }] = await Promise.all([
     loadCompanyAnalytics({ supabase, companyId: company.id, timezone, granularity, from, to }),
-    supabase.from("company_agents").select("status, agents(slug)").eq("company_id", company.id),
+    supabase.from("company_agents").select("status, name, agents(slug)").eq("company_id", company.id),
   ]);
 
   // PostgREST returns `agents` as one embedded object for this to-one
   // relation; the generated types widen it to an array (see my-agents/page).
   const agentRows = (agentRowsRaw ?? []) as unknown as {
     status: string;
+    name: string | null;
     agents: { slug: string } | null;
   }[];
   const teamMember = agentRows.find((r) => r.agents?.slug === "malu") ?? agentRows[0] ?? null;
-  const agentName = defaultAgentName(teamMember?.agents?.slug ?? "malu");
+  const agentName = teamMember?.name ?? defaultAgentName(teamMember?.agents?.slug ?? "malu");
 
   const byMetric = new Map(analytics.metrics.map((m) => [m.metric, m]));
   const conversationsTotal = byMetric.get("conversations")?.total ?? 0;

@@ -157,4 +157,86 @@ describe("PATCH /api/companies/:id/agents/:agentSlug (active-agent toggle)", () 
     });
     expect(res.status).toBe(200);
   });
+
+  // Same endpoint, merge-patch: `name` renames the hire (company_agents.name).
+  describe("rename via { name }", () => {
+    function getName(cookie: string, companyId: string) {
+      return api<{ companyAgent: { name: string } | null }>(
+        "GET",
+        `/api/companies/${companyId}/agents/malu`,
+        cookie,
+      );
+    }
+
+    it("renames an owner's hire, round-tripping through GET", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Rename Round Trip Co");
+      await hire(owner.cookieHeader, companyId);
+
+      const res = await api<{ companyAgent: { name: string } }>(
+        "PATCH",
+        `/api/companies/${companyId}/agents/malu`,
+        owner.cookieHeader,
+        { name: "  Sofia  " },
+      );
+      expect(res.status).toBe(200);
+      expect(res.json.companyAgent.name).toBe("Sofia");
+      expect((await getName(owner.cookieHeader, companyId)).json.companyAgent?.name).toBe("Sofia");
+    });
+
+    it("accepts name and status in one call", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Rename And Toggle Co");
+      await hire(owner.cookieHeader, companyId);
+
+      const res = await api<{ companyAgent: { name: string; status: string } }>(
+        "PATCH",
+        `/api/companies/${companyId}/agents/malu`,
+        owner.cookieHeader,
+        { name: "Sofia", status: "paused" },
+      );
+      expect(res.status).toBe(200);
+      expect(res.json.companyAgent.name).toBe("Sofia");
+      expect(res.json.companyAgent.status).toBe("paused");
+    });
+
+    it("400s for an empty or whitespace-only name", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Rename Empty Co");
+      await hire(owner.cookieHeader, companyId);
+
+      expect(
+        (await api("PATCH", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader, { name: "" }))
+          .status,
+      ).toBe(400);
+      expect(
+        (await api("PATCH", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader, { name: "   " }))
+          .status,
+      ).toBe(400);
+    });
+
+    it("400s for a name longer than 60 characters", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Rename Too Long Co");
+      await hire(owner.cookieHeader, companyId);
+
+      const res = await api("PATCH", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader, {
+        name: "x".repeat(61),
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it("blocks a plain member from renaming", async () => {
+      const owner = await signUpTestUser("owner");
+      const member = await signUpTestUser("member");
+      const companyId = await createCompany(owner.cookieHeader, "Rename Members Only Co");
+      await hire(owner.cookieHeader, companyId);
+      await addMember(owner.cookieHeader, companyId, member.userId);
+
+      const res = await api("PATCH", `/api/companies/${companyId}/agents/malu`, member.cookieHeader, {
+        name: "Sofia",
+      });
+      expect(res.status).toBe(403);
+    });
+  });
 });

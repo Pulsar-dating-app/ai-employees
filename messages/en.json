@@ -326,6 +326,16 @@
     "conversationsToday": "Conversations today",
     "activeBadge": "Active",
     "pausedBadge": "Paused",
+    "name": {
+      "title": "Name",
+      "description": "What you call this team member. Used across your dashboard, on their chat page, and in conversations.",
+      "label": "Display name",
+      "placeholder": "e.g. {default}",
+      "saveButton": "Save",
+      "savedStatus": "Saved",
+      "emptyError": "Give this team member a name.",
+      "updateError": "Something went wrong. Please try again."
+    },
     "availability": {
       "title": "Customer service",
       "description": "Turn {name} on or off for every channel at once. While paused, {name} stops replying to customers everywhere.",

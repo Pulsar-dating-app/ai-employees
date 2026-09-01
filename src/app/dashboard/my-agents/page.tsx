@@ -10,6 +10,7 @@ import { AgentPersonaCard } from "./agent-persona-card";
 
 type HiredAgentRow = {
   status: string;
+  name: string | null;
   agents: { slug: string; role: string | null; description: string | null } | null;
 };
 
@@ -24,7 +25,7 @@ export default async function MyAgentsPage() {
   if (company) {
     const { data } = await supabase
       .from("company_agents")
-      .select("status, agents(slug, role, description)")
+      .select("status, name, agents(slug, role, description)")
       .eq("company_id", company.id);
     hired = (data as HiredAgentRow[] | null) ?? [];
   }
@@ -50,7 +51,7 @@ export default async function MyAgentsPage() {
                 className="transition-transform duration-200 hover:-translate-y-0.5"
               >
                 <AgentPersonaCard
-                  name={defaultAgentName(row.agents.slug)}
+                  name={row.name ?? defaultAgentName(row.agents.slug)}
                   role={row.agents.role}
                   description={row.agents.description}
                   photoSrc={agentPhoto(row.agents.slug)}

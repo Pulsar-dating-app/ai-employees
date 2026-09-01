@@ -326,6 +326,16 @@
     "conversationsToday": "Conversas hoje",
     "activeBadge": "Ativa",
     "pausedBadge": "Pausada",
+    "name": {
+      "title": "Nome",
+      "description": "Como você chama este integrante da equipe. Aparece no seu painel, na página de conversa e nas conversas.",
+      "label": "Nome de exibição",
+      "placeholder": "ex.: {default}",
+      "saveButton": "Salvar",
+      "savedStatus": "Salvo",
+      "emptyError": "Dê um nome a este integrante da equipe.",
+      "updateError": "Algo deu errado. Tente novamente."
+    },
     "availability": {
       "title": "Atendimento",
       "description": "Ligue ou desligue {name} em todos os canais de uma vez. Enquanto estiver pausada, {name} para de responder os clientes em qualquer lugar.",

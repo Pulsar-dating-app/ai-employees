@@ -63,6 +63,11 @@ async function requireAdmin(
 
 const VALID_STATUSES = ["active", "paused"] as const;
 
+// company_agents.name is a plain varchar with no DB-level length cap; this is
+// a sane display-name ceiling enforced at the API layer (and mirrored by the
+// rename form's maxLength).
+const MAX_NAME_LENGTH = 60;
+
 async function getAgentBySlug(
   supabase: Awaited<ReturnType<typeof createClient>>,
   slug: string,
@@ -190,12 +195,19 @@ export async function POST(
   return NextResponse.json({ companyAgent: data }, { status: 201 });
 }
 
-// PATCH: pause or re-activate an already-hired team member (Trello K6). This
-// is the only write path for company_agents.status after the initial hire.
-// Body: { status: "active" | "paused" }. Pausing sets the whole hire off —
-// M3's chat route (and any future channel) gates on status === "active", so a
-// paused hire stops answering customers everywhere. Not a router: sibling
-// hires are untouched. No schema change — the enum already has both values.
+// PATCH: update an already-hired team member. Merge-patch semantics (same as
+// the companies PATCH route): send any subset of the writable fields, only
+// those are touched.
+//   - status: "active" | "paused" (Trello K6) — the only write path for
+//     company_agents.status after the initial hire. Pausing sets the whole
+//     hire off: M3's chat route (and any future channel) gates on
+//     status === "active", so a paused hire stops answering customers
+//     everywhere.
+//   - name: the per-company display name (company_agents.name) — lets a
+//     merchant rename a team member after hiring, shown across the dashboard,
+//     the hosted chat page, and the conversations inbox.
+// At least one field is required (an empty body is a 400). Not a router:
+// sibling hires are untouched. No schema change.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ companyId: string; agentSlug: string }> },
@@ -217,17 +229,42 @@ export async function PATCH(
   if (agentLookup.error) return agentLookup.error;
 
   const body = await request.json().catch(() => null);
-  const status = body?.status;
-  if (!VALID_STATUSES.includes(status)) {
+  const updates: { status?: string; name?: string } = {};
+
+  if (body?.status !== undefined) {
+    if (!VALID_STATUSES.includes(body.status)) {
+      return NextResponse.json(
+        { error: `status must be one of: ${VALID_STATUSES.join(", ")}` },
+        { status: 400 },
+      );
+    }
+    updates.status = body.status;
+  }
+
+  if (body?.name !== undefined) {
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    if (!name) {
+      return NextResponse.json({ error: "name must be a non-empty string" }, { status: 400 });
+    }
+    if (name.length > MAX_NAME_LENGTH) {
+      return NextResponse.json(
+        { error: `name must be at most ${MAX_NAME_LENGTH} characters` },
+        { status: 400 },
+      );
+    }
+    updates.name = name;
+  }
+
+  if (Object.keys(updates).length === 0) {
     return NextResponse.json(
-      { error: `status must be one of: ${VALID_STATUSES.join(", ")}` },
+      { error: "Provide at least one of: status, name" },
       { status: 400 },
     );
   }
 
   const { data, error } = await supabase
     .from("company_agents")
-    .update({ status })
+    .update(updates)
     .eq("company_id", companyId)
     .eq("agent_id", agentLookup.agentId)
     .select()

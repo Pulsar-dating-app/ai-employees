@@ -14,6 +14,7 @@ import { WebChatChannelCard } from "./web-chat-channel-card";
 import { WidgetCustomizeCard } from "./widget-customize-card";
 import { InstagramConnectCard } from "./instagram-connect-card";
 import { AvailabilityCard } from "./availability-card";
+import { NameCard } from "./name-card";
 import { HumanHandoffCard } from "./human-handoff-card";
 import { DevChatTest } from "../../dev-chat-test";
 
@@ -49,7 +50,7 @@ export default async function AgentConnectionsPage({
   if (!agent) notFound();
   const company = companies?.[0] ?? null;
   const user = userData.user;
-  const name = defaultAgentName(agentSlug);
+  const fallbackName = defaultAgentName(agentSlug);
 
   if (!company) {
     return (
@@ -66,7 +67,7 @@ export default async function AgentConnectionsPage({
   const [{ data: companyAgent }, { data: membership }] = await Promise.all([
     supabase
       .from("company_agents")
-      .select("id, status, widget_greeting, widget_launcher_type, widget_launcher_asset_url")
+      .select("id, name, status, widget_greeting, widget_launcher_type, widget_launcher_asset_url")
       .eq("company_id", company.id)
       .eq("agent_id", agent.id)
       .maybeSingle(),
@@ -85,12 +86,13 @@ export default async function AgentConnectionsPage({
         <h1 className="text-headline-lg font-semibold text-on-surface">{t("connectionsTitle")}</h1>
         <p className="text-sm text-on-surface-variant">{t("notHired")}</p>
         <Link href={`/dashboard/agents/${agentSlug}`}>
-          <Button type="button">{t("viewAgent", { name })}</Button>
+          <Button type="button">{t("viewAgent", { name: fallbackName })}</Button>
         </Link>
       </div>
     );
   }
 
+  const name = companyAgent.name ?? fallbackName;
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
 
   const baseUrl = resolveCheckoutBaseUrl();
@@ -124,6 +126,13 @@ export default async function AgentConnectionsPage({
           className="lg:col-span-4"
         />
         <div className="flex flex-col gap-6 lg:col-span-8">
+          <NameCard
+            companyId={company.id}
+            agentSlug={agentSlug}
+            initialName={name}
+            defaultName={fallbackName}
+            canEdit={canEdit}
+          />
           <AvailabilityCard
             companyId={company.id}
             agentSlug={agentSlug}
