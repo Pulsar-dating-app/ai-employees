@@ -40,13 +40,52 @@ function extractMetadata(params: URLSearchParams): Record<string, string> {
   return metadata;
 }
 
-function currentPriceIdForSubscription(subscriptionId: string): string {
-  const match = subscriptionId.match(/^sub_mock_(starter|pro|enterprise)$/);
-  if (match) {
-    const priceId = getPlan(match[1] as PlanKey).stripePriceId;
-    if (priceId) return priceId;
+// P4 test sub ids: `sub_mock_<planKey>[__co_<companyId>]`. The plan half
+// drives the returned price/lookup_key; the optional company half is echoed
+// as metadata.companyId, the way a real subscription created through P3's
+// checkout carries it (so the webhook handler resolves the company without
+// the non-unique stripe_subscription_id fallback).
+function parseSubMock(subscriptionId: string): { planKey: PlanKey | null; companyId: string | null } {
+  const planMatch = subscriptionId.match(/^sub_mock_(starter|pro|enterprise)/);
+  const coMatch = subscriptionId.match(/__co_(.+)$/);
+  return {
+    planKey: planMatch ? (planMatch[1] as PlanKey) : null,
+    companyId: coMatch ? coMatch[1] : null,
+  };
+}
+
+function priceForSubscription(subscriptionId: string): { id: string; lookup_key: string | null } {
+  const { planKey } = parseSubMock(subscriptionId);
+  if (planKey) {
+    const plan = getPlan(planKey);
+    if (plan.stripePriceId) return { id: plan.stripePriceId, lookup_key: plan.stripeLookupKey };
   }
-  return "price_mock_unknown_current";
+  return { id: "price_mock_unknown_current", lookup_key: null };
+}
+
+function mockSubscription(subscriptionId: string) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const { companyId } = parseSubMock(subscriptionId);
+  return {
+    id: subscriptionId,
+    object: "subscription",
+    status: "active",
+    cancel_at_period_end: false,
+    customer: `cus_mock_of_${subscriptionId}`,
+    metadata: companyId ? { companyId } : {},
+    items: {
+      object: "list",
+      data: [
+        {
+          id: "si_mock_1",
+          object: "subscription_item",
+          current_period_start: nowSec,
+          current_period_end: nowSec + 30 * 24 * 3600,
+          price: { object: "price", ...priceForSubscription(subscriptionId) },
+        },
+      ],
+    },
+  };
 }
 
 export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
@@ -108,30 +147,24 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
     if (subMatch) {
       const subscriptionId = subMatch[1];
       if (req.method === "GET") {
-        return send(200, {
-          id: subscriptionId,
-          object: "subscription",
-          status: "active",
-          items: {
-            object: "list",
-            data: [
-              {
-                id: "si_mock_1",
-                object: "subscription_item",
-                price: { id: currentPriceIdForSubscription(subscriptionId), object: "price" },
-              },
-            ],
-          },
-        });
+        // P4 retrieves the subscription on checkout.session.completed and
+        // invoice.paid. Status/period/lookup_key come from the sub id shape
+        // (sub_mock_<planKey>); other events carry the subscription in the
+        // event payload and never hit this.
+        return send(200, mockSubscription(subscriptionId));
+      }
+      if (req.method === "DELETE") {
+        // P4's one-active-subscription guard cancels a superseded sub.
+        return send(200, { ...mockSubscription(subscriptionId), status: "canceled" });
       }
       if (req.method === "POST") {
+        // Not used by P3 (Portal) or P4; kept as a guard in case a swap is
+        // ever wired in our code again.
         if (params.get("proration_behavior") !== "create_prorations") {
           return fail("subscription update must pass proration_behavior=create_prorations");
         }
         return send(200, {
-          id: subscriptionId,
-          object: "subscription",
-          status: "active",
+          ...mockSubscription(subscriptionId),
           items: {
             object: "list",
             data: [
