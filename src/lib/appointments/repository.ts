@@ -18,6 +18,7 @@ import {
   FIELD_TYPE_TO_CUSTOMER_COLUMN,
   type IntakeFieldType,
 } from "@/lib/appointments/intake-fields";
+import { notifyAppointmentConfirmed } from "@/lib/email/appointments";
 
 // Trello J3 -- the abstraction Ana's scheduling tools (list_services /
 // find_available_slots / book_appointment / cancel_appointment) call
@@ -479,6 +480,11 @@ async function book(
         .update({ google_event_id: googleEventId })
         .eq("id", appointment.id);
     }
+
+    // Trello R3 -- confirmation email to the customer (best-effort, never
+    // throws, no email on record = no-op). A `requested` booking gets its
+    // email later, from the H3 PATCH route when the merchant approves it.
+    await notifyAppointmentConfirmed(client, appointment.id as string);
   }
 
   return {
