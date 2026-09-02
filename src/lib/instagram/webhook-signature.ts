@@ -6,26 +6,30 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 // "customer" messages that get answered by the real Agent Engine.
 export function verifyInstagramSignature(rawBody: string, signatureHeader: string | null): boolean {
   const secret = process.env.META_APP_SECRET;
+  const igSecret = process.env.INSTAGRAM_APP_SECRET;
   const hasHeader = signatureHeader?.startsWith("sha256=") ?? false;
-  const expected = secret
-    ? createHmac("sha256", secret).update(rawBody).digest("hex")
-    : "";
   const provided = hasHeader ? signatureHeader!.slice("sha256=".length) : "";
+  const hmac = (s: string | undefined) =>
+    s ? createHmac("sha256", s).update(rawBody).digest("hex") : "";
+  const expected = hmac(secret);
+  const expectedIg = hmac(igSecret);
 
   // TEMP DIAGNOSTIC (debug/ig-webhook-sig) -- no secret values, just shapes.
   console.error(
     "[ig-sig]",
     JSON.stringify({
-      secretSet: Boolean(secret),
-      secretLen: secret?.length ?? 0,
+      metaSecretSet: Boolean(secret),
+      metaSecretLen: secret?.length ?? 0,
+      igSecretSet: Boolean(igSecret),
+      igSecretLen: igSecret?.length ?? 0,
       hasHeader,
-      headerLen: signatureHeader?.length ?? 0,
-      headerHead: signatureHeader?.slice(0, 14) ?? null,
       bodyLen: rawBody.length,
       bodyHead: rawBody.slice(0, 40),
-      expectedHead: expected.slice(0, 12),
       providedHead: provided.slice(0, 12),
-      match: hasHeader && Boolean(secret) && expected === provided,
+      metaHmacHead: expected.slice(0, 12),
+      igHmacHead: expectedIg.slice(0, 12),
+      matchesMeta: hasHeader && Boolean(secret) && expected === provided,
+      matchesInstagram: hasHeader && Boolean(igSecret) && expectedIg === provided,
     }),
   );
 
