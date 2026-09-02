@@ -12,10 +12,12 @@ import { getPlan, type PlanKey } from "@/lib/billing/plans";
 //  - customer email containing "trigger-customer-failure" -> 400
 //  - checkout session create WITH a `currency` param -> 400 (proves the
 //    route never sets one -- Adaptive Pricing owns presentment)
+//  - billing portal session create -> echoes a hosted url (existing
+//    subscribers are sent here for plan changes, not subscriptions.update)
 //  - subscription update WITHOUT proration_behavior=create_prorations -> 400
+//    (kept for P4; P3 no longer calls it)
 //  - GET /v1/subscriptions/sub_mock_<planKey> reports that plan's real
-//    Price id as the current item, so the route's swap/no-op branch is
-//    exercised against genuine plans.ts values.
+//    Price id as the current item (used by P4).
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve) => {
@@ -86,6 +88,18 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
         customer: params.get("customer"),
         url: `https://checkout.stripe.test/c/${id}`,
         metadata: extractMetadata(params),
+      });
+    }
+
+    // --- Billing Portal ------------------------------------------------
+    if (req.method === "POST" && url.pathname === "/v1/billing_portal/sessions") {
+      const id = randomId("bps_mock");
+      return send(200, {
+        id,
+        object: "billing_portal.session",
+        customer: params.get("customer"),
+        return_url: params.get("return_url"),
+        url: `https://billing.stripe.test/p/session/${id}`,
       });
     }
 
