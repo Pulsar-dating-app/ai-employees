@@ -32,6 +32,14 @@ export async function getOrCreateStripeCustomer(opts: {
 // A subscription-mode Checkout Session for one plan. `metadata` is carried
 // on both the session and the resulting subscription so the P4 webhook can
 // read `companyId` / `planKey` off whichever object an event gives it.
+//
+// No idempotency key here on purpose. Stripe caches an idempotent response
+// for 24h and a Checkout Session also expires after 24h, so a stable key
+// (`billing-checkout:<companyId>:<planKey>`) would replay a *stale* session
+// -- one the customer already completed or let expire -- instead of minting
+// a fresh one, leaving them staring at a dead Checkout page. A Session is
+// single-use and free; a double-submit just makes a second one that expires
+// unused.
 export async function createCheckoutSession(opts: {
   customerId: string;
   priceId: string;
@@ -40,20 +48,17 @@ export async function createCheckoutSession(opts: {
   baseUrl: string;
 }): Promise<{ url: string | null }> {
   const stripe = getStripeClient();
-  const session = await stripe.checkout.sessions.create(
-    {
-      mode: "subscription",
-      customer: opts.customerId,
-      line_items: [{ price: opts.priceId, quantity: 1 }],
+  const session = await stripe.checkout.sessions.create({
+    mode: "subscription",
+    customer: opts.customerId,
+    line_items: [{ price: opts.priceId, quantity: 1 }],
+    metadata: { companyId: opts.companyId, planKey: opts.planKey },
+    subscription_data: {
       metadata: { companyId: opts.companyId, planKey: opts.planKey },
-      subscription_data: {
-        metadata: { companyId: opts.companyId, planKey: opts.planKey },
-      },
-      success_url: `${opts.baseUrl}/dashboard/settings/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${opts.baseUrl}/dashboard/settings/billing?checkout=cancel`,
     },
-    { idempotencyKey: `billing-checkout:${opts.companyId}:${opts.planKey}` },
-  );
+    success_url: `${opts.baseUrl}/dashboard/settings/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${opts.baseUrl}/dashboard/settings/billing?checkout=cancel`,
+  });
   return { url: session.url };
 }
 
