@@ -7,7 +7,7 @@ import { refreshLongLivedToken } from "@/lib/instagram/meta-instagram-api";
 // Scheduler-agnostic by design (see decisions.md 2026-09-02): all the
 // logic is here, and the trigger is whatever calls this route with the
 // right bearer. Today that's Supabase pg_cron + pg_net
-// (supabase/migrations/20260902130000_instagram_token_refresh_cron.sql);
+// (supabase/migrations/20260902102416_instagram_token_refresh_cron.sql);
 // moving to Vercel Cron later is a vercel.json crons entry pointing at this
 // same path, no change here. Accepts GET and POST so either style of
 // scheduler works (Vercel Cron sends GET; the pg_net job sends POST).
