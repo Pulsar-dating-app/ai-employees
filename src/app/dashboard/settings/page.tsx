@@ -113,6 +113,7 @@ export default async function SettingsPage() {
             country: company.country,
             industry: company.industry ?? null,
             currency: company.currency,
+            timezone: company.timezone ?? null,
           }}
         />
 

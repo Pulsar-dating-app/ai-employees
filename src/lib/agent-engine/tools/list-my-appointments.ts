@@ -19,10 +19,11 @@ type ListMyAppointmentsArgs = {
 export const listMyAppointmentsTool: AgentTool = {
   name: "list_my_appointments",
   description:
-    "List this customer's own upcoming appointments -- service name, start/end time (UTC ISO " +
-    "8601 instants), status, and the appointment `id` used by cancel_appointment / " +
-    "reschedule_appointment. Always tell the customer times in the `timezone` field, never raw " +
-    "UTC. Call this when the customer asks about an existing booking (\"what time is mine?\", " +
+    "List this customer's own upcoming appointments -- service name, `startsAtLabel` / " +
+    "`endsAtLabel` (the time already written out in the business's timezone -- say these, " +
+    "translated as needed; `startsAt`/`endsAt` are raw UTC ISO instants, don't recompute from " +
+    "them), status, and the appointment `id` used by cancel_appointment / " +
+    "reschedule_appointment. Call this when the customer asks about an existing booking (\"what time is mine?\", " +
     "\"did it go through?\", \"I need to move/cancel my appointment\") -- especially if it was " +
     "made earlier and you don't have its id in view.\n\n" +
     "By default it finds appointments tied to this conversation's customer. If that returns " +

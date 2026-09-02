@@ -499,6 +499,18 @@
         "USD": "USD — Dólar americano",
         "BRL": "BRL — Real brasileiro",
         "EUR": "EUR — Euro"
+      },
+      "timezoneLabel": "Fuso horário",
+      "timezonePlaceholder": "Selecione um fuso horário",
+      "timezoneHint": "Usado nos horários de agendamento. Novas empresas usam o horário de Brasília por padrão.",
+      "timezoneOptions": {
+        "America/Sao_Paulo": "Brasília / São Paulo / Nordeste (GMT-3)",
+        "America/Manaus": "Manaus / Cuiabá / Campo Grande (GMT-4)",
+        "America/Noronha": "Fernando de Noronha (GMT-2)",
+        "America/Rio_Branco": "Rio Branco / Acre (GMT-5)",
+        "America/New_York": "Nova York (GMT-5/-4)",
+        "Europe/Lisbon": "Lisboa (GMT+0/+1)",
+        "UTC": "UTC"
       }
     },
     "shipping": {
