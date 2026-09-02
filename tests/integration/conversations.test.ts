@@ -59,6 +59,7 @@ describe("Conversations API", () => {
     companyId: string,
     status: "active" | "paused" | "closed",
     recipientIgsid = "customer-igsid-1",
+    lastInboundAgeMs = 0,
   ) {
     const svc = getTestServiceClient();
     const { data: agent } = await svc.from("agents").select("id").eq("slug", "malu").single();
@@ -85,6 +86,9 @@ describe("Conversations API", () => {
       conversation_id: conversationId,
       role: "customer",
       content: "oi, vcs entregam em SP?",
+      // N11: how long ago the customer last wrote decides whether the
+      // merchant's reply needs the HUMAN_AGENT tag (>24h) or not.
+      created_at: new Date(Date.now() - lastInboundAgeMs).toISOString(),
     });
     // Unique per call -- a partial unique index on instagram_user_id (where
     // status <> 'disconnected') would otherwise collide across the suite's
@@ -274,6 +278,53 @@ describe("Conversations API", () => {
       .eq("company_id", company.id)
       .single();
     expect((connection as { status: string }).status).toBe("disconnected");
+  });
+
+  it("N11 -- a reply past the 24h window is delivered under the HUMAN_AGENT tag", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Conv IG N11 Tag Co");
+    await hireMalu(owner.cookieHeader, company.id);
+    // The mock's "requires-human-agent-tag" recipient 400s unless the send
+    // carries messaging_type: MESSAGE_TAG + tag: HUMAN_AGENT. Last inbound
+    // is 2 days old -> past 24h, inside 7d -> the route must tag it.
+    const conversationId = await seedInstagramConversation(
+      company.id,
+      "paused",
+      "requires-human-agent-tag",
+      2 * 24 * 60 * 60 * 1000,
+    );
+
+    const res = await api<{ delivery: { ok: boolean } | null }>(
+      "POST",
+      `/api/companies/${company.id}/conversations/${conversationId}/messages`,
+      owner.cookieHeader,
+      { message: "Oi! Desculpa a demora — segue a resposta." },
+    );
+    expect(res.status).toBe(201);
+    expect(res.json.delivery).toEqual({ ok: true });
+  });
+
+  it("N11 -- a reply inside the 24h window is delivered without the tag", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Conv IG N11 NoTag Co");
+    await hireMalu(owner.cookieHeader, company.id);
+    // "rejects-message-tag" 400s if the send carries a message tag. Last
+    // inbound is 1 hour old -> inside 24h -> the route must NOT tag it.
+    const conversationId = await seedInstagramConversation(
+      company.id,
+      "active",
+      "rejects-message-tag",
+      60 * 60 * 1000,
+    );
+
+    const res = await api<{ delivery: { ok: boolean } | null }>(
+      "POST",
+      `/api/companies/${company.id}/conversations/${conversationId}/messages`,
+      owner.cookieHeader,
+      { message: "resposta rápida dentro da janela" },
+    );
+    expect(res.status).toBe(201);
+    expect(res.json.delivery).toEqual({ ok: true });
   });
 
   it("rejects an unsupported PATCH status", async () => {
