@@ -63,11 +63,12 @@ export async function loadAvailableSlots(
 
   const { data: company, error: companyError } = await supabase
     .from("companies")
-    .select("timezone")
+    .select("timezone, min_lead_time_minutes")
     .eq("id", companyId)
     .single();
   if (companyError) throw new Error(companyError.message);
   const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
+  const minLeadTimeMinutes = Number(company.min_lead_time_minutes) || 0;
 
   const { data: businessHoursRows, error: businessHoursError } = await supabase
     .from("business_hours")
@@ -123,6 +124,7 @@ export async function loadAvailableSlots(
     bufferMinutes: service.buffer_minutes,
     businessHours: (businessHoursRows ?? []) as BusinessHourWindow[],
     busy: [...appointmentBusy, ...timeOffBusy, ...googleBusy],
+    minLeadTimeMinutes,
     now,
   });
 

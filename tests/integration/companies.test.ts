@@ -295,4 +295,23 @@ describe("GET/PATCH /api/companies/:id", () => {
     });
     expect(result.status).toBe(400);
   });
+
+  it("(J7) accepts whole-number scheduling policy fields and rejects bad ones", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Policy Co");
+
+    const ok = await api<{ company: { min_lead_time_minutes: number; cancellation_cutoff_hours: number } }>(
+      "PATCH",
+      `/api/companies/${companyId}`,
+      owner.cookieHeader,
+      { min_lead_time_minutes: 120, cancellation_cutoff_hours: 24 },
+    );
+    expect(ok.status).toBe(200);
+    expect(ok.json.company).toMatchObject({ min_lead_time_minutes: 120, cancellation_cutoff_hours: 24 });
+
+    for (const bad of [{ min_lead_time_minutes: -1 }, { min_lead_time_minutes: 1.5 }, { cancellation_cutoff_hours: 99999 }]) {
+      const res = await api("PATCH", `/api/companies/${companyId}`, owner.cookieHeader, bad);
+      expect(res.status).toBe(400);
+    }
+  });
 });

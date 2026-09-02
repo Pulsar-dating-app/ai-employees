@@ -50,6 +50,10 @@ export const AGENT_TOOL_SETS: Record<string, readonly string[]> = {
     "find_available_slots",
     "book_appointment",
     "cancel_appointment",
+    // Trello J5 / J6 -- see the customer's existing bookings, and move one
+    // to a new time in a single write instead of cancel-then-rebook.
+    "list_my_appointments",
+    "reschedule_appointment",
   ],
 };
 

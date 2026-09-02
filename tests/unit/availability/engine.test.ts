@@ -139,6 +139,25 @@ describe("computeAvailableSlots", () => {
     expect(slots.map((s) => s.start)).not.toContain("2026-08-31T10:00:00.000Z");
   });
 
+  it("(J7) excludes slots inside the minimum booking lead time", () => {
+    const slots = computeAvailableSlots({
+      timezone: "UTC",
+      from: "2026-08-31",
+      to: "2026-08-31",
+      durationMinutes: 30,
+      bufferMinutes: 0,
+      businessHours: [MON_9_TO_12],
+      busy: [],
+      // 09:00 open, now is 08:00, but a 120-minute lead time pushes the
+      // earliest bookable start to 10:00.
+      minLeadTimeMinutes: 120,
+      now: new Date("2026-08-31T08:00:00.000Z"),
+    });
+    expect(slots.map((s) => s.start)).not.toContain("2026-08-31T09:00:00.000Z");
+    expect(slots.map((s) => s.start)).not.toContain("2026-08-31T09:30:00.000Z");
+    expect(slots.map((s) => s.start)).toContain("2026-08-31T10:30:00.000Z");
+  });
+
   it("resolves day-of-week and local business hours correctly in a non-UTC timezone", () => {
     // America/Sao_Paulo is UTC-3. A 09:00-10:00 local window on Monday
     // 2026-08-31 is 12:00-13:00 UTC.

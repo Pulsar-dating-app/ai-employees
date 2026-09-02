@@ -32,10 +32,11 @@ export const bookAppointmentTool: AgentTool = {
     "business needs to review and confirm it) -- tell the customer which one happened, in your " +
     "own natural words. If `booked` is false, use `reason` to explain honestly (\"slot_unavailable\" " +
     "= someone just took that time, \"outside_business_hours\" = the business is closed then, " +
-    "\"service_not_found\" = not something they offer, \"missing_intake_answers\" = the business " +
-    "still needs the details listed in `missingRequired` -- ask the customer for exactly those " +
-    "and call book_appointment again) and offer to find another time -- never tell the customer " +
-    "it's booked when it isn't.",
+    "\"service_not_found\" = not something they offer, \"too_soon\" = the start is sooner than " +
+    "the business accepts a booking (offer a later time), \"missing_intake_answers\" = the " +
+    "business still needs the details listed in `missingRequired` -- ask the customer for " +
+    "exactly those and call book_appointment again) and offer to find another time -- never " +
+    "tell the customer it's booked when it isn't.",
   parameters: {
     type: "object",
     properties: {
