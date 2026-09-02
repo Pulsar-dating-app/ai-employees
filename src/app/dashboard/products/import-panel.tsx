@@ -114,7 +114,7 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
         <p className="font-semibold text-on-surface">{t("formatTitle")}</p>
         <p className="mt-1">{t("formatDescription")}</p>
         <p className="mt-1">{t("formatPriceHint")}</p>
-        <p className="mt-1">{t("formatVariantsHint")}</p>
+        <p className="mt-1">{t("formatDescriptionHint")}</p>
         <div className="mt-2">
           <a href={`/api/companies/${companyId}/products/import-template`} className={TEMPLATE_LINK_CLASSES}>
             {t("downloadTemplateButton")}

@@ -111,8 +111,6 @@ describe("Products CRUD /api/companies/:id/products", () => {
       image_url: "https://example.test/widget.png",
       product_url: "https://example.test/products/widget",
       category: "widgets",
-      variants: [{ color: "blue", size: "M" }],
-      attributes: { material: "plastic" },
       metadata: { imported_from: "csv" },
     };
 

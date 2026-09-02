@@ -5,10 +5,17 @@ import { resolveLocale } from "@/i18n/request";
 // Trello F3 follow-up — a downloadable starter file matching exactly the
 // columns Trello B4's import route expects (see ../import/route.ts's
 // mapAndValidateRow: name, description, price, currency, stock, image,
-// product_url, category, sku, variants). Header names are fixed English
-// regardless of locale — they're the literal keys the parser reads — only
-// the illustrative example row content is localized, via the same locale
-// resolution the rest of the app's Server Components use.
+// product_url, category, sku). Header names are fixed English regardless of
+// locale — they're the literal keys the parser reads — only the illustrative
+// example row content is localized, via the same locale resolution the rest
+// of the app's Server Components use.
+//
+// The example `description` is deliberately written as a model of the
+// specificity merchants should aim for (size/material/fit, not "nice shirt")
+// — there's no structured attributes/variants field to fall back on
+// (removed; see decisions.md), so description is the only place the AI gets
+// this kind of detail from, and this template is one of the few places a
+// merchant sees a worked example before writing their own.
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -35,18 +42,7 @@ async function requireMember(
   return { error: null };
 }
 
-const HEADER = [
-  "name",
-  "description",
-  "price",
-  "currency",
-  "stock",
-  "image",
-  "product_url",
-  "category",
-  "sku",
-  "variants",
-];
+const HEADER = ["name", "description", "price", "currency", "stock", "image", "product_url", "category", "sku"];
 
 function csvEscape(value: string): string {
   if (/["\n,]/.test(value)) {
@@ -60,7 +56,7 @@ function buildExampleRows(locale: "en" | "pt"): string[][] {
     return [
       [
         "Camiseta Exemplo",
-        "Descrição curta do produto aqui.",
+        "Camiseta 100% algodão, gola redonda, caimento levemente justo. Disponível nas cores azul e vermelho, tamanhos P, M e G — informe qual cor e tamanho ao perguntar sobre estoque.",
         "29.90",
         "BRL",
         "10",
@@ -68,17 +64,16 @@ function buildExampleRows(locale: "en" | "pt"): string[][] {
         "https://example.com/produto",
         "Roupas",
         "SKU-001",
-        '{"Cor": ["Azul", "Vermelho"], "Tamanho": ["P", "M", "G"]}',
       ],
       // Only `name` is required — this row shows every other column can be left blank.
-      ["Caneca Exemplo", "", "", "", "", "", "", "", "", ""],
+      ["Caneca Exemplo", "", "", "", "", "", "", "", ""],
     ];
   }
 
   return [
     [
       "Example T-Shirt",
-      "Short product description goes here.",
+      "100% cotton, crew neck, slightly fitted cut. Available in blue and red, sizes S/M/L — mention the color and size when asking about stock.",
       "29.90",
       "USD",
       "10",
@@ -86,9 +81,8 @@ function buildExampleRows(locale: "en" | "pt"): string[][] {
       "https://example.com/product",
       "Clothing",
       "SKU-001",
-      '{"Color": ["Blue", "Red"], "Size": ["S", "M", "L"]}',
     ],
-    ["Example Mug", "", "", "", "", "", "", "", "", ""],
+    ["Example Mug", "", "", "", "", "", "", "", ""],
   ];
 }
 

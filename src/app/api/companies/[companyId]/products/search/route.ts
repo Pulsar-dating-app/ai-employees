@@ -52,7 +52,7 @@ function parseNumberParam(raw: string | null, field: string): { value?: number; 
 // relevance-ranked search (ProductRepository.search) over ?text=/&keywords=
 // (repeatable -- ?keywords=a&keywords=b -- matches ANY of them, unlike
 // ?text= whose words are all required)/&category=/&priceMin=/&priceMax=/
-// &attributes= (JSON-encoded object)/&limit=.
+// &limit=.
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ companyId: string }> },
@@ -88,16 +88,6 @@ export async function GET(
     const limit = parseNumberParam(url.searchParams.get("limit"), "limit");
     if (limit.error) return NextResponse.json({ error: limit.error }, { status: 400 });
 
-    const attributesRaw = url.searchParams.get("attributes");
-    let attributes: Record<string, unknown> | undefined;
-    if (attributesRaw !== null) {
-      try {
-        attributes = JSON.parse(attributesRaw);
-      } catch {
-        return NextResponse.json({ error: "attributes must be valid JSON" }, { status: 400 });
-      }
-    }
-
     const keywords = url.searchParams.getAll("keywords");
 
     const products = await ProductRepository.search({
@@ -107,7 +97,6 @@ export async function GET(
       category: url.searchParams.get("category") ?? undefined,
       priceMin: priceMin.value,
       priceMax: priceMax.value,
-      attributes,
       limit: limit.value,
     });
 

@@ -103,7 +103,7 @@ function collectNumbersFromText(text: string, into: Set<number>): void {
 // Walks a tool result (arbitrary JSON) for every number it contains, in any
 // shape. Deliberately indiscriminate: `products.price` arrives as a *string*
 // from PostgREST, policy/FAQ content is free text carrying real figures
-// ("frete grátis acima de R$ 200"), and product attributes are open jsonb --
+// ("frete grátis acima de R$ 200"), and `products.metadata` is open jsonb --
 // enumerating known fields would silently miss whichever one a future tool
 // adds.
 export function collectNumbers(value: unknown, into: Set<number>): void {

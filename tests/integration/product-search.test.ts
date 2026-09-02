@@ -178,28 +178,6 @@ describe("Product search /api/companies/:id/products/search", () => {
     expect(res.json.products.map((p) => p.id)).toEqual([cheapShirt]);
   });
 
-  it("filters by attributes containment", async () => {
-    const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Attributes Co");
-
-    const blueOne = await createProduct(owner.cookieHeader, companyId, {
-      name: "Widget A",
-      attributes: { color: "blue", material: "plastic" },
-    });
-    await createProduct(owner.cookieHeader, companyId, {
-      name: "Widget B",
-      attributes: { color: "red", material: "plastic" },
-    });
-
-    const res = await search(
-      owner.cookieHeader,
-      companyId,
-      `?attributes=${encodeURIComponent(JSON.stringify({ color: "blue" }))}`,
-    );
-    expect(res.status).toBe(200);
-    expect(res.json.products.map((p) => p.id)).toEqual([blueOne]);
-  });
-
   it("caps results at the requested limit", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Limit Co");
@@ -220,13 +198,6 @@ describe("Product search /api/companies/:id/products/search", () => {
     expect((await search(owner.cookieHeader, companyId, "?priceMin=abc")).status).toBe(400);
     expect((await search(owner.cookieHeader, companyId, "?priceMax=abc")).status).toBe(400);
     expect((await search(owner.cookieHeader, companyId, "?limit=abc")).status).toBe(400);
-  });
-
-  it("rejects malformed attributes JSON", async () => {
-    const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Bad Attributes Co");
-
-    expect((await search(owner.cookieHeader, companyId, "?attributes={not-json")).status).toBe(400);
   });
 
   it("?productId= looks up a single product directly, scoped to the company", async () => {

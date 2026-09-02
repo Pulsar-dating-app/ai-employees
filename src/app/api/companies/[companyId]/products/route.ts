@@ -192,8 +192,6 @@ export async function POST(
       image_url: body?.image_url ?? null,
       product_url: body?.product_url ?? null,
       category: body?.category ?? null,
-      variants: body?.variants ?? null,
-      attributes: body?.attributes ?? null,
       metadata: body?.metadata ?? null,
       embedding,
     })

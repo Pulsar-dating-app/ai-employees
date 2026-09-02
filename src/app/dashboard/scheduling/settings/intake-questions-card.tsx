@@ -82,7 +82,9 @@ export function IntakeQuestionsCard({
 
   function add() {
     if (rows.length >= MAX_FIELDS) return;
-    mutate([...rows, { key: freshKey(), label: "", required: false }]);
+    // Required by default -- most intake questions merchants add are things
+    // they actually need an answer to before booking; opting out is one tap.
+    mutate([...rows, { key: freshKey(), label: "", required: true }]);
   }
 
   function move(index: number, direction: -1 | 1) {
@@ -134,7 +136,7 @@ export function IntakeQuestionsCard({
   }
 
   return (
-    <SettingsSection icon={ListIcon} title={t("title")} subtitle={t("subtitle")}>
+    <SettingsSection id="intake-questions" icon={ListIcon} title={t("title")} subtitle={t("subtitle")}>
       <p className="mb-4 rounded-lg bg-surface-container-low px-3 py-2 text-label-md text-on-surface-variant">
         {t("hint")}
       </p>

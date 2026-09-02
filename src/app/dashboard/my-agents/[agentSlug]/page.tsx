@@ -10,6 +10,7 @@ import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { AgentPersonaCard } from "../agent-persona-card";
+import { PolicySection } from "../../settings/policy-section";
 import { WebChatChannelCard } from "./web-chat-channel-card";
 import { WidgetCustomizeCard } from "./widget-customize-card";
 import { InstagramConnectCard } from "./instagram-connect-card";
@@ -21,6 +22,17 @@ import { DevChatTest } from "../../dev-chat-test";
 // A hired team member's own page is scoped to *how customers reach them* —
 // platform connections only. Business knowledge is company-wide, not
 // per-agent, and lives at /dashboard/settings instead.
+//
+// Deliberate exception: Shipping/Returns render here too, Malu-only. Both
+// are still plain `companies` columns (shipping_policy/return_policy),
+// still edited via `PolicySection` (reused unchanged from Settings, same
+// PATCH /api/companies/[companyId] endpoint, same translations) — nothing
+// moved at the data layer, only where the same component is mounted.
+// User-driven: this content is only ever relevant to Malu's own sales
+// conversations, never Ana's scheduling ones, so surfacing it on a page
+// Ana's own hire also reaches (this one, gated by agentSlug) would be
+// actively misleading. Payment/Other policy stay on Settings — genuinely
+// company-wide, not agent-specific in the same way.
 //
 // The WhatsApp card (`channels-section.tsx`) is deliberately NOT rendered
 // here: as of 2026-08-31 Instagram replaces WhatsApp as the messaging
@@ -44,7 +56,7 @@ export default async function AgentConnectionsPage({
       .eq("slug", agentSlug)
       .eq("is_active", true)
       .maybeSingle(),
-    supabase.from("companies").select("id, slug, allow_human_handoff"),
+    supabase.from("companies").select("id, slug, allow_human_handoff, shipping_policy, return_policy"),
     supabase.auth.getUser(),
   ]);
   if (!agent) notFound();
@@ -140,6 +152,24 @@ export default async function AgentConnectionsPage({
             initialActive={companyAgent.status === "active"}
             canEdit={canEdit}
           />
+          {agentSlug === "malu" ? (
+            <>
+              <PolicySection
+                companyId={company.id}
+                fieldName="shipping_policy"
+                sectionKey="shipping"
+                initialValue={company.shipping_policy}
+                canEdit={canEdit}
+              />
+              <PolicySection
+                companyId={company.id}
+                fieldName="return_policy"
+                sectionKey="returns"
+                initialValue={company.return_policy}
+                canEdit={canEdit}
+              />
+            </>
+          ) : null}
           <HumanHandoffCard
             companyId={company.id}
             agentName={name}

@@ -28,7 +28,6 @@ type MappedProduct = {
   product_url: string | null;
   category: string | null;
   sku: string | null;
-  variants: unknown | null;
 };
 
 async function requireMember(
@@ -144,16 +143,6 @@ function mapAndValidateRow(row: ParsedRow): { product: MappedProduct } | { reaso
     return { reason: stockError };
   }
 
-  const variantsRaw = cellToString(row.variants);
-  let variants: unknown = null;
-  if (variantsRaw !== null) {
-    try {
-      variants = JSON.parse(variantsRaw);
-    } catch {
-      return { reason: "variants must be valid JSON" };
-    }
-  }
-
   return {
     product: {
       name,
@@ -165,7 +154,6 @@ function mapAndValidateRow(row: ParsedRow): { product: MappedProduct } | { reaso
       product_url: cellToString(row.product_url),
       category: cellToString(row.category),
       sku: cellToString(row.sku),
-      variants,
     },
   };
 }
