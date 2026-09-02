@@ -76,7 +76,7 @@ export default async function SchedulingSettingsPage() {
         .order("start_date", { ascending: true }),
       supabase
         .from("appointment_intake_fields")
-        .select("id, label, is_required, position")
+        .select("id, key, label, field_type, is_required, is_enabled, position")
         .eq("company_id", company.id)
         .order("position", { ascending: true }),
     ]);
@@ -113,6 +113,8 @@ export default async function SchedulingSettingsPage() {
           companyId={company.id}
           canEdit={canEdit}
           initialRequiresApproval={Boolean(company.requires_appointment_approval)}
+          initialMinLeadTimeMinutes={Number(company.min_lead_time_minutes) || 0}
+          initialCancellationCutoffHours={Number(company.cancellation_cutoff_hours) || 0}
         />
         <TimeOffCard
           companyId={company.id}

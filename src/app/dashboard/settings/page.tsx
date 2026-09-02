@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
@@ -5,7 +6,7 @@ import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
 import { EmbedDomainsSection } from "./embed-domains-section";
-import { SettingsIcon } from "@/components/ui/icons";
+import { CartIcon, ChevronRightIcon, SettingsIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 
 function countFilledSections(company: {
@@ -85,6 +86,20 @@ export default async function SettingsPage() {
         </p>
       ) : null}
 
+      <Link
+        href="/dashboard/settings/billing"
+        className="flex max-w-4xl items-center gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 shadow-level1 transition-colors hover:bg-surface-container-low"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-fixed text-primary">
+          <CartIcon className="h-5 w-5" />
+        </span>
+        <span className="flex flex-col">
+          <span className="text-label-md font-semibold text-on-surface">{t("billingLink.title")}</span>
+          <span className="text-sm text-on-surface-variant">{t("billingLink.hint")}</span>
+        </span>
+        <ChevronRightIcon className="ml-auto h-5 w-5 shrink-0 text-on-surface-variant" />
+      </Link>
+
       <div className="flex max-w-4xl flex-col gap-6">
         <BusinessInfoSection
           companyId={company.id}
@@ -98,6 +113,7 @@ export default async function SettingsPage() {
             country: company.country,
             industry: company.industry ?? null,
             currency: company.currency,
+            timezone: company.timezone ?? null,
           }}
         />
 

@@ -6,11 +6,12 @@ import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
 
 // Trello N4/N5. The signature is computed with the exact same literal
-// secret global-setup.ts spawns the test Next.js server with -- this is
-// legitimately exercising verifyInstagramSignature's real logic, not a
-// bypass, since a real Meta caller would do the identical HMAC-SHA256 over
-// the identical bytes.
-const TEST_APP_SECRET = "test-meta-app-secret";
+// INSTAGRAM_APP_SECRET global-setup.ts spawns the test Next.js server with
+// -- Instagram Business Login webhooks are signed with the Instagram app
+// secret, not META_APP_SECRET (fixed 2026-09-02, see webhook-signature.ts).
+// This exercises verifyInstagramSignature's real logic, not a bypass: a
+// real Meta caller does the identical HMAC-SHA256 over the identical bytes.
+const TEST_APP_SECRET = "test-instagram-app-secret";
 
 function sign(rawBody: string) {
   return `sha256=${createHmac("sha256", TEST_APP_SECRET).update(rawBody).digest("hex")}`;
@@ -104,6 +105,28 @@ describe("Instagram inbound webhook (GET verify, POST receive)", () => {
       const body = messagingPayload("no-such-account", "some-sender", "hi", "mid-unknown-account");
       const res = await postWebhook(body, sign(body));
       expect(res.status).toBe(200);
+    });
+
+    // Regression (found live 2026-09-02): the connect flow used to store the
+    // OAuth exchange's app-scoped `user_id` (igid_{code}), but real webhooks
+    // arrive under the professional-account id from GET /me?fields=user_id
+    // (igsid_{code}). connectedAgent now returns the latter; a webhook
+    // addressed to the former must find no connection and stay silent.
+    it("does not match a webhook addressed to the OAuth app-scoped id", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Webhook Wrong Id Co");
+      const storedId = await connectedAgent(owner.cookieHeader, companyId, "malu", "webhook-wrong-id");
+      expect(storedId).toBe("igsid_webhook-wrong-id");
+
+      const body = messagingPayload("igid_webhook-wrong-id", "some-sender", "hi", "mid-wrong-id");
+      const res = await postWebhook(body, sign(body));
+      expect(res.status).toBe(200);
+
+      const { data: messages } = await service
+        .from("messages")
+        .select("id")
+        .eq("company_id", companyId);
+      expect(messages).toHaveLength(0);
     });
 
     it("is idempotent: a repeat delivery of an already-processed message id changes nothing", async () => {

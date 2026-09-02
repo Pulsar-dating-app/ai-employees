@@ -52,8 +52,31 @@ export function startInstagramApiMock(): Promise<{ url: string; stop: () => Prom
       return send(200, { access_token: `mock-long-lived-${shortLivedToken}`, expires_in: 5184000 });
     }
 
-    if (url.pathname === "/refresh_access_token" && url.searchParams.get("grant_type") === "ig_refresh_token") {
+    // N6's refreshLongLivedToken goes through graphUrl(), so the path
+    // arrives version-prefixed (/v25.0/refresh_access_token); the real
+    // endpoint also answers unversioned, hence endsWith rather than ===.
+    // access_token containing "trigger-refresh-failure" -> 400, so a test
+    // can assert the route flips that connection to disconnected.
+    if (url.pathname.endsWith("/refresh_access_token") && url.searchParams.get("grant_type") === "ig_refresh_token") {
+      const token = url.searchParams.get("access_token") ?? "";
+      if (token.includes("trigger-refresh-failure")) {
+        return send(400, { error: { message: "mock: refresh failed" } });
+      }
       return send(200, { access_token: "mock-refreshed-token", expires_in: 5184000 });
+    }
+
+    // GET /me?fields=user_id,username -- meta-instagram-api.ts's
+    // fetchAccountProfile. `user_id` here is the Instagram professional-
+    // account id (the one webhooks and the Send API key on); it is
+    // deliberately a DIFFERENT value from the OAuth exchange's app-scoped
+    // `user_id` (`igid_{code}` above) so a test proves the connect flow
+    // stores this one, not that one. Derived from the long-lived token
+    // (`mock-long-lived-mock-short-lived-{code}`) so it stays unique per
+    // code and never trips the partial unique index on instagram_user_id.
+    if (url.pathname === "/v25.0/me" && (req.method ?? "GET") === "GET") {
+      const token = (req.headers["authorization"] ?? "").replace(/^Bearer\s+/i, "");
+      const code = token.replace(/^mock-long-lived-mock-short-lived-/, "");
+      return send(200, { user_id: `igsid_${code}`, username: `user_igsid_${code}` });
     }
 
     const subscribeMatch = url.pathname.match(/^\/v25\.0\/([^/]+)\/subscribed_apps$/);
@@ -69,12 +92,24 @@ export function startInstagramApiMock(): Promise<{ url: string; stop: () => Prom
       let raw = "";
       req.on("data", (chunk) => (raw += chunk));
       req.on("end", () => {
-        const recipientId = JSON.parse(raw || "{}")?.recipient?.id ?? "";
+        const parsed = JSON.parse(raw || "{}");
+        const recipientId = parsed?.recipient?.id ?? "";
+        const hasHumanAgentTag =
+          parsed?.messaging_type === "MESSAGE_TAG" && parsed?.tag === "HUMAN_AGENT";
         if (recipientId === "trigger-send-unauthorized") {
           return send(401, { error: { message: "mock: invalid token" } });
         }
         if (recipientId === "trigger-send-failure") {
           return send(500, { error: { message: "mock: send failed" } });
+        }
+        // N11: two magic recipients let a test prove the HUMAN_AGENT tag is
+        // sent (or not) purely through sendInstagramMessage's ok/!ok result,
+        // mirroring how Meta itself rejects an out-of-window send with no tag.
+        if (recipientId === "requires-human-agent-tag" && !hasHumanAgentTag) {
+          return send(400, { error: { message: "mock: outside 24h window, HUMAN_AGENT tag required" } });
+        }
+        if (recipientId === "rejects-message-tag" && hasHumanAgentTag) {
+          return send(400, { error: { message: "mock: message tag not allowed inside 24h window" } });
         }
         return send(200, { message_id: `mock-message-${recipientId}` });
       });

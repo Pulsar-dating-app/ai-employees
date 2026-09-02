@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isValidTimeZone } from "@/lib/analytics/load";
+import { formatWallClock } from "./time-format";
 import { loadAvailableSlots, ServiceNotFoundError } from "@/lib/availability/load";
 import {
   isWithinBusinessHours,
@@ -11,7 +12,14 @@ import {
 import {
   syncAppointmentConfirmed,
   syncAppointmentCancelled,
+  syncAppointmentRescheduled,
 } from "@/lib/google-calendar/appointment-sync";
+import {
+  validateIntakeAnswer,
+  FIELD_TYPE_TO_CUSTOMER_COLUMN,
+  type IntakeFieldType,
+} from "@/lib/appointments/intake-fields";
+import { notifyAppointmentConfirmed } from "@/lib/email/appointments";
 
 // Trello J3 -- the abstraction Ana's scheduling tools (list_services /
 // find_available_slots / book_appointment / cancel_appointment) call
@@ -42,29 +50,33 @@ import {
 
 const MAX_SLOTS_RETURNED = 20;
 
-type IntakeField = { label: string; is_required: boolean };
+type IntakeField = { key: string; label: string; fieldType: IntakeFieldType; is_required: boolean };
 
-// Trello K8/K9 -- the merchant's configured pre-booking questions, in
+// Trello K8/K9/R2 -- the merchant's enabled pre-booking questions, in
 // display order. Shared by findAvailableSlots (surfaces them to the agent)
-// and book (enforces the required ones).
+// and book (enforces + validates). Only `is_enabled` rows; disabled
+// predefined fields are invisible to the agent.
 async function loadIntakeFields(
   client: SupabaseClient,
   companyId: string,
 ): Promise<IntakeField[]> {
   const { data, error } = await client
     .from("appointment_intake_fields")
-    .select("label, is_required")
+    .select("key, label, field_type, is_required")
     .eq("company_id", companyId)
+    .eq("is_enabled", true)
     .order("position", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => ({
+    key: row.key as string,
     label: row.label as string,
+    fieldType: row.field_type as IntakeFieldType,
     is_required: row.is_required as boolean,
   }));
 }
 
-// The model keys `intakeAnswers` by the question label; match tolerantly
-// (case- and whitespace-insensitive) so "cpf" answers a "CPF" field.
+// R2 -- the model keys `intakeAnswers` by each field's stable `key`. Match
+// exactly (trim + lowercase for leniency, keys are already slugs).
 function normalizeAnswerKeys(
   answers: Record<string, unknown> | null | undefined,
 ): Map<string, string> {
@@ -99,7 +111,11 @@ export type FindAvailableSlotsResult =
       // itself failed) -- slots still come from business_hours + our own
       // appointments alone. See availability/load.ts.
       googleCalendarChecked: boolean;
-      slots: { start: string; end: string }[];
+      // `start`/`end` are UTC ISO instants (pass `start` straight to
+      // book_appointment). `label` is that start already written out in the
+      // business's timezone ("Wed, Sep 3, 14:40") -- the agent speaks the
+      // label and never converts the ISO itself. See time-format.ts.
+      slots: { start: string; end: string; label: string }[];
       // The real result had more than MAX_SLOTS_RETURNED; the customer
       // should narrow the date range or state a preference.
       truncated: boolean;
@@ -109,19 +125,33 @@ export type FindAvailableSlotsResult =
       // the customer the business is away then instead of just "nothing's
       // free".
       timeOff: { start: string; end: string; reason: string | null }[];
-      // Trello K8/K9 -- the customer details this business wants collected
-      // before a booking (appointment_intake_fields). `label` is the raw
-      // data point ("Full name", "CPF", "Idade"); the agent phrases the
-      // actual question. `required` ones must be answered before
-      // book_appointment will go through; optional ones are asked once and
-      // skipped if the customer doesn't answer. Empty when nothing is
-      // configured.
-      intakeQuestions: { label: string; required: boolean }[];
+      // Trello K8/K9/R2 -- the customer details this business wants
+      // collected before a booking. `key` is the stable slug the agent
+      // keys its answers by; `label` is what the agent phrases the question
+      // from; `fieldType` tells the agent what shape of value to expect
+      // (email/phone/cpf/date/name/text). `required` ones must be answered;
+      // optional ones are asked once and skipped if declined. `email` is
+      // always present and always required.
+      intakeQuestions: { key: string; label: string; fieldType: IntakeFieldType; required: boolean }[];
     };
 
 export type BookResult =
-  | { booked: false; reason: "invalid_time" | "service_not_found" | "customer_not_found" | "outside_business_hours" | "slot_unavailable" }
+  | {
+      booked: false;
+      reason:
+        | "invalid_time"
+        | "service_not_found"
+        | "customer_not_found"
+        | "outside_business_hours"
+        | "slot_unavailable"
+        // Trello J7 -- the start is sooner than companies.min_lead_time_minutes allows.
+        | "too_soon";
+    }
   | { booked: false; reason: "missing_intake_answers"; missingRequired: string[] }
+  // R2 -- an answer failed its field_type's format check (e.g. "sim" for an
+  // email). `invalid` names the label + a short machine reason so the agent
+  // can ask again for exactly those.
+  | { booked: false; reason: "invalid_intake_answers"; invalid: { label: string; reason: string }[] }
   | {
       booked: true;
       status: "requested" | "confirmed";
@@ -129,12 +159,55 @@ export type BookResult =
       serviceName: string;
       startsAt: string;
       endsAt: string;
+      // `startsAt`/`endsAt` in the business's timezone, ready to speak.
+      startsAtLabel: string;
+      endsAtLabel: string;
       timezone: string;
     };
 
 export type CancelResult =
-  | { cancelled: false; reason: "not_found" }
+  // Trello J7 -- "cutoff_passed": within companies.cancellation_cutoff_hours
+  // of the start, so the customer can't self-cancel; Ana points them at the team.
+  | { cancelled: false; reason: "not_found" | "cutoff_passed" }
   | { cancelled: true; appointmentId: string; alreadyCancelled: boolean };
+
+// Trello J5 -- one of the customer's own appointments, as list_my_appointments
+// returns it. `id` is what reschedule_appointment / cancel_appointment take.
+export type MyAppointment = {
+  id: string;
+  serviceName: string;
+  startsAt: string;
+  endsAt: string;
+  // `startsAt`/`endsAt` in the business's timezone, ready to speak.
+  startsAtLabel: string;
+  endsAtLabel: string;
+  status: string;
+  timezone: string;
+};
+
+// Trello J6 -- the dedicated reschedule path (replaces "cancel then rebook").
+export type RescheduleResult =
+  | {
+      rescheduled: false;
+      reason:
+        | "not_found"
+        | "invalid_time"
+        | "too_soon"
+        | "outside_business_hours"
+        | "slot_unavailable"
+        | "not_reschedulable";
+    }
+  | {
+      rescheduled: true;
+      appointmentId: string;
+      serviceName: string;
+      startsAt: string;
+      endsAt: string;
+      // `startsAt`/`endsAt` in the business's timezone, ready to speak.
+      startsAtLabel: string;
+      endsAtLabel: string;
+      timezone: string;
+    };
 
 async function listServices(
   companyId: string,
@@ -192,10 +265,18 @@ async function findAvailableSlots(
       available: true,
       timezone,
       googleCalendarChecked,
-      slots: slots.slice(0, MAX_SLOTS_RETURNED),
+      slots: slots.slice(0, MAX_SLOTS_RETURNED).map((slot) => ({
+        ...slot,
+        label: formatWallClock(slot.start, timezone),
+      })),
       truncated: slots.length > MAX_SLOTS_RETURNED,
       timeOff,
-      intakeQuestions: intakeFields.map((f) => ({ label: f.label, required: f.is_required })),
+      intakeQuestions: intakeFields.map((f) => ({
+        key: f.key,
+        label: f.label,
+        fieldType: f.fieldType,
+        required: f.is_required,
+      })),
     };
   } catch (err) {
     // A missing/inactive service, or one belonging to another company, is
@@ -252,13 +333,13 @@ async function book(
       .maybeSingle(),
     client
       .from("customers")
-      .select("id, name")
+      .select("id, name, email, phone")
       .eq("id", customerId)
       .eq("company_id", companyId)
       .maybeSingle(),
     client
       .from("companies")
-      .select("timezone, requires_appointment_approval")
+      .select("timezone, requires_appointment_approval, min_lead_time_minutes")
       .eq("id", companyId)
       .maybeSingle(),
     loadIntakeFields(client, companyId),
@@ -272,6 +353,15 @@ async function book(
 
   const timezone =
     company?.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
+
+  // Trello J7 -- minimum booking lead time. find_available_slots already
+  // stops offering these, but a hand-picked or stale time still has to be
+  // rejected here. Checked right after the time is known to be valid, before
+  // the heavier business-hours / intake checks.
+  const minLeadMinutes = Number(company?.min_lead_time_minutes) || 0;
+  if (minLeadMinutes > 0 && startDate.getTime() <= Date.now() + minLeadMinutes * 60_000) {
+    return { booked: false, reason: "too_soon" };
+  }
 
   const { data: businessHours, error: businessHoursError } = await client
     .from("business_hours")
@@ -306,23 +396,40 @@ async function book(
     return { booked: false, reason: "outside_business_hours" };
   }
 
-  // Trello K9 -- the merchant's pre-booking questions. Every required one
-  // must have a non-empty answer before the row is written; the model gets
-  // the labels back so it can ask and retry. Optional questions never block:
-  // an answer is stored if given, ignored if not. Checked after the slot
-  // validations so a bad time surfaces first (more actionable), and so a
-  // retry after collecting the info runs against a known-good slot.
+  // Trello K9/R2 -- the merchant's pre-booking questions, keyed by each
+  // field's stable `key`. Every required one (email always among them)
+  // needs a non-empty answer; the model gets labels back so it can ask and
+  // retry. Then every provided answer to a known field type is format-
+  // checked (a bad email/cpf/date bounces with `invalid_intake_answers`).
+  // Checked after the slot validations so a bad time surfaces first, and so
+  // a retry runs against a known-good slot.
   const providedAnswers = normalizeAnswerKeys(intakeAnswers);
+  const answerFor = (field: IntakeField) => providedAnswers.get(field.key.trim().toLowerCase());
+
   const missingRequired = intakeFields
-    .filter((f) => f.is_required && !providedAnswers.has(f.label.trim().toLowerCase()))
+    .filter((f) => f.is_required && !answerFor(f))
     .map((f) => f.label);
   if (missingRequired.length > 0) {
     return { booked: false, reason: "missing_intake_answers", missingRequired };
   }
+
+  const invalid: { label: string; reason: string }[] = [];
   const storedIntakeAnswers: Record<string, string> = {};
+  const customerPatch: Record<string, string> = {};
   for (const field of intakeFields) {
-    const answer = providedAnswers.get(field.label.trim().toLowerCase());
-    if (answer) storedIntakeAnswers[field.label] = answer;
+    const answer = answerFor(field);
+    if (!answer) continue;
+    const problem = validateIntakeAnswer(field.fieldType, answer);
+    if (problem) {
+      invalid.push({ label: field.label, reason: problem });
+      continue;
+    }
+    storedIntakeAnswers[field.key] = answer;
+    const column = FIELD_TYPE_TO_CUSTOMER_COLUMN[field.fieldType];
+    if (column) customerPatch[column] = answer;
+  }
+  if (invalid.length > 0) {
+    return { booked: false, reason: "invalid_intake_answers", invalid };
   }
 
   const endsAt = new Date(
@@ -357,6 +464,22 @@ async function book(
     throw error;
   }
 
+  // R2 -- write the name/email/phone answers onto the customers row too, so
+  // list_my_appointments' email lookup works and R3/R4 can reach them.
+  // Fill blanks only (never overwrite a value the customer already has),
+  // best-effort -- the appointment is already saved.
+  const blanksToFill: Record<string, string> = {};
+  if (customerPatch.name && !customer.name) blanksToFill.name = customerPatch.name;
+  if (customerPatch.email && !customer.email) blanksToFill.email = customerPatch.email;
+  if (customerPatch.phone && !customer.phone) blanksToFill.phone = customerPatch.phone;
+  if (Object.keys(blanksToFill).length > 0) {
+    try {
+      await client.from("customers").update(blanksToFill).eq("id", customerId);
+    } catch {
+      // Non-fatal.
+    }
+  }
+
   // Sync to Google Calendar only once the appointment is actually confirmed
   // -- a `requested` one pending manual approval never touches the merchant's
   // calendar (I3). Best-effort: syncAppointmentConfirmed never throws, and a
@@ -374,6 +497,11 @@ async function book(
         .update({ google_event_id: googleEventId })
         .eq("id", appointment.id);
     }
+
+    // Trello R3 -- confirmation email to the customer (best-effort, never
+    // throws, no email on record = no-op). A `requested` booking gets its
+    // email later, from the H3 PATCH route when the merchant approves it.
+    await notifyAppointmentConfirmed(client, appointment.id as string);
   }
 
   return {
@@ -383,6 +511,8 @@ async function book(
     serviceName: service.name as string,
     startsAt: appointment.starts_at as string,
     endsAt: appointment.ends_at as string,
+    startsAtLabel: formatWallClock(appointment.starts_at as string, timezone),
+    endsAtLabel: formatWallClock(appointment.ends_at as string, timezone),
     timezone,
   };
 }
@@ -400,18 +530,38 @@ async function cancel(
 
   // Scoped to customer_id as well as company_id: Ana must never be able to
   // cancel a booking that isn't this customer's, even with a valid id.
-  const { data: appointment, error } = await client
-    .from("appointments")
-    .select("id, status, google_event_id")
-    .eq("id", appointmentId)
-    .eq("company_id", companyId)
-    .eq("customer_id", customerId)
-    .maybeSingle();
+  const [{ data: appointment, error }, { data: company, error: companyError }] = await Promise.all([
+    client
+      .from("appointments")
+      .select("id, status, starts_at, google_event_id")
+      .eq("id", appointmentId)
+      .eq("company_id", companyId)
+      .eq("customer_id", customerId)
+      .maybeSingle(),
+    client
+      .from("companies")
+      .select("cancellation_cutoff_hours")
+      .eq("id", companyId)
+      .maybeSingle(),
+  ]);
   if (error) throw error;
+  if (companyError) throw companyError;
   if (!appointment) return { cancelled: false, reason: "not_found" };
 
   if (appointment.status === "cancelled") {
     return { cancelled: true, appointmentId, alreadyCancelled: true };
+  }
+
+  // Trello J7 -- inside the merchant's cancellation cutoff, the customer
+  // can't self-cancel; Ana tells them to contact the team. Never blocks a
+  // cancel of an already-past appointment oddity: if starts_at is already
+  // behind us the cutoff has trivially passed, which is the intended answer.
+  const cutoffHours = Number(company?.cancellation_cutoff_hours) || 0;
+  if (
+    cutoffHours > 0 &&
+    Date.now() > new Date(appointment.starts_at).getTime() - cutoffHours * 3_600_000
+  ) {
+    return { cancelled: false, reason: "cutoff_passed" };
   }
 
   const { error: updateError } = await client
@@ -433,4 +583,193 @@ async function cancel(
   return { cancelled: true, appointmentId, alreadyCancelled: false };
 }
 
-export const AppointmentRepository = { listServices, findAvailableSlots, book, cancel };
+// Trello J5 -- the customer's own upcoming appointments. Resolved by the
+// trusted ctx.customerId (covers Instagram, and web chat on the same
+// browser), and additionally by an `email` the customer states out loud --
+// the cross-device / new-session path, since a web-chat customer is
+// otherwise only known by a per-browser session id.
+//
+// Read-only by design: an email here is unverified (anyone in the chat can
+// type any address), so it can widen what Ana can *show* but never what she
+// can *change* -- cancel()/reschedule() stay strictly scoped to
+// ctx.customerId. See decisions.md 2026-09-02.
+async function listMyAppointments(
+  {
+    companyId,
+    customerId,
+    email,
+  }: { companyId: string; customerId: string; email?: string | null },
+  supabaseClient?: SupabaseClient,
+): Promise<MyAppointment[]> {
+  const client = supabaseClient ?? createServiceClient();
+
+  const customerIds = new Set<string>([customerId]);
+  const trimmedEmail = typeof email === "string" ? email.trim() : "";
+  if (trimmedEmail) {
+    const { data: matches, error: matchError } = await client
+      .from("customers")
+      .select("id")
+      .eq("company_id", companyId)
+      .ilike("email", trimmedEmail);
+    if (matchError) throw matchError;
+    for (const row of matches ?? []) customerIds.add(row.id as string);
+  }
+
+  const [{ data: company }, { data: rows, error }] = await Promise.all([
+    client.from("companies").select("timezone").eq("id", companyId).maybeSingle(),
+    client
+      .from("appointments")
+      .select("id, starts_at, ends_at, status, services(name)")
+      .eq("company_id", companyId)
+      .in("customer_id", [...customerIds])
+      .not("status", "in", "(cancelled,no_show)")
+      .gte("ends_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(10),
+  ]);
+  if (error) throw error;
+
+  const timezone =
+    company?.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
+
+  return (rows ?? []).map((row) => {
+    const service = row.services as { name: string } | { name: string }[] | null;
+    const serviceName = Array.isArray(service) ? (service[0]?.name ?? "") : (service?.name ?? "");
+    return {
+      id: row.id as string,
+      serviceName,
+      startsAt: row.starts_at as string,
+      endsAt: row.ends_at as string,
+      startsAtLabel: formatWallClock(row.starts_at as string, timezone),
+      endsAtLabel: formatWallClock(row.ends_at as string, timezone),
+      status: row.status as string,
+      timezone,
+    };
+  });
+}
+
+// Trello J6 -- move an existing appointment to a new time in one write,
+// replacing the old "cancel then rebook" two-step (which left the freed
+// slot exposed and could strand the customer if the rebook failed).
+// Mirrors the H3 PATCH-reschedule path field-for-field: server-computed
+// ends_at, business-hours + time-off + lead-time checks, the 23P01 overlap
+// catch, and syncAppointmentRescheduled for a calendar-synced row. Scoped
+// to ctx.customerId like cancel().
+async function reschedule(
+  {
+    companyId,
+    appointmentId,
+    customerId,
+    newStartsAt,
+  }: { companyId: string; appointmentId: string; customerId: string; newStartsAt: string },
+  supabaseClient?: SupabaseClient,
+): Promise<RescheduleResult> {
+  const client = supabaseClient ?? createServiceClient();
+
+  const { data: appointment, error } = await client
+    .from("appointments")
+    .select("id, status, service_id, google_event_id")
+    .eq("id", appointmentId)
+    .eq("company_id", companyId)
+    .eq("customer_id", customerId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!appointment) return { rescheduled: false, reason: "not_found" };
+  if (!["requested", "confirmed"].includes(appointment.status as string)) {
+    return { rescheduled: false, reason: "not_reschedulable" };
+  }
+
+  const startDate = new Date(newStartsAt);
+  if (Number.isNaN(startDate.getTime())) return { rescheduled: false, reason: "invalid_time" };
+
+  const [
+    { data: service, error: serviceError },
+    { data: company, error: companyError },
+    { data: businessHours, error: businessHoursError },
+    { data: timeOff, error: timeOffError },
+  ] = await Promise.all([
+    client
+      .from("services")
+      .select("name, duration_minutes, buffer_minutes")
+      .eq("id", appointment.service_id)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+    client
+      .from("companies")
+      .select("timezone, min_lead_time_minutes")
+      .eq("id", companyId)
+      .maybeSingle(),
+    client
+      .from("business_hours")
+      .select("day_of_week, start_time, end_time")
+      .eq("company_id", companyId)
+      .eq("is_active", true),
+    client.from("company_time_off").select("start_date, end_date").eq("company_id", companyId),
+  ]);
+  if (serviceError) throw serviceError;
+  if (companyError) throw companyError;
+  if (businessHoursError) throw businessHoursError;
+  if (timeOffError) throw timeOffError;
+  if (!service) return { rescheduled: false, reason: "not_reschedulable" };
+
+  const timezone =
+    company?.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
+
+  const minLeadMinutes = Number(company?.min_lead_time_minutes) || 0;
+  if (minLeadMinutes > 0 && startDate.getTime() <= Date.now() + minLeadMinutes * 60_000) {
+    return { rescheduled: false, reason: "too_soon" };
+  }
+
+  if (businessHours && businessHours.length > 0) {
+    const withinHours = isWithinBusinessHours({
+      timezone,
+      businessHours: businessHours as BusinessHourWindow[],
+      startsAt: startDate.toISOString(),
+      durationMinutes: service.duration_minutes,
+    });
+    if (!withinHours) return { rescheduled: false, reason: "outside_business_hours" };
+  }
+  if (isDuringTimeOff((timeOff ?? []) as TimeOffBlock[], timezone, startDate.toISOString())) {
+    return { rescheduled: false, reason: "outside_business_hours" };
+  }
+
+  const endsAt = new Date(
+    startDate.getTime() + (service.duration_minutes + service.buffer_minutes) * 60_000,
+  );
+
+  const { error: updateError } = await client
+    .from("appointments")
+    .update({ starts_at: startDate.toISOString(), ends_at: endsAt.toISOString() })
+    .eq("id", appointmentId);
+  if (updateError) {
+    if (updateError.code === "23P01") return { rescheduled: false, reason: "slot_unavailable" };
+    throw updateError;
+  }
+
+  if (appointment.google_event_id) {
+    await syncAppointmentRescheduled(companyId, appointment.google_event_id as string, {
+      startsAt: startDate.toISOString(),
+      endsAt: endsAt.toISOString(),
+    });
+  }
+
+  return {
+    rescheduled: true,
+    appointmentId,
+    serviceName: service.name as string,
+    startsAt: startDate.toISOString(),
+    endsAt: endsAt.toISOString(),
+    startsAtLabel: formatWallClock(startDate.toISOString(), timezone),
+    endsAtLabel: formatWallClock(endsAt.toISOString(), timezone),
+    timezone,
+  };
+}
+
+export const AppointmentRepository = {
+  listServices,
+  findAvailableSlots,
+  book,
+  cancel,
+  listMyAppointments,
+  reschedule,
+};

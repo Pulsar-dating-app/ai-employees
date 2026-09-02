@@ -4,8 +4,10 @@ import { writeFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { startGraphApiMock } from "./helpers/graph-api-mock";
 import { startInstagramApiMock } from "./helpers/instagram-api-mock";
+import { startEmailMock } from "./helpers/email-mock";
 import { startGoogleOAuthMock } from "./helpers/google-oauth-mock";
 import { startGoogleCalendarMock } from "./helpers/google-calendar-mock";
+import { startStripeApiMock } from "./helpers/stripe-api-mock";
 
 // Boots a real Next.js server, pointed at the already-running local Supabase
 // stack (started/reset by the `test:integration:env:*` npm scripts before
@@ -66,6 +68,10 @@ export default async function setup() {
   const googleOAuthMock = await startGoogleOAuthMock();
   // Same reasoning, for Trello I2's freeBusy.query call.
   const googleCalendarMock = await startGoogleCalendarMock();
+  // Trello R1 -- stands in for the Resend API.
+  const emailMock = await startEmailMock();
+  // Same reasoning, for Trello P3's billing checkout route (Stripe SDK).
+  const stripeApiMock = await startStripeApiMock();
 
   const nextProcess: ChildProcess = spawn(
     "npx",
@@ -100,10 +106,27 @@ export default async function setup() {
         INSTAGRAM_API_BASE_URL: instagramApiMock.url,
         INSTAGRAM_GRAPH_BASE_URL: instagramApiMock.url,
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: "test-instagram-verify-token",
+        // N6's cron route bearer. instagram-token-refresh.test.ts hits the
+        // route directly with this value; the pg_cron schedule itself is a
+        // production-only concern (guarded on Vault secrets that don't
+        // exist locally -- see the migration).
+        CRON_SECRET: "test-cron-secret",
+        RESEND_API_KEY: "test-resend-key",
+        EMAIL_FROM: "Staffra <test@staffra.test>",
+        RESEND_API_BASE_URL: emailMock.url,
         GOOGLE_CLIENT_ID: "test-google-client-id",
         GOOGLE_CLIENT_SECRET: "test-google-client-secret",
         GOOGLE_OAUTH_TOKEN_URL: googleOAuthMock.url,
         GOOGLE_CALENDAR_API_BASE_URL: googleCalendarMock.url,
+        // P3's billing checkout route. The key is never validated by the
+        // mock; STRIPE_API_BASE_URL points the `stripe` SDK at it. Checkout
+        // success/cancel URLs resolve off STAFFRA_CHECKOUT_BASE_URL.
+        STRIPE_SECRET_KEY: "sk_test_mock",
+        STRIPE_API_BASE_URL: stripeApiMock.url,
+        STAFFRA_CHECKOUT_BASE_URL: baseUrl,
+        // P4 webhook signature. stripe-webhook.test.ts signs its synthetic
+        // events with this exact literal via generateTestHeaderString.
+        STRIPE_WEBHOOK_SECRET: "whsec_test_secret",
         // src/lib/products/embeddings.ts's kill switch -- the ~60 product-
         // create call sites across this suite must never make a real
         // OpenAI network call (cost, latency, and the exact "no real LLM
@@ -130,6 +153,8 @@ export default async function setup() {
     await instagramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
+    await emailMock.stop();
+    await stripeApiMock.stop();
     throw err;
   }
 
@@ -141,7 +166,7 @@ export default async function setup() {
   writeFileSync(
     STATE_FILE,
     JSON.stringify(
-      { baseUrl, supabaseUrl: status.API_URL, anonKey: status.PUBLISHABLE_KEY, serviceRoleKey },
+      { baseUrl, supabaseUrl: status.API_URL, anonKey: status.PUBLISHABLE_KEY, serviceRoleKey, emailMockUrl: emailMock.url },
       null,
       2,
     ),
@@ -153,6 +178,8 @@ export default async function setup() {
     await instagramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
+    await emailMock.stop();
+    await stripeApiMock.stop();
     try {
       rmSync(STATE_FILE);
     } catch {

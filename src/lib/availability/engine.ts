@@ -31,6 +31,10 @@ export type ComputeAvailableSlotsInput = {
   // caller -- this function doesn't care where an interval came from, only
   // that it's occupied.
   busy: readonly BusyInterval[];
+  // Trello J7 -- companies.min_lead_time_minutes. A slot starting sooner
+  // than `now + this` is not offered. 0 (the default) keeps the old
+  // behaviour of offering anything strictly after `now`.
+  minLeadTimeMinutes?: number;
   // Injectable for deterministic tests; defaults to the real current time.
   now?: Date;
 };
@@ -218,12 +222,15 @@ export function computeAvailableSlots(input: ComputeAvailableSlotsInput): Availa
     bufferMinutes,
     businessHours,
     busy,
+    minLeadTimeMinutes = 0,
     now = new Date(),
   } = input;
 
   const stepMs = (durationMinutes + bufferMinutes) * 60_000;
   const durationMs = durationMinutes * 60_000;
-  const nowMs = now.getTime();
+  // The earliest a slot is allowed to start: now, plus the merchant's
+  // minimum booking lead time (J7).
+  const earliestStartMs = now.getTime() + Math.max(0, minLeadTimeMinutes) * 60_000;
 
   const busyMs = busy
     .map((b) => ({ start: new Date(b.start).getTime(), end: new Date(b.end).getTime() }))
@@ -240,7 +247,9 @@ export function computeAvailableSlots(input: ComputeAvailableSlotsInput): Availa
       const windowEnd = zonedTimeToUtc(date, window.end_time, timezone).getTime();
 
       for (let start = windowStart; start + durationMs <= windowEnd; start += stepMs) {
-        if (start <= nowMs) continue;
+        // At the default lead time of 0 this is exactly the old `start <=
+        // now` past-slot filter.
+        if (start <= earliestStartMs) continue;
 
         const reservedEnd = start + durationMs + bufferMinutes * 60_000;
         const blocked = busyMs.some((b) => overlaps(start, reservedEnd, b.start, b.end));

@@ -5,11 +5,14 @@ import { signUpTestUser } from "./helpers/auth";
 // Trello K3 (time-off extension) — company_time_off + its routes, plus the
 // one that matters: the availability engine folds a block into the same
 // `busy` list as appointments and Google free/busy, so a blocked day offers
-// no slots. Company timezone is left unset (defaults to UTC), so local
-// wall-clock == UTC in the fixtures below.
+// no slots. Companies here pin timezone to UTC so local wall-clock == UTC in
+// the fixtures below (the create-time default is America/Sao_Paulo).
 describe("Company time off — /api/companies/:id/time-off", () => {
   async function createCompany(ownerCookie: string, name: string) {
-    const created = await api<{ company: { id: string } }>("POST", "/api/companies", ownerCookie, { name });
+    const created = await api<{ company: { id: string } }>("POST", "/api/companies", ownerCookie, {
+      name,
+      timezone: "UTC",
+    });
     return created.json.company.id;
   }
 

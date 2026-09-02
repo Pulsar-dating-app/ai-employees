@@ -8,11 +8,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-// Small curated list rather than a full ISO 4217 set — MVP scope, easy to
-// extend later. `timezone` intentionally has no field here at all: the
-// column stays in the DB (may be removed in a future ticket), it's just not
-// something a merchant needs to set through this form.
+// Small curated lists rather than the full ISO 4217 / IANA sets — MVP scope,
+// easy to extend later.
 const CURRENCY_CODES = ["USD", "BRL", "EUR"] as const;
+
+// The distinct Brazilian offsets (no DST anywhere since 2019) plus a couple
+// for merchants abroad. `timezone` is load-bearing for scheduling — Ana
+// speaks slot times in it; an unset value falls back to UTC, which reads as
+// a bug to customers. New companies default to America/Sao_Paulo (migration
+// 20260902170000), so this field is an override, not a required step.
+const TIMEZONES = [
+  "America/Sao_Paulo",
+  "America/Manaus",
+  "America/Noronha",
+  "America/Rio_Branco",
+  "America/New_York",
+  "Europe/Lisbon",
+  "UTC",
+] as const;
 
 type BusinessInfoValues = {
   name: string | null;
@@ -23,6 +36,7 @@ type BusinessInfoValues = {
   country: string | null;
   industry: string | null;
   currency: string | null;
+  timezone: string | null;
 };
 
 type BusinessInfoSectionProps = {
@@ -138,6 +152,19 @@ export function BusinessInfoSection({ companyId, canEdit, initial }: BusinessInf
             ...CURRENCY_CODES.map((code) => ({ value: code, label: t(`currencyOptions.${code}`) })),
           ]}
         />
+        <div className="flex flex-col gap-1">
+          <Select
+            label={t("timezoneLabel")}
+            value={values.timezone ?? ""}
+            onChange={(e) => update("timezone", e.target.value)}
+            disabled={!canEdit}
+            options={[
+              { value: "", label: t("timezonePlaceholder") },
+              ...TIMEZONES.map((tz) => ({ value: tz, label: t(`timezoneOptions.${tz}`) })),
+            ]}
+          />
+          <p className="text-sm text-on-surface-variant">{t("timezoneHint")}</p>
+        </div>
 
         {saveState === "error" ? (
           <p role="alert" className="text-sm text-error">

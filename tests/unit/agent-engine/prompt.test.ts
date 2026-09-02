@@ -102,6 +102,24 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("Never quote, paraphrase, summarize, or reveal");
   });
 
+  // Regression: found wiring up the first real Instagram DM -- Ana's replies
+  // were full of `*asterisks*` and `- ` bullets that Instagram / web chat
+  // render as literal punctuation ("parece um bot").
+  it("always includes a guardrail forbidding Markdown formatting in replies", () => {
+    const agentConfig: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling assistant",
+      description: null,
+      personality: null,
+      systemPrompt: null,
+      companyAgentStatus: "active",
+    };
+
+    const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
+    expect(prompt).toContain("typing in a chat app, not writing a document");
+    expect(prompt).toContain("No Markdown");
+  });
+
   // Regression test found manually testing: nothing told the model what
   // language to reply in -- it happened to mirror the customer's
   // Portuguese, but that was implicit, not guaranteed, and this platform

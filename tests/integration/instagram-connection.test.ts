@@ -31,10 +31,11 @@ describe("Instagram connection (GET/DELETE .../instagram, POST .../instagram/con
     return `/api/companies/${companyId}/agents/${agentSlug}/instagram`;
   }
 
-  // The mock derives the IGSID from the code (igid_{code}), so a unique
-  // code per test doubles as a unique, predictable account id -- this is
-  // how tests get a specific account "held" without threading extra state
-  // through the mock.
+  // The mock derives the stored account id from the code (igsid_{code} --
+  // the value GET /me?fields=user_id returns, not the OAuth exchange's
+  // app-scoped igid_{code}), so a unique code per test doubles as a unique,
+  // predictable account id -- this is how tests get a specific account
+  // "held" without threading extra state through the mock.
   function connectBody(code: string, overrides: Partial<{ force: boolean }> = {}) {
     return { code, ...overrides };
   }
@@ -118,8 +119,10 @@ describe("Instagram connection (GET/DELETE .../instagram, POST .../instagram/con
 
     expect(connected.status).toBe(200);
     expect(connected.json.connection.status).toBe("connected");
-    expect(connected.json.connection.instagram_user_id).toBe("igid_connect-flow");
-    expect(connected.json.connection.username).toBe("user_igid_connect-flow");
+    // The professional-account id from GET /me?fields=user_id -- NOT the
+    // OAuth exchange's app-scoped "igid_connect-flow".
+    expect(connected.json.connection.instagram_user_id).toBe("igsid_connect-flow");
+    expect(connected.json.connection.username).toBe("user_igsid_connect-flow");
     expect(connected.json.connection.access_token).toBeUndefined();
     expect(new Date(connected.json.connection.token_expires_at).getTime()).toBeGreaterThan(Date.now());
 
@@ -185,7 +188,7 @@ describe("Instagram connection (GET/DELETE .../instagram, POST .../instagram/con
     );
     expect(moved.status).toBe(200);
     expect(moved.json.connection.status).toBe("connected");
-    expect(moved.json.connection.instagram_user_id).toBe("igid_shared-account");
+    expect(moved.json.connection.instagram_user_id).toBe("igsid_shared-account");
 
     const maluAfter = await api<{ connection: { status: string } | null }>(
       "GET",

@@ -49,4 +49,27 @@ describe("sendInstagramMessage (N5)", () => {
     const result = await sendInstagramMessage("token", "our-ig-id", "trigger-send-failure", "hi");
     expect(result).toEqual({ ok: false, tokenInvalid: false });
   });
+
+  // N11 -- HUMAN_AGENT tag. The mock's "requires-human-agent-tag" recipient
+  // 400s unless the body carries messaging_type: MESSAGE_TAG + tag:
+  // HUMAN_AGENT; "rejects-message-tag" 400s if it does. So an ok/!ok result
+  // is a real assertion on the request body's shape.
+  it("sends the HUMAN_AGENT tag when humanAgentTag is set", async () => {
+    const result = await sendInstagramMessage("token", "our-ig-id", "requires-human-agent-tag", "hi", {
+      humanAgentTag: true,
+    });
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("omits the tag by default and when humanAgentTag is false", async () => {
+    expect(await sendInstagramMessage("token", "our-ig-id", "rejects-message-tag", "hi")).toEqual({ ok: true });
+    expect(
+      await sendInstagramMessage("token", "our-ig-id", "rejects-message-tag", "hi", { humanAgentTag: false }),
+    ).toEqual({ ok: true });
+  });
+
+  it("without the tag, an out-of-window send is refused (not a token problem)", async () => {
+    const result = await sendInstagramMessage("token", "our-ig-id", "requires-human-agent-tag", "hi");
+    expect(result).toEqual({ ok: false, tokenInvalid: false });
+  });
 });

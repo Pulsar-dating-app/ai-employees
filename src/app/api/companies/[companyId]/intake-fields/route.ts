@@ -1,12 +1,25 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  PREDEFINED_INTAKE_FIELDS,
+  PREDEFINED_INTAKE_KEYS,
+  EMAIL_INTAKE_KEY,
+  slugifyIntakeLabel,
+} from "@/lib/appointments/intake-fields";
 
-// Trello K8 — appointment_intake_fields: the customer details a merchant
-// wants collected before a booking. Like business-hours (H2), this is a
-// per-company settings list, not a paginated collection: GET returns the
-// whole set in display order; PUT replaces it wholesale (delete-then-insert),
-// with `position` assigned from array order so the client never has to send
-// it. Member-level, matching every other scheduling route.
+// Trello K8 / R2 -- appointment_intake_fields: the customer details a
+// merchant wants collected before a booking. Two kinds of row:
+//   * predefined (key in PREDEFINED_INTAKE_KEYS) -- the fixed core set
+//     (email / full_name / phone / cpf / date_of_birth). Fixed label +
+//     field_type; the merchant only toggles is_enabled / is_required.
+//     `email` is locked on+required -- no booking without one.
+//   * custom -- free-text questions (field_type 'text'), added/removed/
+//     reordered by the merchant, with a slug key generated from the label.
+//
+// GET returns every row (disabled predefined included, so the UI can show
+// the toggles). PUT replaces the whole set wholesale, delete-then-insert
+// like business-hours -- `position` and custom `key`s are assigned
+// server-side. Member-level, matching the rest of the scheduling routes.
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -20,61 +33,77 @@ async function requireMember(
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
+  if (error) return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
   if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
+    return { error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }) };
   }
   return { error: null };
 }
 
-const MAX_FIELDS = 30;
+const MAX_CUSTOM_FIELDS = 25;
 const MAX_LABEL_LENGTH = 120;
 
-type IntakeFieldInput = { label: string; is_required: boolean };
+type PredefinedInput = { key: string; is_enabled: boolean; is_required: boolean };
+type CustomInput = { label: string; is_required: boolean };
 
-// Validates the whole incoming array up front — every row valid or nothing
-// is written (same "reject before touching the DB" style as business-hours).
-function validateIntakeFields(
-  value: unknown,
-): { rows: IntakeFieldInput[] } | { error: string } {
-  if (!Array.isArray(value)) {
-    return { error: "intakeFields must be an array" };
+function validate(
+  body: unknown,
+): { predefined: PredefinedInput[]; custom: CustomInput[] } | { error: string } {
+  const b = (body ?? {}) as Record<string, unknown>;
+
+  // predefined: optional; any key not sent keeps its current default.
+  const predefinedByKey = new Map<string, PredefinedInput>();
+  if (b.predefined !== undefined) {
+    if (!Array.isArray(b.predefined)) return { error: "predefined must be an array" };
+    for (const entry of b.predefined) {
+      const row = (entry ?? {}) as Record<string, unknown>;
+      if (typeof row.key !== "string" || !PREDEFINED_INTAKE_KEYS.has(row.key)) {
+        return { error: `unknown predefined key: ${String(row.key)}` };
+      }
+      if (typeof row.is_enabled !== "boolean" || typeof row.is_required !== "boolean") {
+        return { error: "predefined is_enabled / is_required must be booleans" };
+      }
+      if (row.key === EMAIL_INTAKE_KEY && (!row.is_enabled || !row.is_required)) {
+        return { error: "email is always collected and always required" };
+      }
+      // A field that's off can't also be required.
+      const required = row.is_enabled ? row.is_required : false;
+      predefinedByKey.set(row.key, { key: row.key, is_enabled: row.is_enabled, is_required: required });
+    }
   }
-  if (value.length > MAX_FIELDS) {
-    return { error: `intakeFields can't have more than ${MAX_FIELDS} entries` };
+  const predefined: PredefinedInput[] = PREDEFINED_INTAKE_FIELDS.map(
+    (f) =>
+      predefinedByKey.get(f.key) ?? {
+        key: f.key,
+        is_enabled: f.defaultEnabled,
+        is_required: f.defaultRequired,
+      },
+  );
+
+  // custom: optional; defaults to empty.
+  const custom: CustomInput[] = [];
+  if (b.custom !== undefined) {
+    if (!Array.isArray(b.custom)) return { error: "custom must be an array" };
+    if (b.custom.length > MAX_CUSTOM_FIELDS) {
+      return { error: `no more than ${MAX_CUSTOM_FIELDS} custom questions` };
+    }
+    for (const entry of b.custom) {
+      const row = (entry ?? {}) as Record<string, unknown>;
+      const label = typeof row.label === "string" ? row.label.trim() : "";
+      if (label === "") return { error: "each custom question needs a label" };
+      if (label.length > MAX_LABEL_LENGTH) {
+        return { error: `label must be ${MAX_LABEL_LENGTH} characters or fewer` };
+      }
+      if ("is_required" in row && typeof row.is_required !== "boolean") {
+        return { error: "custom is_required must be a boolean" };
+      }
+      custom.push({ label, is_required: (row.is_required as boolean | undefined) ?? true });
+    }
   }
 
-  const rows: IntakeFieldInput[] = [];
-  for (const entry of value) {
-    if (entry === null || typeof entry !== "object") {
-      return { error: "each intake field must be an object" };
-    }
-    const row = entry as Record<string, unknown>;
-
-    if (typeof row.label !== "string" || row.label.trim() === "") {
-      return { error: "label must be a non-empty string" };
-    }
-    if (row.label.trim().length > MAX_LABEL_LENGTH) {
-      return { error: `label must be ${MAX_LABEL_LENGTH} characters or fewer` };
-    }
-    if ("is_required" in row && typeof row.is_required !== "boolean") {
-      return { error: "is_required must be a boolean" };
-    }
-
-    rows.push({
-      label: row.label.trim(),
-      is_required: (row.is_required as boolean | undefined) ?? false,
-    });
-  }
-
-  return { rows };
+  return { predefined, custom };
 }
 
-// GET: the company's intake fields, in display order.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ companyId: string }> },
@@ -84,31 +113,26 @@ export async function GET(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const memberCheck = await requireMember(supabase, companyId, user.id);
   if (memberCheck.error) return memberCheck.error;
 
   const { data, error } = await supabase
     .from("appointment_intake_fields")
-    .select("id, label, is_required, position")
+    .select("id, key, label, field_type, is_required, is_enabled, position")
     .eq("company_id", companyId)
     .order("position", { ascending: true });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ intakeFields: data });
+  return NextResponse.json({
+    intakeFields: (data ?? []).map((row) => ({
+      ...row,
+      predefined: PREDEFINED_INTAKE_KEYS.has(row.key as string),
+    })),
+  });
 }
 
-// PUT: replace the entire set. Not a transaction (supabase-js has no
-// client-side multi-statement transaction — same limitation and same
-// acceptable delete/insert window as business-hours' PUT, for a
-// low-frequency per-company settings write).
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ companyId: string }> },
@@ -118,16 +142,12 @@ export async function PUT(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const memberCheck = await requireMember(supabase, companyId, user.id);
   if (memberCheck.error) return memberCheck.error;
 
-  const body = await request.json().catch(() => null);
-  const validated = validateIntakeFields(body?.intakeFields);
+  const validated = validate(await request.json().catch(() => null));
   if ("error" in validated) {
     return NextResponse.json({ error: validated.error }, { status: 400 });
   }
@@ -136,31 +156,64 @@ export async function PUT(
     .from("appointment_intake_fields")
     .delete()
     .eq("company_id", companyId);
+  if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 });
 
-  if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
-  }
+  // Predefined first (positions -5..-1, fixed label + field_type from code),
+  // then custom (positions 0..n, slug keys deduped within this write).
+  const rows: {
+    company_id: string;
+    key: string;
+    label: string;
+    field_type: string;
+    is_required: boolean;
+    is_enabled: boolean;
+    position: number;
+  }[] = [];
 
-  if (validated.rows.length === 0) {
-    return NextResponse.json({ intakeFields: [] });
-  }
+  PREDEFINED_INTAKE_FIELDS.forEach((field, i) => {
+    const choice = validated.predefined.find((p) => p.key === field.key)!;
+    rows.push({
+      company_id: companyId,
+      key: field.key,
+      label: field.label,
+      field_type: field.fieldType,
+      is_required: choice.is_required,
+      is_enabled: choice.is_enabled,
+      position: i - PREDEFINED_INTAKE_FIELDS.length,
+    });
+  });
+
+  const usedKeys = new Set(rows.map((r) => r.key));
+  validated.custom.forEach((field, i) => {
+    let key = slugifyIntakeLabel(field.label);
+    let n = 1;
+    while (usedKeys.has(key)) {
+      n += 1;
+      key = `${slugifyIntakeLabel(field.label)}_${n}`;
+    }
+    usedKeys.add(key);
+    rows.push({
+      company_id: companyId,
+      key,
+      label: field.label,
+      field_type: "text",
+      is_required: field.is_required,
+      is_enabled: true,
+      position: i,
+    });
+  });
 
   const { data, error: insertError } = await supabase
     .from("appointment_intake_fields")
-    .insert(
-      validated.rows.map((row, index) => ({
-        company_id: companyId,
-        label: row.label,
-        is_required: row.is_required,
-        position: index,
-      })),
-    )
-    .select("id, label, is_required, position")
+    .insert(rows)
+    .select("id, key, label, field_type, is_required, is_enabled, position")
     .order("position", { ascending: true });
+  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
 
-  if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ intakeFields: data });
+  return NextResponse.json({
+    intakeFields: (data ?? []).map((row) => ({
+      ...row,
+      predefined: PREDEFINED_INTAKE_KEYS.has(row.key as string),
+    })),
+  });
 }

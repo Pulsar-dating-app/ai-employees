@@ -165,7 +165,7 @@
         "privacy": "Privacy policy",
         "terms": "Terms of service"
       },
-      "rights": "© {year} Staffra AI. All rights reserved."
+      "rights": "© {year} Staffra by Pulsar LTDA. All rights reserved."
     },
     "demo": {
       "transcriptLabel": "Example conversation between a customer and Malu",
@@ -336,6 +336,10 @@
       "addButton": "Add domain",
       "removeButton": "Remove",
       "emptyStateWarning": "No domains added yet — the embedded widget is blocked everywhere until you add at least one."
+    },
+    "billingLink": {
+      "title": "Plan & billing",
+      "hint": "Your subscription, usage, and payment method."
     }
   },
   "MyAgents": {
@@ -495,6 +499,18 @@
         "USD": "USD — US Dollar",
         "BRL": "BRL — Brazilian Real",
         "EUR": "EUR — Euro"
+      },
+      "timezoneLabel": "Time zone",
+      "timezonePlaceholder": "Select a time zone",
+      "timezoneHint": "Used for appointment times. New companies default to Brasília time.",
+      "timezoneOptions": {
+        "America/Sao_Paulo": "Brasília / São Paulo / Nordeste (GMT-3)",
+        "America/Manaus": "Manaus / Cuiabá / Campo Grande (GMT-4)",
+        "America/Noronha": "Fernando de Noronha (GMT-2)",
+        "America/Rio_Branco": "Rio Branco / Acre (GMT-5)",
+        "America/New_York": "New York (GMT-5/-4)",
+        "Europe/Lisbon": "Lisbon (GMT+0/+1)",
+        "UTC": "UTC"
       }
     },
     "shipping": {
@@ -729,6 +745,12 @@
         "subtitle": "Manage rules for incoming booking requests.",
         "toggleLabel": "Require approval before confirming appointments",
         "toggleHelp": "When on, new bookings stay pending until you confirm them yourself.",
+        "leadTimeLabel": "Minimum notice before a booking",
+        "leadTimeHelp": "Customers can't book a time sooner than this from now. 0 means no limit.",
+        "cancelCutoffLabel": "Cancellation cutoff",
+        "cancelCutoffHelp": "Customers can't cancel on their own within this many hours of the start. 0 means they always can.",
+        "minutesUnit": "minutes",
+        "hoursUnit": "hours",
         "saveError": "Something went wrong saving that setting. Please try again."
       },
       "timeOff": {
@@ -774,9 +796,21 @@
       "intake": {
         "title": "Intake questions",
         "subtitle": "Details to collect from the customer before an appointment is booked.",
-        "hint": "Enter just a label for the detail — the name of the data, not a full sentence. For example: Name, Age, CPF. Your team asks for it in its own words.",
-        "empty": "No questions yet — bookings go ahead without collecting extra details.",
-        "labelPlaceholder": "e.g. Name",
+        "hint": "Standard fields cover the basics — turn on the ones you need. Add extra questions below for anything specific; enter just a short label and your team asks for it in its own words.",
+        "standardHeading": "Standard fields",
+        "extraHeading": "Extra questions",
+        "alwaysOn": "always collected",
+        "collect": "Collect",
+        "collectAria": "Collect {field}",
+        "standardLabels": {
+          "email": "Email",
+          "full_name": "Full name",
+          "phone": "Phone",
+          "cpf": "CPF",
+          "date_of_birth": "Date of birth"
+        },
+        "empty": "No extra questions — only the standard fields above are collected.",
+        "labelPlaceholder": "e.g. Reason for visit",
         "labelAria": "Question {position} label",
         "required": "Required",
         "requiredAria": "Make \"{label}\" required",
@@ -955,23 +989,24 @@
     "lastUpdated": "Last updated {date}",
     "privacy": {
       "title": "Privacy Policy",
-      "date": "September 1, 2026",
-      "intro": "This Privacy Policy explains how Staffra AI (\"Staffra\", \"we\", \"us\") collects, uses, shares, and protects personal information when you use our website, dashboard, and services (together, the \"Service\"). It also describes the choices you have about your information. By using the Service you agree to the practices described here.",
+      "date": "September 2, 2026",
+      "intro": "This Privacy Policy explains how Pulsar LTDA (\"Pulsar\", \"we\", \"us\"), the company that operates the Staffra platform (\"Staffra\", the \"Service\"), collects, uses, shares, and protects personal information when you use our website, dashboard, and services (together, the \"Service\"). It also describes the choices you have about your information. Please read it together with our Terms of Service.",
       "sections": [
         {
           "heading": "1. Who this policy covers",
           "paragraphs": [
-            "This policy applies to two groups. First, the businesses and their team members who create a Staffra account to hire and manage AI employees (\"Customers\"). Second, the end customers of those businesses who exchange messages with an AI employee over channels such as WhatsApp, Instagram, or a website chat (\"End Users\").",
-            "For End User data, the business that operates the AI employee is the controller of that data and Staffra acts as its processor. That business's own privacy policy governs how it uses the conversation data it collects through Staffra."
+            "This policy applies to two groups. First, the businesses and their team members who create a Staffra account to hire and manage AI employees (\"Customers\"). Second, the end customers of those businesses who exchange messages with an AI employee over channels such as Instagram or a website chat widget (\"End Users\").",
+            "For the account and business information a Customer provides to us directly, Pulsar is the controller of that information. For End User data processed through an AI employee, the business that operates the AI employee is the controller and Pulsar acts as its processor; that business's own privacy policy governs how it uses the conversation data it collects through Staffra."
           ]
         },
         {
           "heading": "2. Information we collect",
           "paragraphs": [
-            "Account information: name, email address, password, company name, and role, provided when a Customer signs up or is invited to a team.",
-            "Business information: the descriptions, policies, product catalog, pricing, opening hours, and other content a Customer adds so its AI employees can answer questions accurately.",
-            "Conversation content: the messages, attachments, and contact identifiers (such as a phone number or social handle) exchanged between an End User and an AI employee, along with any appointments, orders, or checkout links generated during a conversation.",
-            "Connection data: tokens and account identifiers we store when a Customer connects a third-party channel or tool, such as a messaging platform or a calendar.",
+            "Account information: name, email address, password (stored only as a secure hash by our authentication provider), company name, and role, provided when a Customer signs up or is invited to a team.",
+            "Business information: the descriptions, policies, product catalog, pricing, opening hours, bookable services, and other content a Customer adds so its AI employees can answer questions accurately.",
+            "Conversation content: the messages, attachments, and contact identifiers (such as an email address, a phone number, or a social handle) exchanged between an End User and an AI employee, along with any appointments, orders, or checkout links generated during a conversation.",
+            "Connection data: access tokens and account identifiers we store when a Customer connects a third-party channel or tool, such as a messaging platform or a calendar.",
+            "Billing information: for paid subscriptions, the plan a Customer selects and the customer and subscription identifiers returned by our payment processor. We do not receive or store full card numbers.",
             "Usage and device data: log data, IP address, browser type, pages viewed, and actions taken in the dashboard, collected automatically to operate and secure the Service.",
             "Cookies: we use strictly necessary cookies to keep you signed in and to remember your language preference. We do not use advertising cookies."
           ]
@@ -980,7 +1015,8 @@
           "heading": "3. How we use information",
           "paragraphs": [
             "To provide, maintain, and improve the Service, including letting AI employees answer questions, book appointments, and create checkout links on a Customer's behalf.",
-            "To authenticate users, secure accounts, prevent fraud and abuse, and enforce our Terms of Service.",
+            "To send transactional messages to End Users on a Customer's behalf when they provide contact details for that purpose, such as an appointment confirmation or a reminder by email.",
+            "To authenticate users, secure accounts, prevent fraud and abuse, bill paid subscriptions, and enforce our Terms of Service.",
             "To provide support, respond to requests, and send service-related notices such as security alerts and changes to our terms or policies.",
             "To analyze usage in aggregate so we can understand which features are useful and improve performance and reliability.",
             "To comply with legal obligations and to establish, exercise, or defend legal claims."
@@ -990,24 +1026,24 @@
           "heading": "4. Automated processing by AI providers",
           "paragraphs": [
             "AI employees generate replies using large-scale language models operated by trusted third-party providers. To produce a response, the relevant conversation content and the business information needed for context are sent to that provider for processing and are returned to Staffra.",
-            "Our providers are contractually bound to process this data only to deliver the response and not to use it to train their general models. We do not sell personal information and we do not use conversation content for advertising."
+            "Under our agreements with these providers, they may process this data only to generate the response and may not use it to train their general-purpose models. We do not sell personal information and we do not use conversation content for advertising."
           ]
         },
         {
           "heading": "5. How we share information",
           "paragraphs": [
             "Service providers: cloud hosting, database, email delivery, error monitoring, and the AI model providers described above, each acting on our instructions under a data processing agreement.",
-            "Messaging and calendar platforms: when a Customer connects a channel such as WhatsApp or Instagram, or a calendar, we exchange the data needed to send and receive messages or manage events through that platform, subject to that platform's own terms.",
-            "Payment processors: when a checkout link is used, payment is handled by a third-party processor; Staffra does not collect or store card numbers.",
+            "Messaging and calendar platforms: when a Customer connects a channel such as Instagram, or a calendar, we exchange the data needed to send and receive messages or manage events through that platform, subject to that platform's own terms.",
+            "Payment processors: subscription payments and any payments made through a checkout link are handled by a third-party payment processor (such as Stripe). Pulsar does not collect or store full card numbers and is not a party to a checkout-link transaction between a Customer and its End User.",
             "Within a Customer's team: account and conversation data is visible to other authorized members of the same business account, according to their role.",
-            "Legal and safety: we may disclose information if required by law, regulation, legal process, or to protect the rights, property, or safety of Staffra, our Customers, or the public.",
-            "Business transfers: if Staffra is involved in a merger, acquisition, or sale of assets, information may be transferred as part of that transaction, subject to this policy."
+            "Legal and safety: we may disclose information if required by law, regulation, or legal process, or to protect the rights, property, or safety of Pulsar, our Customers, or the public.",
+            "Business transfers: if Pulsar is involved in a merger, acquisition, or sale of assets, information may be transferred as part of that transaction, subject to this policy."
           ]
         },
         {
           "heading": "6. International transfers",
           "paragraphs": [
-            "Staffra is operated from Brazil and uses infrastructure and providers that may be located in other countries, including the United States and the European Union. Where personal information is transferred across borders, we rely on appropriate safeguards such as standard contractual clauses and the protections offered by our providers."
+            "Pulsar is headquartered in Brazil and operates the Service from there, using infrastructure and providers that may be located in other countries, including the United States and the European Union. Where personal information is transferred across borders, we rely on appropriate safeguards such as standard contractual clauses and the protections offered by our providers."
           ]
         },
         {
@@ -1021,20 +1057,20 @@
           "heading": "8. Security",
           "paragraphs": [
             "We protect information with encryption in transit, access controls, and row-level database policies that isolate each business account's data. Sensitive credentials for connected platforms are stored with restricted server-only access.",
-            "No method of transmission or storage is completely secure. If we become aware of a breach that affects your personal information, we will notify you and the relevant authorities as required by law."
+            "No method of transmission or storage is completely secure. If we become aware of a security incident that affects your personal information, we will notify you and the relevant authorities as required by law."
           ]
         },
         {
           "heading": "9. Your rights and choices",
           "paragraphs": [
-            "Depending on where you live, you may have the right to access, correct, delete, or receive a copy of your personal information, to object to or restrict certain processing, and to withdraw consent. Brazilian users have these rights under the LGPD; users in the European Economic Area and the United Kingdom have them under the GDPR.",
-            "Customers can exercise most of these rights directly in the dashboard. For anything else, or if you are an End User, contact us using the details below and we will respond within the time required by applicable law. You also have the right to lodge a complaint with your local data protection authority."
+            "Depending on where you live, you may have the right to confirm whether we process your personal information and to access, correct, delete, anonymize, or receive a portable copy of it, to object to or restrict certain processing, to information about the entities we share it with, and to withdraw consent. Brazilian users have these rights under the LGPD; users in the European Economic Area and the United Kingdom have equivalent rights under the GDPR.",
+            "Customers can exercise most of these rights directly in the dashboard. For anything else, or if you are an End User, contact us using the details in the \"Contact us\" section and we will respond within the time required by applicable law. You also have the right to lodge a complaint with your local data protection authority — in Brazil, the Autoridade Nacional de Proteção de Dados (ANPD)."
           ]
         },
         {
           "heading": "10. Children",
           "paragraphs": [
-            "The Service is intended for businesses and is not directed to children. We do not knowingly collect personal information from children under 13 (or the minimum age in your jurisdiction). If you believe a child has provided us information, contact us and we will delete it."
+            "The Service is intended for businesses and is not directed to children or adolescents. We do not knowingly collect personal information from anyone under 18. If you believe someone under 18 has provided us information, contact us and we will delete it."
           ]
         },
         {
@@ -1046,21 +1082,22 @@
         {
           "heading": "12. Contact us",
           "paragraphs": [
-            "For privacy questions or requests, email privacy@staffra.ai. You can also write to us at the postal address listed on our website."
+            "Pulsar LTDA operates the Staffra platform. For privacy questions or to exercise your data rights, email app.pulsar.contato@gmail.com.",
+            "This address also reaches our Data Protection Officer (Encarregado pelo Tratamento de Dados Pessoais under the LGPD)."
           ]
         }
       ]
     },
     "terms": {
       "title": "Terms of Service",
-      "date": "September 1, 2026",
-      "intro": "These Terms of Service (\"Terms\") are a binding agreement between Staffra AI (\"Staffra\", \"we\", \"us\") and the business or person that uses our website, dashboard, and services (together, the \"Service\"). By creating an account or using the Service, you agree to these Terms. If you are agreeing on behalf of a company, you represent that you are authorized to bind that company.",
+      "date": "September 2, 2026",
+      "intro": "These Terms of Service (\"Terms\") are a binding agreement between Pulsar LTDA (\"Pulsar\", \"we\", \"us\"), the company that operates the Staffra platform (\"Staffra\", the \"Service\"), and the business or person that uses our website, dashboard, and services (together, the \"Service\"). By creating an account or using the Service, you agree to these Terms. If you are agreeing on behalf of a company, you represent that you are authorized to bind that company.",
       "sections": [
         {
           "heading": "1. The Service",
           "paragraphs": [
-            "Staffra lets a business hire pre-built AI employees that talk to its customers on its behalf across channels such as WhatsApp, Instagram, and a website chat. Depending on the role, an AI employee can answer questions using information the business provides, book appointments, and create checkout links.",
-            "We may add, change, or remove features over time. We will not make material reductions to the core Service for an active paid plan without reasonable notice."
+            "Staffra lets a business hire pre-built AI employees that talk to its customers on its behalf across channels such as Instagram and a website chat widget. Depending on the role, an AI employee can answer questions using information the business provides, book appointments, and create checkout links, and Staffra may send related confirmations or reminders on the business's behalf.",
+            "We may add, change, or remove features and supported channels over time. We will not make material reductions to the core Service for an active paid plan without reasonable notice."
           ]
         },
         {
@@ -1073,23 +1110,23 @@
         {
           "heading": "3. Your responsibilities",
           "paragraphs": [
-            "You are responsible for the business information you provide and for reviewing how your AI employees represent your business. Keep policies, pricing, and availability up to date.",
-            "You must have a lawful basis to message your customers and must obtain any consent required by law before an AI employee contacts them. You are responsible for honoring opt-out requests.",
-            "You must comply with the rules of any third-party platform you connect, including the messaging and commerce policies of Meta (WhatsApp and Instagram) and the terms of any payment provider.",
-            "You must not use the Service to send spam, unlawful, deceptive, harassing, or harmful content, or to handle categories of sensitive data the Service is not designed for."
+            "You are responsible for the business information you provide and for reviewing how your AI employees represent your business. Keep policies, pricing, services, and availability up to date.",
+            "You must have a lawful basis to message your customers and must obtain any consent required by law before an AI employee, or a confirmation or reminder sent through Staffra, contacts them. You are responsible for honoring opt-out requests.",
+            "You must comply with the rules of any third-party platform you connect, including the messaging and commerce policies of Meta (Instagram) and the terms of any payment provider.",
+            "You must not use the Service to send spam or unlawful, deceptive, harassing, or harmful content, or to handle categories of sensitive data the Service is not designed for."
           ]
         },
         {
           "heading": "4. AI-generated content",
           "paragraphs": [
             "Replies produced by an AI employee are generated automatically and may be inaccurate, incomplete, or not appropriate for every situation. They are not professional, legal, medical, or financial advice.",
-            "You are responsible for the messages your AI employees send. We recommend monitoring conversations, keeping a human available to step in, and pausing an AI employee if it is not behaving as you expect. Staffra is not liable for decisions made or actions taken based on AI-generated content."
+            "You are responsible for the messages your AI employees send. We recommend monitoring conversations, keeping a human available to step in, and pausing an AI employee if it is not behaving as you expect. Pulsar is not liable for decisions made or actions taken based on AI-generated content."
           ]
         },
         {
           "heading": "5. Your content and data",
           "paragraphs": [
-            "You retain all rights to the business information, catalog, and conversation data you and your customers provide (\"Customer Content\"). You grant Staffra a worldwide, non-exclusive license to host, process, and transmit Customer Content solely to operate and improve the Service for you, including sending it to the AI providers described in our Privacy Policy.",
+            "You retain all rights to the business information, catalog, and conversation data you and your customers provide (\"Customer Content\"). You grant Pulsar a worldwide, non-exclusive license to host, process, and transmit Customer Content solely to operate and improve the Service for you, including sending it to the AI providers described in our Privacy Policy.",
             "You represent that you have the rights needed to provide Customer Content and that it does not infringe the rights of others or violate any law."
           ]
         },
@@ -1103,8 +1140,8 @@
         {
           "heading": "7. Fees and payment",
           "paragraphs": [
-            "Paid plans, if applicable to your account, are billed in advance on the cycle shown at checkout and are non-refundable except where required by law. We may change pricing with at least 30 days' notice before your next renewal.",
-            "Fees charged to your customers through checkout links are processed by a third-party payment provider and settled to you according to that provider's terms. Staffra is not a party to those transactions and does not hold your funds."
+            "Paid plans, if applicable to your account, are billed in advance on the cycle shown at checkout through our payment processor (such as Stripe) and are non-refundable except where required by law. We may change pricing with at least 30 days' notice before your next renewal.",
+            "Fees charged to your own customers through checkout links are processed by a third-party payment provider and settled to you according to that provider's terms. Pulsar is not a party to those transactions and does not hold your funds."
           ]
         },
         {
@@ -1117,27 +1154,27 @@
         {
           "heading": "9. Intellectual property",
           "paragraphs": [
-            "Staffra and its licensors own all rights in the Service, including the software, AI employee designs, models we provide, and the Staffra name and logo. These Terms do not grant you any right to use our trademarks without prior written permission.",
+            "Pulsar and its licensors own all rights in the Service, including the software, AI employee designs, the models we provide, and the Staffra and Pulsar names and logos. These Terms do not grant you any right to use our trademarks without prior written permission.",
             "Feedback you send us about the Service may be used by us without restriction or obligation to you."
           ]
         },
         {
           "heading": "10. Disclaimers",
           "paragraphs": [
-            "The Service is provided \"as is\" and \"as available\" without warranties of any kind, whether express or implied, including implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the Service will be uninterrupted, error-free, or that AI-generated content will be accurate or suitable for your purposes."
+            "The Service is provided \"as is\" and \"as available\" without warranties of any kind, whether express or implied, including implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the Service will be uninterrupted or error-free, or that AI-generated content will be accurate or suitable for your purposes."
           ]
         },
         {
           "heading": "11. Limitation of liability",
           "paragraphs": [
-            "To the maximum extent permitted by law, Staffra will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for lost profits, revenue, data, or goodwill, arising out of or related to the Service.",
-            "Our total liability for any claim arising out of or related to the Service will not exceed the greater of the amount you paid us for the Service in the 12 months before the event giving rise to the claim, or USD 100."
+            "To the maximum extent permitted by law, Pulsar will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for lost profits, revenue, data, or goodwill, arising out of or related to the Service.",
+            "Our total liability for any claim arising out of or related to the Service will not exceed the greater of the amount you paid us for the Service in the 12 months before the event giving rise to the claim, or R$ 500 (five hundred Brazilian reais). Nothing in these Terms limits liability that cannot be limited under applicable law, including under the Brazilian Consumer Protection Code where it applies."
           ]
         },
         {
           "heading": "12. Indemnification",
           "paragraphs": [
-            "You will defend, indemnify, and hold harmless Staffra from any claim, loss, or expense (including reasonable legal fees) arising from your Customer Content, your use of the Service, your violation of these Terms, or your violation of any law or the rights of a third party, including your customers."
+            "You will defend, indemnify, and hold harmless Pulsar from any claim, loss, or expense (including reasonable legal fees) arising from your Customer Content, your use of the Service, your violation of these Terms, or your violation of any law or the rights of a third party, including your own customers."
           ]
         },
         {
@@ -1156,13 +1193,13 @@
         {
           "heading": "15. Governing law",
           "paragraphs": [
-            "These Terms are governed by the laws of Brazil, without regard to conflict-of-law rules. The courts of the city of São Paulo, Brazil will have exclusive jurisdiction, except where mandatory consumer-protection law gives you the right to bring proceedings in your place of residence."
+            "These Terms are governed by the laws of the Federative Republic of Brazil, without regard to conflict-of-law rules. The courts of the Comarca of São Paulo, State of São Paulo, Brazil will have exclusive jurisdiction, except where mandatory consumer-protection law gives you the right to bring proceedings in your place of residence."
           ]
         },
         {
           "heading": "16. Contact us",
           "paragraphs": [
-            "Questions about these Terms can be sent to legal@staffra.ai."
+            "Questions about these Terms can be sent to Pulsar LTDA at app.pulsar.contato@gmail.com."
           ]
         }
       ]
@@ -1174,5 +1211,84 @@
     "next": "Next",
     "done": "Done",
     "close": "Close"
+  },
+  "Billing": {
+    "pageTitle": "Billing",
+    "pageSubtitle": "Your plan, usage, and payments.",
+    "readOnly": "You can view billing, but only owners and admins can make changes.",
+    "perMonth": "/ month",
+    "currencyNote": "Shown in Brazilian real. At checkout you'll see the price in your local currency.",
+    "renewsOn": "Renews on {date}",
+    "endsOn": "Ends on {date}",
+    "noRenewalDate": "Renewal date pending",
+    "upgradeToPro": "Upgrade to Pro",
+    "switchToStarter": "Switch to Starter",
+    "manageBilling": "Manage billing",
+    "choosePlan": "Choose {plan}",
+    "actionError": "Something went wrong. Please try again.",
+    "status": {
+      "active": "Active",
+      "trialing": "Trial",
+      "past_due": "Past due",
+      "unpaid": "Unpaid",
+      "canceled": "Canceled",
+      "incomplete": "Awaiting payment",
+      "incomplete_expired": "Checkout expired",
+      "paused": "Paused"
+    },
+    "banner": {
+      "pastDue": {
+        "title": "Payment failed — your team is paused",
+        "body": "Update your card to bring your team back online.",
+        "action": "Update payment"
+      },
+      "overLimit": {
+        "title": "You've used all your replies this period",
+        "body": "Your team keeps answering for a short grace window. Upgrade to Pro to lift the limit.",
+        "action": "Upgrade plan"
+      },
+      "nearLimit": {
+        "title": "You're almost out of replies",
+        "body": "{left, plural, one {# reply left} other {# replies left}} this period.",
+        "action": "Upgrade plan"
+      },
+      "canceled": {
+        "title": "Your plan ended on {date}",
+        "body": "Your team has stopped answering. Choose a plan to bring it back."
+      }
+    },
+    "usage": {
+      "label": "Replies this period",
+      "count": "{used, number} of {limit, number} replies",
+      "resetsIn": "{days, plural, one {Resets in # day} other {Resets in # days}}",
+      "overNote": "Over the plan limit — answering on a grace allowance."
+    },
+    "activate": {
+      "title": "Activate your team",
+      "body": "Choose a plan so your team can start answering customers."
+    },
+    "reactivate": {
+      "title": "Reactivate your team",
+      "body": "Choose a plan to bring your team back online."
+    },
+    "plan": {
+      "replies": "{limit, number} replies per month",
+      "teammates": "Unlimited teammates on your account"
+    },
+    "enterprise": {
+      "title": "Need higher volume or custom terms?",
+      "body": "Enterprise plans are arranged with our team.",
+      "cta": "Contact us"
+    },
+    "summary": {
+      "title": "Billing summary",
+      "plan": "Plan",
+      "status": "Status",
+      "none": "No plan",
+      "nextRenewal": "Next renewal",
+      "endsOn": "Ends on",
+      "manageInStripe": "Manage billing in Stripe",
+      "support": "Questions about billing? Contact support."
+    }
   }
 }

@@ -4,6 +4,7 @@ import { AgentEngine } from "@/lib/agent-engine";
 import { resolveWebChatSession } from "@/lib/web-chat/session";
 import { isEmbedOriginAllowed } from "@/lib/web-chat/embed-authorization";
 import { checkAndRecordIpRateLimit, checkConversationRateLimit, getClientIp } from "@/lib/web-chat/rate-limit";
+import { isBillingLapsed } from "@/lib/billing/activation";
 
 // Trello M3 -- the public, unauthenticated chat API a website visitor (or
 // the embeddable widget, M5) talks to. Public and slug-based, so it lives
@@ -202,6 +203,15 @@ export async function POST(
     return NextResponse.json({ error: conversationStatusError.message }, { status: 500 });
   }
   if (conversation.status === "paused") {
+    return NextResponse.json({ reply: null });
+  }
+
+  // P4 -- a lapsed subscription (card declined / unpaid / canceled) silences
+  // the AI on every channel, same shape as the 'paused' gate above. The
+  // customer's message is already persisted; the merchant sees a P5 banner.
+  // Bots resume automatically once invoice.paid flips company_billing back
+  // to 'active'. A company that never subscribed is untouched here (P6).
+  if (await isBillingLapsed(companyId, supabase)) {
     return NextResponse.json({ reply: null });
   }
 

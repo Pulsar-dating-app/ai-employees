@@ -5,7 +5,21 @@ import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
 import { CalendarIcon, ChevronRightIcon, ClockIcon, XIcon } from "@/components/ui/icons";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PREDEFINED_INTAKE_FIELDS } from "@/lib/appointments/intake-fields";
 import type { Appointment, AppointmentStatus } from "./appointment-types";
+
+// R2 -- intake_answers is keyed by a field's stable slug (`full_name`,
+// `cpf`, …). Show the predefined ones with their proper label; for a
+// custom key, un-slug it for a readable heading. Bookings made before R2
+// were keyed by the raw label, which un-slugging leaves essentially intact.
+const PREDEFINED_INTAKE_LABELS: Record<string, string> = Object.fromEntries(
+  PREDEFINED_INTAKE_FIELDS.map((f) => [f.key, f.label]),
+);
+function intakeKeyLabel(key: string): string {
+  if (PREDEFINED_INTAKE_LABELS[key]) return PREDEFINED_INTAKE_LABELS[key];
+  const spaced = key.replace(/_/g, " ").trim();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
 
 type AppointmentListProps = {
   companyId: string;
@@ -284,9 +298,9 @@ function AppointmentCard({
                 </button>
                 {showIntake ? (
                   <dl className="mt-2 flex flex-col gap-1.5 border-l-2 border-outline-variant/40 pl-3">
-                    {intakeEntries.map(([label, value]) => (
-                      <div key={label} className="flex flex-wrap gap-x-1.5 text-label-md">
-                        <dt className="font-semibold text-on-surface">{label}:</dt>
+                    {intakeEntries.map(([key, value]) => (
+                      <div key={key} className="flex flex-wrap gap-x-1.5 text-label-md">
+                        <dt className="font-semibold text-on-surface">{intakeKeyLabel(key)}:</dt>
                         <dd className="text-on-surface-variant">{value}</dd>
                       </div>
                     ))}

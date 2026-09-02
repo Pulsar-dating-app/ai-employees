@@ -83,7 +83,6 @@ export default async function AppointmentsPage() {
     { data: calendarConnection },
     { count: pendingRequested },
     { count: businessHoursCount },
-    { count: intakeFieldsCount },
   ] = await Promise.all([
     supabase
       .from("company_users")
@@ -128,19 +127,16 @@ export default async function AppointmentsPage() {
       .select("id", { count: "exact", head: true })
       .eq("company_id", company.id)
       .eq("status", "requested"),
-    // Missing-config alerts (below): a company with no configured open day
-    // at all, or no intake questions set up, still lets Ana book blind —
-    // worth flagging up front rather than only discoverable by opening
-    // Settings and finding an empty section.
+    // Missing-config alert (below): a company with no configured open day
+    // at all still lets Ana book blind — worth flagging up front rather than
+    // only discoverable by opening Settings and finding an empty section.
+    // (Intake questions are always configured now — R2 seeds a required
+    // email for every company — so there's no "empty intake" alert.)
     supabase
       .from("business_hours")
       .select("id", { count: "exact", head: true })
       .eq("company_id", company.id)
       .eq("is_active", true),
-    supabase
-      .from("appointment_intake_fields")
-      .select("id", { count: "exact", head: true })
-      .eq("company_id", company.id),
   ]);
 
   const canEdit = membership !== null;
@@ -152,7 +148,6 @@ export default async function AppointmentsPage() {
     (calendarConnection as { status?: string } | null)?.status !== "connected" &&
     Boolean(process.env.GOOGLE_CLIENT_ID);
   const businessHoursEmpty = (businessHoursCount ?? 0) === 0;
-  const intakeFieldsEmpty = (intakeFieldsCount ?? 0) === 0;
 
   // Missing-config alerts, top of page — replaces the old calendar-only rail
   // nudge card (appointments-summary.tsx) with one consistent set covering
@@ -165,7 +160,7 @@ export default async function AppointmentsPage() {
   // hours/appointments alone, so it doesn't carry the same "something is
   // actually wrong" weight as the other two.
   const alerts =
-    businessHoursEmpty || intakeFieldsEmpty || calendarNotConnected ? (
+    businessHoursEmpty || calendarNotConnected ? (
       <div className="mb-6 flex flex-col gap-3">
         {businessHoursEmpty ? (
           <Alert
@@ -178,19 +173,6 @@ export default async function AppointmentsPage() {
             }
           >
             {t("alerts.businessHoursBody")}
-          </Alert>
-        ) : null}
-        {intakeFieldsEmpty ? (
-          <Alert
-            variant="warning"
-            title={t("alerts.intakeTitle")}
-            action={
-              <Link href="/dashboard/scheduling/settings#intake-questions" className="text-sm font-semibold underline">
-                {t("alerts.intakeAction")}
-              </Link>
-            }
-          >
-            {t("alerts.intakeBody")}
           </Alert>
         ) : null}
         {calendarNotConnected ? (

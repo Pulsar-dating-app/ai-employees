@@ -20,8 +20,11 @@ export const findAvailableSlotsTool: AgentTool = {
     "from a list_services result. `from` and `to` are calendar dates (YYYY-MM-DD, `to` " +
     "inclusive) -- keep the range narrow, a few days at a time; ask the customer roughly when " +
     "they'd like to come in rather than scanning weeks at once.\n\n" +
-    "Each slot's `start`/`end` are UTC ISO 8601 instants; the result also includes the " +
-    "business's `timezone` -- always tell the customer times in that timezone, never raw UTC. " +
+    "Each slot has a `label` -- the time already written out in the business's timezone " +
+    "(\"Wed, Sep 3, 14:40\"). Say that to the customer (translated into their language / clock " +
+    "style as needed); never compute a time yourself from the raw `start`/`end`, which are UTC " +
+    "ISO 8601 instants for passing back to book_appointment only. The result also includes the " +
+    "business's `timezone` for reference. " +
     "If `truncated` is true there were more slots than shown, so narrow the range or ask the " +
     "customer's preference. If `googleCalendarChecked` is false the business's live calendar " +
     "couldn't be consulted: still offer the slots, but don't promise the time is definitely " +
@@ -36,11 +39,13 @@ export const findAvailableSlotsTool: AgentTool = {
     "If the list is empty and there's no `timeOff` explaining it, say nothing is open in that " +
     "range and offer to try another -- never invent a slot that isn't in the result. " +
     "`available: false` means that service isn't something this business offers.\n\n" +
-    "`intakeQuestions` lists customer details this business wants before a booking (each with a " +
-    "`label` and whether it's `required`). If it's non-empty, collect those from the customer -- " +
-    "phrase each `label` as a natural question in your own words -- and pass the answers to " +
-    "book_appointment as `intakeAnswers`. You must have every required one before booking; ask " +
-    "for an optional one once and move on if they'd rather not say.",
+    "`intakeQuestions` lists customer details this business wants before a booking. Each has a " +
+    "`key` (an id -- key your `intakeAnswers` object by this), a `label` (phrase the question " +
+    "from this, in your own words), a `fieldType` (`email` / `phone` / `cpf` / `date` / `name` " +
+    "/ `text` -- so you know what to expect), and whether it's `required`. An `email` is always " +
+    "on the list and always required. Collect every required one before booking; ask for an " +
+    "optional one once and move on if they'd rather not say. Pass what you gather to " +
+    "book_appointment as `intakeAnswers`, keyed by each question's `key`.",
   parameters: {
     type: "object",
     properties: {

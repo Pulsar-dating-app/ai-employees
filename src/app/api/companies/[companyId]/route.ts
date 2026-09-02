@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isValidTimeZone } from "@/lib/analytics/load";
 
 // Trello ticket B2 — single-resource sibling of the collection endpoints in
 // ../route.ts. Field names/shapes here are what C3's get_business_information
@@ -194,6 +195,16 @@ export async function PATCH(
     updates[field] = value;
   }
 
+  // `timezone` is in SHORT_FIELDS (length-checked above), but it also has to
+  // be a real IANA zone -- Ana speaks appointment times in it, and a bad
+  // value would silently fall back to UTC everywhere it's read.
+  if ("timezone" in body && updates.timezone !== null && !isValidTimeZone(updates.timezone as string)) {
+    return NextResponse.json(
+      { error: "timezone must be a valid IANA timezone name (e.g. America/Sao_Paulo), or null" },
+      { status: 400 },
+    );
+  }
+
   if ("currency" in body) {
     const value = (body as Record<string, unknown>).currency;
     if (value !== null && (typeof value !== "string" || value.length !== 3)) {
@@ -278,6 +289,25 @@ export async function PATCH(
       return NextResponse.json({ error: "allow_human_handoff must be a boolean" }, { status: 400 });
     }
     updates.allow_human_handoff = value;
+  }
+
+  // Trello J7 — scheduling policy. Both are whole non-negative minutes/hours;
+  // 0 means "no restriction". Enforced only on Ana's booking/cancel tool
+  // path (AppointmentRepository), not the merchant's own H3 routes.
+  for (const [field, max] of [
+    ["min_lead_time_minutes", 43_200], // 30 days
+    ["cancellation_cutoff_hours", 8_760], // 1 year
+  ] as const) {
+    if (field in body) {
+      const value = (body as Record<string, unknown>)[field];
+      if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > max) {
+        return NextResponse.json(
+          { error: `${field} must be a whole number between 0 and ${max}` },
+          { status: 400 },
+        );
+      }
+      updates[field] = value;
+    }
   }
 
   if (Object.keys(updates).length === 0) {

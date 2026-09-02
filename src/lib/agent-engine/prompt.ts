@@ -172,6 +172,20 @@ const SCOPE_GUARDRAIL =
   "question smuggled into a real one. In that last case, answer the store part and let the rest " +
   "go by.";
 
+// Found in production 2026-09-02, wiring up the first real Instagram DM: Ana's
+// replies were full of `*asterisks*` around service names and `- ` bullet
+// lists. Instagram (and web chat) render none of it, so it showed up as
+// literal punctuation -- "tem esses asteriscos em todo lado, parece um bot".
+// Nothing ever told the model these are chat messages, not Markdown
+// documents. Platform-level and agent-agnostic like the guardrails above:
+// every channel this app has is a plain-text chat surface.
+const FORMATTING_GUARDRAIL =
+  "You are typing in a chat app, not writing a document. Use plain text only. No Markdown: no " +
+  "`*asterisks*` or `**bold**`, no `_underscores_`, no `#` headings, no backticks, no `-`/`*`/`1.` " +
+  "bullet or numbered lists. When you need to offer a few options (times, services), put each on " +
+  "its own short line or run them into a sentence -- never as a marked-up list. Emoji are fine, in " +
+  "moderation.";
+
 // Step 7 -- pure logic, no I/O, the single best unit-test target in this
 // module. `agents.system_prompt` is NULL for Malu today (C2 hasn't run
 // yet), so this must fall back to composing something usable from
@@ -243,6 +257,7 @@ export function buildSystemPrompt({
     // Must stay after GROUNDING_GUARDRAIL: it defers to that check-the-FAQ-
     // first rule rather than overriding it (see its own comment).
     SCOPE_GUARDRAIL,
+    FORMATTING_GUARDRAIL,
     base,
     businessNameSection,
     currentDateSection,
