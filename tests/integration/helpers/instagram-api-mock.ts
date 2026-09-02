@@ -78,12 +78,24 @@ export function startInstagramApiMock(): Promise<{ url: string; stop: () => Prom
       let raw = "";
       req.on("data", (chunk) => (raw += chunk));
       req.on("end", () => {
-        const recipientId = JSON.parse(raw || "{}")?.recipient?.id ?? "";
+        const parsed = JSON.parse(raw || "{}");
+        const recipientId = parsed?.recipient?.id ?? "";
+        const hasHumanAgentTag =
+          parsed?.messaging_type === "MESSAGE_TAG" && parsed?.tag === "HUMAN_AGENT";
         if (recipientId === "trigger-send-unauthorized") {
           return send(401, { error: { message: "mock: invalid token" } });
         }
         if (recipientId === "trigger-send-failure") {
           return send(500, { error: { message: "mock: send failed" } });
+        }
+        // N11: two magic recipients let a test prove the HUMAN_AGENT tag is
+        // sent (or not) purely through sendInstagramMessage's ok/!ok result,
+        // mirroring how Meta itself rejects an out-of-window send with no tag.
+        if (recipientId === "requires-human-agent-tag" && !hasHumanAgentTag) {
+          return send(400, { error: { message: "mock: outside 24h window, HUMAN_AGENT tag required" } });
+        }
+        if (recipientId === "rejects-message-tag" && hasHumanAgentTag) {
+          return send(400, { error: { message: "mock: message tag not allowed inside 24h window" } });
         }
         return send(200, { message_id: `mock-message-${recipientId}` });
       });

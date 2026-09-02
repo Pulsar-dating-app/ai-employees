@@ -188,15 +188,22 @@ export type SendInstagramMessageResult =
   // failed -- transient, log and move on, the connection is still fine).
   | { ok: false; tokenInvalid: boolean };
 
+// Trello N11 -- `humanAgentTag` sends the message under Instagram's
+// `HUMAN_AGENT` tag (`messaging_type: "MESSAGE_TAG"`), the only way to
+// reply past the 24h window: up to 7 days, and only for a genuine human
+// reply. The default path (no options / tag false) is byte-for-byte
+// unchanged -- the inbound webhook's automated replies must never use it.
 export async function sendInstagramMessage(
   accessToken: string,
   instagramUserId: string,
   recipientId: string,
   text: string,
+  options: { humanAgentTag?: boolean } = {},
 ): Promise<SendInstagramMessageResult> {
   const body = JSON.stringify({
     recipient: { id: recipientId },
     message: { text: text.slice(0, MAX_MESSAGE_LENGTH) },
+    ...(options.humanAgentTag ? { messaging_type: "MESSAGE_TAG", tag: "HUMAN_AGENT" } : {}),
   });
 
   const attempt = () =>

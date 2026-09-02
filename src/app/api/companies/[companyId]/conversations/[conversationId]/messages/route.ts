@@ -14,10 +14,20 @@ import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
 // and picks it up). Instagram needs an actual outbound send via
 // sendInstagramMessage. The message row is persisted first and always --
 // delivery is reported back as { delivery: { ok } } so the UI can warn
-// without ever losing the merchant's text. Replying past Instagram's 24h
-// window (which needs the HUMAN_AGENT tag) is N11's job, not this ticket's.
+// without ever losing the merchant's text.
+//
+// N11: past Instagram's 24h messaging window, delivery only works under the
+// HUMAN_AGENT tag (7 days, human replies only). deliverOverInstagram looks
+// at the age of the last inbound customer message and passes the tag when
+// that age is >24h and <=7d -- inside 24h it sends normally, and past 7d
+// nothing can be done so it sends normally and lets the send fail (same as
+// before N11). The agent's own automated replies (the webhook) never use it.
 
 const MAX_MESSAGE_LENGTH = 4000;
+
+// Instagram's standard messaging window; the HUMAN_AGENT tag extends it to 7 days.
+const STANDARD_WINDOW_MS = 24 * 60 * 60 * 1000;
+const HUMAN_AGENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -45,6 +55,7 @@ async function requireMember(
 // message and only needs to know if it went out.
 async function deliverOverInstagram(
   companyId: string,
+  conversationId: string,
   agentId: string | null,
   customerId: string,
   text: string,
@@ -52,7 +63,7 @@ async function deliverOverInstagram(
   if (!agentId) return { ok: false };
   const service = createServiceClient();
 
-  const [{ data: connection }, { data: customer }] = await Promise.all([
+  const [{ data: connection }, { data: customer }, { data: lastInbound }] = await Promise.all([
     service
       .from("company_instagram_connections")
       .select("access_token, instagram_user_id, status")
@@ -60,17 +71,36 @@ async function deliverOverInstagram(
       .eq("agent_id", agentId)
       .maybeSingle(),
     service.from("customers").select("instagram_user_id").eq("id", customerId).maybeSingle(),
+    service
+      .from("messages")
+      .select("created_at")
+      .eq("conversation_id", conversationId)
+      .eq("role", "customer")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   if (!connection || connection.status !== "connected" || !customer?.instagram_user_id) {
     return { ok: false };
   }
 
+  // N11: reply under the HUMAN_AGENT tag only when the customer's last
+  // message is past the standard 24h window but still inside the 7-day one
+  // the tag allows. No inbound on record -> treat as inside the window
+  // (don't tag): a takeover always follows an inbound, so this is only the
+  // defensive path.
+  const lastInboundAgeMs = lastInbound?.created_at
+    ? Date.now() - new Date(lastInbound.created_at).getTime()
+    : 0;
+  const humanAgentTag = lastInboundAgeMs > STANDARD_WINDOW_MS && lastInboundAgeMs <= HUMAN_AGENT_WINDOW_MS;
+
   const result = await sendInstagramMessage(
     connection.access_token,
     connection.instagram_user_id,
     customer.instagram_user_id,
     text,
+    { humanAgentTag },
   );
 
   if (!result.ok && result.tokenInvalid) {
@@ -156,7 +186,13 @@ export async function POST(
   // Instagram: an actual outbound send.
   let delivery: { ok: boolean } | null = null;
   if (conversation.channel === "instagram") {
-    delivery = await deliverOverInstagram(companyId, conversation.agent_id, conversation.customer_id, message);
+    delivery = await deliverOverInstagram(
+      companyId,
+      conversationId,
+      conversation.agent_id,
+      conversation.customer_id,
+      message,
+    );
   }
 
   return NextResponse.json({ message: reply, delivery }, { status: 201 });
