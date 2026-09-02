@@ -76,7 +76,7 @@ export default async function SchedulingSettingsPage() {
         .order("start_date", { ascending: true }),
       supabase
         .from("appointment_intake_fields")
-        .select("id, label, is_required, position")
+        .select("id, key, label, field_type, is_required, is_enabled, position")
         .eq("company_id", company.id)
         .order("position", { ascending: true }),
     ]);
