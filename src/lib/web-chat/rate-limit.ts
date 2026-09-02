@@ -6,9 +6,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // cost brake -- spamming a business requires a phone number -- has no
 // equivalent here, so this is the deliberate replacement. See decisions.md.
 
-export const IP_RATE_LIMIT = { maxRequests: 20, windowMs: 60_000 };
-export const CONVERSATION_RATE_LIMIT = { maxMessages: 10, windowMs: 60_000 };
-export const CONVERSATION_HARD_CAP = 200;
+export const IP_RATE_LIMIT = { maxRequests: 60, windowMs: 60_000 };
+export const CONVERSATION_RATE_LIMIT = { maxMessages: 30, windowMs: 60_000 };
+export const CONVERSATION_HARD_CAP = 10_000;
 
 export type RateLimitResult = { allowed: true } | { allowed: false; reason: string };
 
