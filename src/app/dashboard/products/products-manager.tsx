@@ -23,8 +23,6 @@ export type Product = {
   image_url: string | null;
   product_url: string | null;
   category: string | null;
-  variants: unknown;
-  attributes: unknown;
   metadata: unknown;
   is_active: boolean;
   created_at: string;

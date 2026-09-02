@@ -10,25 +10,30 @@ import { PageHeader } from "../page-header";
 
 function countFilledSections(company: {
   description: string | null;
-  shipping_policy: string | null;
-  return_policy: string | null;
   payment_policy: string | null;
   additional_information: string | null;
   faq: unknown[] | null;
 }): number {
   return [
     Boolean(company.description),
-    Boolean(company.shipping_policy),
-    Boolean(company.return_policy),
     Boolean(company.payment_policy),
     Array.isArray(company.faq) && company.faq.length > 0,
     Boolean(company.additional_information),
   ].filter(Boolean).length;
 }
 
-// Company-wide settings — the business knowledge Malu (and any future
-// team member) draws on. Lives at the top level, not under a specific
-// hired agent: it's a fact about the company, not about who's hired.
+// Company-wide settings — the business knowledge every hired team member
+// draws on. Lives at the top level, not under a specific hired agent: it's
+// a fact about the company, not about who's hired.
+//
+// Exception: Shipping and Returns policy moved to Malu's own Connections
+// page (my-agents/[agentSlug]/page.tsx) — user-driven, since that content
+// is only ever relevant to her sales conversations, never Ana's scheduling
+// ones. Still the same `companies.shipping_policy`/`return_policy` columns,
+// same `PolicySection` component, just mounted somewhere else; nothing
+// moved at the data layer. Payment/Other stayed here — genuinely
+// company-wide, not tied to one agent's own conversations the way
+// shipping/returns are.
 export default async function SettingsPage() {
   const supabase = await createClient();
   const t = await getTranslations("Settings");
@@ -54,7 +59,7 @@ export default async function SettingsPage() {
     .maybeSingle();
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
 
-  const totalSections = 6;
+  const totalSections = 4;
   const filledSections = countFilledSections(company);
 
   return (
@@ -96,23 +101,11 @@ export default async function SettingsPage() {
           }}
         />
 
-        {/* The four single-field policy sections read as a monotonous form
-            stack one-per-row; a grid gives the page real structure. */}
+        {/* The two remaining single-field policy sections read as a
+            monotonous form stack one-per-row; a grid gives the page real
+            structure. (Shipping/Returns used to sit here too — moved to
+            Malu's own Connections page, see this page's own top comment.) */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <PolicySection
-            companyId={company.id}
-            fieldName="shipping_policy"
-            sectionKey="shipping"
-            initialValue={company.shipping_policy}
-            canEdit={canEdit}
-          />
-          <PolicySection
-            companyId={company.id}
-            fieldName="return_policy"
-            sectionKey="returns"
-            initialValue={company.return_policy}
-            canEdit={canEdit}
-          />
           <PolicySection
             companyId={company.id}
             fieldName="payment_policy"

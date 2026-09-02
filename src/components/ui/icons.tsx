@@ -296,6 +296,17 @@ export function ImageIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// The Alert component's warning variant (Stitch "Alert Component System").
+export function WarningIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <path d="M12 3.5 2.5 20h19z" strokeLinejoin="round" />
+      <path d="M12 9.5v4.5" />
+      <path d="M12 17v.01" />
+    </svg>
+  );
+}
+
 // The Share & Embed dialog's two sections.
 export function CodeIcon(props: React.SVGProps<SVGSVGElement>) {
   return (

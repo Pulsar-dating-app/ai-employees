@@ -6,6 +6,7 @@ import { zonedTimeToUtc } from "@/lib/availability/engine";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { agentPhoto } from "@/lib/agents/media";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import { CalendarIcon } from "@/components/ui/icons";
 import { LockedPage } from "../locked-page";
 import { AppointmentsManager } from "./appointments-manager";
@@ -81,6 +82,8 @@ export default async function AppointmentsPage() {
     { data: hired },
     { data: calendarConnection },
     { count: pendingRequested },
+    { count: businessHoursCount },
+    { count: intakeFieldsCount },
   ] = await Promise.all([
     supabase
       .from("company_users")
@@ -125,17 +128,86 @@ export default async function AppointmentsPage() {
       .select("id", { count: "exact", head: true })
       .eq("company_id", company.id)
       .eq("status", "requested"),
+    // Missing-config alerts (below): a company with no configured open day
+    // at all, or no intake questions set up, still lets Ana book blind —
+    // worth flagging up front rather than only discoverable by opening
+    // Settings and finding an empty section.
+    supabase
+      .from("business_hours")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", company.id)
+      .eq("is_active", true),
+    supabase
+      .from("appointment_intake_fields")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", company.id),
   ]);
 
   const canEdit = membership !== null;
   const pendingCount = company.requires_appointment_approval ? (pendingRequested ?? 0) : 0;
 
-  // Rail nudge: Google Calendar isn't connected yet, and the workspace
-  // *can* connect it (credentials configured). Links straight to the K2
-  // card on the settings screen.
-  const showCalendarNudge =
+  // Google Calendar isn't connected yet, and the workspace *can* connect it
+  // (credentials configured) — same gate the old rail nudge card used.
+  const calendarNotConnected =
     (calendarConnection as { status?: string } | null)?.status !== "connected" &&
     Boolean(process.env.GOOGLE_CLIENT_ID);
+  const businessHoursEmpty = (businessHoursCount ?? 0) === 0;
+  const intakeFieldsEmpty = (intakeFieldsCount ?? 0) === 0;
+
+  // Missing-config alerts, top of page — replaces the old calendar-only rail
+  // nudge card (appointments-summary.tsx) with one consistent set covering
+  // all three "Ana can't do her job well without this" gaps. Business
+  // hours/intake are `warning` (booking correctness is actually at risk
+  // without them — Ana has no hours to check availability against, or
+  // skips questions the merchant wanted asked); Calendar is `info` per the
+  // user's own call — connecting it is a real improvement (live conflict
+  // checking) but Ana still books correctly without it using the in-app
+  // hours/appointments alone, so it doesn't carry the same "something is
+  // actually wrong" weight as the other two.
+  const alerts =
+    businessHoursEmpty || intakeFieldsEmpty || calendarNotConnected ? (
+      <div className="mb-6 flex flex-col gap-3">
+        {businessHoursEmpty ? (
+          <Alert
+            variant="warning"
+            title={t("alerts.businessHoursTitle")}
+            action={
+              <Link href="/dashboard/scheduling/settings#business-hours" className="text-sm font-semibold underline">
+                {t("alerts.businessHoursAction")}
+              </Link>
+            }
+          >
+            {t("alerts.businessHoursBody")}
+          </Alert>
+        ) : null}
+        {intakeFieldsEmpty ? (
+          <Alert
+            variant="warning"
+            title={t("alerts.intakeTitle")}
+            action={
+              <Link href="/dashboard/scheduling/settings#intake-questions" className="text-sm font-semibold underline">
+                {t("alerts.intakeAction")}
+              </Link>
+            }
+          >
+            {t("alerts.intakeBody")}
+          </Alert>
+        ) : null}
+        {calendarNotConnected ? (
+          <Alert
+            variant="info"
+            title={t("alerts.calendarTitle")}
+            action={
+              <Link href="/dashboard/scheduling/settings#google-calendar" className="text-sm font-semibold underline">
+                {t("alerts.calendarAction")}
+              </Link>
+            }
+          >
+            {t("alerts.calendarBody")}
+          </Alert>
+        ) : null}
+      </div>
+    ) : null;
 
   // PostgREST returns `agents` as one embedded object for this to-one
   // relation; the generated types widen it to an array (same cast the
@@ -183,12 +255,12 @@ export default async function AppointmentsPage() {
       initialAppointments={appointments ?? []}
       initialTotal={count ?? 0}
       pageSize={PAGE_SIZE}
+      alerts={alerts}
       summary={
         <AppointmentsSummary
           bookedToday={bookedToday ?? 0}
           completedToday={completedToday ?? 0}
           teamMember={teamMember}
-          showCalendarNudge={showCalendarNudge}
         />
       }
     />

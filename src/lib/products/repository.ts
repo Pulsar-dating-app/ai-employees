@@ -37,8 +37,6 @@ export type Product = {
   image_url: string | null;
   product_url: string | null;
   category: string | null;
-  variants: unknown;
-  attributes: Record<string, unknown> | null;
   metadata: unknown;
   // Nullable/unconstrained at the DB level (Trello B4) -- null means "not
   // tracked," 0 means "out of stock." Was missing from this type even
@@ -71,7 +69,6 @@ export type ProductSearchParams = {
   category?: string;
   priceMin?: number;
   priceMax?: number;
-  attributes?: Record<string, unknown>;
   limit?: number;
 };
 
@@ -119,7 +116,6 @@ async function runSearchRpc(
     p_category: params.category ?? null,
     p_price_min: params.priceMin ?? null,
     p_price_max: params.priceMax ?? null,
-    p_attributes: params.attributes ?? null,
     p_query_embedding: queryEmbedding ? toPgVectorLiteral(queryEmbedding) : null,
     p_limit: limit,
   });

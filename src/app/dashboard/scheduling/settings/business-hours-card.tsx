@@ -187,7 +187,7 @@ export function BusinessHoursCard({
   }
 
   return (
-    <SettingsSection icon={ClockIcon} title={t("title")} subtitle={t("subtitle")}>
+    <SettingsSection id="business-hours" icon={ClockIcon} title={t("title")} subtitle={t("subtitle")}>
       <div className="flex flex-col gap-4">
         {days.map((day) => {
           const dayName = t(`days.${day.key}`);

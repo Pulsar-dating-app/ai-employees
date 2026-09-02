@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { KeyValuesEditor, normalizeKeyValues, type KeyValues } from "./key-values-editor";
 import type { Product } from "./products-manager";
 
 // Small curated list, same as business-info-section.tsx's currency field —
@@ -58,8 +57,6 @@ export function ProductForm({ companyId, mode, companyCurrency, product, onSaved
   const tCommon = useTranslations("Products");
 
   const [values, setValues] = useState<FormValues>(toFormValues(product, companyCurrency));
-  const [variants, setVariants] = useState<KeyValues | null>(() => normalizeKeyValues(product?.variants));
-  const [attributes, setAttributes] = useState<KeyValues | null>(() => normalizeKeyValues(product?.attributes));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,8 +83,6 @@ export function ProductForm({ companyId, mode, companyCurrency, product, onSaved
       product_url: values.product_url.trim() || null,
       category: values.category.trim() || null,
       sku: values.sku.trim() || null,
-      variants,
-      attributes,
     };
 
     setIsSaving(true);
@@ -114,11 +109,15 @@ export function ProductForm({ companyId, mode, companyCurrency, product, onSaved
   return (
     <div className="flex flex-col gap-3">
       <Input label={t("nameLabel")} value={values.name} onChange={(e) => update("name", e.target.value)} maxLength={255} />
-      <Textarea
-        label={t("descriptionLabel")}
-        value={values.description}
-        onChange={(e) => update("description", e.target.value)}
-      />
+      <div>
+        <Textarea
+          label={t("descriptionLabel")}
+          value={values.description}
+          onChange={(e) => update("description", e.target.value)}
+          rows={5}
+        />
+        <p className="mt-1.5 text-xs text-on-surface-variant">{t("descriptionHint")}</p>
+      </div>
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="min-w-0 flex-1">
           <Input
@@ -179,44 +178,6 @@ export function ProductForm({ companyId, mode, companyCurrency, product, onSaved
           />
         </div>
       </div>
-      <div className="flex flex-col gap-2">
-        <div>
-          <span className="text-sm font-medium text-neutral-900">{t("variantsLabel")}</span>
-          <p className="text-xs text-neutral-500">{t("variantsHint")}</p>
-        </div>
-        <KeyValuesEditor
-          initialValue={variants}
-          onChange={setVariants}
-          keyLabel={t("variantsOptionLabel")}
-          keyPlaceholder={t("variantsOptionPlaceholder")}
-          valuePlaceholder={t("variantsValuePlaceholder")}
-          addValueButton={t("addValueButton")}
-          addRowButton={t("variantsAddOptionButton")}
-          removeRowButton={t("removeOptionButton")}
-          removeValueLabel={t("removeValueLabel")}
-          emptyState={t("emptyOptionsState")}
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <div>
-          <span className="text-sm font-medium text-neutral-900">{t("attributesLabel")}</span>
-          <p className="text-xs text-neutral-500">{t("attributesHint")}</p>
-        </div>
-        <KeyValuesEditor
-          initialValue={attributes}
-          onChange={setAttributes}
-          keyLabel={t("attributesOptionLabel")}
-          keyPlaceholder={t("attributesOptionPlaceholder")}
-          valuePlaceholder={t("attributesValuePlaceholder")}
-          addValueButton={t("addValueButton")}
-          addRowButton={t("attributesAddOptionButton")}
-          removeRowButton={t("removeOptionButton")}
-          removeValueLabel={t("removeValueLabel")}
-          emptyState={t("emptyOptionsState")}
-        />
-      </div>
-
       {error ? (
         <p role="alert" className="text-sm text-error">
           {error}

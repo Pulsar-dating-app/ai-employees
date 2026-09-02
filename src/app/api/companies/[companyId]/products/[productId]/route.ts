@@ -98,8 +98,6 @@ const OPTIONAL_PASSTHROUGH_FIELDS = [
   "image_url",
   "product_url",
   "category",
-  "variants",
-  "attributes",
   "metadata",
 ] as const;
 

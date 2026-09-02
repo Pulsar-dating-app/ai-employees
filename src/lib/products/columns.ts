@@ -15,4 +15,4 @@
 // of falling back to GenericStringError, which concatenated literals don't
 // reliably preserve through a module boundary.
 export const PRODUCT_PUBLIC_COLUMNS =
-  "id, company_id, external_id, sku, name, description, price, currency, image_url, product_url, category, variants, attributes, metadata, stock, is_active, created_at, updated_at";
+  "id, company_id, external_id, sku, name, description, price, currency, image_url, product_url, category, metadata, stock, is_active, created_at, updated_at";

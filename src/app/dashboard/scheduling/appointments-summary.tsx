@@ -1,12 +1,17 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import clsx from "clsx";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
-import { BadgeCheckIcon, CalendarIcon, ChevronRightIcon } from "@/components/ui/icons";
+import { BadgeCheckIcon } from "@/components/ui/icons";
 
 // The Stitch screen's right-hand rail, card for card: "Today's Overview"
 // (two stat tiles) and the persona card under it. Same chrome constant as
 // the booking cards — that screen's hairlines are lighter than <Card>'s.
+//
+// The Google Calendar "not connected" nudge that used to live here as a
+// third rail card moved to page.tsx's `alerts` (rendered above the whole
+// grid, alongside the business-hours/intake-questions warnings) — one
+// consistent banner treatment for all three missing-config states instead
+// of Calendar getting its own differently-styled card.
 const RAIL_CARD_CLASSES =
   "rounded-xl border border-outline-variant/30 bg-surface-container-lowest shadow-level1";
 
@@ -20,12 +25,10 @@ export async function AppointmentsSummary({
   bookedToday,
   completedToday,
   teamMember,
-  showCalendarNudge = false,
 }: {
   bookedToday: number;
   completedToday: number;
   teamMember: SchedulingTeamMember | null;
-  showCalendarNudge?: boolean;
 }) {
   const t = await getTranslations("Scheduling.appointments.summary");
 
@@ -93,27 +96,6 @@ export async function AppointmentsSummary({
             </div>
           </div>
         </div>
-      ) : null}
-
-      {/* Google Calendar isn't connected — one tap to the K2 card, which the
-          #google-calendar anchor scrolls straight to. */}
-      {showCalendarNudge ? (
-        <Link
-          href="/dashboard/scheduling/settings#google-calendar"
-          className={clsx(
-            RAIL_CARD_CLASSES,
-            "group flex items-center gap-3 p-4 transition-colors hover:border-outline-variant/60 hover:bg-surface-container-low",
-          )}
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-fixed text-primary">
-            <CalendarIcon className="h-4 w-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-label-md font-semibold text-on-surface">{t("calendarNudgeTitle")}</p>
-            <p className="text-label-sm text-on-surface-variant">{t("calendarNudgeBody")}</p>
-          </div>
-          <ChevronRightIcon className="h-4 w-4 shrink-0 text-on-surface-variant transition-transform group-hover:translate-x-0.5" />
-        </Link>
       ) : null}
     </>
   );

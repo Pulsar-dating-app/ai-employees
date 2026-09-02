@@ -33,6 +33,10 @@ type AppointmentsManagerProps = {
    * controls — client state — can sit where the design puts them, above the
    * whole 12-column grid. */
   summary: ReactNode;
+  /** Missing-config warning/info banners (business hours, intake questions,
+   * Google Calendar) — Server-Component-built for the same reason `summary`
+   * is, rendered full-width between the header and the grid. */
+  alerts?: ReactNode;
 };
 
 // The list endpoint's own ceiling (MAX_PAGE_SIZE in H3's route). A month
@@ -73,6 +77,7 @@ export function AppointmentsManager({
   initialTotal,
   pageSize,
   summary,
+  alerts,
 }: AppointmentsManagerProps) {
   const t = useTranslations("Scheduling.appointments");
   const locale = useLocale();
@@ -323,6 +328,8 @@ export function AppointmentsManager({
           </button>
         </div>
       </div>
+
+      {alerts}
 
       <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Indeterminate sweep over the content column while it re-fetches —
