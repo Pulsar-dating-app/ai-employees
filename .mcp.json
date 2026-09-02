@@ -7,6 +7,10 @@
     "meta-devtools": {
       "type": "http",
       "url": "https://mcp.facebook.com/devtools"
+    },
+    "stripe": {
+      "type": "http",
+      "url": "https://mcp.stripe.com"
     }
   }
 }
