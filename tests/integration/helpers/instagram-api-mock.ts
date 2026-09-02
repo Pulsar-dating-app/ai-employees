@@ -52,7 +52,16 @@ export function startInstagramApiMock(): Promise<{ url: string; stop: () => Prom
       return send(200, { access_token: `mock-long-lived-${shortLivedToken}`, expires_in: 5184000 });
     }
 
-    if (url.pathname === "/refresh_access_token" && url.searchParams.get("grant_type") === "ig_refresh_token") {
+    // N6's refreshLongLivedToken goes through graphUrl(), so the path
+    // arrives version-prefixed (/v25.0/refresh_access_token); the real
+    // endpoint also answers unversioned, hence endsWith rather than ===.
+    // access_token containing "trigger-refresh-failure" -> 400, so a test
+    // can assert the route flips that connection to disconnected.
+    if (url.pathname.endsWith("/refresh_access_token") && url.searchParams.get("grant_type") === "ig_refresh_token") {
+      const token = url.searchParams.get("access_token") ?? "";
+      if (token.includes("trigger-refresh-failure")) {
+        return send(400, { error: { message: "mock: refresh failed" } });
+      }
       return send(200, { access_token: "mock-refreshed-token", expires_in: 5184000 });
     }
 

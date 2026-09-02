@@ -100,6 +100,11 @@ export default async function setup() {
         INSTAGRAM_API_BASE_URL: instagramApiMock.url,
         INSTAGRAM_GRAPH_BASE_URL: instagramApiMock.url,
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: "test-instagram-verify-token",
+        // N6's cron route bearer. instagram-token-refresh.test.ts hits the
+        // route directly with this value; the pg_cron schedule itself is a
+        // production-only concern (guarded on Vault secrets that don't
+        // exist locally -- see the migration).
+        CRON_SECRET: "test-cron-secret",
         GOOGLE_CLIENT_ID: "test-google-client-id",
         GOOGLE_CLIENT_SECRET: "test-google-client-secret",
         GOOGLE_OAUTH_TOKEN_URL: googleOAuthMock.url,
