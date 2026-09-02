@@ -124,6 +124,9 @@ export default async function setup() {
         STRIPE_SECRET_KEY: "sk_test_mock",
         STRIPE_API_BASE_URL: stripeApiMock.url,
         STAFFRA_CHECKOUT_BASE_URL: baseUrl,
+        // P4 webhook signature. stripe-webhook.test.ts signs its synthetic
+        // events with this exact literal via generateTestHeaderString.
+        STRIPE_WEBHOOK_SECRET: "whsec_test_secret",
         // src/lib/products/embeddings.ts's kill switch -- the ~60 product-
         // create call sites across this suite must never make a real
         // OpenAI network call (cost, latency, and the exact "no real LLM

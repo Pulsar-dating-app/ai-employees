@@ -4,6 +4,7 @@ import { AgentEngine } from "@/lib/agent-engine";
 import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
 import { resolveInstagramSession } from "@/lib/instagram/session";
 import { verifyInstagramSignature } from "@/lib/instagram/webhook-signature";
+import { isBillingLapsed } from "@/lib/billing/activation";
 
 // Trello N4/N5 -- Meta's single fixed callback URL for every company's
 // Instagram DMs, the way instagram-callback/route.ts is one shared OAuth
@@ -122,6 +123,13 @@ export async function POST(request: Request) {
       .eq("agent_id", connection.agent_id)
       .maybeSingle();
     if (!companyAgent || companyAgent.status !== "active") continue;
+
+    // P4: a lapsed subscription (card declined / unpaid / canceled) silences
+    // the AI on every channel -- same "skip before persisting or calling the
+    // engine" shape as the K6 gate above. Recovers automatically when
+    // invoice.paid flips company_billing back to 'active'. A company that
+    // never subscribed is untouched here (that cut-over is P6).
+    if (await isBillingLapsed(connection.company_id, supabase)) continue;
 
     let session;
     try {
