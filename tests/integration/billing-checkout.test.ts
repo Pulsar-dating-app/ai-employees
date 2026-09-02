@@ -162,6 +162,53 @@ describe("Plan checkout (Trello P3)", () => {
     expect(getPlan("pro").stripePriceId).toMatch(/^price_/);
   });
 
+  describe("POST /billing/portal (Trello P5 — Manage billing)", () => {
+    it("requires an admin and a Stripe customer on record", async () => {
+      const owner = await signUpTestUser("owner");
+      const member = await signUpTestUser("member");
+      const companyId = await createCompany(owner.cookieHeader, "Portal Route Co");
+      await api("POST", `/api/companies/${companyId}/members`, owner.cookieHeader, {
+        userId: member.userId,
+        role: "member",
+      });
+      const svc = getTestServiceClient();
+
+      // unauthenticated
+      expect(
+        (await api("POST", `/api/companies/${companyId}/billing/portal`, undefined, {})).status,
+      ).toBe(401);
+      // plain member
+      expect(
+        (await api("POST", `/api/companies/${companyId}/billing/portal`, member.cookieHeader, {})).status,
+      ).toBe(403);
+      // admin, but no billing row yet
+      const noAccount = await api<{ code?: string }>(
+        "POST",
+        `/api/companies/${companyId}/billing/portal`,
+        owner.cookieHeader,
+        {},
+      );
+      expect(noAccount.status).toBe(400);
+      expect(noAccount.json.code).toBe("no_billing_account");
+
+      // admin, with a customer on record
+      await svc.from("company_billing").insert({
+        company_id: companyId,
+        stripe_customer_id: "cus_portal_route",
+        plan_key: "starter",
+        subscription_status: "active",
+      });
+      const ok = await api<{ url: string }>(
+        "POST",
+        `/api/companies/${companyId}/billing/portal`,
+        owner.cookieHeader,
+        {},
+      );
+      expect(ok.status).toBe(200);
+      expect(ok.json.url).toMatch(/^https:\/\/billing\.stripe\.test\/p\/session\//);
+    });
+  });
+
   describe("isBillingActive stub (wired as a real gate in P6)", () => {
     it("is true only for an active/trialing subscription row", async () => {
       const owner = await signUpTestUser("owner");

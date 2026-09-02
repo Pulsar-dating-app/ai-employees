@@ -100,12 +100,22 @@ async function syncBillingFromSubscription(
     console.error(`stripe webhook: unknown subscription status '${subscription.status}' -- not writing it`);
   }
 
+  // "Will not renew." Stripe's classic mode set the boolean
+  // `cancel_at_period_end`; flexible billing mode (what our subs use) leaves
+  // that false and instead sets `cancel_at` to a future timestamp. Treat
+  // either as cancelling so the UI can say "Ends on <date>" instead of
+  // "Renews on <date>". A full cancel still arrives later as
+  // `customer.subscription.deleted` → status `canceled`.
+  const willNotRenew =
+    subscription.cancel_at_period_end === true ||
+    (subscription.cancel_at != null && subscription.status !== "canceled");
+
   // Only the fields the event actually tells us about -- an UPDATE leaves
   // every other column (notably plan_key, when the lookup key is unknown)
   // exactly as it was.
   const fields: Record<string, unknown> = {
     stripe_subscription_id: subscription.id,
-    cancel_at_period_end: subscription.cancel_at_period_end ?? false,
+    cancel_at_period_end: willNotRenew,
   };
   const customerId = expandableId(subscription.customer);
   if (customerId) fields.stripe_customer_id = customerId;
@@ -136,7 +146,7 @@ async function syncBillingFromSubscription(
       subscription_status: knownStatus ?? "incomplete",
       stripe_customer_id: customerId,
       stripe_subscription_id: subscription.id,
-      cancel_at_period_end: subscription.cancel_at_period_end ?? false,
+      cancel_at_period_end: willNotRenew,
       current_period_start: periodStart,
       current_period_end: periodEnd,
     });

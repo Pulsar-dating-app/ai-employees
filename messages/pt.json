@@ -336,6 +336,10 @@
       "addButton": "Adicionar domínio",
       "removeButton": "Remover",
       "emptyStateWarning": "Nenhum domínio adicionado ainda — o widget incorporado fica bloqueado em todos os sites até você adicionar pelo menos um."
+    },
+    "billingLink": {
+      "title": "Plano e cobrança",
+      "hint": "Sua assinatura, uso e forma de pagamento."
     }
   },
   "MyAgents": {
@@ -1195,5 +1199,84 @@
     "next": "Avançar",
     "done": "Concluir",
     "close": "Fechar"
+  },
+  "Billing": {
+    "pageTitle": "Cobrança",
+    "pageSubtitle": "Seu plano, uso e pagamentos.",
+    "readOnly": "Você pode ver a cobrança, mas só donos e administradores podem alterar.",
+    "perMonth": "/ mês",
+    "currencyNote": "Valores em reais. No checkout você verá o preço na sua moeda local.",
+    "renewsOn": "Renova em {date}",
+    "endsOn": "Encerra em {date}",
+    "noRenewalDate": "Data de renovação pendente",
+    "upgradeToPro": "Mudar para o Pro",
+    "switchToStarter": "Mudar para o Starter",
+    "manageBilling": "Gerenciar cobrança",
+    "choosePlan": "Escolher {plan}",
+    "actionError": "Algo deu errado. Tente de novo.",
+    "status": {
+      "active": "Ativo",
+      "trialing": "Teste",
+      "past_due": "Pagamento atrasado",
+      "unpaid": "Não pago",
+      "canceled": "Cancelado",
+      "incomplete": "Aguardando pagamento",
+      "incomplete_expired": "Checkout expirado",
+      "paused": "Pausado"
+    },
+    "banner": {
+      "pastDue": {
+        "title": "Pagamento falhou — sua equipe está pausada",
+        "body": "Atualize seu cartão para reativar sua equipe.",
+        "action": "Atualizar pagamento"
+      },
+      "overLimit": {
+        "title": "Você usou todas as respostas deste período",
+        "body": "Sua equipe continua respondendo por um curto período de tolerância. Mude para o Pro para aumentar o limite.",
+        "action": "Mudar de plano"
+      },
+      "nearLimit": {
+        "title": "Suas respostas estão acabando",
+        "body": "{left, plural, one {# resposta restante} other {# respostas restantes}} neste período.",
+        "action": "Mudar de plano"
+      },
+      "canceled": {
+        "title": "Seu plano encerrou em {date}",
+        "body": "Sua equipe parou de responder. Escolha um plano para reativá-la."
+      }
+    },
+    "usage": {
+      "label": "Respostas neste período",
+      "count": "{used, number} de {limit, number} respostas",
+      "resetsIn": "{days, plural, one {Renova em # dia} other {Renova em # dias}}",
+      "overNote": "Acima do limite do plano — respondendo com a tolerância."
+    },
+    "activate": {
+      "title": "Ative sua equipe",
+      "body": "Escolha um plano para sua equipe começar a responder clientes."
+    },
+    "reactivate": {
+      "title": "Reative sua equipe",
+      "body": "Escolha um plano para trazer sua equipe de volta."
+    },
+    "plan": {
+      "replies": "{limit, number} respostas por mês",
+      "teammates": "Membros ilimitados na sua conta"
+    },
+    "enterprise": {
+      "title": "Precisa de mais volume ou condições sob medida?",
+      "body": "Planos Enterprise são combinados com nosso time.",
+      "cta": "Fale com a gente"
+    },
+    "summary": {
+      "title": "Resumo da cobrança",
+      "plan": "Plano",
+      "status": "Status",
+      "none": "Sem plano",
+      "nextRenewal": "Próxima renovação",
+      "endsOn": "Encerra em",
+      "manageInStripe": "Gerenciar cobrança na Stripe",
+      "support": "Dúvidas sobre cobrança? Fale com o suporte."
+    }
   }
 }
