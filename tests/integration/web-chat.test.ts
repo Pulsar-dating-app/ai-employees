@@ -154,8 +154,8 @@ describe("Public chat API GET/POST /api/chat/:companySlug/:agentSlug", () => {
       .single();
     const conversationId = (conversation as { id: string }).id;
 
-    // 10 recent customer messages -- exactly the rolling-window threshold.
-    const recentRows = Array.from({ length: 10 }, () => ({
+    // 30 recent customer messages -- exactly the rolling-window threshold.
+    const recentRows = Array.from({ length: 30 }, () => ({
       company_id: company.id,
       conversation_id: conversationId,
       role: "customer" as const,
@@ -193,17 +193,23 @@ describe("Public chat API GET/POST /api/chat/:companySlug/:agentSlug", () => {
       .single();
     const conversationId = (conversation as { id: string }).id;
 
-    // 200 old customer messages (outside the 60s rolling window, so only
+    // 10,000 old customer messages (outside the 60s rolling window, so only
     // the hard cap -- not the rolling-window check -- can be what trips).
+    // Inserted in batches -- a single 10,000-row insert risks hitting a
+    // request-size/timeout ceiling that a real accumulation over time never
+    // would.
     const oldTimestamp = new Date(Date.now() - 10 * 60_000).toISOString();
-    const oldRows = Array.from({ length: 200 }, () => ({
-      company_id: company.id,
-      conversation_id: conversationId,
-      role: "customer" as const,
-      content: "old",
-      created_at: oldTimestamp,
-    }));
-    await svc.from("messages").insert(oldRows);
+    const BATCH_SIZE = 1000;
+    for (let inserted = 0; inserted < 10_000; inserted += BATCH_SIZE) {
+      const batch = Array.from({ length: Math.min(BATCH_SIZE, 10_000 - inserted) }, () => ({
+        company_id: company.id,
+        conversation_id: conversationId,
+        role: "customer" as const,
+        content: "old",
+        created_at: oldTimestamp,
+      }));
+      await svc.from("messages").insert(batch);
+    }
 
     const res = await api("POST", `/api/chat/${company.slug}/malu`, undefined, { sessionId, message: "One more?" });
     expect(res.status).toBe(429);
@@ -218,7 +224,7 @@ describe("Public chat API GET/POST /api/chat/:companySlug/:agentSlug", () => {
 
     const ip = `203.0.113.${Math.floor(Math.random() * 254) + 1}`;
     const svc = getTestServiceClient();
-    const rows = Array.from({ length: 20 }, () => ({ ip }));
+    const rows = Array.from({ length: 60 }, () => ({ ip }));
     await svc.from("chat_ip_rate_limits").insert(rows);
 
     const { baseUrl } = getTestEnv();
