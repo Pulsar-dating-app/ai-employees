@@ -336,6 +336,10 @@
       "addButton": "Add domain",
       "removeButton": "Remove",
       "emptyStateWarning": "No domains added yet — the embedded widget is blocked everywhere until you add at least one."
+    },
+    "billingLink": {
+      "title": "Plan & billing",
+      "hint": "Your subscription, usage, and payment method."
     }
   },
   "MyAgents": {
@@ -1195,5 +1199,84 @@
     "next": "Next",
     "done": "Done",
     "close": "Close"
+  },
+  "Billing": {
+    "pageTitle": "Billing",
+    "pageSubtitle": "Your plan, usage, and payments.",
+    "readOnly": "You can view billing, but only owners and admins can make changes.",
+    "perMonth": "/ month",
+    "currencyNote": "Shown in Brazilian real. At checkout you'll see the price in your local currency.",
+    "renewsOn": "Renews on {date}",
+    "endsOn": "Ends on {date}",
+    "noRenewalDate": "Renewal date pending",
+    "upgradeToPro": "Upgrade to Pro",
+    "switchToStarter": "Switch to Starter",
+    "manageBilling": "Manage billing",
+    "choosePlan": "Choose {plan}",
+    "actionError": "Something went wrong. Please try again.",
+    "status": {
+      "active": "Active",
+      "trialing": "Trial",
+      "past_due": "Past due",
+      "unpaid": "Unpaid",
+      "canceled": "Canceled",
+      "incomplete": "Awaiting payment",
+      "incomplete_expired": "Checkout expired",
+      "paused": "Paused"
+    },
+    "banner": {
+      "pastDue": {
+        "title": "Payment failed — your team is paused",
+        "body": "Update your card to bring your team back online.",
+        "action": "Update payment"
+      },
+      "overLimit": {
+        "title": "You've used all your replies this period",
+        "body": "Your team keeps answering for a short grace window. Upgrade to Pro to lift the limit.",
+        "action": "Upgrade plan"
+      },
+      "nearLimit": {
+        "title": "You're almost out of replies",
+        "body": "{left, plural, one {# reply left} other {# replies left}} this period.",
+        "action": "Upgrade plan"
+      },
+      "canceled": {
+        "title": "Your plan ended on {date}",
+        "body": "Your team has stopped answering. Choose a plan to bring it back."
+      }
+    },
+    "usage": {
+      "label": "Replies this period",
+      "count": "{used, number} of {limit, number} replies",
+      "resetsIn": "{days, plural, one {Resets in # day} other {Resets in # days}}",
+      "overNote": "Over the plan limit — answering on a grace allowance."
+    },
+    "activate": {
+      "title": "Activate your team",
+      "body": "Choose a plan so your team can start answering customers."
+    },
+    "reactivate": {
+      "title": "Reactivate your team",
+      "body": "Choose a plan to bring your team back online."
+    },
+    "plan": {
+      "replies": "{limit, number} replies per month",
+      "teammates": "Unlimited teammates on your account"
+    },
+    "enterprise": {
+      "title": "Need higher volume or custom terms?",
+      "body": "Enterprise plans are arranged with our team.",
+      "cta": "Contact us"
+    },
+    "summary": {
+      "title": "Billing summary",
+      "plan": "Plan",
+      "status": "Status",
+      "none": "No plan",
+      "nextRenewal": "Next renewal",
+      "endsOn": "Ends on",
+      "manageInStripe": "Manage billing in Stripe",
+      "support": "Questions about billing? Contact support."
+    }
   }
 }

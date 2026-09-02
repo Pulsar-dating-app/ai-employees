@@ -880,6 +880,15 @@ The database layer for subscription billing — no Stripe calls, no routes. Migr
 - **Dunning has no grace.** P4 only records status; the block is a **reply gate**. `src/lib/billing/activation.ts` gained `isBillingLapsed(companyId, client?)` = "has a `company_billing` row whose status is **not** `active`/`trialing`". It's called before `AgentEngine.run()` in the web chat route (`{ reply: null }`, same as the `paused` gate) and the Instagram webhook (`continue`, same as the K6 gate) — so `past_due` / `unpaid` / `canceled` / `incomplete` silence the bot on every channel. Recovery is automatic when `invoice.paid` flips the status back to `active`; no `company_agents` mutation. A company with **no** `company_billing` row is *not* lapsed here — the "no plan whatsoever" cut-over is P6's.
 - **Tests:** `tests/integration/stripe-webhook.test.ts` — signed synthetic events (`stripe.webhooks.generateTestHeaderString`; `STRIPE_WEBHOOK_SECRET` literal shared with `global-setup.ts`). `stripe-api-mock.ts` `GET /v1/subscriptions/:id` returns period/status/`lookup_key` and echoes `metadata.companyId` for `sub_mock_<plan>__co_<id>` ids; `DELETE` for the guard.
 
+### Billing UI (Trello P5) — epic P
+
+`/dashboard/settings/billing` (`page.tsx`, Server Component, admin-gated view, EN/PT `Billing` namespace) — the merchant's window into P1–P4. Reads `company_billing` + the current period's `company_message_usage` row (matched on `current_period_start`) and links out; no billing logic. Reached from a link card at the top of `/dashboard/settings` (not a sidebar destination). Built from the Stitch "Billing & Plan" screens (project `17743086378683250734`), plus a usage meter Stitch dropped, styled like the metrics-page bars.
+
+- **States** (derived from `subscription_status`): `active`/`trialing` → current-plan card + usage meter; `past_due`/`unpaid` → a loud red "team is paused" banner + `ManageBillingButton`, plan card shows the red status chip; `canceled` / `incomplete` / no row → an "Activate/Reactivate your team" card with the two self-serve plan cards. Near-limit (≥80%) → amber banner; over-limit → red banner + grace note. Status chips follow K4's `STATUS_CHIP` tones.
+- **`billing-actions.tsx`** (`"use client"`) — `CheckoutButton` (POSTs `/billing/checkout` with `{ planKey }`) and `ManageBillingButton` (POSTs `/billing/portal`), each following the returned `url`. **No in-page plan switcher** — every change happens on Stripe, P4's webhook syncs back.
+- **`POST /api/companies/[companyId]/billing/portal`** — admin-gated; opens the Stripe Billing Portal **home** (card / invoices / cancellation), no `flow_data` deep-link (that's the P3 checkout route's job for plan switches). 400 `no_billing_account` if there's no `stripe_customer_id` yet. Covered in `billing-checkout.test.ts`.
+- Price shown is always the BRL reference from `plans.ts` with a "you'll see your local currency at checkout" note; `Enterprise` is a `mailto:` strip. No frontend tests (project convention).
+
 ## Data model
 
 Implemented in `supabase/migrations/` (2026-08-23), all tables in `public` schema with RLS enabled:
