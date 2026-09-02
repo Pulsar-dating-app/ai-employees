@@ -4,7 +4,7 @@ import { AgentEngine } from "@/lib/agent-engine";
 import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
 import { resolveInstagramSession } from "@/lib/instagram/session";
 import { verifyInstagramSignature } from "@/lib/instagram/webhook-signature";
-import { isBillingLapsed } from "@/lib/billing/activation";
+import { evaluateReplyGate, recordAiReply, QUOTA_EXCEEDED_CUSTOMER_TEXT } from "@/lib/billing/enforcement";
 
 // Trello N4/N5 -- Meta's single fixed callback URL for every company's
 // Instagram DMs, the way instagram-callback/route.ts is one shared OAuth
@@ -124,13 +124,6 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (!companyAgent || companyAgent.status !== "active") continue;
 
-    // P4: a lapsed subscription (card declined / unpaid / canceled) silences
-    // the AI on every channel -- same "skip before persisting or calling the
-    // engine" shape as the K6 gate above. Recovers automatically when
-    // invoice.paid flips company_billing back to 'active'. A company that
-    // never subscribed is untouched here (that cut-over is P6).
-    if (await isBillingLapsed(connection.company_id, supabase)) continue;
-
     let session;
     try {
       session = await resolveInstagramSession(supabase, connection.company_id, connection.agent_id, senderId);
@@ -176,6 +169,37 @@ export async function POST(request: Request) {
     }
     if (conversation.status === "paused") continue;
 
+    // P4 + P7: the billing gate, same decision web chat makes. A lapsed
+    // subscription silences the AI (skip, like the K6/paused gates above); a
+    // company past its reply-quota grace band is stopped only if the hard
+    // stop is armed (off by default). The inbound message is already
+    // persisted above so a human still sees it. The merchant sees a P5 banner.
+    const billingGate = await evaluateReplyGate(connection.company_id, supabase);
+    if (!billingGate.allow) {
+      if (billingGate.reason === "grace_exceeded") {
+        console.warn("[billing] instagram reply blocked: reply quota grace exceeded", {
+          companyId: connection.company_id,
+        });
+        const { error: cannedError } = await supabase
+          .from("messages")
+          .insert({
+            company_id: connection.company_id,
+            conversation_id: session.conversationId,
+            role: "agent",
+            content: QUOTA_EXCEEDED_CUSTOMER_TEXT,
+          });
+        if (!cannedError) {
+          await sendInstagramMessage(
+            connection.access_token,
+            connection.instagram_user_id,
+            senderId,
+            QUOTA_EXCEEDED_CUSTOMER_TEXT,
+          );
+        }
+      }
+      continue;
+    }
+
     let result;
     try {
       result = await AgentEngine.run({ companyId: connection.company_id, conversationId: session.conversationId, message: text });
@@ -198,6 +222,12 @@ export async function POST(request: Request) {
       console.error("Instagram webhook: failed to persist reply", replyError);
       continue;
     }
+
+    // P7 -- count this reply against the plan's monthly pool (one replying
+    // AgentEngine.run() = +1, channel-agnostic). Best-effort, before the
+    // delivery attempt: "a reply happened" is what the counter tracks, and a
+    // dead token (handled below) is a separate concern.
+    await recordAiReply(connection.company_id, supabase);
 
     const sendResult = await sendInstagramMessage(connection.access_token, connection.instagram_user_id, senderId, result.responseText);
     if (!sendResult.ok) {

@@ -162,6 +162,24 @@ describe("Instagram inbound webhook (GET verify, POST receive)", () => {
         external_message_id: "mid-repeat",
       });
 
+      // P7: an active plan with a used-up-to-N counter for the period. A
+      // redelivery must not tick this -- the 23505 on the mid stops the
+      // route before the gate or recordAiReply.
+      const periodStart = new Date().toISOString();
+      await service.from("company_billing").insert({
+        company_id: companyId,
+        plan_key: "starter",
+        subscription_status: "active",
+        current_period_start: periodStart,
+        current_period_end: new Date(Date.now() + 30 * 24 * 3600_000).toISOString(),
+      });
+      await service.from("company_message_usage").insert({
+        company_id: companyId,
+        period_start: periodStart,
+        replies_used: 7,
+        reply_limit: 10_000,
+      });
+
       const body = messagingPayload(recipientId, "sender-idempotent", "a different retried text", "mid-repeat");
       const res = await postWebhook(body, sign(body));
       expect(res.status).toBe(200);
@@ -175,6 +193,15 @@ describe("Instagram inbound webhook (GET verify, POST receive)", () => {
       // reached for this delivery.
       expect(messages).toHaveLength(1);
       expect((messages as { content: string }[])[0].content).toBe("already handled");
+
+      // And the reply counter didn't move (P7).
+      const { data: usage } = await service
+        .from("company_message_usage")
+        .select("replies_used")
+        .eq("company_id", companyId)
+        .eq("period_start", periodStart)
+        .single();
+      expect((usage as { replies_used: number }).replies_used).toBe(7);
     });
 
     // Trello N4's route calls AgentEngine.run() the same way M3's public chat
