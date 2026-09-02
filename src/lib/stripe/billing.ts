@@ -57,22 +57,33 @@ export async function createCheckoutSession(opts: {
   return { url: session.url };
 }
 
-// Starter <-> Pro on an already-live subscription: swap the single line
-// item's price in place, prorating the difference now. No-ops if the
-// subscription is already on the target price.
-export async function swapSubscriptionPlan(opts: {
-  subscriptionId: string;
-  newPriceId: string;
-}): Promise<{ unchanged: boolean }> {
+// Plan change on an already-live subscription goes through the Stripe
+// Customer Portal, not `subscriptions.update` in our code: Stripe Checkout
+// can't modify an existing subscription, and owning the swap ourselves means
+// owning proration/dunning/idempotency edge cases for a rare action. The
+// Portal (Stripe-hosted, configured in the Dashboard) does the swap; P4's
+// `customer.subscription.updated` webhook reconciles `company_billing`.
+//
+// `flow_data` deep-links the session straight to the plan-switch screen for
+// this subscription. Omitting `configuration` uses the account's default
+// Portal configuration.
+export async function createBillingPortalSession(opts: {
+  customerId: string;
+  returnUrl: string;
+  subscriptionId?: string | null;
+}): Promise<{ url: string }> {
   const stripe = getStripeClient();
-  const subscription = await stripe.subscriptions.retrieve(opts.subscriptionId);
-  const item = subscription.items.data[0];
-
-  if (item?.price?.id === opts.newPriceId) return { unchanged: true };
-
-  await stripe.subscriptions.update(opts.subscriptionId, {
-    items: [{ id: item.id, price: opts.newPriceId }],
-    proration_behavior: "create_prorations",
+  const session = await stripe.billingPortal.sessions.create({
+    customer: opts.customerId,
+    return_url: opts.returnUrl,
+    ...(opts.subscriptionId
+      ? {
+          flow_data: {
+            type: "subscription_update",
+            subscription_update: { subscription: opts.subscriptionId },
+          },
+        }
+      : {}),
   });
-  return { unchanged: false };
+  return { url: session.url };
 }

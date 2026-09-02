@@ -103,13 +103,13 @@ describe("Plan checkout (Trello P3)", () => {
     expect(second?.stripe_customer_id).toBe(first?.stripe_customer_id);
   });
 
-  it("swaps the plan in place (prorated) when a live subscription exists", async () => {
+  it("sends an existing subscriber to the Stripe Billing Portal, leaving company_billing untouched", async () => {
     const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Checkout Plan Swap Co");
+    const companyId = await createCompany(owner.cookieHeader, "Checkout Portal Co");
     const svc = getTestServiceClient();
     await svc.from("company_billing").insert({
       company_id: companyId,
-      stripe_customer_id: "cus_seed_swap",
+      stripe_customer_id: "cus_seed_portal",
       stripe_subscription_id: "sub_mock_starter",
       subscription_status: "active",
       plan_key: "starter",
@@ -119,40 +119,45 @@ describe("Plan checkout (Trello P3)", () => {
 
     const res = await checkout(owner.cookieHeader, companyId, "pro");
     expect(res.status).toBe(200);
-    expect(res.json.mode).toBe("plan_change");
-    expect(res.json.unchanged).toBe(false);
-    expect(res.json.url ?? null).toBeNull();
+    expect(res.json.mode).toBe("portal");
+    expect(res.json.url).toMatch(/^https:\/\/billing\.stripe\.test\/p\/session\//);
 
+    // The plan swap happens on the Portal; P4's webhook is what writes
+    // company_billing. This route must not touch it.
     const { data: billing } = await svc
       .from("company_billing")
-      .select("plan_key")
+      .select("plan_key, subscription_status")
       .eq("company_id", companyId)
       .single();
-    expect(billing?.plan_key).toBe("pro");
+    expect(billing?.plan_key).toBe("starter");
+    expect(billing?.subscription_status).toBe("active");
   });
 
-  it("no-ops the swap when already on the requested plan", async () => {
+  it("returns the Portal for an existing subscriber even with no planKey in the body", async () => {
     const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Checkout Same Plan Co");
+    const companyId = await createCompany(owner.cookieHeader, "Checkout Portal No Key Co");
     const svc = getTestServiceClient();
     await svc.from("company_billing").insert({
       company_id: companyId,
-      stripe_customer_id: "cus_seed_same",
+      stripe_customer_id: "cus_seed_portal_nokey",
       stripe_subscription_id: "sub_mock_pro",
       subscription_status: "active",
       plan_key: "pro",
     });
 
-    const res = await checkout(owner.cookieHeader, companyId, "pro");
+    const res = await api<{ mode: string; url: string }>(
+      "POST",
+      `/api/companies/${companyId}/billing/checkout`,
+      owner.cookieHeader,
+      {},
+    );
     expect(res.status).toBe(200);
-    expect(res.json.mode).toBe("plan_change");
-    expect(res.json.unchanged).toBe(true);
+    expect(res.json.mode).toBe("portal");
   });
 
   it("checkout targets the plan's real BRL price id", () => {
     // Guards the plumbing the mock relies on: the route resolves the price
-    // via getPlan(), and stripe-api-mock keys its subscription responses off
-    // the same values.
+    // via getPlan().
     expect(getPlan("starter").stripePriceId).toMatch(/^price_/);
     expect(getPlan("pro").stripePriceId).toMatch(/^price_/);
   });
