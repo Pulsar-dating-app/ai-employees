@@ -99,7 +99,17 @@ export async function POST(request: Request) {
   const payload = JSON.parse(rawBody) as InstagramWebhookPayload;
   const supabase = createServiceClient();
 
-  for (const { recipientId, senderId, text, mid } of extractInboundTextMessages(payload)) {
+  const _items = extractInboundTextMessages(payload);
+  console.error(
+    "[ig-route]",
+    JSON.stringify({
+      rawHead: rawBody.slice(0, 300),
+      itemCount: _items.length,
+      items: _items.map((i) => ({ recipientId: i.recipientId, senderId: i.senderId, textLen: i.text?.length ?? 0, mid: i.mid?.slice(0, 8) })),
+    }),
+  );
+
+  for (const { recipientId, senderId, text, mid } of _items) {
     // The connection this message belongs to -- recipientId is our own
     // business account's id, which N1 guarantees maps to exactly one
     // (company, agent). No connection found means an account we're
@@ -111,6 +121,7 @@ export async function POST(request: Request) {
       .eq("instagram_user_id", recipientId)
       .eq("status", "connected")
       .maybeSingle();
+    console.error("[ig-route] connLookup", JSON.stringify({ recipientId, found: Boolean(connection), agentId: connection?.agent_id ?? null }));
     if (!connection) continue;
 
     // K6: a paused hire is silent on every channel. The connection can stay
@@ -122,6 +133,7 @@ export async function POST(request: Request) {
       .eq("company_id", connection.company_id)
       .eq("agent_id", connection.agent_id)
       .maybeSingle();
+    console.error("[ig-route] k6gate", JSON.stringify({ agentStatus: companyAgent?.status ?? null }));
     if (!companyAgent || companyAgent.status !== "active") continue;
 
     // P4: a lapsed subscription (card declined / unpaid / canceled) silences
@@ -129,7 +141,9 @@ export async function POST(request: Request) {
     // engine" shape as the K6 gate above. Recovers automatically when
     // invoice.paid flips company_billing back to 'active'. A company that
     // never subscribed is untouched here (that cut-over is P6).
-    if (await isBillingLapsed(connection.company_id, supabase)) continue;
+    const _lapsed = await isBillingLapsed(connection.company_id, supabase);
+    console.error("[ig-route] billingGate", JSON.stringify({ lapsed: _lapsed }));
+    if (_lapsed) continue;
 
     let session;
     try {
