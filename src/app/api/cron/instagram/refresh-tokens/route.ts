@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { refreshLongLivedToken } from "@/lib/instagram/meta-instagram-api";
+import { cronAuthError } from "@/lib/cron/auth";
 
 // Trello N6 -- renews Instagram long-lived tokens before they lapse.
 //
@@ -24,20 +25,9 @@ import { refreshLongLivedToken } from "@/lib/instagram/meta-instagram-api";
 // makes the choice of scheduler and its timing precision not matter.
 const REFRESH_WINDOW_DAYS = 7;
 
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}`;
-}
-
 async function handle(request: Request) {
-  if (!process.env.CRON_SECRET) {
-    // Misconfiguration, not a caller error -- fail loud so it's noticed.
-    return NextResponse.json({ error: "CRON_SECRET is not configured" }, { status: 500 });
-  }
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = cronAuthError(request);
+  if (authError) return authError;
 
   const supabase = createServiceClient();
   const cutoff = new Date(Date.now() + REFRESH_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();

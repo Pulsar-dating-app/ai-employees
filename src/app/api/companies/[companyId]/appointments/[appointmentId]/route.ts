@@ -5,6 +5,7 @@ import {
   syncAppointmentRescheduled,
   syncAppointmentCancelled,
 } from "@/lib/google-calendar/appointment-sync";
+import { notifyAppointmentConfirmed, notifyAppointmentDeclined } from "@/lib/email/appointments";
 import {
   isWithinBusinessHours,
   isDuringTimeOff,
@@ -257,7 +258,20 @@ export async function PATCH(
   }
 
   const preUpdateGoogleEventId = appointmentLookup.appointment.google_event_id as string | null;
+  const preUpdateStatus = appointmentLookup.appointment.status as string;
   const rescheduled = "starts_at" in body || "service_id" in body;
+
+  // Trello R3 -- email the customer when the merchant acts on a pending
+  // request (K7): approving it sends a confirmation, declining it (status
+  // -> cancelled while it was still `requested`) sends a short "couldn't be
+  // confirmed" note. Best-effort, before the Google-sync branching since
+  // some of those paths return early. A confirm at *creation* time is
+  // emailed by AppointmentRepository.book, not here.
+  if (preUpdateStatus === "requested" && update.status === "confirmed") {
+    await notifyAppointmentConfirmed(supabase, appointmentId);
+  } else if (preUpdateStatus === "requested" && update.status === "cancelled") {
+    await notifyAppointmentDeclined(supabase, appointmentId);
+  }
 
   if (update.status === "cancelled" && preUpdateGoogleEventId) {
     const synced = await cancelGoogleEventAndClear(supabase, companyId, appointmentId, preUpdateGoogleEventId);

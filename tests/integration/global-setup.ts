@@ -4,6 +4,7 @@ import { writeFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { startGraphApiMock } from "./helpers/graph-api-mock";
 import { startInstagramApiMock } from "./helpers/instagram-api-mock";
+import { startEmailMock } from "./helpers/email-mock";
 import { startGoogleOAuthMock } from "./helpers/google-oauth-mock";
 import { startGoogleCalendarMock } from "./helpers/google-calendar-mock";
 import { startStripeApiMock } from "./helpers/stripe-api-mock";
@@ -67,6 +68,8 @@ export default async function setup() {
   const googleOAuthMock = await startGoogleOAuthMock();
   // Same reasoning, for Trello I2's freeBusy.query call.
   const googleCalendarMock = await startGoogleCalendarMock();
+  // Trello R1 -- stands in for the Resend API.
+  const emailMock = await startEmailMock();
   // Same reasoning, for Trello P3's billing checkout route (Stripe SDK).
   const stripeApiMock = await startStripeApiMock();
 
@@ -108,6 +111,9 @@ export default async function setup() {
         // production-only concern (guarded on Vault secrets that don't
         // exist locally -- see the migration).
         CRON_SECRET: "test-cron-secret",
+        RESEND_API_KEY: "test-resend-key",
+        EMAIL_FROM: "Staffra <test@staffra.test>",
+        RESEND_API_BASE_URL: emailMock.url,
         GOOGLE_CLIENT_ID: "test-google-client-id",
         GOOGLE_CLIENT_SECRET: "test-google-client-secret",
         GOOGLE_OAUTH_TOKEN_URL: googleOAuthMock.url,
@@ -144,6 +150,7 @@ export default async function setup() {
     await instagramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
+    await emailMock.stop();
     await stripeApiMock.stop();
     throw err;
   }
@@ -156,7 +163,7 @@ export default async function setup() {
   writeFileSync(
     STATE_FILE,
     JSON.stringify(
-      { baseUrl, supabaseUrl: status.API_URL, anonKey: status.PUBLISHABLE_KEY, serviceRoleKey },
+      { baseUrl, supabaseUrl: status.API_URL, anonKey: status.PUBLISHABLE_KEY, serviceRoleKey, emailMockUrl: emailMock.url },
       null,
       2,
     ),
@@ -168,6 +175,7 @@ export default async function setup() {
     await instagramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
+    await emailMock.stop();
     await stripeApiMock.stop();
     try {
       rmSync(STATE_FILE);
