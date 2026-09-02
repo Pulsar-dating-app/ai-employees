@@ -113,6 +113,8 @@ export default async function SchedulingSettingsPage() {
           companyId={company.id}
           canEdit={canEdit}
           initialRequiresApproval={Boolean(company.requires_appointment_approval)}
+          initialMinLeadTimeMinutes={Number(company.min_lead_time_minutes) || 0}
+          initialCancellationCutoffHours={Number(company.cancellation_cutoff_hours) || 0}
         />
         <TimeOffCard
           companyId={company.id}

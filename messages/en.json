@@ -729,6 +729,12 @@
         "subtitle": "Manage rules for incoming booking requests.",
         "toggleLabel": "Require approval before confirming appointments",
         "toggleHelp": "When on, new bookings stay pending until you confirm them yourself.",
+        "leadTimeLabel": "Minimum notice before a booking",
+        "leadTimeHelp": "Customers can't book a time sooner than this from now. 0 means no limit.",
+        "cancelCutoffLabel": "Cancellation cutoff",
+        "cancelCutoffHelp": "Customers can't cancel on their own within this many hours of the start. 0 means they always can.",
+        "minutesUnit": "minutes",
+        "hoursUnit": "hours",
         "saveError": "Something went wrong saving that setting. Please try again."
       },
       "timeOff": {

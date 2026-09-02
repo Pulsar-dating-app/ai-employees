@@ -280,6 +280,25 @@ export async function PATCH(
     updates.allow_human_handoff = value;
   }
 
+  // Trello J7 — scheduling policy. Both are whole non-negative minutes/hours;
+  // 0 means "no restriction". Enforced only on Ana's booking/cancel tool
+  // path (AppointmentRepository), not the merchant's own H3 routes.
+  for (const [field, max] of [
+    ["min_lead_time_minutes", 43_200], // 30 days
+    ["cancellation_cutoff_hours", 8_760], // 1 year
+  ] as const) {
+    if (field in body) {
+      const value = (body as Record<string, unknown>)[field];
+      if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > max) {
+        return NextResponse.json(
+          { error: `${field} must be a whole number between 0 and ${max}` },
+          { status: 400 },
+        );
+      }
+      updates[field] = value;
+    }
+  }
+
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }

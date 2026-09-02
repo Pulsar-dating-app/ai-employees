@@ -4,6 +4,8 @@ import { listServicesTool } from "@/lib/agent-engine/tools/list-services";
 import { findAvailableSlotsTool } from "@/lib/agent-engine/tools/find-available-slots";
 import { bookAppointmentTool } from "@/lib/agent-engine/tools/book-appointment";
 import { cancelAppointmentTool } from "@/lib/agent-engine/tools/cancel-appointment";
+import { listMyAppointmentsTool } from "@/lib/agent-engine/tools/list-my-appointments";
+import { rescheduleAppointmentTool } from "@/lib/agent-engine/tools/reschedule-appointment";
 import type { ToolExecutionContext } from "@/lib/agent-engine/tools/types";
 import { api } from "./helpers/request";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
@@ -579,5 +581,176 @@ describe("through a full AgentEngine.run", () => {
       status: "confirmed",
       starts_at: `${BOOKING_DATE}T09:00:00+00:00`,
     });
+  });
+});
+
+// Trello J5 -- Ana can see the customer's own upcoming appointments.
+describe("list_my_appointments", () => {
+  it("returns this customer's upcoming appointments, soonest first, excluding cancelled", async () => {
+    const seed = await seedConversation(owner, "List Mine Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Consulta", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx = toolCtxFor(seed);
+
+    const later = (await bookAppointmentTool.execute(
+      { serviceId, startsAt: `${BOOKING_DATE}T15:00:00Z` },
+      ctx,
+    )) as { appointmentId: string };
+    const earlier = (await bookAppointmentTool.execute(
+      { serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` },
+      ctx,
+    )) as { appointmentId: string };
+    const cancelled = (await bookAppointmentTool.execute(
+      { serviceId, startsAt: `${BOOKING_DATE}T12:00:00Z` },
+      ctx,
+    )) as { appointmentId: string };
+    await cancelAppointmentTool.execute({ appointmentId: cancelled.appointmentId }, ctx);
+
+    const result = (await listMyAppointmentsTool.execute({}, ctx)) as {
+      appointments: { id: string; serviceName: string; startsAt: string; status: string; timezone: string }[];
+    };
+
+    expect(result.appointments.map((a) => a.id)).toEqual([earlier.appointmentId, later.appointmentId]);
+    expect(result.appointments[0]).toMatchObject({ serviceName: "Consulta", status: "confirmed", timezone: "UTC" });
+  });
+
+  it("finds appointments under a stated email that aren't tied to this conversation", async () => {
+    const seed = await seedConversation(owner, "Email Lookup Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Retorno", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const svc = getTestServiceClient();
+
+    // A separate customer row (as a different browser/session would be),
+    // carrying an email, with its own appointment.
+    const { data: other } = await svc
+      .from("customers")
+      .insert({ company_id: seed.companyId, name: "Bruno", email: "bruno@example.test", channel: "web_chat" })
+      .select("id")
+      .single();
+    const otherCtx: ToolExecutionContext = { ...toolCtxFor(seed), customerId: (other as { id: string }).id };
+    await bookAppointmentTool.execute({ serviceId, startsAt: `${BOOKING_DATE}T11:00:00Z` }, otherCtx);
+
+    // The current conversation's customer has no bookings of their own.
+    const bare = (await listMyAppointmentsTool.execute({}, toolCtxFor(seed))) as { appointments: unknown[] };
+    expect(bare.appointments).toEqual([]);
+
+    // ...until they give the email they booked with (case-insensitive).
+    const byEmail = (await listMyAppointmentsTool.execute(
+      { email: "  Bruno@Example.test " },
+      toolCtxFor(seed),
+    )) as { appointments: { startsAt: string }[] };
+    expect(byEmail.appointments).toHaveLength(1);
+    expect(byEmail.appointments[0].startsAt).toBe(`${BOOKING_DATE}T11:00:00+00:00`);
+  });
+});
+
+// Trello J6 -- move an appointment in one write.
+describe("reschedule_appointment", () => {
+  async function seededBooking() {
+    const seed = await seedConversation(owner, `Reschedule Co ${Math.random().toString(36).slice(2)}`);
+    const serviceId = await createService(owner, seed.companyId, { name: "Sessao", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx = toolCtxFor(seed);
+    const booked = (await bookAppointmentTool.execute(
+      { serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` },
+      ctx,
+    )) as { appointmentId: string };
+    return { seed, serviceId, ctx, appointmentId: booked.appointmentId };
+  }
+
+  it("moves the appointment to a new time and recomputes ends_at", async () => {
+    const { ctx, appointmentId } = await seededBooking();
+
+    const result = (await rescheduleAppointmentTool.execute(
+      { appointmentId, newStartsAt: `${BOOKING_DATE}T14:00:00Z` },
+      ctx,
+    )) as { rescheduled: boolean; startsAt: string; endsAt: string; serviceName: string };
+
+    expect(result.rescheduled).toBe(true);
+    expect(result.startsAt).toBe(`${BOOKING_DATE}T14:00:00.000Z`);
+    expect(result.endsAt).toBe(`${BOOKING_DATE}T14:30:00.000Z`);
+
+    const { data: row } = await getTestServiceClient()
+      .from("appointments")
+      .select("starts_at, ends_at")
+      .eq("id", appointmentId)
+      .single();
+    expect(new Date(row!.starts_at).toISOString()).toBe(`${BOOKING_DATE}T14:00:00.000Z`);
+  });
+
+  it("won't move an appointment that belongs to a different customer", async () => {
+    const { seed, appointmentId } = await seededBooking();
+    const strangerId = await createCustomer(owner, seed.companyId, "Stranger");
+    const strangerCtx: ToolExecutionContext = { ...toolCtxFor(seed), customerId: strangerId };
+
+    const result = await rescheduleAppointmentTool.execute(
+      { appointmentId, newStartsAt: `${BOOKING_DATE}T14:00:00Z` },
+      strangerCtx,
+    );
+    expect(result).toEqual({ rescheduled: false, reason: "not_found" });
+  });
+
+  it("rejects a new time outside business hours", async () => {
+    const { ctx, appointmentId } = await seededBooking();
+    const result = await rescheduleAppointmentTool.execute(
+      { appointmentId, newStartsAt: `${BOOKING_DATE}T22:00:00Z` },
+      ctx,
+    );
+    expect(result).toEqual({ rescheduled: false, reason: "outside_business_hours" });
+  });
+
+  it("reports slot_unavailable when the new time overlaps another live appointment", async () => {
+    const { ctx, serviceId, appointmentId } = await seededBooking();
+    await bookAppointmentTool.execute({ serviceId, startsAt: `${BOOKING_DATE}T13:00:00Z` }, ctx);
+
+    const result = await rescheduleAppointmentTool.execute(
+      { appointmentId, newStartsAt: `${BOOKING_DATE}T13:00:00Z` },
+      ctx,
+    );
+    expect(result).toEqual({ rescheduled: false, reason: "slot_unavailable" });
+  });
+});
+
+// Trello J7 -- booking lead time & cancellation cutoff, enforced on Ana's path.
+describe("scheduling policy (J7)", () => {
+  it("book_appointment rejects a start inside companies.min_lead_time_minutes", async () => {
+    const seed = await seedConversation(owner, "Lead Time Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Quick", duration_minutes: 30 });
+    // 30-day minimum notice; a slot tomorrow is well inside it.
+    await api("PATCH", `/api/companies/${seed.companyId}`, owner.cookieHeader, { min_lead_time_minutes: 43_200 });
+
+    const tomorrowNoon = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    tomorrowNoon.setUTCHours(12, 0, 0, 0);
+
+    const result = await bookAppointmentTool.execute(
+      { serviceId, startsAt: tomorrowNoon.toISOString() },
+      toolCtxFor(seed),
+    );
+    expect(result).toEqual({ booked: false, reason: "too_soon" });
+  });
+
+  it("cancel_appointment rejects a cancel inside companies.cancellation_cutoff_hours", async () => {
+    const seed = await seedConversation(owner, "Cutoff Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Late", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx = toolCtxFor(seed);
+
+    const booked = (await bookAppointmentTool.execute(
+      { serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` },
+      ctx,
+    )) as { appointmentId: string };
+
+    // Cutoff of a full year: the far-future BOOKING_DATE is inside it.
+    await api("PATCH", `/api/companies/${seed.companyId}`, owner.cookieHeader, { cancellation_cutoff_hours: 8_760 });
+
+    const result = await cancelAppointmentTool.execute({ appointmentId: booked.appointmentId }, ctx);
+    expect(result).toEqual({ cancelled: false, reason: "cutoff_passed" });
+
+    const { data: row } = await getTestServiceClient()
+      .from("appointments")
+      .select("status")
+      .eq("id", booked.appointmentId)
+      .single();
+    expect(row!.status).not.toBe("cancelled");
   });
 });

@@ -7,6 +7,8 @@ import { listServicesTool } from "./list-services";
 import { findAvailableSlotsTool } from "./find-available-slots";
 import { bookAppointmentTool } from "./book-appointment";
 import { cancelAppointmentTool } from "./cancel-appointment";
+import { listMyAppointmentsTool } from "./list-my-appointments";
+import { rescheduleAppointmentTool } from "./reschedule-appointment";
 import { getBusinessInformationTool } from "./get-business-information";
 import { getPolicyInformationTool } from "./get-policy-information";
 import { requestHumanTool } from "./request-human";
@@ -29,6 +31,8 @@ export const defaultTools: AgentTool[] = [
   findAvailableSlotsTool,
   bookAppointmentTool,
   cancelAppointmentTool,
+  listMyAppointmentsTool,
+  rescheduleAppointmentTool,
   getBusinessInformationTool,
   getPolicyInformationTool,
   requestHumanTool,

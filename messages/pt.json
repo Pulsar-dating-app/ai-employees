@@ -729,6 +729,12 @@
         "subtitle": "Defina as regras para novos pedidos de agendamento.",
         "toggleLabel": "Exigir aprovação antes de confirmar agendamentos",
         "toggleHelp": "Quando ativado, novos agendamentos ficam pendentes até você confirmar.",
+        "leadTimeLabel": "Antecedência mínima para agendar",
+        "leadTimeHelp": "O cliente não pode agendar um horário com menos antecedência que isso. 0 significa sem limite.",
+        "cancelCutoffLabel": "Prazo para cancelamento",
+        "cancelCutoffHelp": "O cliente não pode cancelar sozinho faltando menos que essas horas para o início. 0 significa que sempre pode.",
+        "minutesUnit": "minutos",
+        "hoursUnit": "horas",
         "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
       },
       "timeOff": {

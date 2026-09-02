@@ -22,10 +22,12 @@ export const cancelAppointmentTool: AgentTool = {
     "`reason` is optional free text from the customer. Only this customer's own appointments " +
     "can be cancelled.\n\n" +
     "If `cancelled` is false with reason \"not_found\", you don't have a valid id for one of " +
-    "their bookings (e.g. it was made another time and isn't in view) -- don't guess; offer to " +
-    "connect them with the team instead. `alreadyCancelled: true` means it was already " +
-    "cancelled, so just reassure them. To move an appointment to a new time, cancel it and " +
-    "then book the new time as two separate steps.",
+    "their bookings (e.g. it was made another time and isn't in view) -- try list_my_appointments " +
+    "first; if it still can't be found, don't guess, offer to connect them with the team. " +
+    "Reason \"cutoff_passed\" means it's too close to the start for the customer to cancel " +
+    "themselves -- tell them that and offer a human handoff. `alreadyCancelled: true` means it " +
+    "was already cancelled, so just reassure them. To move an appointment to a new time, use " +
+    "reschedule_appointment -- don't cancel and re-book.",
   parameters: {
     type: "object",
     properties: {
