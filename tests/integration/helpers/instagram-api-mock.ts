@@ -65,6 +65,20 @@ export function startInstagramApiMock(): Promise<{ url: string; stop: () => Prom
       return send(200, { access_token: "mock-refreshed-token", expires_in: 5184000 });
     }
 
+    // GET /me?fields=user_id,username -- meta-instagram-api.ts's
+    // fetchAccountProfile. `user_id` here is the Instagram professional-
+    // account id (the one webhooks and the Send API key on); it is
+    // deliberately a DIFFERENT value from the OAuth exchange's app-scoped
+    // `user_id` (`igid_{code}` above) so a test proves the connect flow
+    // stores this one, not that one. Derived from the long-lived token
+    // (`mock-long-lived-mock-short-lived-{code}`) so it stays unique per
+    // code and never trips the partial unique index on instagram_user_id.
+    if (url.pathname === "/v25.0/me" && (req.method ?? "GET") === "GET") {
+      const token = (req.headers["authorization"] ?? "").replace(/^Bearer\s+/i, "");
+      const code = token.replace(/^mock-long-lived-mock-short-lived-/, "");
+      return send(200, { user_id: `igsid_${code}`, username: `user_igsid_${code}` });
+    }
+
     const subscribeMatch = url.pathname.match(/^\/v25\.0\/([^/]+)\/subscribed_apps$/);
     if (subscribeMatch && req.method === "POST") {
       if (subscribeMatch[1].includes("trigger-subscribe-failure")) {

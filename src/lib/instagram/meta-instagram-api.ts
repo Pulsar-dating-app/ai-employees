@@ -20,6 +20,13 @@ import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 // (found live 2026-09-02; the classic Graph API / WhatsApp webhooks are
 // the ones that use META_APP_SECRET).
 //
+// One more id gotcha in the same family: the `user_id` the OAuth code
+// exchange returns is *app-scoped* and does NOT match the id on inbound
+// messaging webhooks or the Send API path. connectInstagramAccount stores
+// the professional-account id from GET /me?fields=user_id instead -- see
+// fetchAccountProfile (found live 2026-09-02: every real DM missed N4's
+// connection lookup).
+//
 // INSTAGRAM_API_BASE_URL/INSTAGRAM_GRAPH_BASE_URL let tests point this at a
 // local mock instead of the real endpoints -- same reasoning as
 // META_GRAPH_API_BASE_URL: the spawned test Next.js server can't share an
@@ -70,7 +77,16 @@ export function buildAuthorizeUrl(state: string) {
   return url.toString();
 }
 
-// Step 2: code -> short-lived (1h) token + the app-scoped Instagram user id.
+// Step 2: code -> short-lived (1h) token.
+//
+// The OAuth response also carries a `user_id`, but it is the *app-scoped*
+// id -- it does NOT match the id Instagram stamps on messaging webhooks
+// (`entry[].id` / `recipient.id`) nor the one the Send API addresses in its
+// path. That id is the Instagram professional-account id, which only
+// GET /me?fields=user_id returns (see fetchAccountProfile). Trusting the
+// OAuth `user_id` here is what made every real inbound DM miss its
+// connection lookup in N4's webhook (found live 2026-09-02), so it is
+// deliberately ignored.
 async function exchangeCodeForShortLivedToken(code: string) {
   const body = new URLSearchParams({
     client_id: process.env.INSTAGRAM_APP_ID!,
@@ -81,14 +97,9 @@ async function exchangeCodeForShortLivedToken(code: string) {
   });
   const res = await fetch(`${API_BASE_URL}/oauth/access_token`, { method: "POST", body });
   if (!res.ok) throw new Error(`Instagram code exchange failed: ${await res.text()}`);
-  const { access_token: accessToken, user_id: userId } = (await res.json()) as {
-    access_token?: string;
-    user_id?: string | number;
-  };
-  if (!accessToken || userId === undefined) {
-    throw new Error("Instagram code exchange returned no access_token/user_id");
-  }
-  return { accessToken, userId: String(userId) };
+  const { access_token: accessToken } = (await res.json()) as { access_token?: string };
+  if (!accessToken) throw new Error("Instagram code exchange returned no access_token");
+  return { accessToken };
 }
 
 // Step 3: short-lived -> long-lived (60 days). N6 is the future renewal job;
@@ -145,16 +156,28 @@ async function subscribeToMessaging(accessToken: string, instagramUserId: string
   if (!res.ok) throw new Error(`Instagram webhook subscription failed: ${await res.text()}`);
 }
 
-// The merchant-facing @username, so N3 can show "Connected: @loja" the way
-// the WhatsApp card shows a phone number -- never the raw account id.
-async function fetchUsername(accessToken: string, instagramUserId: string) {
+// The Instagram professional-account id plus the merchant-facing @username,
+// in one call.
+//
+// `user_id` here -- NOT `id`, which is the same app-scoped value the OAuth
+// exchange returns -- is the id that messaging webhooks arrive under
+// (`entry[].id` / `recipient.id`) and that the Send API addresses in its
+// path. It is what company_instagram_connections.instagram_user_id must
+// hold for N4's inbound lookup (`.eq("instagram_user_id", recipientId)`) to
+// find this connection. The username is only for N3's "Connected: @loja"
+// card -- never surface the raw account id.
+async function fetchAccountProfile(accessToken: string) {
   const res = await fetch(
-    graphUrl(`/${instagramUserId}`, { fields: "username" }),
+    graphUrl("/me", { fields: "user_id,username" }),
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
   if (!res.ok) throw new Error(`Instagram account lookup failed: ${await res.text()}`);
-  const { username } = (await res.json()) as { username?: string };
-  return username ?? null;
+  const { user_id: userId, username } = (await res.json()) as {
+    user_id?: string | number;
+    username?: string;
+  };
+  if (userId === undefined) throw new Error("Instagram account lookup returned no user_id");
+  return { instagramUserId: String(userId), username: username ?? null };
 }
 
 // The full connect sequence the route calls: code -> long-lived token,
@@ -164,12 +187,14 @@ async function fetchUsername(accessToken: string, instagramUserId: string) {
 // manual-connect-test route needed (finishConnection alone, skipping the
 // code exchange) -- nothing here has a second caller yet.
 export async function connectInstagramAccount(code: string) {
-  const { accessToken: shortLivedToken, userId } = await exchangeCodeForShortLivedToken(code);
+  const { accessToken: shortLivedToken } = await exchangeCodeForShortLivedToken(code);
   const { accessToken, tokenExpiresAt } = await exchangeForLongLivedToken(shortLivedToken);
-  await subscribeToMessaging(accessToken, userId);
-  const username = await fetchUsername(accessToken, userId);
+  // Resolve the professional-account id from the token itself, not the
+  // OAuth response's app-scoped user_id -- see fetchAccountProfile.
+  const { instagramUserId, username } = await fetchAccountProfile(accessToken);
+  await subscribeToMessaging(accessToken, instagramUserId);
 
-  return { instagramUserId: userId, username, accessToken, tokenExpiresAt };
+  return { instagramUserId, username, accessToken, tokenExpiresAt };
 }
 
 // Trello N5 -- delivery, the other end of N4's inbound webhook. `<IG_ID>` in

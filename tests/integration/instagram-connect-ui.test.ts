@@ -198,7 +198,9 @@ describe("Instagram connect UI entry points (start, callback)", () => {
         owner.cookieHeader,
       );
       expect(status.json.connection?.status).toBe("connected");
-      expect(status.json.connection?.instagram_user_id).toBe("igid_callback-success");
+      // The professional-account id from GET /me?fields=user_id, not the
+      // OAuth exchange's app-scoped "igid_callback-success".
+      expect(status.json.connection?.instagram_user_id).toBe("igsid_callback-success");
     });
 
     it("surfaces the Meta round trip failing as connect_failed", async () => {
