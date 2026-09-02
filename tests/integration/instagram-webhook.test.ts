@@ -107,6 +107,28 @@ describe("Instagram inbound webhook (GET verify, POST receive)", () => {
       expect(res.status).toBe(200);
     });
 
+    // Regression (found live 2026-09-02): the connect flow used to store the
+    // OAuth exchange's app-scoped `user_id` (igid_{code}), but real webhooks
+    // arrive under the professional-account id from GET /me?fields=user_id
+    // (igsid_{code}). connectedAgent now returns the latter; a webhook
+    // addressed to the former must find no connection and stay silent.
+    it("does not match a webhook addressed to the OAuth app-scoped id", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Webhook Wrong Id Co");
+      const storedId = await connectedAgent(owner.cookieHeader, companyId, "malu", "webhook-wrong-id");
+      expect(storedId).toBe("igsid_webhook-wrong-id");
+
+      const body = messagingPayload("igid_webhook-wrong-id", "some-sender", "hi", "mid-wrong-id");
+      const res = await postWebhook(body, sign(body));
+      expect(res.status).toBe(200);
+
+      const { data: messages } = await service
+        .from("messages")
+        .select("id")
+        .eq("company_id", companyId);
+      expect(messages).toHaveLength(0);
+    });
+
     it("is idempotent: a repeat delivery of an already-processed message id changes nothing", async () => {
       const owner = await signUpTestUser("owner");
       const companyId = await createCompany(owner.cookieHeader, "Webhook Idempotent Co");
