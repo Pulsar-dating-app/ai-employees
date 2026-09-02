@@ -5,6 +5,7 @@ import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
 import { getTestEnv } from "./helpers/env";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello ticket E1 -- unlike C4's test, this one goes over real HTTP (there
 // IS a route now), matching this repo's default convention. The link under
@@ -37,6 +38,7 @@ beforeAll(async () => {
     name: "E1 Redirect Co",
   });
   const companyId = created.json.company.id;
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
 
   const hired = await api<{ companyAgent: { agent_id: string } }>(
     "POST",

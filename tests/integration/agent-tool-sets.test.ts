@@ -3,6 +3,7 @@ import { AgentEngine } from "@/lib/agent-engine";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello ticket J2 -- the unit test pins the map; this pins the behaviour the
 // map exists for: what the engine actually hands OpenAI for a given agent.
@@ -24,6 +25,7 @@ beforeAll(async () => {
     name: "J2 Tool Sets Co",
   });
   shared = { owner, companyId: created.json.company.id };
+  await seedActivePlan(shared.companyId); // P6: the hire POST needs an active plan
 });
 
 // Hires the agent (idempotent by B1's design) and opens a conversation with

@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { AGENT_ENRICHMENT, DEFAULT_MONTHLY_PRICE_BRL } from "@/lib/agents/catalog";
 import { resolveAgentDescription } from "@/lib/agents/copy";
 import { agentPhoto } from "@/lib/agents/media";
 import { MarketplaceGrid } from "./marketplace-grid";
@@ -34,7 +33,6 @@ export default async function MarketplacePage() {
 
   const cards: MarketplaceAgent[] = await Promise.all(
     (agents ?? []).map(async (agent) => {
-      const enrichment = AGENT_ENRICHMENT[agent.slug];
       return {
         slug: agent.slug,
         name: defaultAgentName(agent.slug),
@@ -44,7 +42,6 @@ export default async function MarketplacePage() {
           agent.description,
           defaultAgentName(agent.slug),
         ),
-        monthlyPriceBRL: enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL,
         isHired: hiredAgentIds.has(agent.id),
         photoSrc: agentPhoto(agent.slug),
       };

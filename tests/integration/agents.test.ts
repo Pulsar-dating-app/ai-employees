@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello ticket B1 -- hiring is agent-scalable (agentSlug is a URL param,
 // never hardcoded), so these tests exercise that generically via "malu"
@@ -43,9 +44,43 @@ describe("GET/POST /api/companies/:id/agents/:agentSlug", () => {
     expect(post.status).toBe(404);
   });
 
+  // Trello P6: hiring is an activation, so it needs an active plan. Without
+  // one the POST is a 402 pointing the merchant at billing; nothing is
+  // written. An already-hired company is exempt (the idempotent no-op).
+  it("402s the hire when the company has no active plan", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "No Plan Hiring Co");
+
+    const blocked = await api<{ error: string }>(
+      "POST",
+      `/api/companies/${companyId}/agents/malu`,
+      owner.cookieHeader,
+    );
+    expect(blocked.status).toBe(402);
+    expect(blocked.json.error).toBe("plan_required");
+
+    const stillNotHired = await api<{ companyAgent: unknown }>(
+      "GET",
+      `/api/companies/${companyId}/agents/malu`,
+      owner.cookieHeader,
+    );
+    expect(stillNotHired.json.companyAgent).toBeNull();
+
+    // Subscribe -> the same call now succeeds.
+    await seedActivePlan(companyId);
+    const hired = await api<{ companyAgent: { status: string } }>(
+      "POST",
+      `/api/companies/${companyId}/agents/malu`,
+      owner.cookieHeader,
+    );
+    expect(hired.status).toBe(201);
+    expect(hired.json.companyAgent.status).toBe("active");
+  });
+
   it("hires Malu, is idempotent on a repeat hire, and reports status correctly", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Hiring Co");
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
 
     const before = await api<{ companyAgent: unknown }>(
       "GET",
@@ -83,6 +118,7 @@ describe("GET/POST /api/companies/:id/agents/:agentSlug", () => {
   it("accepts a custom display name", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Custom Name Co");
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
 
     const hired = await api<{ companyAgent: { name: string } }>(
       "POST",

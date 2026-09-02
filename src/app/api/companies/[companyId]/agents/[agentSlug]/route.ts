@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
+import { isBillingActive } from "@/lib/billing/activation";
 
 // Trello ticket B1 — agent-scalable by design even though the MVP only ever
 // hires "malu": the agent is a URL segment (agentSlug), never hardcoded, so
@@ -134,6 +135,12 @@ export async function GET(
 // (no "hired" state — see decisions.md), so this inserts directly as active.
 // Optional body: { name?: string } to override the default display name
 // (company_agents.name is a per-company, merchant-editable label).
+//
+// Trello P6: hiring is an activation, so it needs an active plan. The check
+// is on the *first* hire only — an already-hired company re-POSTing is the
+// idempotent no-op it always was, gate or no gate. `enterprise` has no
+// self-serve Price but a real (contact-us) subscription still sets
+// subscription_status, so isBillingActive covers it too.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ companyId: string; agentSlug: string }> },
@@ -159,6 +166,29 @@ export async function POST(
     typeof body?.name === "string" && body.name.trim()
       ? body.name.trim()
       : defaultAgentName(agentLookup.agentSlug);
+
+  // Already hired? Return the existing row unchanged — the historical
+  // idempotent contract, and it must not start failing just because this
+  // company's plan later lapsed. The P6 gate below only guards a new hire.
+  const { data: alreadyHired, error: alreadyHiredError } = await supabase
+    .from("company_agents")
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("agent_id", agentLookup.agentId)
+    .maybeSingle();
+  if (alreadyHiredError) {
+    return NextResponse.json({ error: alreadyHiredError.message }, { status: 500 });
+  }
+  if (alreadyHired) {
+    return NextResponse.json({ companyAgent: alreadyHired }, { status: 200 });
+  }
+
+  // Trello P6: no active subscription → can't hire. The dashboard sends the
+  // merchant to /dashboard/settings/billing to pick a plan; a 402 with a
+  // stable `error` code is what the hire flow keys off.
+  if (!(await isBillingActive(companyId, supabase))) {
+    return NextResponse.json({ error: "plan_required" }, { status: 402 });
+  }
 
   const { data, error } = await supabase
     .from("company_agents")
@@ -208,6 +238,8 @@ export async function POST(
 //     the hosted chat page, and the conversations inbox.
 // At least one field is required (an empty body is a 400). Not a router:
 // sibling hires are untouched. No schema change.
+// Trello P6: a `status: "active"` update is gated on an active plan (402
+// `plan_required`), same as the first hire; `paused` and `name` are not.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ companyId: string; agentSlug: string }> },
@@ -260,6 +292,13 @@ export async function PATCH(
       { error: "Provide at least one of: status, name" },
       { status: 400 },
     );
+  }
+
+  // Trello P6: turning a hire back on is an activation — same plan gate as
+  // the first hire. Pausing (`status: "paused"`) and renaming stay open, so
+  // a lapsed company can still switch its bots off.
+  if (updates.status === "active" && !(await isBillingActive(companyId, supabase))) {
+    return NextResponse.json({ error: "plan_required" }, { status: 402 });
   }
 
   const { data, error } = await supabase

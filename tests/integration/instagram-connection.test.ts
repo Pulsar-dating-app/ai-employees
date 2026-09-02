@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello N2. Instagram's endpoints are stood in for by
 // tests/integration/helpers/instagram-api-mock.ts (wired in via
@@ -20,6 +21,7 @@ describe("Instagram connection (GET/DELETE .../instagram, POST .../instagram/con
   }
 
   async function hireAgent(ownerCookie: string, companyId: string, agentSlug: string) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     await api("POST", `/api/companies/${companyId}/agents/${agentSlug}`, ownerCookie);
   }
 

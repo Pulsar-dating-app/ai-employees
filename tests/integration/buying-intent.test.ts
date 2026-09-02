@@ -5,6 +5,7 @@ import type { ToolExecutionContext } from "@/lib/agent-engine/tools/types";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello ticket C6 -- like agent-engine.test.ts / checkout-link.test.ts,
 // this imports the module directly rather than going over HTTP: there's no
@@ -42,6 +43,7 @@ async function seedConversation(
     name: companyName,
   });
   const companyId = created.json.company.id;
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
 
   const hired = await api<{ companyAgent: { agent_id: string } }>(
     "POST",

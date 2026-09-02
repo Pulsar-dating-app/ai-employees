@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -31,10 +32,14 @@ export function AvailabilityCard({
   const [confirmingPause, setConfirmingPause] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Trello P6: a 402 on turning the hire back on means the plan lapsed --
+  // point the merchant at billing instead of the generic retry message.
+  const [needsPlan, setNeedsPlan] = useState(false);
 
   async function setStatus(next: "active" | "paused") {
     setSaving(true);
     setErrorMessage(null);
+    setNeedsPlan(false);
     try {
       const res = await fetch(`/api/companies/${companyId}/agents/${agentSlug}`, {
         method: "PATCH",
@@ -42,7 +47,8 @@ export function AvailabilityCard({
         body: JSON.stringify({ status: next }),
       });
       if (!res.ok) {
-        setErrorMessage(t("updateError"));
+        if (res.status === 402) setNeedsPlan(true);
+        else setErrorMessage(t("updateError"));
         setSaving(false);
         return;
       }
@@ -119,6 +125,19 @@ export function AvailabilityCard({
           <p role="alert" className="text-sm text-error">
             {errorMessage}
           </p>
+        ) : null}
+
+        {needsPlan ? (
+          <div className="flex flex-wrap items-center gap-3 border-t border-outline-variant pt-4">
+            <p role="alert" className="text-sm text-on-surface-variant">
+              {t("planRequired", { name: agentName })}
+            </p>
+            <Link href="/dashboard/settings/billing">
+              <Button type="button" size="sm">
+                {t("goToBilling")}
+              </Button>
+            </Link>
+          </div>
         ) : null}
       </CardContent>
     </Card>

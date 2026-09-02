@@ -474,7 +474,7 @@
     "viewDetails": "Ver detalhes",
     "searchPlaceholder": "Buscar por nome ou cargo…",
     "noResults": "Nenhum integrante corresponde a “{query}”.",
-    "priceLabel": "R$ {price}/mês",
+    "includedInPlan": "Incluído no seu plano",
     "backToMarketplace": "Voltar para o marketplace",
     "traits": {
       "warm": "Caloroso(a)",
@@ -498,17 +498,12 @@
       "inventInfo": "Inventar preços, estoque ou políticas",
       "soundGeneric": "Soar como um chatbot genérico"
     },
-    "priceLabel": "R$ {price}/mês",
+    "includedInPlan": "Incluído no seu plano",
     "hireButton": "Contratar {name}",
-    "mockPaymentTitle": "Confirme e pague",
-    "mockPaymentSubtitle": "Esta é uma prévia do fluxo de contratação — nenhum pagamento é cobrado ainda.",
-    "cardNumberLabel": "Número do cartão",
-    "cardNameLabel": "Nome no cartão",
-    "cardExpiryLabel": "Validade",
-    "cardCvcLabel": "CVC",
-    "confirmHire": "Confirmar — R$ {price}/mês",
     "confirming": "Contratando…",
-    "cancel": "Cancelar",
+    "needsPlanTitle": "Escolha um plano para contratar sua equipe",
+    "needsPlanBody": "Contratar {name} exige um plano ativo — ele cobre todos os integrantes que você colocar para trabalhar. Escolha um e {name} já começa.",
+    "goToBilling": "Ir para cobrança",
     "hiredBadge": "{name} está contratada",
     "hiredDescription": "{name} já faz parte da sua equipe — acesse as configurações para ensinar {name} sobre o seu negócio e definir onde {name} conversa com os seus clientes.",
     "goToSettings": "Ir para configurações",
@@ -568,7 +563,9 @@
       "pauseConfirm": "Pausar {name}? Vai parar de responder em todos os canais até você reativar.",
       "pauseConfirmButton": "Sim, pausar",
       "cancel": "Cancelar",
-      "updateError": "Algo deu errado. Tente novamente."
+      "updateError": "Algo deu errado. Tente novamente.",
+      "planRequired": "Reativar {name} exige um plano ativo.",
+      "goToBilling": "Ir para cobrança"
     },
     "humanHandoff": {
       "title": "Transferência para humano",

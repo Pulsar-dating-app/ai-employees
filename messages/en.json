@@ -474,7 +474,7 @@
     "viewDetails": "View details",
     "searchPlaceholder": "Search by name or role…",
     "noResults": "No team members match “{query}”.",
-    "priceLabel": "R$ {price}/month",
+    "includedInPlan": "Included in your plan",
     "backToMarketplace": "Back to marketplace",
     "traits": {
       "warm": "Warm",
@@ -498,17 +498,12 @@
       "inventInfo": "Invent prices, stock, or policies",
       "soundGeneric": "Sound like a generic chatbot"
     },
-    "priceLabel": "R$ {price}/month",
+    "includedInPlan": "Included in your plan",
     "hireButton": "Hire {name}",
-    "mockPaymentTitle": "Confirm and pay",
-    "mockPaymentSubtitle": "This is a preview of the hiring flow — no payment is actually charged yet.",
-    "cardNumberLabel": "Card number",
-    "cardNameLabel": "Name on card",
-    "cardExpiryLabel": "Expiry",
-    "cardCvcLabel": "CVC",
-    "confirmHire": "Confirm — R$ {price}/month",
     "confirming": "Hiring…",
-    "cancel": "Cancel",
+    "needsPlanTitle": "Pick a plan to hire your team",
+    "needsPlanBody": "Hiring {name} needs an active plan — it covers every team member you put to work. Choose one and {name} can start right away.",
+    "goToBilling": "Go to billing",
     "hiredBadge": "{name} is hired",
     "hiredDescription": "{name} is on your team — head to settings to teach them about your business and set up where they talk to your customers.",
     "goToSettings": "Go to settings",
@@ -568,7 +563,9 @@
       "pauseConfirm": "Pause {name}? They'll stop replying on every channel until you turn them back on.",
       "pauseConfirmButton": "Yes, pause",
       "cancel": "Cancel",
-      "updateError": "Something went wrong. Please try again."
+      "updateError": "Something went wrong. Please try again.",
+      "planRequired": "Turning {name} back on needs an active plan.",
+      "goToBilling": "Go to billing"
     },
     "humanHandoff": {
       "title": "Human handoff",

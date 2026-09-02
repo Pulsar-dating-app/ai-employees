@@ -3,6 +3,7 @@ import { api } from "./helpers/request";
 import { getTestEnv } from "./helpers/env";
 import { signUpTestUser } from "./helpers/auth";
 import { encodeState, generateNonce, OAUTH_STATE_COOKIE } from "@/lib/instagram/oauth-state";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello N3: the two entry/exit points of the redirect-based OAuth flow --
 // /connect/start (the "Connect Instagram" link's target) and the shared
@@ -28,6 +29,7 @@ describe("Instagram connect UI entry points (start, callback)", () => {
   }
 
   async function hireAgent(ownerCookie: string, companyId: string, agentSlug: string) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     await api("POST", `/api/companies/${companyId}/agents/${agentSlug}`, ownerCookie);
   }
 

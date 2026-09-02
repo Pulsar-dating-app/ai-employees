@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { loadSchedulingAnalytics } from "@/lib/analytics/scheduling";
+import { seedActivePlan } from "./helpers/billing";
 
 // Scheduling metrics for the Performance page (src/lib/analytics/scheduling.ts).
 // Real local Postgres + RLS throughout, same as the E2 analytics file.
@@ -17,6 +18,7 @@ async function seed(owner: Awaited<ReturnType<typeof signUpTestUser>>, name: str
     name,
   });
   const companyId = created.json.company.id;
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
 
   const hireAna = await api<{ companyAgent: { agent_id: string } }>(
     "POST",

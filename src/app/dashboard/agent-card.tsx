@@ -8,7 +8,6 @@ export type MarketplaceAgent = {
   name: string;
   role: string;
   description: string;
-  monthlyPriceBRL: number;
   isHired: boolean;
   photoSrc: string | null;
 };
@@ -89,7 +88,7 @@ export function HireableAgentCard({
 
         <div className="mt-1 flex items-center justify-between gap-3 border-t border-outline-variant/60 pt-4">
           <span className="text-sm font-semibold text-on-surface">
-            {agent.isHired ? t("hiredBadge") : t("priceLabel", { price: agent.monthlyPriceBRL })}
+            {agent.isHired ? t("hiredBadge") : t("includedInPlan")}
           </span>
           <span className="inline-flex h-9 items-center justify-center rounded-md border border-outline-variant bg-surface-container px-4 text-sm font-medium text-on-surface">
             {t("viewDetails")}

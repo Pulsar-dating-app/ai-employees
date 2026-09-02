@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
+import { seedActivePlan } from "./helpers/billing";
+import { getTestServiceClient } from "./helpers/service-client";
 
 // Trello ticket K6 -- PATCH /api/companies/:id/agents/:agentSlug is the only
 // write path for company_agents.status after the initial hire. A plain
@@ -14,6 +16,7 @@ describe("PATCH /api/companies/:id/agents/:agentSlug (active-agent toggle)", () 
   }
 
   async function hire(ownerCookie: string, companyId: string) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     await api("POST", `/api/companies/${companyId}/agents/malu`, ownerCookie, {});
   }
 
@@ -156,6 +159,49 @@ describe("PATCH /api/companies/:id/agents/:agentSlug (active-agent toggle)", () 
       status: "paused",
     });
     expect(res.status).toBe(200);
+  });
+
+  // Trello P6: turning a hire back on is an activation and needs an active
+  // plan; pausing and renaming never do.
+  it("402s a PATCH to active once the plan has lapsed, but still allows pause", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Toggle Lapsed Co");
+    await hire(owner.cookieHeader, companyId); // seeds an active plan + hires
+    const svc = getTestServiceClient();
+
+    // Pause works regardless of billing.
+    const paused = await api("PATCH", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader, {
+      status: "paused",
+    });
+    expect(paused.status).toBe(200);
+
+    // Subscription lapses.
+    await svc
+      .from("company_billing")
+      .update({ subscription_status: "past_due" })
+      .eq("company_id", companyId);
+
+    const reactivate = await api("PATCH", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader, {
+      status: "active",
+    });
+    expect(reactivate.status).toBe(402);
+    expect((reactivate.json as { error: string }).error).toBe("plan_required");
+
+    // A rename still goes through -- only status:active is gated.
+    const renamed = await api("PATCH", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader, {
+      name: "Malu Renamed",
+    });
+    expect(renamed.status).toBe(200);
+
+    // Recovering the plan re-opens activation.
+    await svc
+      .from("company_billing")
+      .update({ subscription_status: "active" })
+      .eq("company_id", companyId);
+    const reactivated = await api("PATCH", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader, {
+      status: "active",
+    });
+    expect(reactivated.status).toBe(200);
   });
 
   // Same endpoint, merge-patch: `name` renames the hire (company_agents.name).

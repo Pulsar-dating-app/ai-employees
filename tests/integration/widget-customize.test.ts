@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { getTestEnv } from "./helpers/env";
 import { signUpTestUser } from "./helpers/auth";
+import { seedActivePlan } from "./helpers/billing";
 
 // Embed widget customization -- POST /api/companies/:id/agents/:slug/widget.
 // Raw fetch + FormData (not the shared `api()` helper, which always
@@ -23,6 +24,7 @@ async function createCompany(ownerCookie: string, name: string) {
 }
 
 async function hireMalu(ownerCookie: string, companyId: string) {
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
   await api("POST", `/api/companies/${companyId}/agents/malu`, ownerCookie);
 }
 
