@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
 import { SpinnerIcon } from "@/components/ui/icons";
@@ -27,6 +27,18 @@ function useRedirectAction() {
   const t = useTranslations("Billing");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // `go()` deliberately leaves `pending` true after `window.location.assign`
+  // so the button can't be re-fired mid-navigation. But if the customer
+  // then hits the browser Back button from Stripe, this page is restored
+  // from the bfcache with that frozen state -- the button would spin
+  // forever. `pageshow` fires on every load *and* on a bfcache restore, so
+  // clearing here un-sticks it.
+  useEffect(() => {
+    const reset = () => setPending(false);
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
 
   async function go(url: string, body: unknown) {
     setPending(true);
