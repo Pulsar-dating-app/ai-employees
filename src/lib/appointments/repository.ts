@@ -13,6 +13,11 @@ import {
   syncAppointmentCancelled,
   syncAppointmentRescheduled,
 } from "@/lib/google-calendar/appointment-sync";
+import {
+  validateIntakeAnswer,
+  FIELD_TYPE_TO_CUSTOMER_COLUMN,
+  type IntakeFieldType,
+} from "@/lib/appointments/intake-fields";
 
 // Trello J3 -- the abstraction Ana's scheduling tools (list_services /
 // find_available_slots / book_appointment / cancel_appointment) call
@@ -43,29 +48,33 @@ import {
 
 const MAX_SLOTS_RETURNED = 20;
 
-type IntakeField = { label: string; is_required: boolean };
+type IntakeField = { key: string; label: string; fieldType: IntakeFieldType; is_required: boolean };
 
-// Trello K8/K9 -- the merchant's configured pre-booking questions, in
+// Trello K8/K9/R2 -- the merchant's enabled pre-booking questions, in
 // display order. Shared by findAvailableSlots (surfaces them to the agent)
-// and book (enforces the required ones).
+// and book (enforces + validates). Only `is_enabled` rows; disabled
+// predefined fields are invisible to the agent.
 async function loadIntakeFields(
   client: SupabaseClient,
   companyId: string,
 ): Promise<IntakeField[]> {
   const { data, error } = await client
     .from("appointment_intake_fields")
-    .select("label, is_required")
+    .select("key, label, field_type, is_required")
     .eq("company_id", companyId)
+    .eq("is_enabled", true)
     .order("position", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => ({
+    key: row.key as string,
     label: row.label as string,
+    fieldType: row.field_type as IntakeFieldType,
     is_required: row.is_required as boolean,
   }));
 }
 
-// The model keys `intakeAnswers` by the question label; match tolerantly
-// (case- and whitespace-insensitive) so "cpf" answers a "CPF" field.
+// R2 -- the model keys `intakeAnswers` by each field's stable `key`. Match
+// exactly (trim + lowercase for leniency, keys are already slugs).
 function normalizeAnswerKeys(
   answers: Record<string, unknown> | null | undefined,
 ): Map<string, string> {
@@ -110,14 +119,14 @@ export type FindAvailableSlotsResult =
       // the customer the business is away then instead of just "nothing's
       // free".
       timeOff: { start: string; end: string; reason: string | null }[];
-      // Trello K8/K9 -- the customer details this business wants collected
-      // before a booking (appointment_intake_fields). `label` is the raw
-      // data point ("Full name", "CPF", "Idade"); the agent phrases the
-      // actual question. `required` ones must be answered before
-      // book_appointment will go through; optional ones are asked once and
-      // skipped if the customer doesn't answer. Empty when nothing is
-      // configured.
-      intakeQuestions: { label: string; required: boolean }[];
+      // Trello K8/K9/R2 -- the customer details this business wants
+      // collected before a booking. `key` is the stable slug the agent
+      // keys its answers by; `label` is what the agent phrases the question
+      // from; `fieldType` tells the agent what shape of value to expect
+      // (email/phone/cpf/date/name/text). `required` ones must be answered;
+      // optional ones are asked once and skipped if declined. `email` is
+      // always present and always required.
+      intakeQuestions: { key: string; label: string; fieldType: IntakeFieldType; required: boolean }[];
     };
 
 export type BookResult =
@@ -133,6 +142,10 @@ export type BookResult =
         | "too_soon";
     }
   | { booked: false; reason: "missing_intake_answers"; missingRequired: string[] }
+  // R2 -- an answer failed its field_type's format check (e.g. "sim" for an
+  // email). `invalid` names the label + a short machine reason so the agent
+  // can ask again for exactly those.
+  | { booked: false; reason: "invalid_intake_answers"; invalid: { label: string; reason: string }[] }
   | {
       booked: true;
       status: "requested" | "confirmed";
@@ -240,7 +253,12 @@ async function findAvailableSlots(
       slots: slots.slice(0, MAX_SLOTS_RETURNED),
       truncated: slots.length > MAX_SLOTS_RETURNED,
       timeOff,
-      intakeQuestions: intakeFields.map((f) => ({ label: f.label, required: f.is_required })),
+      intakeQuestions: intakeFields.map((f) => ({
+        key: f.key,
+        label: f.label,
+        fieldType: f.fieldType,
+        required: f.is_required,
+      })),
     };
   } catch (err) {
     // A missing/inactive service, or one belonging to another company, is
@@ -297,7 +315,7 @@ async function book(
       .maybeSingle(),
     client
       .from("customers")
-      .select("id, name")
+      .select("id, name, email, phone")
       .eq("id", customerId)
       .eq("company_id", companyId)
       .maybeSingle(),
@@ -360,23 +378,40 @@ async function book(
     return { booked: false, reason: "outside_business_hours" };
   }
 
-  // Trello K9 -- the merchant's pre-booking questions. Every required one
-  // must have a non-empty answer before the row is written; the model gets
-  // the labels back so it can ask and retry. Optional questions never block:
-  // an answer is stored if given, ignored if not. Checked after the slot
-  // validations so a bad time surfaces first (more actionable), and so a
-  // retry after collecting the info runs against a known-good slot.
+  // Trello K9/R2 -- the merchant's pre-booking questions, keyed by each
+  // field's stable `key`. Every required one (email always among them)
+  // needs a non-empty answer; the model gets labels back so it can ask and
+  // retry. Then every provided answer to a known field type is format-
+  // checked (a bad email/cpf/date bounces with `invalid_intake_answers`).
+  // Checked after the slot validations so a bad time surfaces first, and so
+  // a retry runs against a known-good slot.
   const providedAnswers = normalizeAnswerKeys(intakeAnswers);
+  const answerFor = (field: IntakeField) => providedAnswers.get(field.key.trim().toLowerCase());
+
   const missingRequired = intakeFields
-    .filter((f) => f.is_required && !providedAnswers.has(f.label.trim().toLowerCase()))
+    .filter((f) => f.is_required && !answerFor(f))
     .map((f) => f.label);
   if (missingRequired.length > 0) {
     return { booked: false, reason: "missing_intake_answers", missingRequired };
   }
+
+  const invalid: { label: string; reason: string }[] = [];
   const storedIntakeAnswers: Record<string, string> = {};
+  const customerPatch: Record<string, string> = {};
   for (const field of intakeFields) {
-    const answer = providedAnswers.get(field.label.trim().toLowerCase());
-    if (answer) storedIntakeAnswers[field.label] = answer;
+    const answer = answerFor(field);
+    if (!answer) continue;
+    const problem = validateIntakeAnswer(field.fieldType, answer);
+    if (problem) {
+      invalid.push({ label: field.label, reason: problem });
+      continue;
+    }
+    storedIntakeAnswers[field.key] = answer;
+    const column = FIELD_TYPE_TO_CUSTOMER_COLUMN[field.fieldType];
+    if (column) customerPatch[column] = answer;
+  }
+  if (invalid.length > 0) {
+    return { booked: false, reason: "invalid_intake_answers", invalid };
   }
 
   const endsAt = new Date(
@@ -409,6 +444,22 @@ async function book(
     // app-layer check-then-insert can't be.
     if (error.code === "23P01") return { booked: false, reason: "slot_unavailable" };
     throw error;
+  }
+
+  // R2 -- write the name/email/phone answers onto the customers row too, so
+  // list_my_appointments' email lookup works and R3/R4 can reach them.
+  // Fill blanks only (never overwrite a value the customer already has),
+  // best-effort -- the appointment is already saved.
+  const blanksToFill: Record<string, string> = {};
+  if (customerPatch.name && !customer.name) blanksToFill.name = customerPatch.name;
+  if (customerPatch.email && !customer.email) blanksToFill.email = customerPatch.email;
+  if (customerPatch.phone && !customer.phone) blanksToFill.phone = customerPatch.phone;
+  if (Object.keys(blanksToFill).length > 0) {
+    try {
+      await client.from("customers").update(blanksToFill).eq("id", customerId);
+    } catch {
+      // Non-fatal.
+    }
   }
 
   // Sync to Google Calendar only once the appointment is actually confirmed
