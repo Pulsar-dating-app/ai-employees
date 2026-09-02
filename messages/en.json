@@ -458,6 +458,18 @@
       "htmlSnippetLabel": "HTML Snippet",
       "copyScriptButton": "Copy Script",
       "embedInfoText": "Paste this code into your website, right before the closing body tag, to start sharing {name}'s chat. The bubble will appear automatically in the bottom-right corner."
+    },
+    "tour": {
+      "nameTitle": "Make it yours",
+      "nameDescription": "Rename {name} to match your brand — customers see this name everywhere you talk to them.",
+      "humanHandoffTitle": "Bring in a person",
+      "humanHandoffDescription": "Turn this on so you or your team can step into a conversation whenever {name} should hand it off to a human.",
+      "instagramTitle": "Connect Instagram",
+      "instagramDescription": "Link your Instagram account so {name} can also chat with customers there.",
+      "embedTitle": "Customize the widget",
+      "embedDescription": "Choose how {name}'s chat bubble looks and greets visitors before it goes live on your site.",
+      "linksTitle": "Share it anywhere",
+      "linksDescription": "Grab the direct link or embed code to add {name}'s chat to your website or send it directly to customers."
     }
   },
   "Teach": {
@@ -1155,5 +1167,12 @@
         }
       ]
     }
+  },
+  "Tour": {
+    "stepCounter": "Step {current} of {total}",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "close": "Close"
   }
 }

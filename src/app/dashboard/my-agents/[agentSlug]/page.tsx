@@ -18,6 +18,7 @@ import { AvailabilityCard } from "./availability-card";
 import { NameCard } from "./name-card";
 import { HumanHandoffCard } from "./human-handoff-card";
 import { DevChatTest } from "../../dev-chat-test";
+import { AgentConnectionsTour } from "./agent-connections-tour";
 
 // A hired team member's own page is scoped to *how customers reach them* —
 // platform connections only. Business knowledge is company-wide, not
@@ -117,6 +118,7 @@ export default async function AgentConnectionsPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <AgentConnectionsTour agentName={name} />
       <BackLink href="/dashboard/my-agents">{t("backToMyAgents")}</BackLink>
 
       <div>
@@ -138,13 +140,15 @@ export default async function AgentConnectionsPage({
           className="lg:col-span-4"
         />
         <div className="flex flex-col gap-6 lg:col-span-8">
-          <NameCard
-            companyId={company.id}
-            agentSlug={agentSlug}
-            initialName={name}
-            defaultName={fallbackName}
-            canEdit={canEdit}
-          />
+          <div data-tour="agent-name">
+            <NameCard
+              companyId={company.id}
+              agentSlug={agentSlug}
+              initialName={name}
+              defaultName={fallbackName}
+              canEdit={canEdit}
+            />
+          </div>
           <AvailabilityCard
             companyId={company.id}
             agentSlug={agentSlug}
@@ -170,27 +174,35 @@ export default async function AgentConnectionsPage({
               />
             </>
           ) : null}
-          <HumanHandoffCard
-            companyId={company.id}
-            agentName={name}
-            canEdit={canEdit}
-            initialAllowHumanHandoff={company.allow_human_handoff}
-          />
-          <Suspense fallback={null}>
-            <InstagramConnectCard companyId={company.id} agentSlug={agentSlug} canEdit={canEdit} />
-          </Suspense>
-          <WidgetCustomizeCard
-            companyId={company.id}
-            agentSlug={agentSlug}
-            agentName={name}
-            canEdit={canEdit}
-            initial={{
-              greeting: companyAgent.widget_greeting,
-              launcherType: companyAgent.widget_launcher_type,
-              launcherAssetUrl: companyAgent.widget_launcher_asset_url,
-            }}
-          />
-          <WebChatChannelCard agentName={name} chatUrl={chatUrl} embedSnippet={embedSnippet} />
+          <div data-tour="human-handoff">
+            <HumanHandoffCard
+              companyId={company.id}
+              agentName={name}
+              canEdit={canEdit}
+              initialAllowHumanHandoff={company.allow_human_handoff}
+            />
+          </div>
+          <div data-tour="instagram-connect">
+            <Suspense fallback={null}>
+              <InstagramConnectCard companyId={company.id} agentSlug={agentSlug} canEdit={canEdit} />
+            </Suspense>
+          </div>
+          <div data-tour="embed-customize">
+            <WidgetCustomizeCard
+              companyId={company.id}
+              agentSlug={agentSlug}
+              agentName={name}
+              canEdit={canEdit}
+              initial={{
+                greeting: companyAgent.widget_greeting,
+                launcherType: companyAgent.widget_launcher_type,
+                launcherAssetUrl: companyAgent.widget_launcher_asset_url,
+              }}
+            />
+          </div>
+          <div data-tour="share-links">
+            <WebChatChannelCard agentName={name} chatUrl={chatUrl} embedSnippet={embedSnippet} />
+          </div>
           {process.env.NODE_ENV !== "production" ? (
             <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />
           ) : null}

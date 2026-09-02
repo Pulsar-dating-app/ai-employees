@@ -458,6 +458,18 @@
       "htmlSnippetLabel": "Trecho HTML",
       "copyScriptButton": "Copiar script",
       "embedInfoText": "Cole este código no seu site, logo antes da tag de fechamento do body, para começar a compartilhar o chat de {name}. A bolha aparece automaticamente no canto inferior direito."
+    },
+    "tour": {
+      "nameTitle": "Deixe com a sua cara",
+      "nameDescription": "Renomeie {name} para combinar com sua marca — os clientes veem esse nome em toda conversa.",
+      "humanHandoffTitle": "Traga uma pessoa para a conversa",
+      "humanHandoffDescription": "Ative para que você ou sua equipe possam assumir uma conversa sempre que {name} precisar transferir para um humano.",
+      "instagramTitle": "Conecte o Instagram",
+      "instagramDescription": "Vincule sua conta do Instagram para que {name} também converse com clientes por lá.",
+      "embedTitle": "Personalize o widget",
+      "embedDescription": "Escolha a aparência da bolha de chat de {name} e a saudação exibida aos visitantes antes de publicar no seu site.",
+      "linksTitle": "Compartilhe em qualquer lugar",
+      "linksDescription": "Pegue o link direto ou o código de incorporação para adicionar o chat de {name} ao seu site ou enviar diretamente aos clientes."
     }
   },
   "Teach": {
@@ -1155,5 +1167,12 @@
         }
       ]
     }
+  },
+  "Tour": {
+    "stepCounter": "Passo {current} de {total}",
+    "back": "Voltar",
+    "next": "Avançar",
+    "done": "Concluir",
+    "close": "Fechar"
   }
 }
