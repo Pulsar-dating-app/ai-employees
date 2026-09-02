@@ -20,8 +20,11 @@ export const findAvailableSlotsTool: AgentTool = {
     "from a list_services result. `from` and `to` are calendar dates (YYYY-MM-DD, `to` " +
     "inclusive) -- keep the range narrow, a few days at a time; ask the customer roughly when " +
     "they'd like to come in rather than scanning weeks at once.\n\n" +
-    "Each slot's `start`/`end` are UTC ISO 8601 instants; the result also includes the " +
-    "business's `timezone` -- always tell the customer times in that timezone, never raw UTC. " +
+    "Each slot has a `label` -- the time already written out in the business's timezone " +
+    "(\"Wed, Sep 3, 14:40\"). Say that to the customer (translated into their language / clock " +
+    "style as needed); never compute a time yourself from the raw `start`/`end`, which are UTC " +
+    "ISO 8601 instants for passing back to book_appointment only. The result also includes the " +
+    "business's `timezone` for reference. " +
     "If `truncated` is true there were more slots than shown, so narrow the range or ask the " +
     "customer's preference. If `googleCalendarChecked` is false the business's live calendar " +
     "couldn't be consulted: still offer the slots, but don't promise the time is definitely " +

@@ -495,6 +495,18 @@
         "USD": "USD — US Dollar",
         "BRL": "BRL — Brazilian Real",
         "EUR": "EUR — Euro"
+      },
+      "timezoneLabel": "Time zone",
+      "timezonePlaceholder": "Select a time zone",
+      "timezoneHint": "Used for appointment times. New companies default to Brasília time.",
+      "timezoneOptions": {
+        "America/Sao_Paulo": "Brasília / São Paulo / Nordeste (GMT-3)",
+        "America/Manaus": "Manaus / Cuiabá / Campo Grande (GMT-4)",
+        "America/Noronha": "Fernando de Noronha (GMT-2)",
+        "America/Rio_Branco": "Rio Branco / Acre (GMT-5)",
+        "America/New_York": "New York (GMT-5/-4)",
+        "Europe/Lisbon": "Lisbon (GMT+0/+1)",
+        "UTC": "UTC"
       }
     },
     "shipping": {

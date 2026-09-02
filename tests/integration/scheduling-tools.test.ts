@@ -195,7 +195,7 @@ describe("find_available_slots", () => {
       available: true;
       timezone: string;
       googleCalendarChecked: boolean;
-      slots: { start: string; end: string }[];
+      slots: { start: string; end: string; label: string }[];
     };
 
     expect(result.available).toBe(true);
@@ -204,6 +204,8 @@ describe("find_available_slots", () => {
     expect(result.slots[0]).toEqual({
       start: `${BOOKING_DATE}T09:00:00.000Z`,
       end: `${BOOKING_DATE}T09:30:00.000Z`,
+      // Ready-to-speak wall clock in the business timezone (here UTC).
+      label: "Mon, Mar 1, 09:00",
     });
   });
 

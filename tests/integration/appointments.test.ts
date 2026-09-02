@@ -6,7 +6,12 @@ import { signUpTestUser, type TestUser } from "./helpers/auth";
 // constraint and the requires_appointment_approval status branch.
 describe("Appointments CRUD /api/companies/:id/appointments", () => {
   async function createCompany(ownerCookie: string, name: string) {
-    const created = await api<{ company: { id: string } }>("POST", "/api/companies", ownerCookie, { name });
+    const created = await api<{ company: { id: string } }>("POST", "/api/companies", ownerCookie, {
+      name,
+      // Business hours in these tests are written as UTC wall-clock times;
+      // pin the zone so they are not shifted by the create-time default.
+      timezone: "UTC",
+    });
     return created.json.company.id;
   }
 

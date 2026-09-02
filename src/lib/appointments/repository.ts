@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isValidTimeZone } from "@/lib/analytics/load";
+import { formatWallClock } from "./time-format";
 import { loadAvailableSlots, ServiceNotFoundError } from "@/lib/availability/load";
 import {
   isWithinBusinessHours,
@@ -110,7 +111,11 @@ export type FindAvailableSlotsResult =
       // itself failed) -- slots still come from business_hours + our own
       // appointments alone. See availability/load.ts.
       googleCalendarChecked: boolean;
-      slots: { start: string; end: string }[];
+      // `start`/`end` are UTC ISO instants (pass `start` straight to
+      // book_appointment). `label` is that start already written out in the
+      // business's timezone ("Wed, Sep 3, 14:40") -- the agent speaks the
+      // label and never converts the ISO itself. See time-format.ts.
+      slots: { start: string; end: string; label: string }[];
       // The real result had more than MAX_SLOTS_RETURNED; the customer
       // should narrow the date range or state a preference.
       truncated: boolean;
@@ -154,6 +159,9 @@ export type BookResult =
       serviceName: string;
       startsAt: string;
       endsAt: string;
+      // `startsAt`/`endsAt` in the business's timezone, ready to speak.
+      startsAtLabel: string;
+      endsAtLabel: string;
       timezone: string;
     };
 
@@ -170,6 +178,9 @@ export type MyAppointment = {
   serviceName: string;
   startsAt: string;
   endsAt: string;
+  // `startsAt`/`endsAt` in the business's timezone, ready to speak.
+  startsAtLabel: string;
+  endsAtLabel: string;
   status: string;
   timezone: string;
 };
@@ -192,6 +203,9 @@ export type RescheduleResult =
       serviceName: string;
       startsAt: string;
       endsAt: string;
+      // `startsAt`/`endsAt` in the business's timezone, ready to speak.
+      startsAtLabel: string;
+      endsAtLabel: string;
       timezone: string;
     };
 
@@ -251,7 +265,10 @@ async function findAvailableSlots(
       available: true,
       timezone,
       googleCalendarChecked,
-      slots: slots.slice(0, MAX_SLOTS_RETURNED),
+      slots: slots.slice(0, MAX_SLOTS_RETURNED).map((slot) => ({
+        ...slot,
+        label: formatWallClock(slot.start, timezone),
+      })),
       truncated: slots.length > MAX_SLOTS_RETURNED,
       timeOff,
       intakeQuestions: intakeFields.map((f) => ({
@@ -494,6 +511,8 @@ async function book(
     serviceName: service.name as string,
     startsAt: appointment.starts_at as string,
     endsAt: appointment.ends_at as string,
+    startsAtLabel: formatWallClock(appointment.starts_at as string, timezone),
+    endsAtLabel: formatWallClock(appointment.ends_at as string, timezone),
     timezone,
   };
 }
@@ -621,6 +640,8 @@ async function listMyAppointments(
       serviceName,
       startsAt: row.starts_at as string,
       endsAt: row.ends_at as string,
+      startsAtLabel: formatWallClock(row.starts_at as string, timezone),
+      endsAtLabel: formatWallClock(row.ends_at as string, timezone),
       status: row.status as string,
       timezone,
     };
@@ -738,6 +759,8 @@ async function reschedule(
     serviceName: service.name as string,
     startsAt: startDate.toISOString(),
     endsAt: endsAt.toISOString(),
+    startsAtLabel: formatWallClock(startDate.toISOString(), timezone),
+    endsAtLabel: formatWallClock(endsAt.toISOString(), timezone),
     timezone,
   };
 }

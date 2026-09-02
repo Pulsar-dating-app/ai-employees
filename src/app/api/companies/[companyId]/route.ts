@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isValidTimeZone } from "@/lib/analytics/load";
 
 // Trello ticket B2 — single-resource sibling of the collection endpoints in
 // ../route.ts. Field names/shapes here are what C3's get_business_information
@@ -192,6 +193,16 @@ export async function PATCH(
       );
     }
     updates[field] = value;
+  }
+
+  // `timezone` is in SHORT_FIELDS (length-checked above), but it also has to
+  // be a real IANA zone -- Ana speaks appointment times in it, and a bad
+  // value would silently fall back to UTC everywhere it's read.
+  if ("timezone" in body && updates.timezone !== null && !isValidTimeZone(updates.timezone as string)) {
+    return NextResponse.json(
+      { error: "timezone must be a valid IANA timezone name (e.g. America/Sao_Paulo), or null" },
+      { status: 400 },
+    );
   }
 
   if ("currency" in body) {

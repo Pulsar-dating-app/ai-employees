@@ -12,7 +12,12 @@ import { getTestServiceClient } from "./helpers/service-client";
 // a genuine third-party dependency, not our own DB/RLS.
 describe("Availability GET /api/companies/:id/services/:serviceId/availability", () => {
   async function createCompany(ownerCookie: string, name: string) {
-    const created = await api<{ company: { id: string } }>("POST", "/api/companies", ownerCookie, { name });
+    const created = await api<{ company: { id: string } }>("POST", "/api/companies", ownerCookie, {
+      name,
+      // Business hours in these tests are written as UTC wall-clock times;
+      // pin the zone so they are not shifted by the create-time default.
+      timezone: "UTC",
+    });
     return created.json.company.id;
   }
 

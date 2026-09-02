@@ -20,8 +20,9 @@ export const rescheduleAppointmentTool: AgentTool = {
     "(e.g. 2026-09-10T15:00:00-03:00) and must be one of the slot starts from a fresh " +
     "`find_available_slots` call for that service -- never a time you chose yourself.\n\n" +
     "The service (and so the duration) stays the same; only the time changes. On success, " +
-    "`rescheduled` is true with the new `startsAt`/`endsAt` and the `timezone` to phrase them " +
-    "in. If `rescheduled` is false, use `reason` to respond honestly and offer another time " +
+    "`rescheduled` is true with `startsAtLabel`/`endsAtLabel` (the new time in the business's " +
+    "timezone -- say these, don't recompute from the raw `startsAt`/`endsAt`). " +
+    "If `rescheduled` is false, use `reason` to respond honestly and offer another time " +
     "(or a human handoff): \"not_found\" = you don't have a valid id for this customer's " +
     "booking; \"slot_unavailable\" = that new time was just taken; \"outside_business_hours\" " +
     "= the business is closed/away then; \"too_soon\" = the new time is sooner than the " +
