@@ -15,9 +15,10 @@ import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 // Business login settings -- sending the top-level Meta App ID as
 // client_id here gets rejected with "Invalid platform app" (found live,
 // 2026-08-31). The webhook's X-Hub-Signature-256 (webhook-signature.ts) is
-// the one place that correctly stays on META_APP_SECRET -- Meta signs
-// every webhook payload with the app-level secret regardless of which
-// product/login-type triggered it.
+// also signed with INSTAGRAM_APP_SECRET, not META_APP_SECRET -- Instagram
+// API with Instagram Login signs its own webhooks with its own app secret
+// (found live 2026-09-02; the classic Graph API / WhatsApp webhooks are
+// the ones that use META_APP_SECRET).
 //
 // INSTAGRAM_API_BASE_URL/INSTAGRAM_GRAPH_BASE_URL let tests point this at a
 // local mock instead of the real endpoints -- same reasoning as

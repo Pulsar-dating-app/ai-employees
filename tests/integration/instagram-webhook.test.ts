@@ -6,11 +6,12 @@ import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
 
 // Trello N4/N5. The signature is computed with the exact same literal
-// secret global-setup.ts spawns the test Next.js server with -- this is
-// legitimately exercising verifyInstagramSignature's real logic, not a
-// bypass, since a real Meta caller would do the identical HMAC-SHA256 over
-// the identical bytes.
-const TEST_APP_SECRET = "test-meta-app-secret";
+// INSTAGRAM_APP_SECRET global-setup.ts spawns the test Next.js server with
+// -- Instagram Business Login webhooks are signed with the Instagram app
+// secret, not META_APP_SECRET (fixed 2026-09-02, see webhook-signature.ts).
+// This exercises verifyInstagramSignature's real logic, not a bypass: a
+// real Meta caller does the identical HMAC-SHA256 over the identical bytes.
+const TEST_APP_SECRET = "test-instagram-app-secret";
 
 function sign(rawBody: string) {
   return `sha256=${createHmac("sha256", TEST_APP_SECRET).update(rawBody).digest("hex")}`;
