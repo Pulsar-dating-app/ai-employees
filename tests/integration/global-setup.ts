@@ -6,6 +6,7 @@ import { startGraphApiMock } from "./helpers/graph-api-mock";
 import { startInstagramApiMock } from "./helpers/instagram-api-mock";
 import { startGoogleOAuthMock } from "./helpers/google-oauth-mock";
 import { startGoogleCalendarMock } from "./helpers/google-calendar-mock";
+import { startStripeApiMock } from "./helpers/stripe-api-mock";
 
 // Boots a real Next.js server, pointed at the already-running local Supabase
 // stack (started/reset by the `test:integration:env:*` npm scripts before
@@ -66,6 +67,8 @@ export default async function setup() {
   const googleOAuthMock = await startGoogleOAuthMock();
   // Same reasoning, for Trello I2's freeBusy.query call.
   const googleCalendarMock = await startGoogleCalendarMock();
+  // Same reasoning, for Trello P3's billing checkout route (Stripe SDK).
+  const stripeApiMock = await startStripeApiMock();
 
   const nextProcess: ChildProcess = spawn(
     "npx",
@@ -109,6 +112,12 @@ export default async function setup() {
         GOOGLE_CLIENT_SECRET: "test-google-client-secret",
         GOOGLE_OAUTH_TOKEN_URL: googleOAuthMock.url,
         GOOGLE_CALENDAR_API_BASE_URL: googleCalendarMock.url,
+        // P3's billing checkout route. The key is never validated by the
+        // mock; STRIPE_API_BASE_URL points the `stripe` SDK at it. Checkout
+        // success/cancel URLs resolve off STAFFRA_CHECKOUT_BASE_URL.
+        STRIPE_SECRET_KEY: "sk_test_mock",
+        STRIPE_API_BASE_URL: stripeApiMock.url,
+        STAFFRA_CHECKOUT_BASE_URL: baseUrl,
         // src/lib/products/embeddings.ts's kill switch -- the ~60 product-
         // create call sites across this suite must never make a real
         // OpenAI network call (cost, latency, and the exact "no real LLM
@@ -135,6 +144,7 @@ export default async function setup() {
     await instagramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
+    await stripeApiMock.stop();
     throw err;
   }
 
@@ -158,6 +168,7 @@ export default async function setup() {
     await instagramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
+    await stripeApiMock.stop();
     try {
       rmSync(STATE_FILE);
     } catch {
