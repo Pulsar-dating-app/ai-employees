@@ -55,10 +55,10 @@ export const BILLING_PLANS: readonly BillingPlan[] = [
   {
     key: "starter",
     displayName: "Starter",
-    stripeLookupKey: "starter_monthly",
-    stripePriceId: "price_1UBD3NHAg1kV3YLS502z3M2I",
+    stripeLookupKey: "starter2_monthly",
+    stripePriceId: "price_1UBclEHAg1kV3YLS1ouL6qsM",
     monthlyReplyLimit: 10_000,
-    priceBrlCents: 99_900,
+    priceBrlCents: 94_000,
     isSelfServe: true,
   },
   {

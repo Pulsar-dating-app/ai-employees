@@ -53,7 +53,10 @@ describe("billing plan catalog (Trello P1)", () => {
   });
 
   it("reverse-resolves a plan from its Stripe lookup key", () => {
-    expect(getPlanByLookupKey("starter_monthly")?.key).toBe("starter");
+    // Derived from the catalog rather than a literal, so swapping a Price's
+    // lookup_key in plans.ts doesn't break this round-trip check.
+    const starterLookupKey = getPlan("starter").stripeLookupKey!;
+    expect(getPlanByLookupKey(starterLookupKey)?.key).toBe("starter");
     expect(getPlanByLookupKey("nope")).toBeUndefined();
   });
 });
