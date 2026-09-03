@@ -1,11 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
-import { isValidTimeZone, addDays } from "@/lib/analytics/load";
+import { isValidTimeZone, addDays, localDate } from "@/lib/analytics/load";
 import { formatWallClock } from "./time-format";
 import { loadAvailableSlots, ServiceNotFoundError } from "@/lib/availability/load";
 import {
   isWithinBusinessHours,
   isDuringTimeOff,
+  zonedTimeToUtc,
   type BusinessHourWindow,
   type TimeOffBlock,
 } from "@/lib/availability/engine";
@@ -50,6 +51,14 @@ import { notifyWaitlistForFreedSlot } from "@/lib/appointments/waitlist";
 // slot was taken and offer another, the same pattern as create_checkout_link.
 
 const MAX_SLOTS_RETURNED = 20;
+
+// Abuse guard found in live testing: nothing stopped a single customer from
+// booking dozens of slots on the same day in one conversation, effectively
+// locking out every other customer that day. A hard per-customer daily cap,
+// same spirit as the web-chat rate limits (src/lib/web-chat/rate-limit.ts) --
+// generous enough for a real customer's rare "two things same day" need,
+// low enough that grabbing a whole day's schedule is impossible.
+const MAX_DAILY_BOOKINGS_PER_CUSTOMER = 2;
 
 // Trello J8 -- how far ahead find_next_available scans, and in what stride.
 // The engine takes a date range and returns every slot in it, so the "early
@@ -192,7 +201,10 @@ export type BookResult =
         | "outside_business_hours"
         | "slot_unavailable"
         // Trello J7 -- the start is sooner than companies.min_lead_time_minutes allows.
-        | "too_soon";
+        | "too_soon"
+        // This customer already has MAX_DAILY_BOOKINGS_PER_CUSTOMER live
+        // appointments on the same local calendar day as `startsAt`.
+        | "daily_limit_reached";
     }
   | { booked: false; reason: "missing_intake_answers"; missingRequired: string[] }
   // R2 -- an answer failed its field_type's format check (e.g. "sim" for an
@@ -495,6 +507,27 @@ async function book(
   const minLeadMinutes = Number(company?.min_lead_time_minutes) || 0;
   if (minLeadMinutes > 0 && startDate.getTime() <= Date.now() + minLeadMinutes * 60_000) {
     return { booked: false, reason: "too_soon" };
+  }
+
+  // Abuse guard -- caps how many live appointments this one customer can
+  // hold on the same local calendar day, regardless of service. "Local" is
+  // the business's own timezone (a booking's day depends on where the
+  // business is, not UTC), computed via the same zonedTimeToUtc midnight
+  // boundary the availability engine itself exports for this purpose.
+  const localBookingDay = localDate(timezone, startDate);
+  const dayStartUtc = zonedTimeToUtc(localBookingDay, "00:00", timezone);
+  const dayEndUtc = zonedTimeToUtc(addDays(localBookingDay, 1), "00:00", timezone);
+  const { count: sameDayCount, error: sameDayError } = await client
+    .from("appointments")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("customer_id", customerId)
+    .not("status", "in", "(cancelled,no_show)")
+    .gte("starts_at", dayStartUtc.toISOString())
+    .lt("starts_at", dayEndUtc.toISOString());
+  if (sameDayError) throw sameDayError;
+  if ((sameDayCount ?? 0) >= MAX_DAILY_BOOKINGS_PER_CUSTOMER) {
+    return { booked: false, reason: "daily_limit_reached" };
   }
 
   const { data: businessHours, error: businessHoursError } = await client

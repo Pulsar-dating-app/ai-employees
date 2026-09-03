@@ -41,7 +41,9 @@ export const bookAppointmentTool: AgentTool = {
     "timezone -- don't recompute from the raw `startsAt`). If `booked` is false, use `reason` to explain honestly (\"slot_unavailable\" " +
     "= someone just took that time, \"outside_business_hours\" = the business is closed then, " +
     "\"service_not_found\" = not something they offer, \"too_soon\" = the start is sooner than " +
-    "the business accepts a booking (offer a later time), \"missing_intake_answers\" = the " +
+    "the business accepts a booking (offer a later time), \"daily_limit_reached\" = this " +
+    "customer already has the maximum number of appointments allowed on that day -- decline " +
+    "warmly and offer to book on a different day instead, \"missing_intake_answers\" = the " +
     "business still needs the details listed in `missingRequired` -- ask for exactly those and " +
     "retry, \"invalid_intake_answers\" = a value was the wrong shape (`invalid` names which " +
     "label and why -- e.g. a bad email or a CPF that isn't 11 digits) -- ask again for those " +
