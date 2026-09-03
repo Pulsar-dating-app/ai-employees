@@ -139,12 +139,40 @@ export async function POST(
         { status: 500 },
       );
     }
-    const { url } = await createBillingPortalSession({
-      customerId: billing!.stripe_customer_id,
-      returnUrl,
-      subscriptionId: billing!.stripe_subscription_id,
-    });
-    return NextResponse.json({ ok: true, mode: "portal", url });
+    // Deep-link into the Portal's plan-switch flow. That flow needs the
+    // "subscription update" feature enabled (with an allowed product list)
+    // in the Stripe Customer Portal configuration; if it isn't, Stripe
+    // throws. Rather than 500, fall back to the plain Portal home so the
+    // merchant can still manage card / invoices / cancellation.
+    try {
+      const { url } = await createBillingPortalSession({
+        customerId: billing!.stripe_customer_id,
+        returnUrl,
+        subscriptionId: billing!.stripe_subscription_id,
+      });
+      return NextResponse.json({ ok: true, mode: "portal", url });
+    } catch (err) {
+      console.error(
+        `billing checkout: subscription_update Portal flow failed for company ${companyId} -- falling back to Portal home. Enable "Customers can switch plans" in the Stripe Customer Portal config.`,
+        err,
+      );
+      try {
+        const { url } = await createBillingPortalSession({
+          customerId: billing!.stripe_customer_id,
+          returnUrl,
+        });
+        return NextResponse.json({ ok: true, mode: "portal", url });
+      } catch (fallbackErr) {
+        console.error(`billing checkout: Portal home also unavailable for company ${companyId}`, fallbackErr);
+        return NextResponse.json(
+          {
+            error: "The billing portal isn't available. Check the Stripe Customer Portal configuration.",
+            code: "portal_unavailable",
+          },
+          { status: 502 },
+        );
+      }
+    }
   }
 
   // --- No subscription yet -> Checkout ----------------------------------
