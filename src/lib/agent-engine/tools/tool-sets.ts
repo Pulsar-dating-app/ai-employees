@@ -40,7 +40,8 @@ export const AGENT_TOOL_SETS: Record<string, readonly string[]> = {
   // Scheduling (Trello J3): the common set plus the appointment tools.
   // `list_services` is the deterministic read that grounds her in what the
   // business offers (the scheduling analog of `search_products`);
-  // `find_available_slots` calls I2's availability engine;
+  // `find_available_slots` calls I2's availability engine, and J8's
+  // `find_next_available` is its "just the soonest opening" shortcut;
   // `book_appointment` / `cancel_appointment` write the `appointments` row.
   // Notably she gets NO catalogue or checkout tools: a scheduling assistant
   // offering to sell a product is the exact failure J2 exists to prevent.
@@ -48,6 +49,7 @@ export const AGENT_TOOL_SETS: Record<string, readonly string[]> = {
     ...COMMON_TOOL_NAMES,
     "list_services",
     "find_available_slots",
+    "find_next_available",
     "book_appointment",
     "cancel_appointment",
     // Trello J5 / J6 -- see the customer's existing bookings, and move one

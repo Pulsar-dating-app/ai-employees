@@ -5,6 +5,7 @@ import { createCheckoutLinkTool } from "./create-checkout-link";
 import { flagBuyingIntentTool } from "./flag-buying-intent";
 import { listServicesTool } from "./list-services";
 import { findAvailableSlotsTool } from "./find-available-slots";
+import { findNextAvailableTool } from "./find-next-available";
 import { bookAppointmentTool } from "./book-appointment";
 import { cancelAppointmentTool } from "./cancel-appointment";
 import { listMyAppointmentsTool } from "./list-my-appointments";
@@ -29,6 +30,7 @@ export const defaultTools: AgentTool[] = [
   flagBuyingIntentTool,
   listServicesTool,
   findAvailableSlotsTool,
+  findNextAvailableTool,
   bookAppointmentTool,
   cancelAppointmentTool,
   listMyAppointmentsTool,

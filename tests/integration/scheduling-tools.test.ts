@@ -2,11 +2,13 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { AgentEngine } from "@/lib/agent-engine";
 import { listServicesTool } from "@/lib/agent-engine/tools/list-services";
 import { findAvailableSlotsTool } from "@/lib/agent-engine/tools/find-available-slots";
+import { findNextAvailableTool } from "@/lib/agent-engine/tools/find-next-available";
 import { bookAppointmentTool } from "@/lib/agent-engine/tools/book-appointment";
 import { cancelAppointmentTool } from "@/lib/agent-engine/tools/cancel-appointment";
 import { listMyAppointmentsTool } from "@/lib/agent-engine/tools/list-my-appointments";
 import { rescheduleAppointmentTool } from "@/lib/agent-engine/tools/reschedule-appointment";
 import type { ToolExecutionContext } from "@/lib/agent-engine/tools/types";
+import { formatWallClock } from "@/lib/appointments/time-format";
 import { api } from "./helpers/request";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
@@ -219,6 +221,91 @@ describe("find_available_slots", () => {
 
     const result = await findAvailableSlotsTool.execute(
       { serviceId: otherServiceId, from: BOOKING_DATE, to: BOOKING_DATE },
+      toolCtxFor(seed),
+    );
+
+    expect(result).toEqual({ available: false, reason: "service_not_found" });
+  });
+});
+
+// Trello J8 -- the "soonest opening" shortcut. Scans forward from now, so
+// (unlike find_available_slots' fixed far-future BOOKING_DATE) it needs
+// business hours on a near-term day: set every weekday open.
+describe("find_next_available", () => {
+  async function setBusinessHoursAllWeek(companyId: string) {
+    await api("PUT", `/api/companies/${companyId}/business-hours`, owner.cookieHeader, {
+      businessHours: [0, 1, 2, 3, 4, 5, 6].map((day_of_week) => ({
+        day_of_week,
+        start_time: "09:00",
+        end_time: "17:00",
+      })),
+    });
+  }
+
+  it("returns the single earliest slot, in the future, with a ready-to-speak label", async () => {
+    const seed = await seedConversation(owner, "Next Slot Co");
+    const serviceId = await createService(owner, seed.companyId, {
+      name: "Consultation",
+      duration_minutes: 30,
+    });
+    await setBusinessHoursAllWeek(seed.companyId);
+
+    const result = (await findNextAvailableTool.execute(
+      { serviceId },
+      toolCtxFor(seed),
+    )) as {
+      available: true;
+      found: true;
+      timezone: string;
+      googleCalendarChecked: boolean;
+      slot: { start: string; end: string; label: string };
+      intakeQuestions: { key: string }[];
+    };
+
+    expect(result).toMatchObject({
+      available: true,
+      found: true,
+      timezone: "UTC",
+      googleCalendarChecked: false,
+    });
+    // A real future instant, 30 minutes long, aligned to the 09:00-17:00 grid.
+    expect(new Date(result.slot.start).getTime()).toBeGreaterThan(Date.now());
+    expect(new Date(result.slot.end).getTime() - new Date(result.slot.start).getTime()).toBe(
+      30 * 60_000,
+    );
+    const hour = new Date(result.slot.start).getUTCHours();
+    expect(hour).toBeGreaterThanOrEqual(9);
+    expect(hour).toBeLessThan(17);
+    // Label is the slot start already written out in the business timezone.
+    expect(result.slot.label).toBe(formatWallClock(result.slot.start, "UTC"));
+    // Intake questions ride along so Ana can book without a second call.
+    expect(result.intakeQuestions.map((q) => q.key)).toEqual(["email", "full_name"]);
+  });
+
+  it("reports found:false with a horizon when nothing is open in range", async () => {
+    const seed = await seedConversation(owner, "Never Open Co");
+    const serviceId = await createService(owner, seed.companyId, {
+      name: "Consultation",
+      duration_minutes: 30,
+    });
+    // No business hours configured at all -> the engine has no window to
+    // place a slot in, all the way out to the horizon.
+
+    const result = await findNextAvailableTool.execute({ serviceId }, toolCtxFor(seed));
+
+    expect(result).toEqual({ available: true, found: false, horizonDays: 90 });
+  });
+
+  it("reports service_not_found for a service from another company", async () => {
+    const seed = await seedConversation(owner, "Next Slot Tenant A");
+    const other = await seedConversation(owner, "Next Slot Tenant B");
+    const otherServiceId = await createService(owner, other.companyId, {
+      name: "Other",
+      duration_minutes: 30,
+    });
+
+    const result = await findNextAvailableTool.execute(
+      { serviceId: otherServiceId },
       toolCtxFor(seed),
     );
 
