@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { AGENT_ENRICHMENT, DEFAULT_MONTHLY_PRICE_BRL } from "@/lib/agents/catalog";
+import { resolveAgentDescription } from "@/lib/agents/copy";
 import { agentPhoto } from "@/lib/agents/media";
 import { BackLink } from "../../back-link";
 import { AgentHireFlow } from "./agent-hire-flow";
@@ -52,7 +53,7 @@ export default async function AgentDetailPage({
         agentSlug={agent.slug}
         name={defaultAgentName(agent.slug)}
         role={agent.role ?? ""}
-        description={agent.description ?? ""}
+        description={await resolveAgentDescription(agent.slug, agent.description)}
         photoSrc={agentPhoto(agent.slug)}
         traits={enrichment?.traits ?? []}
         should={enrichment?.should ?? []}

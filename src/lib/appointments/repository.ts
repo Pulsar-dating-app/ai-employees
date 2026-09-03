@@ -110,6 +110,16 @@ export type BookableService = {
   category: string | null;
 };
 
+export type ListServicesResult = {
+  services: BookableService[];
+  // The per-company catch-all service, only when the merchant has activated
+  // it (services.is_default + is_active). Ana books an in-domain request
+  // that matches none of `services` under this one, putting the actual ask
+  // in book_appointment's `summary`. Null = no catch-all; only listed
+  // services can be booked.
+  defaultService: BookableService | null;
+};
+
 export type FindAvailableSlotsResult =
   | { available: false; reason: "service_not_found" }
   | {
@@ -249,26 +259,34 @@ export type RescheduleResult =
 async function listServices(
   companyId: string,
   supabaseClient?: SupabaseClient,
-): Promise<BookableService[]> {
+): Promise<ListServicesResult> {
   const client = supabaseClient ?? createServiceClient();
   const { data, error } = await client
     .from("services")
-    .select("id, name, description, duration_minutes, price, currency, category")
+    .select("id, name, description, duration_minutes, price, currency, category, is_default")
     .eq("company_id", companyId)
     .eq("is_active", true)
     .order("name", { ascending: true });
 
   if (error) throw error;
 
-  return (data ?? []).map((row) => ({
-    id: row.id as string,
-    name: row.name as string,
-    description: (row.description as string | null) ?? null,
-    durationMinutes: row.duration_minutes as number,
-    price: (row.price as string | null) ?? null,
-    currency: (row.currency as string | null) ?? null,
-    category: (row.category as string | null) ?? null,
+  const rows = (data ?? []).map((row) => ({
+    isDefault: row.is_default === true,
+    service: {
+      id: row.id as string,
+      name: row.name as string,
+      description: (row.description as string | null) ?? null,
+      durationMinutes: row.duration_minutes as number,
+      price: (row.price as string | null) ?? null,
+      currency: (row.currency as string | null) ?? null,
+      category: (row.category as string | null) ?? null,
+    },
   }));
+
+  return {
+    services: rows.filter((r) => !r.isDefault).map((r) => r.service),
+    defaultService: rows.find((r) => r.isDefault)?.service ?? null,
+  };
 }
 
 async function findAvailableSlots(
@@ -409,6 +427,7 @@ async function book(
     agentId,
     startsAt,
     notes,
+    summary,
     intakeAnswers,
   }: {
     companyId: string;
@@ -418,6 +437,10 @@ async function book(
     agentId: string | null;
     startsAt: string;
     notes: string | null;
+    // Ana's short professional-facing recap of what the booking is about
+    // (stored on the row + mirrored to the Google Calendar event
+    // description). Null when she didn't compose one.
+    summary: string | null;
     // Trello K9 -- answers the agent collected for the merchant's intake
     // questions, keyed by question label. Null/omitted when the business has
     // none configured.
@@ -562,6 +585,7 @@ async function book(
       starts_at: startDate.toISOString(),
       ends_at: endsAt.toISOString(),
       notes: notes ?? null,
+      summary: summary?.trim() ? summary.trim() : null,
       intake_answers: storedIntakeAnswers,
     })
     .select()
@@ -598,9 +622,13 @@ async function book(
   if (status === "confirmed") {
     const googleEventId = await syncAppointmentConfirmed(companyId, {
       serviceName: service.name,
-      customerName: customer.name,
+      // The name may have arrived only now, in this booking's `full_name`
+      // intake answer (a fresh web-chat visitor's customer row starts
+      // nameless) -- `customer.name` was read before the blank-fill above.
+      customerName: customer.name ?? customerPatch.name ?? "",
       startsAt: appointment.starts_at,
       endsAt: appointment.ends_at,
+      summary: appointment.summary as string | null,
     });
     if (googleEventId) {
       await client

@@ -17,6 +17,7 @@ export type BusinessInformation = {
   email: string | null;
   phone: string | null;
   websiteUrl: string | null;
+  address: string | null;
   industry: string | null;
 };
 
@@ -31,7 +32,7 @@ async function getBusinessInformation(
   const serviceClient = supabaseClient ?? createServiceClient();
   const { data, error } = await serviceClient
     .from("companies")
-    .select("name, description, email, phone, website_url, industry")
+    .select("name, description, email, phone, website_url, address, industry")
     .eq("id", companyId)
     .maybeSingle();
 
@@ -43,6 +44,7 @@ async function getBusinessInformation(
     email: data?.email ?? null,
     phone: data?.phone ?? null,
     websiteUrl: data?.website_url ?? null,
+    address: data?.address ?? null,
     industry: data?.industry ?? null,
   };
 }

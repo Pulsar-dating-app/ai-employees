@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
+import { getTestServiceClient } from "./helpers/service-client";
 
 // Trello H1 — services CRUD, scoped to company_id. Mirrors products.test.ts's
 // conventions exactly (same helper shapes, same case coverage) since the
@@ -228,6 +229,48 @@ describe("Services CRUD /api/companies/:id/services", () => {
     );
     expect(reactivated.status).toBe(200);
     expect(reactivated.json.service.is_active).toBe(true);
+  });
+
+  it("seeds one inactive default service per company, hidden from the list and not deletable", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Default Svc Co");
+    await createService(owner.cookieHeader, companyId, { name: "Avaliação", duration_minutes: 30 });
+
+    // Not in the normal listing (even with includeInactive).
+    const list = await api<{ services: { name: string; is_default: boolean }[]; total: number }>(
+      "GET",
+      `/api/companies/${companyId}/services?includeInactive=true`,
+      owner.cookieHeader,
+    );
+    expect(list.json.services.every((s) => !s.is_default)).toBe(true);
+    expect(list.json.services.map((s) => s.name)).toEqual(["Avaliação"]);
+
+    // It exists though — one row, is_default, inactive.
+    const svc = getTestServiceClient();
+    const { data: def } = await svc
+      .from("services")
+      .select("id, is_active, is_default")
+      .eq("company_id", companyId)
+      .eq("is_default", true)
+      .single();
+    expect(def).toMatchObject({ is_active: false, is_default: true });
+
+    // DELETE is refused; PATCH { is_active } is how you toggle it.
+    const del = await api(
+      "DELETE",
+      `/api/companies/${companyId}/services/${def!.id}`,
+      owner.cookieHeader,
+    );
+    expect(del.status).toBe(400);
+
+    const on = await api<{ service: Record<string, unknown> }>(
+      "PATCH",
+      `/api/companies/${companyId}/services/${def!.id}`,
+      owner.cookieHeader,
+      { is_active: true, name: "Consulta geral", duration_minutes: 45 },
+    );
+    expect(on.status).toBe(200);
+    expect(on.json.service).toMatchObject({ is_active: true, name: "Consulta geral", duration_minutes: 45, is_default: true });
   });
 
   it("filters by category and paginates", async () => {

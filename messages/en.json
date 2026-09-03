@@ -28,6 +28,12 @@
       "passwordTooShort": "Password must be at least 6 characters."
     }
   },
+  "Agents": {
+    "descriptions": {
+      "malu": "Malu runs your storefront conversations from first hello to checkout. She learns your catalog, works out what each shopper is really after, and recommends the products that genuinely fit — answering questions about price, stock, and policies straight from what you've told her, never guessing. Warm and attentive, she nudges ready buyers toward checkout without ever getting pushy.",
+      "ana": "Ana takes bookings off your plate. She checks real availability against your opening hours, your existing appointments, and your connected calendar, then offers customers times that are genuinely free. She collects the details you need before confirming, handles reschedules and cancellations on the spot, and adds people to a waitlist when you're fully booked — all in a calm, punctual, on-brand voice."
+    }
+  },
   "Onboarding": {
     "title": "Set up your business",
     "subtitle": "This is what your team represents when they talk to your customers. You can change it any time in settings.",
@@ -481,16 +487,23 @@
     "saving": "Saving…",
     "saved": "Saved",
     "saveError": "Something went wrong. Please try again.",
+    "autosaveSaved": "Changes saved",
+    "autosaveError": "Couldn't save that — edit the field again to retry.",
     "businessInfo": {
       "title": "Business information",
-      "description": "Your company's name, description, and how customers can reach you.",
+      "description": "Your company's name, address, and how customers can reach you.",
       "nameLabel": "Business name",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "What you sell, what makes you different, and any general rules customers should know.",
       "emailLabel": "Contact email",
       "phoneLabel": "Contact phone",
       "websiteLabel": "Website",
+      "addressLabel": "Address",
+      "addressPlaceholder": "Street, number, city, state",
       "countryLabel": "Country",
+      "countryPlaceholder": "Select a country",
+      "countrySearchPlaceholder": "Search countries…",
+      "countryNoResults": "No countries match",
       "industryLabel": "Industry",
       "industryPlaceholder": "e.g. Fashion retail, Cosmetics, Electronics",
       "currencyLabel": "Currency",
@@ -637,6 +650,18 @@
     "noCompany": "Hire your first team member to start managing your services.",
     "browseMarketplace": "Browse the marketplace",
     "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
+    "default": {
+      "title": "Default service",
+      "description": "One catch-all for requests you haven't listed as their own service.",
+      "explainer": "Turn this on and, when a customer asks to book something you haven't set up as its own service — as long as it fits what your business does — your team books it here, with a note of what they asked for. Turn it off and only your listed services can be booked.",
+      "onLabel": "On",
+      "offLabel": "Off",
+      "toggleAria": "Use a default service for unlisted requests",
+      "nameLabel": "Name",
+      "durationLabel": "Duration (minutes)",
+      "saved": "Saved",
+      "saveError": "Something went wrong saving that. Please try again."
+    },
     "save": "Save",
     "saving": "Saving…",
     "saveError": "Something went wrong. Please try again.",
@@ -722,6 +747,8 @@
         "closed": "Closed",
         "to": "to",
         "openLabel": "{day} open",
+        "rangeStartAria": "{day} time range {position} — opens at",
+        "rangeEndAria": "{day} time range {position} — closes at",
         "addRange": "Add hours",
         "removeRange": "Remove this time range",
         "save": "Save business hours",
@@ -745,10 +772,10 @@
         "subtitle": "Manage rules for incoming booking requests.",
         "toggleLabel": "Require approval before confirming appointments",
         "toggleHelp": "When on, new bookings stay pending until you confirm them yourself.",
-        "leadTimeLabel": "Minimum notice before a booking",
-        "leadTimeHelp": "Customers can't book a time sooner than this from now. 0 means no limit.",
-        "cancelCutoffLabel": "Cancellation cutoff",
-        "cancelCutoffHelp": "Customers can't cancel on their own within this many hours of the start. 0 means they always can.",
+        "leadTimeLabel": "How much advance notice a booking needs",
+        "leadTimeHelp": "The soonest a customer can book, counted from right now. Example: 120 minutes means someone messaging at 3:00 pm can't take a slot before 5:00 pm. Set 0 to let them book the very next open slot.",
+        "cancelCutoffLabel": "When customers can no longer cancel on their own",
+        "cancelCutoffHelp": "Once the appointment is this many hours away, the customer can't cancel it themselves — your team asks them to contact you instead. Example: 24 means self-cancelling closes a day before the start. Set 0 to allow it any time.",
         "minutesUnit": "minutes",
         "hoursUnit": "hours",
         "saveError": "Something went wrong saving that setting. Please try again."
@@ -796,12 +823,10 @@
       "intake": {
         "title": "Intake questions",
         "subtitle": "Details to collect from the customer before an appointment is booked.",
-        "hint": "Standard fields cover the basics — turn on the ones you need. Add extra questions below for anything specific; enter just a short label and your team asks for it in its own words.",
+        "hint": "Standard fields cover the basics — turn on the ones a customer must give before booking. Add extra questions below for anything specific; enter just a short label and your team asks for it in its own words.",
         "standardHeading": "Standard fields",
         "extraHeading": "Extra questions",
-        "alwaysOn": "always collected",
-        "collect": "Collect",
-        "collectAria": "Collect {field}",
+        "alwaysOn": "always required",
         "standardLabels": {
           "email": "Email",
           "full_name": "Full name",
@@ -884,6 +909,7 @@
         "serviceLabel": "Service:",
         "serviceRemoved": "Service removed",
         "unnamedCustomer": "Unnamed",
+        "summaryLabel": "What it's about",
         "intakeToggle": "{count, plural, one {# detail from the customer} other {# details from the customer}}"
       },
       "actions": {
@@ -944,7 +970,9 @@
         "active": "AI managing",
         "closed": "Resolved"
       },
-      "resumeButton": "Resume AI",
+      "resumeButton": "Let the AI reply again",
+      "pausedNoticeTitle": "You're handling this conversation",
+      "pausedNoticeBody": "The AI has stepped back and won't reply to the customer while you're here. When you're done, use the button below to let it take over again.",
       "emptyState": "No messages yet.",
       "teamLabel": "Team",
       "aiLabel": "AI",

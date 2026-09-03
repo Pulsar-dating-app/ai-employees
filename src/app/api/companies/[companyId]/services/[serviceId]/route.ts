@@ -197,6 +197,15 @@ export async function DELETE(
   const serviceLookup = await getService(supabase, companyId, serviceId);
   if (serviceLookup.error) return serviceLookup.error;
 
+  // The catch-all default service can't be removed -- deactivating it (PATCH
+  // { is_active: false }) is the "turn it off" path.
+  if (serviceLookup.service.is_default) {
+    return NextResponse.json(
+      { error: "The default service can't be deleted. Deactivate it instead." },
+      { status: 400 },
+    );
+  }
+
   const { data, error } = await supabase
     .from("services")
     .update({ is_active: false })

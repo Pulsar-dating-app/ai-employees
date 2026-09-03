@@ -298,9 +298,14 @@ export async function PATCH(
     if (service && customer) {
       const googleEventId = await syncAppointmentConfirmed(companyId, {
         serviceName: service.name,
-        customerName: customer.name,
+        customerName:
+          customer.name ??
+          (data.intake_answers as Record<string, string> | null)?.full_name ??
+          "",
         startsAt: data.starts_at,
         endsAt: data.ends_at,
+        // Ana's recap, captured at booking time (K-epic summary work).
+        summary: data.summary as string | null,
       });
       if (googleEventId) {
         const { data: synced } = await supabase

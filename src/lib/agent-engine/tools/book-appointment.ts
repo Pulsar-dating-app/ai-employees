@@ -5,6 +5,7 @@ type BookAppointmentArgs = {
   serviceId: string;
   startsAt: string;
   notes?: string;
+  summary?: string;
   intakeAnswers?: Record<string, unknown>;
 };
 
@@ -28,6 +29,12 @@ export const bookAppointmentTool: AgentTool = {
     "a `key`, a `label`, and a `fieldType` (email/phone/cpf/date/name/text). Ask in your own " +
     "words, then pass `intakeAnswers` keyed by each question's `key` (not its label). Have " +
     "every `required` one; ask an optional one once and leave it out if declined.\n\n" +
+    "Always pass `summary`: two or three sentences, written for the practitioner who will see " +
+    "this customer, recapping why they're booking -- their situation, symptoms, goal, or " +
+    "request as it came up in the chat, plus anything the professional should know before the " +
+    "appointment. Write it as a briefing in your own words, not a transcript and not a list of " +
+    "the customer's quotes. If the customer gave nothing to summarise (just \"I want to book X\"), " +
+    "pass a one-line note saying so.\n\n" +
     "On success, `status` is either \"confirmed\" (the booking is set) or \"requested\" (the " +
     "business needs to review and confirm it) -- tell the customer which one happened, in your " +
     "own natural words, and confirm the time using `startsAtLabel` (already in the business's " +
@@ -55,6 +62,12 @@ export const bookAppointmentTool: AgentTool = {
         type: "string",
         description: "Optional short note from the customer about this booking.",
       },
+      summary: {
+        type: "string",
+        description:
+          "A short professional-facing recap of what the appointment is about — the customer's " +
+          "reason / situation in your own words, for the practitioner to read. Not a transcript.",
+      },
       intakeAnswers: {
         type: "object",
         description:
@@ -79,6 +92,7 @@ export const bookAppointmentTool: AgentTool = {
         agentId: ctx.agentId,
         startsAt: args.startsAt,
         notes: typeof args.notes === "string" ? args.notes : null,
+        summary: typeof args.summary === "string" ? args.summary : null,
         intakeAnswers:
           args.intakeAnswers && typeof args.intakeAnswers === "object" ? args.intakeAnswers : null,
       },

@@ -8,6 +8,11 @@ export type AgentConfig = {
   personality: string | null;
   systemPrompt: string | null;
   companyAgentStatus: string | null;
+  // The merchant's per-company display name for this hire
+  // (`company_agents.name`). When it differs from the platform default,
+  // buildSystemPrompt tells the agent to introduce itself with this name
+  // instead of whatever the base prompt hard-codes.
+  displayName: string | null;
 };
 
 // Step 1 -- loads the platform-defined `agents` row plus this company's
@@ -32,7 +37,7 @@ export async function loadAgentConfig(
 
   const { data: companyAgent, error: companyAgentError } = await supabase
     .from("company_agents")
-    .select("status")
+    .select("status, name")
     .eq("company_id", companyId)
     .eq("agent_id", agentId)
     .maybeSingle();
@@ -48,5 +53,6 @@ export async function loadAgentConfig(
     personality: agent.personality,
     systemPrompt: agent.system_prompt,
     companyAgentStatus: companyAgent.status,
+    displayName: (companyAgent.name as string | null) ?? null,
   };
 }

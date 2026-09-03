@@ -14,13 +14,14 @@ function eventUrl(calendarId: string, eventId?: string): string {
 export async function createCalendarEvent(
   accessToken: string,
   calendarId: string,
-  event: { summary: string; startIso: string; endIso: string },
+  event: { summary: string; startIso: string; endIso: string; description?: string | null },
 ): Promise<{ id: string }> {
   const res = await fetch(eventUrl(calendarId), {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
     body: JSON.stringify({
       summary: event.summary,
+      ...(event.description ? { description: event.description } : {}),
       start: { dateTime: event.startIso },
       end: { dateTime: event.endIso },
     }),

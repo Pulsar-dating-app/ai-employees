@@ -27,6 +27,7 @@ describe("CompanyRepository", () => {
         email: "hello@infoco.test",
         phone: "+15551234567",
         website_url: "https://infoco.test",
+        address: "123 Main St, Springfield",
         industry: "Retail",
       });
 
@@ -37,6 +38,7 @@ describe("CompanyRepository", () => {
         email: "hello@infoco.test",
         phone: "+15551234567",
         websiteUrl: "https://infoco.test",
+        address: "123 Main St, Springfield",
         industry: "Retail",
       });
     });

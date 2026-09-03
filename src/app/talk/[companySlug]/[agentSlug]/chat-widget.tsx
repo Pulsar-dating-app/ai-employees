@@ -106,7 +106,13 @@ export function ChatWidget({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Whether the message list is scrolled to (near) the bottom. Starts true
+  // so the first load lands at the newest message; flips as the visitor
+  // scrolls up to read history, which is when we must NOT yank them back
+  // down on the next poll / reply.
+  const pinnedToBottomRef = useRef(true);
   // Not React state: the id itself never needs to trigger a re-render --
   // "is the chat ready" is already properly derived from `messages` (null
   // until the fetch below resolves), so this only needs to be readable by
@@ -162,9 +168,20 @@ export function ChatWidget({
     };
   }, [companySlug, agentSlug, isEmbedded, isSending]);
 
+  // Only follow the conversation down when the visitor is already at the
+  // bottom. A poll refresh or an agent reply while they're reading earlier
+  // messages must leave their scroll position alone.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (pinnedToBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, isSending]);
+
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    pinnedToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  }
 
   async function handleSend() {
     const text = draft.trim();
@@ -172,6 +189,9 @@ export function ChatWidget({
     if (!text || isSending || !sessionId) return;
 
     setErrorMessage(null);
+    // The visitor just sent something — snap to the bottom to show it and
+    // the reply, regardless of where they'd scrolled.
+    pinnedToBottomRef.current = true;
     setMessages((prev) => [...(prev ?? []), { role: "customer", content: text, created_at: new Date().toISOString() }]);
     setDraft("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
@@ -188,6 +208,10 @@ export function ChatWidget({
     });
 
     setIsSending(false);
+    // It's a chat: keep the cursor in the box so the visitor can just keep
+    // typing. Clicking Send (or the textarea being briefly busy) moves focus
+    // away otherwise, forcing a click back into the field every message.
+    textareaRef.current?.focus();
 
     if (!res.ok) {
       setErrorMessage(res.status === 429 ? t("errorRateLimited") : t("errorGeneric"));
@@ -246,7 +270,11 @@ export function ChatWidget({
         </main>
       ) : (
         <>
-      <main className="flex flex-1 flex-col items-center overflow-y-auto px-4 pb-4 md:px-0">
+      <main
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex flex-1 flex-col items-center overflow-y-auto px-4 pb-4 md:px-0"
+      >
         <div className="flex w-full max-w-3xl flex-1 flex-col gap-6 py-8">
           {messages === null ? null : messages.length === 0 ? (
             <p className="mt-8 text-center text-body-md text-on-surface-variant">{t("emptyState")}</p>
@@ -340,7 +368,10 @@ export function ChatWidget({
               }}
               placeholder={t("inputPlaceholder", { name: agentName })}
               rows={1}
-              disabled={isSending || messages === null}
+              // Stays enabled while a reply is in flight so the visitor can
+              // keep typing and never loses the caret; handleSend guards
+              // against an overlapping send.
+              disabled={messages === null}
               className="max-h-[120px] w-full resize-none bg-transparent px-2 py-2.5 text-body-md text-on-surface placeholder:text-outline focus:outline-none"
             />
             <button

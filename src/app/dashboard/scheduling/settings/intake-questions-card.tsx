@@ -8,7 +8,7 @@ import { Toggle } from "@/components/ui/toggle";
 import {
   PREDEFINED_INTAKE_FIELDS,
   PREDEFINED_INTAKE_KEYS,
-  EMAIL_INTAKE_KEY,
+  LOCKED_INTAKE_KEYS,
 } from "@/lib/appointments/intake-fields";
 import { SettingsSection } from "./settings-section";
 
@@ -88,14 +88,13 @@ export function IntakeQuestionsCard({
     setError(null);
   }
 
-  function setPre(key: string, patch: Partial<{ enabled: boolean; required: boolean }>) {
-    if (key === EMAIL_INTAKE_KEY) return;
+  // Standard fields are one switch now: "Required". A merchant only turns a
+  // field on because they want it answered, so "collect but optional" was a
+  // distinction without a purpose — required and enabled move together.
+  function setPreRequired(key: string, required: boolean) {
+    if (LOCKED_INTAKE_KEYS.has(key)) return;
     touch();
-    setPredefined((p) => {
-      const next = { ...p, [key]: { ...p[key], ...patch } };
-      if (!next[key].enabled) next[key].required = false;
-      return next;
-    });
+    setPredefined((p) => ({ ...p, [key]: { enabled: required, required } }));
   }
 
   function updateCustomLabel(rowKey: string, value: string) {
@@ -192,26 +191,17 @@ export function IntakeQuestionsCard({
             >
               <span className="min-w-32 flex-1 text-sm font-medium text-on-surface">
                 {t(`standardLabels.${f.key}`)}
-                {f.key === EMAIL_INTAKE_KEY ? (
+                {f.locked ? (
                   <span className="ml-2 text-label-md font-normal text-on-surface-variant">{t("alwaysOn")}</span>
                 ) : null}
               </span>
               <label className="flex items-center gap-2">
-                <span className="text-label-md text-on-surface-variant">{t("collect")}</span>
-                <Toggle
-                  checked={state.enabled}
-                  disabled={locked}
-                  label={t("collectAria", { field: t(`standardLabels.${f.key}`) })}
-                  onChange={() => setPre(f.key, { enabled: !state.enabled })}
-                />
-              </label>
-              <label className="flex items-center gap-2">
                 <span className="text-label-md text-on-surface-variant">{t("required")}</span>
                 <Toggle
                   checked={state.required}
-                  disabled={locked || !state.enabled}
+                  disabled={locked}
                   label={t("requiredAria", { label: t(`standardLabels.${f.key}`) })}
-                  onChange={() => setPre(f.key, { required: !state.required })}
+                  onChange={() => setPreRequired(f.key, !state.required)}
                 />
               </label>
             </div>

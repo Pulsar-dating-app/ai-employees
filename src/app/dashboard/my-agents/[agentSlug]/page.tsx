@@ -132,6 +132,7 @@ export default async function AgentConnectionsPage({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <AgentPersonaCard
+          slug={agentSlug}
           name={name}
           role={agent.role}
           description={agent.description}

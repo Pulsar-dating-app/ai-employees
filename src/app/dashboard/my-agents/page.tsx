@@ -51,6 +51,7 @@ export default async function MyAgentsPage() {
                 className="transition-transform duration-200 hover:-translate-y-0.5"
               >
                 <AgentPersonaCard
+                  slug={row.agents.slug}
                   name={row.name ?? defaultAgentName(row.agents.slug)}
                   role={row.agents.role}
                   description={row.agents.description}

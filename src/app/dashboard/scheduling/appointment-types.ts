@@ -32,6 +32,10 @@ export type Appointment = {
   ends_at: string;
   google_event_id: string | null;
   notes: string | null;
+  // Ana's professional-facing recap of what the booking is about (also
+  // pushed to the Google Calendar event description). Null for bookings
+  // made before this existed, or a merchant-created one.
+  summary: string | null;
   cancellation_reason: string | null;
   // Trello K9 — the label→answer map Ana collected before booking. `{}` when
   // the business has no intake questions, or the booking predates K9.

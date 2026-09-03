@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { ClockIcon, PlusIcon, XIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
+import { CHEVRON } from "@/components/ui/select";
 import { SettingsSection } from "./settings-section";
 import { Toggle } from "@/components/ui/toggle";
 
@@ -31,8 +32,8 @@ const DISPLAY_DAYS = [
 const DEFAULT_START = "09:00";
 const DEFAULT_END = "17:00";
 
-const TIME_INPUT_CLASSES =
-  "h-10 rounded-md border border-outline-variant/60 bg-surface-container-lowest px-3 text-sm text-on-surface outline-none transition-colors focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60";
+const TIME_SELECT_CLASSES =
+  "h-10 rounded-md border border-outline-variant bg-surface-container-lowest pl-3 text-sm text-on-surface outline-none transition-colors focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60";
 
 type TimeRange = { start: string; end: string };
 type DayState = { key: string; dow: number; open: boolean; ranges: TimeRange[] };
@@ -45,6 +46,47 @@ function toMinutes(hhmm: string): number {
 function toHhMm(total: number): string {
   const t = Math.max(0, Math.min(total, 23 * 60 + 59));
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+}
+
+// A 15-minute grid in unambiguous 24-hour "HH:MM". A native <input type="time">
+// renders AM/PM for en-US browsers and is a fiddly spinner; a plain list of
+// preset times is faster to pick from and reads the same everywhere. The
+// trailing 23:59 lets a business express "open until midnight".
+const TIME_OPTIONS: string[] = (() => {
+  const out: string[] = [];
+  for (let m = 0; m < 24 * 60; m += 15) out.push(toHhMm(m));
+  out.push("23:59");
+  return out;
+})();
+
+function TimeSelect({
+  value,
+  disabled,
+  ariaLabel,
+  onChange,
+}: {
+  value: string;
+  disabled: boolean;
+  ariaLabel: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <select
+      aria-label={ariaLabel}
+      className={clsx(TIME_SELECT_CLASSES, CHEVRON)}
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      {/* A value saved before this grid existed (e.g. 08:45) still shows. */}
+      {TIME_OPTIONS.includes(value) ? null : <option value={value}>{value}</option>}
+      {TIME_OPTIONS.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  );
 }
 
 // After one range is edited, push every later range that now starts before
@@ -195,8 +237,8 @@ export function BusinessHoursCard({
             <div
               key={day.key}
               className={clsx(
-                "flex flex-col gap-3 rounded-lg border border-transparent bg-surface-container-low p-4 transition-colors sm:flex-row sm:items-start sm:justify-between",
-                day.open ? "hover:border-outline-variant/40" : "bg-surface-container-low/60",
+                "flex flex-col gap-3 rounded-lg border border-outline-variant/40 bg-surface-container-low p-4 transition-colors sm:flex-row sm:items-start sm:justify-between",
+                day.open && "hover:border-outline-variant",
               )}
             >
               <div className="flex items-center gap-4 pt-1 sm:w-40">
@@ -220,20 +262,18 @@ export function BusinessHoursCard({
                 <div className="flex flex-col items-stretch gap-2 sm:items-end">
                   {day.ranges.map((range, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <input
-                        type="time"
-                        className={TIME_INPUT_CLASSES}
+                      <TimeSelect
                         value={range.start}
                         disabled={!canEdit}
-                        onChange={(e) => setRange(day.key, i, { start: e.target.value })}
+                        ariaLabel={t("rangeStartAria", { day: dayName, position: i + 1 })}
+                        onChange={(v) => setRange(day.key, i, { start: v })}
                       />
                       <span className="text-on-surface-variant">{t("to")}</span>
-                      <input
-                        type="time"
-                        className={TIME_INPUT_CLASSES}
+                      <TimeSelect
                         value={range.end}
                         disabled={!canEdit}
-                        onChange={(e) => setRange(day.key, i, { end: e.target.value })}
+                        ariaLabel={t("rangeEndAria", { day: dayName, position: i + 1 })}
+                        onChange={(v) => setRange(day.key, i, { end: v })}
                       />
                       {canEdit && day.ranges.length > 1 ? (
                         <button

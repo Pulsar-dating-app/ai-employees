@@ -3,11 +3,13 @@ import { getTranslations } from "next-intl/server";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { BadgeCheckIcon } from "@/components/ui/icons";
 import { MOCK_CONVERSATIONS_TODAY } from "@/lib/agents/catalog";
+import { resolveAgentDescription } from "@/lib/agents/copy";
 
 // Stitch "My Agents" persona card — photo header, active pill, verified
 // chip, description, and a one-row stat strip. Used both on the my-team
 // list and (full width) on the per-agent configuration page.
 export async function AgentPersonaCard({
+  slug,
   name,
   role,
   description,
@@ -15,6 +17,9 @@ export async function AgentPersonaCard({
   active,
   className,
 }: {
+  // When given, the localised per-slug blurb is used, falling back to
+  // `description` (the DB value) only if none is authored.
+  slug?: string;
   name: string;
   role: string | null;
   description: string | null;
@@ -23,6 +28,7 @@ export async function AgentPersonaCard({
   className?: string;
 }) {
   const t = await getTranslations("MyAgents");
+  const blurb = slug ? await resolveAgentDescription(slug, description) : (description ?? "");
 
   return (
     <div
@@ -58,8 +64,8 @@ export async function AgentPersonaCard({
           <BadgeCheckIcon className="mt-1 h-5 w-5 shrink-0 text-primary" />
         </div>
 
-        {description ? (
-          <p className="line-clamp-3 text-sm text-on-surface-variant">{description}</p>
+        {blurb ? (
+          <p className="line-clamp-3 text-sm text-on-surface-variant">{blurb}</p>
         ) : null}
 
         <div className="flex items-center justify-between border-t border-outline-variant pt-4 text-sm">

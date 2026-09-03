@@ -167,17 +167,91 @@ describe("list_services", () => {
     await api("DELETE", `/api/companies/${seed.companyId}/services/${inactiveId}`, owner.cookieHeader);
 
     const result = (await listServicesTool.execute({}, toolCtxFor(seed))) as {
-      id: string;
-      name: string;
-      durationMinutes: number;
-      price: string | null;
-    }[];
+      services: { id: string; name: string; durationMinutes: number; price: string | null }[];
+      defaultService: { id: string } | null;
+    };
 
-    expect(result).toHaveLength(1);
+    expect(result.services).toHaveLength(1);
     // `price decimal(12,2)` reaches the model as a JSON number — PostgREST
     // emits `50.00` unquoted and JSON.parse hands back 50, so this is not
     // the string the dashboard's own `Number(price)` calls imply.
-    expect(result[0]).toMatchObject({ name: "Haircut", durationMinutes: 30, price: 50 });
+    expect(result.services[0]).toMatchObject({ name: "Haircut", durationMinutes: 30, price: 50 });
+    // The catch-all default service is seeded inactive, so it isn't offered
+    // and doesn't count among the real services.
+    expect(result.defaultService).toBeNull();
+  });
+
+  it("surfaces the default service only once the merchant activates it, never in `services`", async () => {
+    const seed = await seedConversation(owner, "Default Service Co");
+    await createService(owner, seed.companyId, { name: "Avaliação", duration_minutes: 30 });
+    const svc = getTestServiceClient();
+
+    const { data: def } = await svc
+      .from("services")
+      .select("id, name")
+      .eq("company_id", seed.companyId)
+      .eq("is_default", true)
+      .single();
+
+    const before = (await listServicesTool.execute({}, toolCtxFor(seed))) as {
+      services: { name: string }[];
+      defaultService: { id: string } | null;
+    };
+    expect(before.defaultService).toBeNull();
+    expect(before.services.map((s) => s.name)).toEqual(["Avaliação"]);
+
+    // Merchant turns it on.
+    const res = await api(
+      "PATCH",
+      `/api/companies/${seed.companyId}/services/${def!.id}`,
+      owner.cookieHeader,
+      { is_active: true },
+    );
+    expect(res.status).toBe(200);
+
+    const after = (await listServicesTool.execute({}, toolCtxFor(seed))) as {
+      services: { name: string }[];
+      defaultService: { id: string; name: string } | null;
+    };
+    expect(after.defaultService).toMatchObject({ id: def!.id, name: def!.name });
+    // Still not mixed into the pickable list.
+    expect(after.services.map((s) => s.name)).toEqual(["Avaliação"]);
+  });
+
+  it("book_appointment accepts the default service's id and records what was asked in the summary", async () => {
+    const seed = await seedConversation(owner, "Default Book Co");
+    await setBusinessHours(owner, seed.companyId);
+    const svc = getTestServiceClient();
+    const { data: def } = await svc
+      .from("services")
+      .select("id")
+      .eq("company_id", seed.companyId)
+      .eq("is_default", true)
+      .single();
+    await api("PATCH", `/api/companies/${seed.companyId}/services/${def!.id}`, owner.cookieHeader, {
+      is_active: true,
+    });
+
+    const booked = (await bookAppointmentTool.execute(
+      {
+        serviceId: def!.id,
+        startsAt: `${BOOKING_DATE}T09:00:00Z`,
+        summary: "Customer asked to book for a chipped front tooth.",
+        intakeAnswers: { email: TEST_EMAIL, full_name: "Test Customer" },
+      },
+      toolCtxFor(seed),
+    )) as { booked: boolean; appointmentId: string };
+    expect(booked.booked).toBe(true);
+
+    const { data: row } = await svc
+      .from("appointments")
+      .select("service_id, summary")
+      .eq("id", booked.appointmentId)
+      .single();
+    expect(row).toMatchObject({
+      service_id: def!.id,
+      summary: "Customer asked to book for a chipped front tooth.",
+    });
   });
 });
 
@@ -348,6 +422,32 @@ describe("book_appointment", () => {
     });
     // ends_at bakes in duration + buffer (60 + 15).
     expect(row.ends_at).toBe(`${BOOKING_DATE}T10:15:00+00:00`);
+  });
+
+  it("stores the professional-facing summary Ana passes", async () => {
+    const seed = await seedConversation(owner, "Summary Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Consulta", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+
+    const result = (await bookAppointmentTool.execute(
+      {
+        serviceId,
+        startsAt: `${BOOKING_DATE}T09:00:00Z`,
+        summary: "  Recurring lower-back pain for 3 weeks, worse in the morning; wants an assessment.  ",
+        intakeAnswers: { email: TEST_EMAIL, full_name: "Test Customer" },
+      },
+      toolCtxFor(seed),
+    )) as { booked: true; appointmentId: string };
+
+    const { data: row } = await getTestServiceClient()
+      .from("appointments")
+      .select("summary")
+      .eq("id", result.appointmentId)
+      .single();
+    // Trimmed, stored verbatim.
+    expect(row!.summary).toBe(
+      "Recurring lower-back pain for 3 weeks, worse in the morning; wants an assessment.",
+    );
   });
 
   it("writes a requested appointment when the company requires approval", async () => {

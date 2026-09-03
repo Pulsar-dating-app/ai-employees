@@ -147,13 +147,24 @@ export function ConversationThread({
             >
               {t(`status.${conversation.status}`)}
             </span>
-            {conversation.status === "paused" ? (
-              <Button type="button" variant="secondary" size="sm" isLoading={isResuming} onClick={handleResume}>
-                {t("resumeButton")}
-              </Button>
-            ) : null}
           </div>
         </div>
+
+        {conversation.status === "paused" ? (
+          <div className="m-4 mb-0 rounded-lg border border-error/30 bg-error-container/25 p-4">
+            <p className="text-sm font-semibold text-on-error-container">{t("pausedNoticeTitle")}</p>
+            <p className="mt-1 text-sm text-on-surface-variant">{t("pausedNoticeBody")}</p>
+            <Button
+              type="button"
+              size="sm"
+              className="mt-3"
+              isLoading={isResuming}
+              onClick={handleResume}
+            >
+              {t("resumeButton")}
+            </Button>
+          </div>
+        ) : null}
 
         <div className="flex max-h-[60vh] flex-1 flex-col gap-4 overflow-y-auto px-6 py-6">
           {messages.length === 0 ? (

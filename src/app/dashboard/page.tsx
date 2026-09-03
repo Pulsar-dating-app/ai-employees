@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { AGENT_ENRICHMENT, DEFAULT_MONTHLY_PRICE_BRL } from "@/lib/agents/catalog";
+import { resolveAgentDescription } from "@/lib/agents/copy";
 import { agentPhoto } from "@/lib/agents/media";
 import { MarketplaceGrid } from "./marketplace-grid";
 import type { MarketplaceAgent } from "./agent-card";
@@ -31,18 +32,20 @@ export default async function MarketplacePage() {
     hiredAgentIds = new Set((companyAgents ?? []).map((ca) => ca.agent_id as string));
   }
 
-  const cards: MarketplaceAgent[] = (agents ?? []).map((agent) => {
-    const enrichment = AGENT_ENRICHMENT[agent.slug];
-    return {
-      slug: agent.slug,
-      name: defaultAgentName(agent.slug),
-      role: agent.role ?? "",
-      description: agent.description ?? "",
-      monthlyPriceBRL: enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL,
-      isHired: hiredAgentIds.has(agent.id),
-      photoSrc: agentPhoto(agent.slug),
-    };
-  });
+  const cards: MarketplaceAgent[] = await Promise.all(
+    (agents ?? []).map(async (agent) => {
+      const enrichment = AGENT_ENRICHMENT[agent.slug];
+      return {
+        slug: agent.slug,
+        name: defaultAgentName(agent.slug),
+        role: agent.role ?? "",
+        description: await resolveAgentDescription(agent.slug, agent.description),
+        monthlyPriceBRL: enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL,
+        isHired: hiredAgentIds.has(agent.id),
+        photoSrc: agentPhoto(agent.slug),
+      };
+    }),
+  );
 
   return (
     <div className="flex flex-col gap-8">

@@ -7,7 +7,7 @@ import { isValidTimeZone } from "@/lib/analytics/load";
 // / get_policy_information tools will read at runtime, so keep them stable.
 
 const MAX_TEXT_LENGTH = 5000; // description, shipping/return/payment policy, additional_information
-const MAX_SHORT_LENGTH = 255; // name, email, phone, website_url, country, timezone, industry
+const MAX_SHORT_LENGTH = 255; // name, email, phone, website_url, address, country, timezone, industry
 const MAX_FAQ_ENTRIES = 50;
 const MAX_FAQ_QUESTION_LENGTH = 300;
 const MAX_FAQ_ANSWER_LENGTH = 2000;
@@ -46,6 +46,7 @@ const SHORT_FIELDS = [
   "email",
   "phone",
   "website_url",
+  "address",
   "country",
   "timezone",
   "industry",
@@ -203,6 +204,20 @@ export async function PATCH(
       { error: "timezone must be a valid IANA timezone name (e.g. America/Sao_Paulo), or null" },
       { status: 400 },
     );
+  }
+
+  // `country` is in SHORT_FIELDS (length-checked above), but it's now an
+  // ISO 3166-1 alpha-2 code from the Settings dropdown, not free text.
+  // Accept it case-insensitively and store it uppercase.
+  if ("country" in body && updates.country !== null) {
+    const code = String(updates.country).trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(code)) {
+      return NextResponse.json(
+        { error: "country must be a two-letter ISO 3166-1 country code (e.g. BR), or null" },
+        { status: 400 },
+      );
+    }
+    updates.country = code;
   }
 
   if ("currency" in body) {

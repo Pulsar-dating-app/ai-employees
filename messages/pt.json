@@ -28,6 +28,12 @@
       "passwordTooShort": "A senha deve ter pelo menos 6 caracteres."
     }
   },
+  "Agents": {
+    "descriptions": {
+      "malu": "A Malu conduz as conversas da sua loja do primeiro \"oi\" até o checkout. Ela aprende seu catálogo, entende o que cada cliente realmente procura e recomenda os produtos que fazem sentido — respondendo sobre preço, estoque e políticas com base no que você cadastrou, sem inventar. Atenciosa e acolhedora, ela conduz quem está pronto para comprar até o checkout, sem nunca ser insistente.",
+      "ana": "A Ana tira a agenda das suas mãos. Ela confere a disponibilidade real considerando seu horário de funcionamento, os agendamentos existentes e o calendário conectado, e então oferece aos clientes horários que estão de fato livres. Coleta as informações que você precisa antes de confirmar, resolve remarcações e cancelamentos na hora, e coloca clientes numa lista de espera quando você está lotado — sempre com um tom pontual, tranquilo e a cara do seu negócio."
+    }
+  },
   "Onboarding": {
     "title": "Configure seu negócio",
     "subtitle": "É isso que sua equipe representa ao falar com seus clientes. Você pode mudar quando quiser nas configurações.",
@@ -481,16 +487,23 @@
     "saving": "Salvando…",
     "saved": "Salvo",
     "saveError": "Algo deu errado. Tente novamente.",
+    "autosaveSaved": "Alterações salvas",
+    "autosaveError": "Não foi possível salvar — edite o campo de novo para tentar outra vez.",
     "businessInfo": {
       "title": "Informações do negócio",
-      "description": "O nome da sua empresa, a descrição e como os clientes podem entrar em contato.",
+      "description": "O nome da sua empresa, o endereço e como os clientes podem entrar em contato.",
       "nameLabel": "Nome do negócio",
       "descriptionLabel": "Descrição",
       "descriptionPlaceholder": "O que você vende, o que te diferencia e regras gerais que os clientes devem saber.",
       "emailLabel": "E-mail de contato",
       "phoneLabel": "Telefone de contato",
       "websiteLabel": "Site",
+      "addressLabel": "Endereço",
+      "addressPlaceholder": "Rua, número, cidade, estado",
       "countryLabel": "País",
+      "countryPlaceholder": "Selecione um país",
+      "countrySearchPlaceholder": "Buscar países…",
+      "countryNoResults": "Nenhum país encontrado",
       "industryLabel": "Setor",
       "industryPlaceholder": "ex.: Moda, Cosméticos, Eletrônicos",
       "currencyLabel": "Moeda",
@@ -637,6 +650,18 @@
     "noCompany": "Contrate o primeiro integrante da sua equipe para começar a gerenciar seus serviços.",
     "browseMarketplace": "Ver marketplace",
     "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "default": {
+      "title": "Serviço padrão",
+      "description": "Um serviço coringa para pedidos que você não cadastrou como serviço próprio.",
+      "explainer": "Deixe ativado e, quando um cliente pedir para agendar algo que você não cadastrou como serviço próprio — desde que faça sentido para o que seu negócio faz — sua equipe agenda aqui, com uma anotação do que foi pedido. Desative e só os serviços que você cadastrou poderão ser agendados.",
+      "onLabel": "Ativado",
+      "offLabel": "Desativado",
+      "toggleAria": "Usar um serviço padrão para pedidos não cadastrados",
+      "nameLabel": "Nome",
+      "durationLabel": "Duração (minutos)",
+      "saved": "Salvo",
+      "saveError": "Algo deu errado ao salvar. Tente novamente."
+    },
     "save": "Salvar",
     "saving": "Salvando…",
     "saveError": "Algo deu errado. Tente novamente.",
@@ -722,6 +747,8 @@
         "closed": "Fechado",
         "to": "às",
         "openLabel": "{day} aberto",
+        "rangeStartAria": "{day} intervalo {position} — abre às",
+        "rangeEndAria": "{day} intervalo {position} — fecha às",
         "addRange": "Adicionar horário",
         "removeRange": "Remover este intervalo",
         "save": "Salvar horários",
@@ -745,10 +772,10 @@
         "subtitle": "Defina as regras para novos pedidos de agendamento.",
         "toggleLabel": "Exigir aprovação antes de confirmar agendamentos",
         "toggleHelp": "Quando ativado, novos agendamentos ficam pendentes até você confirmar.",
-        "leadTimeLabel": "Antecedência mínima para agendar",
-        "leadTimeHelp": "O cliente não pode agendar um horário com menos antecedência que isso. 0 significa sem limite.",
-        "cancelCutoffLabel": "Prazo para cancelamento",
-        "cancelCutoffHelp": "O cliente não pode cancelar sozinho faltando menos que essas horas para o início. 0 significa que sempre pode.",
+        "leadTimeLabel": "Quanta antecedência um agendamento exige",
+        "leadTimeHelp": "O horário mais próximo que o cliente pode marcar, contando a partir de agora. Ex.: 120 minutos significa que quem escreve às 15:00 só consegue pegar um horário a partir das 17:00. Use 0 para deixar o cliente pegar o próximo horário livre.",
+        "cancelCutoffLabel": "Quando o cliente não pode mais cancelar sozinho",
+        "cancelCutoffHelp": "Quando faltar esta quantidade de horas para o agendamento, o cliente não consegue mais cancelar sozinho — a equipe pede que ele entre em contato com você. Ex.: 24 significa que o cancelamento por conta própria fecha um dia antes do início. Use 0 para permitir a qualquer momento.",
         "minutesUnit": "minutos",
         "hoursUnit": "horas",
         "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
@@ -796,12 +823,10 @@
       "intake": {
         "title": "Perguntas iniciais",
         "subtitle": "Dados a coletar do cliente antes de marcar um agendamento.",
-        "hint": "Os campos padrão cobrem o básico — ative os que você precisa. Adicione perguntas extras abaixo para algo específico; cadastre só um rótulo curto e sua equipe pergunta com as próprias palavras.",
+        "hint": "Os campos padrão cobrem o básico — ative os que o cliente precisa informar antes de agendar. Adicione perguntas extras abaixo para algo específico; cadastre só um rótulo curto e sua equipe pergunta com as próprias palavras.",
         "standardHeading": "Campos padrão",
         "extraHeading": "Perguntas extras",
-        "alwaysOn": "sempre coletado",
-        "collect": "Coletar",
-        "collectAria": "Coletar {field}",
+        "alwaysOn": "sempre obrigatório",
         "standardLabels": {
           "email": "Email",
           "full_name": "Nome completo",
@@ -884,6 +909,7 @@
         "serviceLabel": "Serviço:",
         "serviceRemoved": "Serviço removido",
         "unnamedCustomer": "Sem nome",
+        "summaryLabel": "Sobre o que é",
         "intakeToggle": "{count, plural, one {# dado do cliente} other {# dados do cliente}}"
       },
       "actions": {
@@ -944,7 +970,9 @@
         "active": "IA gerenciando",
         "closed": "Resolvida"
       },
-      "resumeButton": "Retomar IA",
+      "resumeButton": "Deixar a IA responder de novo",
+      "pausedNoticeTitle": "Você está cuidando desta conversa",
+      "pausedNoticeBody": "A IA saiu de cena e não vai responder ao cliente enquanto você estiver aqui. Quando terminar, use o botão abaixo para ela voltar a responder.",
       "emptyState": "Nenhuma mensagem ainda.",
       "teamLabel": "Equipe",
       "aiLabel": "IA",

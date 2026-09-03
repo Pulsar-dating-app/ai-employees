@@ -41,7 +41,7 @@ export default async function ServicesPage() {
     );
   }
 
-  const [{ data: membership }, { data: services, count }] = await Promise.all([
+  const [{ data: membership }, { data: services, count }, { data: defaultService }] = await Promise.all([
     supabase
       .from("company_users")
       .select("role")
@@ -52,9 +52,16 @@ export default async function ServicesPage() {
       .from("services")
       .select("*", { count: "exact" })
       .eq("company_id", company.id)
+      .eq("is_default", false)
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .range(0, PAGE_SIZE - 1),
+    supabase
+      .from("services")
+      .select("*")
+      .eq("company_id", company.id)
+      .eq("is_default", true)
+      .maybeSingle(),
   ]);
 
   // Matches Products: H1's routes only ever call requireMember, never
@@ -79,6 +86,7 @@ export default async function ServicesPage() {
         initialServices={services ?? []}
         initialTotal={count ?? 0}
         pageSize={PAGE_SIZE}
+        defaultService={defaultService ?? null}
       />
     </div>
   );
