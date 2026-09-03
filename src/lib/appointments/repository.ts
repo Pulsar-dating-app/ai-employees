@@ -20,6 +20,7 @@ import {
   type IntakeFieldType,
 } from "@/lib/appointments/intake-fields";
 import { notifyAppointmentConfirmed } from "@/lib/email/appointments";
+import { notifyWaitlistForFreedSlot } from "@/lib/appointments/waitlist";
 
 // Trello J3 -- the abstraction Ana's scheduling tools (list_services /
 // find_available_slots / book_appointment / cancel_appointment) call
@@ -643,7 +644,7 @@ async function cancel(
   const [{ data: appointment, error }, { data: company, error: companyError }] = await Promise.all([
     client
       .from("appointments")
-      .select("id, status, starts_at, google_event_id")
+      .select("id, status, starts_at, service_id, google_event_id")
       .eq("id", appointmentId)
       .eq("company_id", companyId)
       .eq("customer_id", customerId)
@@ -689,6 +690,15 @@ async function cancel(
   if (appointment.google_event_id) {
     await syncAppointmentCancelled(companyId, appointment.google_event_id as string);
   }
+
+  // Trello R5 -- this cancel just freed a slot; notify the oldest waitlist
+  // entry whose window covers it. Best-effort, never throws.
+  await notifyWaitlistForFreedSlot({
+    supabase: client,
+    companyId,
+    serviceId: (appointment.service_id as string | null) ?? null,
+    startsAt: appointment.starts_at as string,
+  });
 
   return { cancelled: true, appointmentId, alreadyCancelled: false };
 }

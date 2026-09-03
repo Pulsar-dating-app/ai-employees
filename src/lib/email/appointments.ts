@@ -31,7 +31,7 @@ function one<T>(v: T | T[] | null): T | null {
   return Array.isArray(v) ? (v[0] ?? null) : v;
 }
 
-function formatWhen(startsAt: string, timezone: string | null): string {
+export function formatWhen(startsAt: string, timezone: string | null): string {
   const tz = timezone && isValidTimeZone(timezone) ? timezone : "UTC";
   return new Intl.DateTimeFormat("en-US", {
     timeZone: tz,

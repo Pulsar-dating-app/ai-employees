@@ -6,6 +6,7 @@ import {
   syncAppointmentCancelled,
 } from "@/lib/google-calendar/appointment-sync";
 import { notifyAppointmentConfirmed, notifyAppointmentDeclined } from "@/lib/email/appointments";
+import { notifyWaitlistForFreedSlot } from "@/lib/appointments/waitlist";
 import {
   isWithinBusinessHours,
   isDuringTimeOff,
@@ -273,6 +274,19 @@ export async function PATCH(
     await notifyAppointmentDeclined(supabase, appointmentId);
   }
 
+  // Trello R5 -- a cancel here (merchant cancelling, or declining a pending
+  // request) frees the slot: notify the oldest matching waitlist entry.
+  // Best-effort, before the Google-sync branches since those can return
+  // early. Not on a reschedule -- the customer still holds a slot then.
+  if (update.status === "cancelled" && preUpdateStatus !== "cancelled") {
+    await notifyWaitlistForFreedSlot({
+      supabase,
+      companyId,
+      serviceId: (data.service_id as string | null) ?? null,
+      startsAt: data.starts_at as string,
+    });
+  }
+
   if (update.status === "cancelled" && preUpdateGoogleEventId) {
     const synced = await cancelGoogleEventAndClear(supabase, companyId, appointmentId, preUpdateGoogleEventId);
     if (synced) return NextResponse.json({ appointment: synced });
@@ -342,6 +356,18 @@ export async function DELETE(
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Trello R5 -- freed a slot (unless it was already cancelled): notify the
+  // oldest matching waitlist entry. Best-effort, before the Google-sync
+  // branch since that can return early.
+  if (appointmentLookup.appointment.status !== "cancelled") {
+    await notifyWaitlistForFreedSlot({
+      supabase,
+      companyId,
+      serviceId: (data.service_id as string | null) ?? null,
+      startsAt: data.starts_at as string,
+    });
   }
 
   const preUpdateGoogleEventId = appointmentLookup.appointment.google_event_id as string | null;

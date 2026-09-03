@@ -99,7 +99,7 @@ describe("per-agent tool sets (J2)", () => {
     expect(names).not.toContain("flag_buying_intent");
   });
 
-  it("offers Ana the scheduling tools (J3, J5, J6, J8)", async () => {
+  it("offers Ana the scheduling tools (J3, J5, J6, J8, R5)", async () => {
     const names = await toolNamesOfferedTo("ana");
 
     expect(names).toEqual(
@@ -111,6 +111,7 @@ describe("per-agent tool sets (J2)", () => {
         "cancel_appointment",
         "list_my_appointments",
         "reschedule_appointment",
+        "add_to_waitlist",
       ]),
     );
   });
