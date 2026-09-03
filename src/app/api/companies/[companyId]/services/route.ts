@@ -100,7 +100,13 @@ export async function GET(
   const page = parsePositiveInt(searchParams.get("page"), 1);
   const pageSize = parsePositiveInt(searchParams.get("pageSize"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
 
-  let query = supabase.from("services").select("*", { count: "exact" }).eq("company_id", companyId);
+  // The catch-all default service is managed on its own card, never listed
+  // here or offered as a normal pickable service.
+  let query = supabase
+    .from("services")
+    .select("*", { count: "exact" })
+    .eq("company_id", companyId)
+    .eq("is_default", false);
   if (!includeInactive) {
     query = query.eq("is_active", true);
   }

@@ -8,8 +8,10 @@ export type PredefinedIntakeField = {
   key: string;
   label: string;
   fieldType: IntakeFieldType;
-  // Whether the merchant may toggle enable/require. `email` is locked: it
-  // is always collected and always required -- no booking without one.
+  // Whether the merchant may toggle enable/require. A locked field is always
+  // collected and always required -- `email` (the notify/lookup key) and
+  // `full_name` (every downstream surface, and the calendar event, needs a
+  // name) are both locked.
   locked: boolean;
   defaultEnabled: boolean;
   defaultRequired: boolean;
@@ -19,7 +21,7 @@ export type PredefinedIntakeField = {
 // migration 20260902140000). Order here is the display order.
 export const PREDEFINED_INTAKE_FIELDS: readonly PredefinedIntakeField[] = [
   { key: "email", label: "Email", fieldType: "email", locked: true, defaultEnabled: true, defaultRequired: true },
-  { key: "full_name", label: "Nome completo", fieldType: "name", locked: false, defaultEnabled: true, defaultRequired: true },
+  { key: "full_name", label: "Nome completo", fieldType: "name", locked: true, defaultEnabled: true, defaultRequired: true },
   { key: "phone", label: "Telefone", fieldType: "phone", locked: false, defaultEnabled: false, defaultRequired: false },
   { key: "cpf", label: "CPF", fieldType: "cpf", locked: false, defaultEnabled: false, defaultRequired: false },
   { key: "date_of_birth", label: "Data de nascimento", fieldType: "date", locked: false, defaultEnabled: false, defaultRequired: false },
@@ -27,6 +29,12 @@ export const PREDEFINED_INTAKE_FIELDS: readonly PredefinedIntakeField[] = [
 
 export const PREDEFINED_INTAKE_KEYS: ReadonlySet<string> = new Set(
   PREDEFINED_INTAKE_FIELDS.map((f) => f.key),
+);
+
+// Predefined fields the merchant can't turn off or make optional -- always
+// enabled + required.
+export const LOCKED_INTAKE_KEYS: ReadonlySet<string> = new Set(
+  PREDEFINED_INTAKE_FIELDS.filter((f) => f.locked).map((f) => f.key),
 );
 
 export const EMAIL_INTAKE_KEY = "email";

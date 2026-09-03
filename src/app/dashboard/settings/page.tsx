@@ -110,6 +110,7 @@ export default async function SettingsPage() {
             email: company.email,
             phone: company.phone,
             website_url: company.website_url,
+            address: company.address ?? null,
             country: company.country,
             industry: company.industry ?? null,
             currency: company.currency,

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   PREDEFINED_INTAKE_FIELDS,
   PREDEFINED_INTAKE_KEYS,
-  EMAIL_INTAKE_KEY,
+  LOCKED_INTAKE_KEYS,
   slugifyIntakeLabel,
 } from "@/lib/appointments/intake-fields";
 
@@ -12,7 +12,7 @@ import {
 //   * predefined (key in PREDEFINED_INTAKE_KEYS) -- the fixed core set
 //     (email / full_name / phone / cpf / date_of_birth). Fixed label +
 //     field_type; the merchant only toggles is_enabled / is_required.
-//     `email` is locked on+required -- no booking without one.
+//     `email` and `full_name` are locked on+required (LOCKED_INTAKE_KEYS).
 //   * custom -- free-text questions (field_type 'text'), added/removed/
 //     reordered by the merchant, with a slug key generated from the label.
 //
@@ -63,8 +63,8 @@ function validate(
       if (typeof row.is_enabled !== "boolean" || typeof row.is_required !== "boolean") {
         return { error: "predefined is_enabled / is_required must be booleans" };
       }
-      if (row.key === EMAIL_INTAKE_KEY && (!row.is_enabled || !row.is_required)) {
-        return { error: "email is always collected and always required" };
+      if (LOCKED_INTAKE_KEYS.has(row.key) && (!row.is_enabled || !row.is_required)) {
+        return { error: `${row.key} is always collected and always required` };
       }
       // A field that's off can't also be required.
       const required = row.is_enabled ? row.is_required : false;

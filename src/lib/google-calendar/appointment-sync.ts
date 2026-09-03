@@ -14,6 +14,9 @@ export type AppointmentSyncDetails = {
   customerName: string;
   startsAt: string;
   endsAt: string;
+  // Trello -- Ana's professional-facing recap of the booking, stored on the
+  // appointment and mirrored into the calendar event description. Optional.
+  summary?: string | null;
 };
 
 // Called the moment an appointment becomes `confirmed` (at creation for an
@@ -28,8 +31,12 @@ export async function syncAppointmentConfirmed(
   if (!connection) return null;
 
   try {
+    const summary = details.customerName
+      ? `${details.serviceName} — ${details.customerName}`
+      : details.serviceName;
     const event = await createCalendarEvent(connection.accessToken, connection.calendarId, {
-      summary: `${details.serviceName} — ${details.customerName}`,
+      summary,
+      description: details.summary ?? null,
       startIso: details.startsAt,
       endIso: details.endsAt,
     });

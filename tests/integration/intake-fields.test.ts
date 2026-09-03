@@ -66,20 +66,22 @@ describe("Appointment intake fields — /api/companies/:id/intake-fields", () =>
     expect(byKey.phone).toMatchObject({ is_enabled: false, is_required: false });
   });
 
-  it("rejects turning email off or making it optional", async () => {
+  it("rejects turning a locked field (email, full_name) off or making it optional", async () => {
     const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Email Locked Co");
+    const companyId = await createCompany(owner.cookieHeader, "Locked Fields Co");
 
-    expect(
-      (await put(owner.cookieHeader, companyId, {
-        predefined: [{ key: "email", is_enabled: false, is_required: false }],
-      })).status,
-    ).toBe(400);
-    expect(
-      (await put(owner.cookieHeader, companyId, {
-        predefined: [{ key: "email", is_enabled: true, is_required: false }],
-      })).status,
-    ).toBe(400);
+    for (const key of ["email", "full_name"]) {
+      expect(
+        (await put(owner.cookieHeader, companyId, {
+          predefined: [{ key, is_enabled: false, is_required: false }],
+        })).status,
+      ).toBe(400);
+      expect(
+        (await put(owner.cookieHeader, companyId, {
+          predefined: [{ key, is_enabled: true, is_required: false }],
+        })).status,
+      ).toBe(400);
+    }
   });
 
   it("validates the payload", async () => {

@@ -13,10 +13,46 @@ describe("buildSystemPrompt", () => {
       personality: "friendly",
       systemPrompt: "You are Malu, a helpful sales assistant.",
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
     expect(prompt).toContain("You are Malu, a helpful sales assistant.");
+  });
+
+  it("adds a name-override section when the merchant renamed the hire", () => {
+    const agentConfig: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling assistant",
+      description: "desc",
+      personality: null,
+      systemPrompt: "You are Ana, a scheduling assistant.",
+      companyAgentStatus: "active",
+      displayName: "Sofia",
+    };
+
+    const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
+    expect(prompt).toContain("Your name is Sofia");
+    // The base prompt is still present; the override just follows it.
+    expect(prompt).toContain("You are Ana, a scheduling assistant.");
+    expect(prompt.indexOf("Your name is Sofia")).toBeGreaterThan(
+      prompt.indexOf("You are Ana, a scheduling assistant."),
+    );
+  });
+
+  it("does not add a name-override section when the name is the platform default", () => {
+    const agentConfig: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling assistant",
+      description: "desc",
+      personality: null,
+      systemPrompt: "You are Ana.",
+      companyAgentStatus: "active",
+      displayName: "Ana",
+    };
+
+    const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
+    expect(prompt).not.toContain("Your name is");
   });
 
   it("falls back to role/description/personality when system_prompt is null (Malu's real current state)", () => {
@@ -27,6 +63,7 @@ describe("buildSystemPrompt", () => {
       personality: "Warm and concise",
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -50,6 +87,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: "base prompt",
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: "Pulsar LTDA", intent: "unknown" });
@@ -64,6 +102,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: "base prompt",
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -78,6 +117,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: null,
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -95,6 +135,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -113,6 +154,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -132,6 +174,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -150,6 +193,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -170,6 +214,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -189,6 +234,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -211,6 +257,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -231,6 +278,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -250,6 +298,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -271,6 +320,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -290,6 +340,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -304,6 +355,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "buying" });
@@ -318,6 +370,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
@@ -332,6 +385,7 @@ describe("buildSystemPrompt", () => {
       personality: null,
       systemPrompt: null,
       companyAgentStatus: "active",
+      displayName: null,
     };
 
     const prompt = buildSystemPrompt({

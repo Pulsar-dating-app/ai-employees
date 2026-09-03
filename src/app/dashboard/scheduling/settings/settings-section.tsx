@@ -58,8 +58,7 @@ export function SettingsSection({
     <section
       id={id}
       className={clsx(
-        "rounded-xl border border-outline-variant/40 transition-colors",
-        open ? "bg-surface-container-lowest shadow-level1" : "bg-surface-container",
+        "rounded-xl border border-outline-variant bg-surface-container-lowest shadow-level1 transition-colors",
         id && "scroll-mt-24",
       )}
     >
@@ -70,7 +69,7 @@ export function SettingsSection({
         onClick={() => setOpen((v) => !v)}
         className={clsx(
           "flex w-full items-center gap-3 p-6 text-left transition-colors",
-          open ? "border-b border-outline-variant/40" : "rounded-xl hover:bg-surface-container-high",
+          open ? "border-b border-outline-variant/40" : "rounded-xl hover:bg-surface-container",
         )}
       >
         <span

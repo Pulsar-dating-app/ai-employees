@@ -8,6 +8,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { ServiceFilters } from "./service-filters";
 import { ServiceList } from "./service-list";
 import { ServiceForm } from "./service-form";
+import { DefaultServiceCard } from "./default-service-card";
 
 export type Service = {
   id: string;
@@ -21,6 +22,7 @@ export type Service = {
   category: string | null;
   metadata: unknown;
   is_active: boolean;
+  is_default: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -39,6 +41,9 @@ type ServicesManagerProps = {
   initialServices: Service[];
   initialTotal: number;
   pageSize: number;
+  // The per-company catch-all service (services.is_default). Always exists
+  // (trigger-seeded); starts inactive.
+  defaultService: Service | null;
 };
 
 const DEFAULT_FILTERS: ServiceFiltersState = {
@@ -58,6 +63,7 @@ export function ServicesManager({
   initialServices,
   initialTotal,
   pageSize,
+  defaultService,
 }: ServicesManagerProps) {
   const t = useTranslations("Services");
 
@@ -117,6 +123,10 @@ export function ServicesManager({
 
   return (
     <div className="flex flex-col gap-6">
+      {defaultService ? (
+        <DefaultServiceCard companyId={companyId} service={defaultService} canEdit={canEdit} />
+      ) : null}
+
       {canEdit ? (
         <Card>
           <CardHeader>

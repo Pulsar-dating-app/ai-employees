@@ -1,4 +1,5 @@
 import type { AgentConfig } from "./config";
+import { defaultAgentName } from "@/lib/agents/naming";
 
 // Found manually testing the dev-chat-test tool: asked "what was my last
 // message?" on a fresh conversation, and the model echoed this prompt's own
@@ -228,6 +229,19 @@ export function buildSystemPrompt({
       .filter((part): part is string => Boolean(part))
       .join("\n\n");
 
+  // The merchant renamed this hire (company_agents.name). The base prompt
+  // still hard-codes the platform name ("You are Ana…"), so this overrides
+  // it explicitly -- placed after `base` in the section list below so it
+  // wins. Only emitted when the name actually differs from the default, to
+  // avoid a redundant line for every un-renamed agent.
+  const displayName = agentConfig.displayName?.trim();
+  const nameOverrideSection =
+    displayName && displayName !== defaultAgentName(agentConfig.slug)
+      ? `Your name is ${displayName}. Introduce yourself and refer to yourself as ${displayName} ` +
+        `with customers. If any instruction below uses a different name for you, treat that as a ` +
+        `template and use ${displayName} instead.`
+      : null;
+
   const businessNameSection = businessName ? `Business name: ${businessName}` : null;
 
   // Real context, phrased so it also fixes the failure mode it exists for:
@@ -259,6 +273,7 @@ export function buildSystemPrompt({
     SCOPE_GUARDRAIL,
     FORMATTING_GUARDRAIL,
     base,
+    nameOverrideSection,
     businessNameSection,
     currentDateSection,
     intentSection,

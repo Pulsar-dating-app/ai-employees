@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { useCompanyAutosave, SaveStatusLine } from "./company-autosave";
 
 type PolicyField = "shipping_policy" | "return_policy" | "payment_policy" | "additional_information";
 type SectionKey = "shipping" | "returns" | "payments" | "other";
@@ -17,11 +17,9 @@ type PolicySectionProps = {
   canEdit: boolean;
 };
 
-// Reused for the four sections that are each a single free-text companies
-// column (Shipping/Returns/Payments/Other) — structurally identical, only
-// the field name and translated copy differ. Each instance saves and
-// reports success/failure independently, per the ticket's explicit
-// per-section feedback requirement.
+// Reused for the single-free-text-column sections (Shipping / Returns /
+// Payments / Other). Saves on blur — no Save button — with a status line at
+// the foot of the card. See company-autosave.tsx.
 export function PolicySection({
   companyId,
   fieldName,
@@ -30,25 +28,15 @@ export function PolicySection({
   canEdit,
 }: PolicySectionProps) {
   const t = useTranslations(`Teach.${sectionKey}`);
-  const tCommon = useTranslations("Teach");
+  const { status, save } = useCompanyAutosave(companyId);
 
   const [value, setValue] = useState(initialValue ?? "");
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
+  const [saved, setSaved] = useState(initialValue ?? "");
 
-  async function handleSave() {
-    setIsSaving(true);
-    setSaveState("idle");
-
-    const trimmed = value.trim();
-    const res = await fetch(`/api/companies/${companyId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [fieldName]: trimmed ? trimmed : null }),
-    });
-
-    setIsSaving(false);
-    setSaveState(res.ok ? "success" : "error");
+  async function commit() {
+    const normalized = value.trim() ? value.trim() : null;
+    if ((normalized ?? "") === saved) return;
+    if (await save({ [fieldName]: normalized })) setSaved(normalized ?? "");
   }
 
   return (
@@ -63,26 +51,11 @@ export function PolicySection({
           placeholder={t("placeholder")}
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onBlur={commit}
           disabled={!canEdit}
           maxLength={5000}
         />
-
-        {saveState === "error" ? (
-          <p role="alert" className="text-sm text-error">
-            {tCommon("saveError")}
-          </p>
-        ) : null}
-
-        {canEdit ? (
-          <div className="flex items-center gap-3">
-            <Button type="button" isLoading={isSaving} onClick={handleSave}>
-              {isSaving ? tCommon("saving") : tCommon("save")}
-            </Button>
-            {saveState === "success" ? (
-              <span className="text-sm text-tertiary-container">{tCommon("saved")}</span>
-            ) : null}
-          </div>
-        ) : null}
+        {canEdit ? <SaveStatusLine status={status} /> : null}
       </CardContent>
     </Card>
   );

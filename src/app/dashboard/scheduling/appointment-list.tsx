@@ -283,6 +283,15 @@ function AppointmentCard({
               </span>
             </div>
 
+            {appointment.summary ? (
+              <div className="mt-2 rounded-md border-l-2 border-primary/40 bg-surface-container-low px-3 py-2">
+                <p className="text-label-md font-semibold text-on-surface">{t("list.summaryLabel")}</p>
+                <p className="mt-0.5 whitespace-pre-wrap text-label-md text-on-surface-variant">
+                  {appointment.summary}
+                </p>
+              </div>
+            ) : null}
+
             {intakeEntries.length > 0 ? (
               <div className="mt-2">
                 <button
