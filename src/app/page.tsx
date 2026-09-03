@@ -22,15 +22,7 @@ export default async function Home() {
       <Suspense fallback={null}>
         <AuthModalController />
       </Suspense>
-      {/* Dev-only: the M5 embeddable widget script, live on this app's own
-          landing page purely so it can be exercised locally without a
-          separate host page. Never renders in production -- points at
-          jorginho-e-cia/malu, this session's own test company (whichever
-          company's allowed_embed_domains needs "localhost" for this to
-          work -- that's per-company, not global). */}
-      {process.env.NODE_ENV !== "production" ? (
-        <Script src="/widget.js" data-company="jorginho-e-cia" data-agent="malu" data-greeting="Oi!👋 Posso te ajudar a achar o produto ideal?" strategy="afterInteractive" />
-      ) : null}
+      <script src="https://www.staffra.io/widget.js" data-company="staffra" data-agent="ana" data-greeting="Bom dia!"></script>
     </>
   );
 }
