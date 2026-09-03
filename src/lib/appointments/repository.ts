@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
-import { isValidTimeZone } from "@/lib/analytics/load";
+import { isValidTimeZone, addDays } from "@/lib/analytics/load";
 import { formatWallClock } from "./time-format";
 import { loadAvailableSlots, ServiceNotFoundError } from "@/lib/availability/load";
 import {
@@ -49,6 +49,14 @@ import { notifyAppointmentConfirmed } from "@/lib/email/appointments";
 // slot was taken and offer another, the same pattern as create_checkout_link.
 
 const MAX_SLOTS_RETURNED = 20;
+
+// Trello J8 -- how far ahead find_next_available scans, and in what stride.
+// The engine takes a date range and returns every slot in it, so the "early
+// exit" is at the chunk level: stop the moment a chunk yields any slot. The
+// common case ("soonest opening") resolves on the first chunk; the horizon
+// only bites for a service that's genuinely booked solid for months.
+const NEXT_AVAILABLE_HORIZON_DAYS = 90;
+const NEXT_AVAILABLE_CHUNK_DAYS = 14;
 
 type IntakeField = { key: string; label: string; fieldType: IntakeFieldType; is_required: boolean };
 
@@ -132,6 +140,34 @@ export type FindAvailableSlotsResult =
       // (email/phone/cpf/date/name/text). `required` ones must be answered;
       // optional ones are asked once and skipped if declined. `email` is
       // always present and always required.
+      intakeQuestions: { key: string; label: string; fieldType: IntakeFieldType; required: boolean }[];
+    };
+
+// Trello J8 -- find_next_available's shape. A trimmed find_available_slots:
+// one earliest slot instead of a windowful, no `truncated`, and `timeOff`
+// dropped (the horizon is wide enough that naming every blocked range would
+// be noise -- the agent falls back to find_available_slots for that story).
+// `intakeQuestions` is kept so Ana can go straight to book_appointment
+// without a second round-trip.
+export type FindNextAvailableResult =
+  | { available: false; reason: "service_not_found" }
+  | {
+      available: true;
+      found: false;
+      // Roughly how far ahead the scan looked before giving up.
+      horizonDays: number;
+    }
+  | {
+      available: true;
+      found: true;
+      timezone: string;
+      // False whenever the connected Google Calendar wasn't actually
+      // consulted -- same meaning as on FindAvailableSlotsResult.
+      googleCalendarChecked: boolean;
+      // `start`/`end` are UTC ISO instants (pass `start` straight to
+      // book_appointment); `label` is that start written out in the
+      // business's timezone, ready to speak.
+      slot: { start: string; end: string; label: string };
       intakeQuestions: { key: string; label: string; fieldType: IntakeFieldType; required: boolean }[];
     };
 
@@ -282,6 +318,80 @@ async function findAvailableSlots(
     // A missing/inactive service, or one belonging to another company, is
     // a model-recoverable answer ("that isn't something we offer"), not a
     // turn-aborting error.
+    if (err instanceof ServiceNotFoundError) {
+      return { available: false, reason: "service_not_found" };
+    }
+    throw err;
+  }
+}
+
+// Trello J8 -- "what's your soonest slot for X?" without making Ana guess a
+// date range for find_available_slots (and often call it twice). Walks
+// forward from now in NEXT_AVAILABLE_CHUNK_DAYS windows over the same I2
+// engine -- so business hours, our appointments, Google free/busy, merchant
+// time off and J7's lead time are all already applied -- and returns the
+// earliest slot the first non-empty chunk produces.
+async function findNextAvailable(
+  { companyId, serviceId }: { companyId: string; serviceId: string },
+  supabaseClient?: SupabaseClient,
+): Promise<FindNextAvailableResult> {
+  const client = supabaseClient ?? createServiceClient();
+
+  // Start a day before today's UTC date: the engine drops past slots by its
+  // own `now`, and the extra day covers a business whose local date is still
+  // "yesterday" relative to UTC -- its evening is still bookable.
+  const scanStart = addDays(new Date().toISOString().slice(0, 10), -1);
+
+  try {
+    for (
+      let offset = 0;
+      offset < NEXT_AVAILABLE_HORIZON_DAYS;
+      offset += NEXT_AVAILABLE_CHUNK_DAYS
+    ) {
+      const from = addDays(scanStart, offset);
+      const to = addDays(
+        scanStart,
+        Math.min(offset + NEXT_AVAILABLE_CHUNK_DAYS - 1, NEXT_AVAILABLE_HORIZON_DAYS),
+      );
+
+      const { slots, googleCalendarChecked } = await loadAvailableSlots({
+        supabase: client,
+        companyId,
+        serviceId,
+        from,
+        to,
+      });
+      if (slots.length === 0) continue;
+
+      // computeAvailableSlots walks dates ascending, but a day with two
+      // business-hours windows can emit its slots in DB order -- pick the
+      // true earliest rather than trusting slots[0].
+      const earliest = slots.reduce((a, b) => (a.start <= b.start ? a : b));
+
+      const [{ data: company }, intakeFields] = await Promise.all([
+        client.from("companies").select("timezone").eq("id", companyId).maybeSingle(),
+        loadIntakeFields(client, companyId),
+      ]);
+      const timezone =
+        company?.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
+
+      return {
+        available: true,
+        found: true,
+        timezone,
+        googleCalendarChecked,
+        slot: { ...earliest, label: formatWallClock(earliest.start, timezone) },
+        intakeQuestions: intakeFields.map((f) => ({
+          key: f.key,
+          label: f.label,
+          fieldType: f.fieldType,
+          required: f.is_required,
+        })),
+      };
+    }
+
+    return { available: true, found: false, horizonDays: NEXT_AVAILABLE_HORIZON_DAYS };
+  } catch (err) {
     if (err instanceof ServiceNotFoundError) {
       return { available: false, reason: "service_not_found" };
     }
@@ -768,6 +878,7 @@ async function reschedule(
 export const AppointmentRepository = {
   listServices,
   findAvailableSlots,
+  findNextAvailable,
   book,
   cancel,
   listMyAppointments,
