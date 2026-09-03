@@ -1467,7 +1467,6 @@
     "pageSubtitle": "Seu plano, uso e pagamentos.",
     "readOnly": "Você pode ver a cobrança, mas só donos e administradores podem alterar.",
     "perMonth": "/ mês",
-    "currencyNote": "Valores em reais. No checkout você verá o preço na sua moeda local.",
     "renewsOn": "Renova em {date}",
     "endsOn": "Encerra em {date}",
     "noRenewalDate": "Data de renovação pendente",

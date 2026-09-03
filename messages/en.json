@@ -1467,7 +1467,6 @@
     "pageSubtitle": "Your plan, usage, and payments.",
     "readOnly": "You can view billing, but only owners and admins can make changes.",
     "perMonth": "/ month",
-    "currencyNote": "Shown in Brazilian real. At checkout you'll see the price in your local currency.",
     "renewsOn": "Renews on {date}",
     "endsOn": "Ends on {date}",
     "noRenewalDate": "Renewal date pending",

@@ -146,7 +146,6 @@ export default async function BillingPage() {
   const nearLimit = limit > 0 && rawPct >= 80 && !overLimit;
 
   const selfServePlans = BILLING_PLANS.filter((p) => p.isSelfServe);
-  const currencyNote = t("currencyNote");
 
   return (
     <div className="flex flex-col gap-8">
@@ -216,7 +215,6 @@ export default async function BillingPage() {
                   </span>
                   <span className="text-on-surface-variant">{t("perMonth")}</span>
                 </div>
-                <p className="mt-1 text-sm text-on-surface-variant">{currencyNote}</p>
 
                 <div className="mt-6 flex flex-col gap-4 border-t border-outline-variant/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
                   <p className="flex items-center gap-2 text-label-md text-on-surface">
@@ -333,8 +331,6 @@ export default async function BillingPage() {
                   </div>
                 ))}
               </div>
-
-              <p className="mt-4 text-sm text-on-surface-variant">{currencyNote}</p>
             </div>
           )}
 
