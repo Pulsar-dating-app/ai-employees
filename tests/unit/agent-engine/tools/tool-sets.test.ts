@@ -54,7 +54,7 @@ describe("resolveToolsForAgent", () => {
     expect(names).not.toContain("flag_buying_intent");
   });
 
-  it("gives Ana the scheduling tools (J3, J5, J6, J8)", () => {
+  it("gives Ana the scheduling tools (J3, J5, J6, J8, R5)", () => {
     const names = namesFor("ana");
     expect(names).toEqual(
       expect.arrayContaining([
@@ -65,6 +65,7 @@ describe("resolveToolsForAgent", () => {
         "cancel_appointment",
         "list_my_appointments",
         "reschedule_appointment",
+        "add_to_waitlist",
       ]),
     );
   });
