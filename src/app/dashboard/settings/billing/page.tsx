@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import clsx from "clsx";
 import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { reconcileIncompleteBilling } from "@/lib/stripe/webhooks";
 import { BILLING_PLANS, getPlan, type PlanKey } from "@/lib/billing/plans";
 import { CartIcon, CalendarIcon, InfoIcon, WarningIcon } from "@/components/ui/icons";
 import { PageHeader } from "../../page-header";
@@ -114,7 +116,25 @@ export default async function BillingPage() {
       .maybeSingle(),
   ]);
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
-  const billing = billingRow as Billing | null;
+  let billing = billingRow as Billing | null;
+
+  // Self-heal a row still stuck at the P3 checkout stub because the
+  // `checkout.session.completed` webhook never landed (endpoint down, or no
+  // `stripe listen` in local dev). Adopt the customer's live subscription
+  // straight from Stripe; on success, re-read the freshly synced row.
+  if (billing?.subscription_status === "incomplete" && billing.stripe_customer_id) {
+    const reconciled = await reconcileIncompleteBilling(createServiceClient(), company.id);
+    if (reconciled) {
+      const { data: fresh } = await supabase
+        .from("company_billing")
+        .select(
+          "plan_key, subscription_status, current_period_start, current_period_end, cancel_at_period_end, stripe_customer_id",
+        )
+        .eq("company_id", company.id)
+        .maybeSingle();
+      billing = (fresh as Billing | null) ?? billing;
+    }
+  }
 
   let usage: { replies_used: number; reply_limit: number } | null = null;
   if (billing?.current_period_start) {

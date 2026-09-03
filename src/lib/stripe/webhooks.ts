@@ -173,6 +173,58 @@ async function syncBillingFromSubscription(
   }
 }
 
+// Recovery for a lost or late `checkout.session.completed`: the merchant
+// paid, Stripe created the subscription, but the webhook never landed
+// (endpoint down, a handler 500 loop, or -- in local dev -- `stripe listen`
+// not running). The billing page calls this when it finds the row still
+// stuck at the P3 stub's `incomplete`: pull the customer's live
+// subscription straight from Stripe and run it through the same sync the
+// webhook uses. Fully idempotent -- if the webhook then arrives it is just
+// another full-state write. Returns true if it adopted a subscription.
+export async function reconcileIncompleteBilling(
+  service: Service,
+  companyId: string,
+): Promise<boolean> {
+  const { data: row } = await service
+    .from("company_billing")
+    .select("subscription_status, stripe_customer_id, stripe_subscription_id")
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  // Only the stuck-stub case. A `canceled` / `incomplete_expired` row is a
+  // real end state, not something to quietly revive.
+  if (!row || row.subscription_status !== "incomplete") return false;
+  const customerId = (row.stripe_customer_id as string | null) ?? null;
+  const knownSubId = (row.stripe_subscription_id as string | null) ?? null;
+  if (!customerId && !knownSubId) return false;
+
+  const stripe = getStripeClient();
+  let subscription: Stripe.Subscription | null = null;
+  try {
+    if (knownSubId) {
+      subscription = await stripe.subscriptions.retrieve(knownSubId);
+    } else {
+      const list = await stripe.subscriptions.list({
+        customer: customerId as string,
+        status: "all",
+        limit: 10,
+      });
+      subscription =
+        list.data
+          .filter((s) => LIVE_STATUSES.has(s.status))
+          .sort((a, b) => b.created - a.created)[0] ?? null;
+    }
+  } catch (err) {
+    console.error(`billing reconcile: Stripe lookup failed for company ${companyId}`, err);
+    return false;
+  }
+
+  if (!subscription || !LIVE_STATUSES.has(subscription.status)) return false;
+
+  await syncBillingFromSubscription(service, subscription, { companyId });
+  return true;
+}
+
 export async function handleCheckoutSessionCompleted(
   service: Service,
   session: Stripe.Checkout.Session,

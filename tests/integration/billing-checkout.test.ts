@@ -162,6 +162,71 @@ describe("Plan checkout (Trello P3)", () => {
     expect(getPlan("pro").stripePriceId).toMatch(/^price_/);
   });
 
+  // A completed checkout whose `checkout.session.completed` webhook never
+  // landed leaves company_billing on the P3 stub (`incomplete`, no
+  // subscription id) while Stripe already has a live subscription. The
+  // route reconciles from Stripe before deciding checkout-vs-portal.
+  describe("reconcile — a lost checkout.session.completed webhook", () => {
+    it("adopts the customer's live subscription and returns the Portal instead of a second checkout", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Checkout Reconcile Co");
+      const svc = getTestServiceClient();
+      await svc.from("company_billing").insert({
+        company_id: companyId,
+        // Mock: this customer id shape means "Stripe has a live starter sub".
+        stripe_customer_id: `cus_livesub_starter__co_${companyId}`,
+        subscription_status: "incomplete",
+        plan_key: "starter",
+      });
+
+      const res = await checkout(owner.cookieHeader, companyId, "pro");
+      expect(res.status).toBe(200);
+      expect(res.json.mode).toBe("portal");
+
+      const { data: billing } = await svc
+        .from("company_billing")
+        .select("subscription_status, stripe_subscription_id, plan_key, current_period_start")
+        .eq("company_id", companyId)
+        .single();
+      expect(billing?.subscription_status).toBe("active");
+      expect(billing?.stripe_subscription_id).toBe(`sub_mock_starter__co_${companyId}`);
+      expect(billing?.plan_key).toBe("starter");
+
+      // The synced period opened a usage row.
+      const { data: usage } = await svc
+        .from("company_message_usage")
+        .select("replies_used, reply_limit")
+        .eq("company_id", companyId)
+        .eq("period_start", billing!.current_period_start as string)
+        .single();
+      expect(usage?.replies_used).toBe(0);
+      expect(usage?.reply_limit).toBe(getPlan("starter").monthlyReplyLimit);
+    });
+
+    it("still mints a checkout when the customer genuinely has no live subscription", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Checkout Reconcile Noop Co");
+      const svc = getTestServiceClient();
+      await svc.from("company_billing").insert({
+        company_id: companyId,
+        stripe_customer_id: "cus_no_live_sub",
+        subscription_status: "incomplete",
+        plan_key: "starter",
+      });
+
+      const res = await checkout(owner.cookieHeader, companyId, "starter");
+      expect(res.status).toBe(200);
+      expect(res.json.mode).toBe("checkout");
+
+      const { data: billing } = await svc
+        .from("company_billing")
+        .select("subscription_status")
+        .eq("company_id", companyId)
+        .single();
+      expect(billing?.subscription_status).toBe("incomplete");
+    });
+  });
+
   describe("POST /billing/portal (Trello P5 — Manage billing)", () => {
     it("requires an admin and a Stripe customer on record", async () => {
       const owner = await signUpTestUser("owner");

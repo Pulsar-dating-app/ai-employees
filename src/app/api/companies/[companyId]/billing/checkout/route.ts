@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getPlan, type PlanKey } from "@/lib/billing/plans";
+import { reconcileIncompleteBilling } from "@/lib/stripe/webhooks";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import {
   createBillingPortalSession,
@@ -98,13 +99,30 @@ export async function POST(
     return NextResponse.json({ error: "Company not found" }, { status: 404 });
   }
 
-  const { data: billing, error: billingError } = await supabase
+  const { data: billingRow, error: billingError } = await supabase
     .from("company_billing")
     .select("stripe_customer_id, stripe_subscription_id, subscription_status")
     .eq("company_id", companyId)
     .maybeSingle();
   if (billingError) {
     return NextResponse.json({ error: billingError.message }, { status: 500 });
+  }
+  let billing = billingRow;
+
+  // If a completed checkout's webhook never landed, the row is still the P3
+  // stub (`incomplete`, no subscription id) while Stripe already has a live
+  // subscription. Adopt it before deciding checkout-vs-portal, so this
+  // request opens the Portal instead of minting a second subscription.
+  if (billing?.subscription_status === "incomplete" && billing.stripe_customer_id) {
+    const reconciled = await reconcileIncompleteBilling(createServiceClient(), companyId);
+    if (reconciled) {
+      const { data: fresh } = await supabase
+        .from("company_billing")
+        .select("stripe_customer_id, stripe_subscription_id, subscription_status")
+        .eq("company_id", companyId)
+        .maybeSingle();
+      billing = fresh ?? billing;
+    }
   }
 
   const returnUrl = `${resolveCheckoutBaseUrl()}/dashboard/settings/billing`;

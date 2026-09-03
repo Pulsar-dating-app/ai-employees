@@ -142,6 +142,19 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
       });
     }
 
+    // --- Subscriptions list --------------------------------------------
+    // Billing reconcile (recovery for a lost checkout.session.completed):
+    // the route lists a customer's subscriptions to adopt a live one. A
+    // customer id shaped `cus_livesub_<planKey>__co_<companyId>` stands in
+    // for "Stripe has a live subscription for this customer"; anything else
+    // returns an empty list.
+    if (req.method === "GET" && url.pathname === "/v1/subscriptions") {
+      const customer = url.searchParams.get("customer") ?? "";
+      const m = customer.match(/^cus_livesub_(starter|pro|enterprise)__co_(.+)$/);
+      const data = m ? [mockSubscription(`sub_mock_${m[1]}__co_${m[2]}`)] : [];
+      return send(200, { object: "list", data, has_more: false });
+    }
+
     // --- Subscriptions ---------------------------------------------------
     const subMatch = url.pathname.match(/^\/v1\/subscriptions\/([^/]+)$/);
     if (subMatch) {
