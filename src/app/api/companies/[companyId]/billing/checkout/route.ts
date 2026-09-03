@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getPlan, type PlanKey } from "@/lib/billing/plans";
-import { reconcileIncompleteBilling } from "@/lib/stripe/webhooks";
+import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import {
   createBillingPortalSession,
@@ -109,12 +109,13 @@ export async function POST(
   }
   let billing = billingRow;
 
-  // If a completed checkout's webhook never landed, the row is still the P3
-  // stub (`incomplete`, no subscription id) while Stripe already has a live
-  // subscription. Adopt it before deciding checkout-vs-portal, so this
-  // request opens the Portal instead of minting a second subscription.
-  if (billing?.subscription_status === "incomplete" && billing.stripe_customer_id) {
-    const reconciled = await reconcileIncompleteBilling(createServiceClient(), companyId);
+  // Backstop for a missed billing webhook before deciding checkout-vs-portal:
+  // a lost checkout.session.completed leaves a stub `incomplete` row while
+  // Stripe already has a live sub (adopt it -> open the Portal, don't mint a
+  // second subscription); a Portal plan change whose webhook was lost leaves
+  // a stale `plan_key` (re-sync it). No-op when nothing drifted.
+  if (billing?.stripe_customer_id) {
+    const reconciled = await reconcileBillingFromStripe(createServiceClient(), companyId);
     if (reconciled) {
       const { data: fresh } = await supabase
         .from("company_billing")

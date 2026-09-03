@@ -203,6 +203,34 @@ describe("Plan checkout (Trello P3)", () => {
       expect(usage?.reply_limit).toBe(getPlan("starter").monthlyReplyLimit);
     });
 
+    it("re-syncs a stale plan_key after a Portal upgrade whose webhook was lost", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Checkout Reconcile Upgrade Co");
+      const svc = getTestServiceClient();
+      // We recorded Starter, but the sub id points at a Pro subscription --
+      // the merchant switched plans on the Portal and the
+      // customer.subscription.updated never arrived.
+      await svc.from("company_billing").insert({
+        company_id: companyId,
+        stripe_customer_id: "cus_upgrade",
+        stripe_subscription_id: `sub_mock_pro__co_${companyId}`,
+        subscription_status: "active",
+        plan_key: "starter",
+      });
+
+      const res = await checkout(owner.cookieHeader, companyId, "pro");
+      expect(res.status).toBe(200);
+      expect(res.json.mode).toBe("portal");
+
+      const { data: billing } = await svc
+        .from("company_billing")
+        .select("plan_key, subscription_status")
+        .eq("company_id", companyId)
+        .single();
+      expect(billing?.plan_key).toBe("pro");
+      expect(billing?.subscription_status).toBe("active");
+    });
+
     it("still mints a checkout when the customer genuinely has no live subscription", async () => {
       const owner = await signUpTestUser("owner");
       const companyId = await createCompany(owner.cookieHeader, "Checkout Reconcile Noop Co");

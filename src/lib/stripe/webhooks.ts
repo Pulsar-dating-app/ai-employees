@@ -173,27 +173,34 @@ async function syncBillingFromSubscription(
   }
 }
 
-// Recovery for a lost or late `checkout.session.completed`: the merchant
-// paid, Stripe created the subscription, but the webhook never landed
-// (endpoint down, a handler 500 loop, or -- in local dev -- `stripe listen`
-// not running). The billing page calls this when it finds the row still
-// stuck at the P3 stub's `incomplete`: pull the customer's live
-// subscription straight from Stripe and run it through the same sync the
-// webhook uses. Fully idempotent -- if the webhook then arrives it is just
-// another full-state write. Returns true if it adopted a subscription.
-export async function reconcileIncompleteBilling(
+// Backstop for a lost or late billing webhook -- webhooks stay the
+// real-time path (Stripe retries them for ~3 days), this catches drift
+// when one never lands: endpoint down, a handler 500 loop, a Portal
+// upgrade/downgrade/cancel whose `customer.subscription.updated` went
+// missing, or -- in local dev -- no `stripe listen`.
+//
+// Called on the billing page load and by the checkout route before it
+// decides checkout-vs-portal. Given a company:
+//   - a known `stripe_subscription_id`  -> retrieve it, re-sync if the
+//     status / plan / period / renewal flag drifted from our row
+//   - no sub id but status `incomplete` -> the P3 stub: adopt the
+//     customer's newest live subscription (a lost checkout.session.completed)
+// Runs everything through the same `syncBillingFromSubscription` the
+// webhook uses -- fully idempotent; a webhook that arrives later is just
+// another full-state write. Returns true if it wrote anything.
+export async function reconcileBillingFromStripe(
   service: Service,
   companyId: string,
 ): Promise<boolean> {
   const { data: row } = await service
     .from("company_billing")
-    .select("subscription_status, stripe_customer_id, stripe_subscription_id")
+    .select(
+      "subscription_status, stripe_customer_id, stripe_subscription_id, plan_key, current_period_start, cancel_at_period_end",
+    )
     .eq("company_id", companyId)
     .maybeSingle();
 
-  // Only the stuck-stub case. A `canceled` / `incomplete_expired` row is a
-  // real end state, not something to quietly revive.
-  if (!row || row.subscription_status !== "incomplete") return false;
+  if (!row) return false;
   const customerId = (row.stripe_customer_id as string | null) ?? null;
   const knownSubId = (row.stripe_subscription_id as string | null) ?? null;
   if (!customerId && !knownSubId) return false;
@@ -203,7 +210,7 @@ export async function reconcileIncompleteBilling(
   try {
     if (knownSubId) {
       subscription = await stripe.subscriptions.retrieve(knownSubId);
-    } else {
+    } else if (row.subscription_status === "incomplete") {
       const list = await stripe.subscriptions.list({
         customer: customerId as string,
         status: "all",
@@ -219,7 +226,24 @@ export async function reconcileIncompleteBilling(
     return false;
   }
 
-  if (!subscription || !LIVE_STATUSES.has(subscription.status)) return false;
+  if (!subscription) return false;
+
+  // Skip the write when nothing we mirror has changed -- keeps a plain
+  // billing-page view from bumping `updated_at` and re-opening usage rows
+  // on every load.
+  const item = subscription.items.data[0];
+  const lookupKey = item?.price?.lookup_key ?? null;
+  const stripePlanKey = lookupKey ? (getPlanByLookupKey(lookupKey)?.key ?? null) : null;
+  const stripePeriodStart = unixToIso(item?.current_period_start);
+  const stripeWillNotRenew =
+    subscription.cancel_at_period_end === true ||
+    (subscription.cancel_at != null && subscription.status !== "canceled");
+  const unchanged =
+    row.subscription_status === subscription.status &&
+    (stripePlanKey === null || stripePlanKey === row.plan_key) &&
+    sameSecond(stripePeriodStart, (row.current_period_start as string | null) ?? null) &&
+    row.cancel_at_period_end === stripeWillNotRenew;
+  if (unchanged) return false;
 
   await syncBillingFromSubscription(service, subscription, { companyId });
   return true;
