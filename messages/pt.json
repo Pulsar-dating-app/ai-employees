@@ -475,6 +475,7 @@
     "searchPlaceholder": "Buscar por nome ou cargo…",
     "noResults": "Nenhum integrante corresponde a “{query}”.",
     "includedInPlan": "Incluído no seu plano",
+    "needsPlan": "Precisa de um plano",
     "backToMarketplace": "Voltar para o marketplace",
     "traits": {
       "warm": "Caloroso(a)",

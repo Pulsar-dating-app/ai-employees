@@ -9,7 +9,13 @@ import { HireableAgentCard, type MarketplaceAgent } from "./agent-card";
 // Client-side filter over the (small) live agent roster — there's no agent
 // search endpoint and the list is a handful of rows, so this stays in the
 // browser. Stitch's "All Departments" select is dropped (no such data).
-export function MarketplaceGrid({ agents }: { agents: MarketplaceAgent[] }) {
+export function MarketplaceGrid({
+  agents,
+  billingActive,
+}: {
+  agents: MarketplaceAgent[];
+  billingActive: boolean;
+}) {
   const t = useTranslations("Marketplace");
   const [query, setQuery] = useState("");
 
@@ -43,6 +49,7 @@ export function MarketplaceGrid({ agents }: { agents: MarketplaceAgent[] }) {
             <HireableAgentCard
               key={agent.slug}
               agent={agent}
+              billingActive={billingActive}
               style={{ animationDelay: `${index * 80}ms` }}
             />
           ))}

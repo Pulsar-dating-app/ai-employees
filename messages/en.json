@@ -475,6 +475,7 @@
     "searchPlaceholder": "Search by name or role…",
     "noResults": "No team members match “{query}”.",
     "includedInPlan": "Included in your plan",
+    "needsPlan": "Needs a plan",
     "backToMarketplace": "Back to marketplace",
     "traits": {
       "warm": "Warm",

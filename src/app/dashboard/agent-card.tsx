@@ -53,9 +53,11 @@ function StatusPill({ hired, label }: { hired: boolean; label: string }) {
 // into a short wide banner.
 export function HireableAgentCard({
   agent,
+  billingActive,
   style,
 }: {
   agent: MarketplaceAgent;
+  billingActive: boolean;
   style?: React.CSSProperties;
 }) {
   const t = useTranslations("Marketplace");
@@ -88,7 +90,11 @@ export function HireableAgentCard({
 
         <div className="mt-1 flex items-center justify-between gap-3 border-t border-outline-variant/60 pt-4">
           <span className="text-sm font-semibold text-on-surface">
-            {agent.isHired ? t("hiredBadge") : t("includedInPlan")}
+            {agent.isHired
+              ? t("hiredBadge")
+              : billingActive
+                ? t("includedInPlan")
+                : t("needsPlan")}
           </span>
           <span className="inline-flex h-9 items-center justify-center rounded-md border border-outline-variant bg-surface-container px-4 text-sm font-medium text-on-surface">
             {t("viewDetails")}
