@@ -1493,13 +1493,16 @@
       },
       "overLimit": {
         "title": "You've used all your replies this period",
-        "body": "Your team keeps answering for a short grace window. Upgrade to Pro to lift the limit.",
-        "action": "Upgrade plan"
+        "body": "Your team keeps answering for a short grace window. Upgrade your plan to lift the limit.",
+        "bodyMaxPlan": "Your team keeps answering for a short grace window. You're already on our highest plan — talk to us for more capacity.",
+        "action": "Upgrade plan",
+        "actionContact": "Contact us"
       },
       "nearLimit": {
         "title": "You're almost out of replies",
         "body": "{left, plural, one {# reply left} other {# replies left}} this period.",
-        "action": "Upgrade plan"
+        "action": "Upgrade plan",
+        "actionContact": "Contact us"
       },
       "canceled": {
         "title": "Your plan ended on {date}",

@@ -1493,13 +1493,16 @@
       },
       "overLimit": {
         "title": "Você usou todas as respostas deste período",
-        "body": "Sua equipe continua respondendo por um curto período de tolerância. Mude para o Pro para aumentar o limite.",
-        "action": "Mudar de plano"
+        "body": "Sua equipe continua respondendo por um curto período de tolerância. Mude de plano para aumentar o limite.",
+        "bodyMaxPlan": "Sua equipe continua respondendo por um curto período de tolerância. Você já está no nosso maior plano — fale com a gente para mais capacidade.",
+        "action": "Mudar de plano",
+        "actionContact": "Fale conosco"
       },
       "nearLimit": {
         "title": "Suas respostas estão acabando",
         "body": "{left, plural, one {# resposta restante} other {# respostas restantes}} neste período.",
-        "action": "Mudar de plano"
+        "action": "Mudar de plano",
+        "actionContact": "Fale conosco"
       },
       "canceled": {
         "title": "Seu plano encerrou em {date}",

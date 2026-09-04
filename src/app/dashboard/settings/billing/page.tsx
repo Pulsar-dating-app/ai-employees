@@ -167,6 +167,19 @@ export default async function BillingPage() {
 
   const selfServePlans = BILLING_PLANS.filter((p) => p.isSelfServe);
 
+  // The near/over-limit banners offer an upgrade -- but only when a higher
+  // self-serve plan actually exists. A company already on the top tier
+  // (Pro today) has nowhere to self-serve upgrade to; Enterprise is
+  // contact-only and isn't in the Portal's plan-switch config, so sending
+  // that company through CheckoutButton would just land them on a Portal
+  // screen with no more room to move. Point them at "talk to us" instead.
+  const currentSelfServeIndex = selfServePlans.findIndex((p) => p.key === billing?.plan_key);
+  const nextSelfServePlan =
+    currentSelfServeIndex >= 0 && currentSelfServeIndex < selfServePlans.length - 1
+      ? selfServePlans[currentSelfServeIndex + 1]
+      : null;
+  const ENTERPRISE_MAILTO = "mailto:contato@staffra.com?subject=Enterprise";
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader icon={CartIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
@@ -201,10 +214,23 @@ export default async function BillingPage() {
             <Banner
               tone="error"
               title={t("banner.overLimit.title")}
-              body={t("banner.overLimit.body")}
+              body={nextSelfServePlan ? t("banner.overLimit.body") : t("banner.overLimit.bodyMaxPlan")}
               action={
                 canEdit ? (
-                  <CheckoutButton companyId={company.id} planKey="pro" label={t("banner.overLimit.action")} />
+                  nextSelfServePlan ? (
+                    <CheckoutButton
+                      companyId={company.id}
+                      planKey={nextSelfServePlan.key as "starter" | "pro"}
+                      label={t("banner.overLimit.action")}
+                    />
+                  ) : (
+                    <a
+                      href={ENTERPRISE_MAILTO}
+                      className="inline-flex h-11 items-center justify-center rounded-lg bg-error px-5 text-label-md font-semibold text-on-error transition-colors hover:brightness-95"
+                    >
+                      {t("banner.overLimit.actionContact")}
+                    </a>
+                  )
                 ) : null
               }
             />
@@ -215,7 +241,20 @@ export default async function BillingPage() {
               body={t("banner.nearLimit.body", { left: Math.max(0, limit - used) })}
               action={
                 canEdit ? (
-                  <CheckoutButton companyId={company.id} planKey="pro" label={t("banner.nearLimit.action")} />
+                  nextSelfServePlan ? (
+                    <CheckoutButton
+                      companyId={company.id}
+                      planKey={nextSelfServePlan.key as "starter" | "pro"}
+                      label={t("banner.nearLimit.action")}
+                    />
+                  ) : (
+                    <a
+                      href={ENTERPRISE_MAILTO}
+                      className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-label-md font-semibold text-on-primary transition-all hover:brightness-90"
+                    >
+                      {t("banner.nearLimit.actionContact")}
+                    </a>
+                  )
                 ) : null
               }
             />
