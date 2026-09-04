@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { syncAppointmentConfirmed } from "@/lib/google-calendar/appointment-sync";
+import { syncAppointmentConfirmed, calendarVisibleEndsAt } from "@/lib/google-calendar/appointment-sync";
 import {
   isWithinBusinessHours,
   isDuringTimeOff,
@@ -307,7 +307,7 @@ export async function POST(
       serviceName: service.name,
       customerName: customer.name,
       startsAt: data.starts_at,
-      endsAt: data.ends_at,
+      visibleEndsAt: calendarVisibleEndsAt(data.starts_at, service.duration_minutes),
     });
     if (googleEventId) {
       const { data: synced } = await supabase

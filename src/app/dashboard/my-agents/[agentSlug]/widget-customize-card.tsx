@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { VideoIcon, ImageIcon } from "@/components/ui/icons";
 
@@ -138,12 +137,12 @@ export function WidgetCustomizeCard({
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description", { name: agentName })}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="flex flex-col gap-4">
+      <div>
+        <h3 className="text-lg font-semibold text-on-surface">{t("title")}</h3>
+        <p className="text-sm text-on-surface-variant">{t("description", { name: agentName })}</p>
+      </div>
+      <div className="flex flex-col gap-3">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_260px]">
           <div className="flex flex-col gap-6">
             <div>
@@ -272,7 +271,7 @@ export function WidgetCustomizeCard({
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

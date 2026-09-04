@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { agentPhoto } from "@/lib/agents/media";
+import { resolveAgentPhoto } from "@/lib/agents/media";
 import { ChatWidget } from "./chat-widget";
 
 // Trello M4 -- the standalone hosted chat page a merchant links to instead
@@ -49,7 +49,7 @@ async function resolveChat(companySlug: string, agentSlug: string): Promise<Reso
 
   const { data: companyAgent } = await supabase
     .from("company_agents")
-    .select("status, name")
+    .select("status, name, photo_type, photo_asset_url")
     .eq("company_id", company.id)
     .eq("agent_id", agent.id)
     .maybeSingle();
@@ -63,7 +63,7 @@ async function resolveChat(companySlug: string, agentSlug: string): Promise<Reso
     kind: "active",
     companyName,
     agentName: companyAgent.name ?? defaultAgentName(agent.slug),
-    agentPhotoSrc: agentPhoto(agent.slug),
+    agentPhotoSrc: resolveAgentPhoto(agent.slug, companyAgent.photo_type, companyAgent.photo_asset_url),
   };
 }
 

@@ -4,18 +4,17 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { agentPhoto } from "@/lib/agents/media";
+import { agentDefaultPhotos, resolveAgentPhoto } from "@/lib/agents/media";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { AgentPersonaCard } from "../agent-persona-card";
 import { PolicySection } from "../../settings/policy-section";
-import { WebChatChannelCard } from "./web-chat-channel-card";
-import { WidgetCustomizeCard } from "./widget-customize-card";
-import { InstagramConnectCard } from "./instagram-connect-card";
+import { ChannelTabsCard } from "./channel-tabs-card";
 import { AvailabilityCard } from "./availability-card";
 import { NameCard } from "./name-card";
+import { PhotoCard } from "./photo-card";
 import { HumanHandoffCard } from "./human-handoff-card";
 import { DevChatTest } from "../../dev-chat-test";
 import { AgentConnectionsTour } from "./agent-connections-tour";
@@ -35,12 +34,10 @@ import { AgentConnectionsTour } from "./agent-connections-tour";
 // actively misleading. Payment/Other policy stay on Settings — genuinely
 // company-wide, not agent-specific in the same way.
 //
-// The WhatsApp card (`channels-section.tsx`) is deliberately NOT rendered
-// here: as of 2026-08-31 Instagram replaces WhatsApp as the messaging
-// channel we're building (epic N). D1's backend, its migrations and
-// `channels-section.tsx` itself all stay in the tree, dormant and
-// unreferenced, so re-mounting one JSX line brings the whole flow back if
-// that decision reverses — nothing about it was deleted.
+// D6 (2026-09-04): WhatsApp is back online, alongside Instagram (not
+// replacing it) — both connection cards, plus the embeddable widget and the
+// direct chat link, are consolidated into one `ChannelTabsCard` rather than
+// four separate full-width cards on this page.
 export default async function AgentConnectionsPage({
   params,
 }: {
@@ -80,7 +77,9 @@ export default async function AgentConnectionsPage({
   const [{ data: companyAgent }, { data: membership }] = await Promise.all([
     supabase
       .from("company_agents")
-      .select("id, name, status, widget_greeting, widget_launcher_type, widget_launcher_asset_url")
+      .select(
+        "id, name, status, widget_greeting, widget_launcher_type, widget_launcher_asset_url, photo_type, photo_asset_url",
+      )
       .eq("company_id", company.id)
       .eq("agent_id", agent.id)
       .maybeSingle(),
@@ -107,6 +106,7 @@ export default async function AgentConnectionsPage({
 
   const name = companyAgent.name ?? fallbackName;
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
+  const photoSrc = resolveAgentPhoto(agentSlug, companyAgent.photo_type, companyAgent.photo_asset_url);
 
   const baseUrl = resolveCheckoutBaseUrl();
   const chatUrl = `${baseUrl}/talk/${company.slug}/${agentSlug}`;
@@ -136,7 +136,7 @@ export default async function AgentConnectionsPage({
           name={name}
           role={agent.role}
           description={agent.description}
-          photoSrc={agentPhoto(agentSlug)}
+          photoSrc={photoSrc}
           active={companyAgent.status === "active"}
           className="lg:col-span-4"
         />
@@ -150,6 +150,17 @@ export default async function AgentConnectionsPage({
               canEdit={canEdit}
             />
           </div>
+          <PhotoCard
+            companyId={company.id}
+            agentSlug={agentSlug}
+            agentName={name}
+            canEdit={canEdit}
+            defaultPhotos={agentDefaultPhotos(agentSlug)}
+            initial={{
+              photoType: (companyAgent.photo_type as "default_1" | "default_2" | "custom") ?? "default_1",
+              photoAssetUrl: companyAgent.photo_asset_url,
+            }}
+          />
           <AvailabilityCard
             companyId={company.id}
             agentSlug={agentSlug}
@@ -183,26 +194,24 @@ export default async function AgentConnectionsPage({
               initialAllowHumanHandoff={company.allow_human_handoff}
             />
           </div>
-          <div data-tour="instagram-connect">
+          <div data-tour="channels">
             <Suspense fallback={null}>
-              <InstagramConnectCard companyId={company.id} agentSlug={agentSlug} canEdit={canEdit} />
+              <ChannelTabsCard
+                companyId={company.id}
+                agentSlug={agentSlug}
+                agentName={name}
+                canEdit={canEdit}
+                metaAppId={process.env.META_APP_ID ?? ""}
+                metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
+                chatUrl={chatUrl}
+                embedSnippet={embedSnippet}
+                widgetInitial={{
+                  greeting: companyAgent.widget_greeting,
+                  launcherType: companyAgent.widget_launcher_type,
+                  launcherAssetUrl: companyAgent.widget_launcher_asset_url,
+                }}
+              />
             </Suspense>
-          </div>
-          <div data-tour="embed-customize">
-            <WidgetCustomizeCard
-              companyId={company.id}
-              agentSlug={agentSlug}
-              agentName={name}
-              canEdit={canEdit}
-              initial={{
-                greeting: companyAgent.widget_greeting,
-                launcherType: companyAgent.widget_launcher_type,
-                launcherAssetUrl: companyAgent.widget_launcher_asset_url,
-              }}
-            />
-          </div>
-          <div data-tour="share-links">
-            <WebChatChannelCard agentName={name} chatUrl={chatUrl} embedSnippet={embedSnippet} />
           </div>
           {process.env.NODE_ENV !== "production" ? (
             <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />

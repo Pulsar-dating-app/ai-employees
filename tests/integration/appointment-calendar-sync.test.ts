@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { capturedCalendarEvent } from "./helpers/google-calendar-events";
 
 // Trello I3 -- calendar sync hooked into H3's existing appointments CRUD
 // routes. Google's Calendar API is stood in for by
@@ -64,6 +65,63 @@ describe("Calendar sync on appointment booking/cancel/reschedule", () => {
     expect(res.status).toBe(201);
     expect(res.json.appointment.status).toBe("confirmed");
     expect(res.json.appointment.google_event_id).toMatch(/^mock-event-/);
+  });
+
+  it("the synced event's visible end excludes the service's buffer minutes", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Buffer Sync Co");
+    const serviceId = await createService(owner.cookieHeader, companyId, {
+      name: "Massage",
+      duration_minutes: 60,
+      buffer_minutes: 15,
+    });
+    const customerId = await createCustomer(owner, companyId, "Jane Doe");
+    await connectCalendar(owner.cookieHeader, companyId);
+
+    const res = await api<{ appointment: { starts_at: string; ends_at: string; google_event_id: string } }>(
+      "POST",
+      `/api/companies/${companyId}/appointments`,
+      owner.cookieHeader,
+      { service_id: serviceId, customer_id: customerId, starts_at: "2027-03-01T09:00:00.000Z" },
+    );
+    // ends_at (what actually blocks the slot) bakes in duration + buffer.
+    expect(res.json.appointment.ends_at).toBe("2027-03-01T10:15:00+00:00");
+
+    const event = await capturedCalendarEvent(res.json.appointment.google_event_id);
+    // The visible calendar event only spans the 60-minute service -- the 15
+    // buffer minutes are a real block (proven above) but never shown.
+    expect(event?.start?.dateTime).toBe("2027-03-01T09:00:00.000Z");
+    expect(event?.end?.dateTime).toBe("2027-03-01T10:00:00.000Z");
+  });
+
+  it("a reschedule's synced event also excludes the buffer from its new visible end", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Buffer Reschedule Sync Co");
+    const serviceId = await createService(owner.cookieHeader, companyId, {
+      name: "Massage",
+      duration_minutes: 60,
+      buffer_minutes: 15,
+    });
+    const customerId = await createCustomer(owner, companyId, "Jane Doe");
+    await connectCalendar(owner.cookieHeader, companyId);
+
+    const created = await api<{ appointment: { id: string; google_event_id: string } }>(
+      "POST",
+      `/api/companies/${companyId}/appointments`,
+      owner.cookieHeader,
+      { service_id: serviceId, customer_id: customerId, starts_at: "2027-03-01T09:00:00.000Z" },
+    );
+
+    await api(
+      "PATCH",
+      `/api/companies/${companyId}/appointments/${created.json.appointment.id}`,
+      owner.cookieHeader,
+      { starts_at: "2027-03-01T11:00:00.000Z" },
+    );
+
+    const event = await capturedCalendarEvent(created.json.appointment.google_event_id);
+    expect(event?.start?.dateTime).toBe("2027-03-01T11:00:00.000Z");
+    expect(event?.end?.dateTime).toBe("2027-03-01T12:00:00.000Z");
   });
 
   it("does not sync a requested appointment, then syncs it once a PATCH confirms it", async () => {

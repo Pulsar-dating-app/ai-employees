@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InstagramIcon, CheckIcon } from "@/components/ui/icons";
 
@@ -89,7 +88,7 @@ export function InstagramConnectCard({
   const isConnected = connection?.status === "connected";
 
   return (
-    <Card className="relative overflow-hidden">
+    <div className="relative overflow-hidden">
       <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-secondary-container/25 blur-3xl" />
 
       <div className="relative flex items-center gap-3">
@@ -184,6 +183,6 @@ export function InstagramConnectCard({
           </p>
         ) : null}
       </div>
-    </Card>
+    </div>
   );
 }

@@ -20,6 +20,41 @@ function graphApiUrl(path: string, params?: Record<string, string>) {
   return url.toString();
 }
 
+// Meta's error envelope, `{ error: { code, error_subcode, message,
+// fbtrace_id } }`. Nothing in this codebase parses it today -- every
+// existing call here just stringifies the raw response body into an
+// Error -- but D4/D5 need to branch on a specific code (131042, "Business
+// Eligibility Payment Issue"), not just "the call failed". Returns null on
+// any body that isn't Meta's documented shape, so a caller can fall back to
+// its own generic handling rather than assume a code that isn't there.
+export type GraphApiError = { code: number; message: string; errorSubcode?: number };
+
+export async function parseGraphApiError(res: Response): Promise<GraphApiError | null> {
+  let body: unknown;
+  try {
+    body = await res.json();
+  } catch {
+    return null;
+  }
+  const error = (body as { error?: unknown })?.error;
+  if (!error || typeof error !== "object" || typeof (error as { code?: unknown }).code !== "number") {
+    return null;
+  }
+  const { code, message, error_subcode: errorSubcode } = error as {
+    code: number;
+    message?: string;
+    error_subcode?: number;
+  };
+  return { code, message: message ?? "Unknown Graph API error", errorSubcode };
+}
+
+// Trello D5 -- Meta's documented code for "Business Eligibility Payment
+// Issue": no valid payment method on the WABA, applied account-wide, and
+// returned on every send attempt (including free service-window replies)
+// until it's fixed. See decisions.md / the D5 ticket for the research this
+// is based on.
+export const PAYMENT_ISSUE_ERROR_CODE = 131042;
+
 // Meta ties a phone number to a two-step-verification PIN on its first
 // /register call -- every subsequent /register for that same number
 // (reconnect, retry) must supply the *same* PIN, or Meta rejects it with
@@ -98,4 +133,82 @@ export async function finishConnection(
   };
 
   return { displayPhoneNumber: displayPhoneNumber ?? null };
+}
+
+// Trello D4 -- delivery, the other end of D2's inbound webhook. Modeled
+// directly on sendInstagramMessage (src/lib/instagram/meta-instagram-api.ts):
+// one retry on a transient 5xx, no retry on a 4xx (fails identically). The
+// third outcome, `payment_issue`, is WhatsApp-specific -- D5's whole reason
+// to exist -- and is not retried either: retrying a 131042 send just burns
+// another call for the same account-level cause.
+export type SendWhatsappMessageResult =
+  | { ok: true }
+  // token_invalid: the token itself is dead (401/403) -- the caller should
+  // flip the connection to disconnected, same as Instagram's dead-token
+  // handling.
+  // payment_issue: Meta's 131042 -- the caller should set D5's
+  // has_payment_issue flag, not retry.
+  // other: anything else (network blip, a 4xx that isn't one of the above,
+  // a 5xx that failed both attempts) -- log and move on.
+  | { ok: false; kind: "token_invalid" | "payment_issue" | "other" };
+
+export async function sendWhatsappMessage(
+  accessToken: string,
+  phoneNumberId: string,
+  to: string,
+  text: string,
+): Promise<SendWhatsappMessageResult> {
+  const body = JSON.stringify({
+    messaging_product: "whatsapp",
+    to,
+    type: "text",
+    text: { body: text },
+  });
+
+  const attempt = () =>
+    fetch(graphApiUrl(`/${phoneNumberId}/messages`), {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+      body,
+    });
+
+  let res = await attempt();
+  // Retry once on a transient failure only -- a 4xx (bad token, payment
+  // issue, invalid recipient) will fail identically on retry.
+  if (!res.ok && res.status >= 500) {
+    res = await attempt();
+  }
+
+  if (res.ok) return { ok: true };
+
+  const parsedError = await parseGraphApiError(res.clone());
+  if (parsedError?.code === PAYMENT_ISSUE_ERROR_CODE) {
+    return { ok: false, kind: "payment_issue" };
+  }
+  if (res.status === 401 || res.status === 403) {
+    return { ok: false, kind: "token_invalid" };
+  }
+  return { ok: false, kind: "other" };
+}
+
+// Trello D5 -- a lightweight, non-sending probe used by the periodic
+// eligibility recheck (see src/app/api/cron/whatsapp/recheck-eligibility).
+// Reuses the same harmless phone-number lookup finishConnection already
+// makes. This can only prove the WABA is reachable and the token still
+// works -- it does NOT prove a real send would succeed, since Meta has no
+// single confirmed "billing eligibility" field to poll (see decisions.md /
+// the D5 ticket's own research note). The reliable signal stays
+// sendWhatsappMessage's opportunistic `payment_issue` result; this is a
+// best-effort supplement, not a source of truth.
+export async function checkWhatsappEligibility(
+  accessToken: string,
+  phoneNumberId: string,
+): Promise<{ ok: true } | { ok: false; stillHasPaymentIssue: boolean }> {
+  const res = await fetch(graphApiUrl(`/${phoneNumberId}`, { fields: "display_phone_number" }), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (res.ok) return { ok: true };
+
+  const parsedError = await parseGraphApiError(res.clone());
+  return { ok: false, stillHasPaymentIssue: parsedError?.code === PAYMENT_ISSUE_ERROR_CODE };
 }

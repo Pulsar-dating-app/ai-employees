@@ -14,6 +14,7 @@ export interface TestEnv {
   anonKey: string;
   serviceRoleKey: string;
   emailMockUrl: string;
+  googleCalendarMockUrl: string;
 }
 
 // Reads the connection info global-setup.ts wrote after booting the test

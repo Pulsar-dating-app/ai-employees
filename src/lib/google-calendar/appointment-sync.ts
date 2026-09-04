@@ -9,11 +9,27 @@ import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from ".
 // that triggered them -- the DB row is the source of truth, this is a
 // layer on top. See the 2026-08-29 decisions.md entry.
 
+// The calendar event is deliberately shorter than appointments.ends_at.
+// `ends_at` = starts_at + duration + buffer, and that full span is what
+// actually keeps the slot from being double-booked (the exclusion
+// constraint and the availability engine both key off it, independent of
+// what's on Google) -- but showing the buffer as part of the visible event
+// would make the merchant's calendar look padded with dead time attached to
+// every appointment. So the event itself spans only the service's own
+// duration; the buffer stays a real block, just an invisible one. See the
+// 2026-09-04 decisions.md entry.
+export function calendarVisibleEndsAt(startsAt: string, durationMinutes: number): string {
+  return new Date(new Date(startsAt).getTime() + durationMinutes * 60_000).toISOString();
+}
+
 export type AppointmentSyncDetails = {
   serviceName: string;
   customerName: string;
   startsAt: string;
-  endsAt: string;
+  // The event's end time as it should appear on the calendar -- callers
+  // pass calendarVisibleEndsAt(startsAt, service.duration_minutes), never
+  // appointments.ends_at directly (that includes the buffer).
+  visibleEndsAt: string;
   // Trello -- Ana's professional-facing recap of the booking, stored on the
   // appointment and mirrored into the calendar event description. Optional.
   summary?: string | null;
@@ -38,7 +54,7 @@ export async function syncAppointmentConfirmed(
       summary,
       description: details.summary ?? null,
       startIso: details.startsAt,
-      endIso: details.endsAt,
+      endIso: details.visibleEndsAt,
     });
     return event.id;
   } catch (err) {
@@ -54,7 +70,7 @@ export async function syncAppointmentConfirmed(
 export async function syncAppointmentRescheduled(
   companyId: string,
   googleEventId: string,
-  details: { startsAt: string; endsAt: string },
+  details: { startsAt: string; visibleEndsAt: string },
 ): Promise<void> {
   const connection = await getValidAccessToken(companyId);
   if (!connection) return;
@@ -62,7 +78,7 @@ export async function syncAppointmentRescheduled(
   try {
     await updateCalendarEvent(connection.accessToken, connection.calendarId, googleEventId, {
       startIso: details.startsAt,
-      endIso: details.endsAt,
+      endIso: details.visibleEndsAt,
     });
   } catch (err) {
     console.error("Failed to update Google Calendar event for rescheduled appointment", err);

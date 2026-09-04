@@ -408,7 +408,16 @@
       "sdkNotReady": "Ainda carregando — tente novamente em instantes.",
       "stepOneTitle": "Conecte seu número do WhatsApp Business",
       "stepTwoTitle": "Comece a falar com os clientes",
-      "stepTwoDescription": "Depois de conectado, sua equipe responde no WhatsApp automaticamente — dia e noite."
+      "stepTwoDescription": "Depois de conectado, sua equipe responde no WhatsApp automaticamente — dia e noite.",
+      "paymentIssueBadge": "Pagamento pendente",
+      "paymentIssueDescription": "O WhatsApp não consegue entregar mensagens até que uma forma de pagamento seja adicionada à sua conta no Meta Business Manager."
+    },
+    "channelTabs": {
+      "tablistLabel": "Formas de os clientes falarem com este funcionário",
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram",
+      "embed": "Incorporar",
+      "link": "Link"
     },
     "instagram": {
       "title": "Instagram",
@@ -427,6 +436,22 @@
       "cancel": "Cancelar",
       "connectError": "Algo deu errado ao conectar o Instagram. Tente novamente.",
       "disconnectError": "Algo deu errado ao desconectar. Tente novamente."
+    },
+    "photo": {
+      "title": "Foto",
+      "description": "Escolha a foto que os clientes veem para {name} — no seu painel, no chat e em todo lugar em que ela aparece.",
+      "defaultLabel": "Opção {number}",
+      "customLabel": "Personalizada",
+      "chooseFileButton": "Escolher arquivo",
+      "noFileChosen": "Nenhum arquivo escolhido",
+      "currentFileHint": "Usando uma foto enviada anteriormente.",
+      "saveButton": "Salvar",
+      "savingButton": "Salvando…",
+      "saved": "Salvo",
+      "chooseFileError": "Escolha uma foto para enviar.",
+      "unsupportedFile": "Use um arquivo PNG, JPEG, WebP ou GIF.",
+      "fileTooLarge": "A foto deve ter no máximo 2MB.",
+      "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
     },
     "widgetCustomize": {
       "title": "Personalize seu widget",
@@ -474,12 +499,8 @@
       "nameDescription": "Renomeie {name} para combinar com sua marca — os clientes veem esse nome em toda conversa.",
       "humanHandoffTitle": "Traga uma pessoa para a conversa",
       "humanHandoffDescription": "Ative para que você ou sua equipe possam assumir uma conversa sempre que {name} precisar transferir para um humano.",
-      "instagramTitle": "Conecte o Instagram",
-      "instagramDescription": "Vincule sua conta do Instagram para que {name} também converse com clientes por lá.",
-      "embedTitle": "Personalize o widget",
-      "embedDescription": "Escolha a aparência da bolha de chat de {name} e a saudação exibida aos visitantes antes de publicar no seu site.",
-      "linksTitle": "Compartilhe em qualquer lugar",
-      "linksDescription": "Pegue o link direto ou o código de incorporação para adicionar o chat de {name} ao seu site ou enviar diretamente aos clientes."
+      "channelsTitle": "Alcance clientes em todo lugar",
+      "channelsDescription": "Conecte {name} ao WhatsApp ou Instagram, personalize o widget de chat do seu site, ou compartilhe um link direto — alterne entre eles com essas abas."
     }
   },
   "Teach": {

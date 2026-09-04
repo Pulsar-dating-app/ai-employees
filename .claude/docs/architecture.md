@@ -87,16 +87,16 @@ User-driven: shipping and return policy content is only ever relevant to Malu's 
 - This is a deliberate, narrow exception to the section's own "business knowledge is company-wide, not per-agent" rule stated earlier in this file (and in the per-agent page's own top comment) — Payment policy and "Other information" stayed on Settings because they're genuinely company-wide in a way shipping/returns, tied to one agent's own conversations, are not. A future request to move more Settings content per-agent should be weighed against that same test (is this actually agent-specific, or just convenient to see nearby?) rather than assumed to generalize from this one.
 - Live-verified: hired both Malu and Ana on a throwaway company, confirmed Shipping/Returns render on Malu's page and not on Ana's, confirmed Settings' completeness meter reads "0 of 4" (not 6), and confirmed saving from Malu's new location still `PATCH`es the same `companies` row (`shipping_policy` persisted, visible in the API response). Cleaned up afterward.
 
-### WhatsApp connection (Trello D1) — dormant since 2026-08-31
+### WhatsApp connection (Trello D1) — relaunched 2026-09-04
 
-> **Parked, not removed.** Instagram replaced WhatsApp as the channel being
-> built (Trello epic N; see decisions.md). Every route, migration, helper and
-> test described below still exists and still passes — nothing in the
-> dashboard reaches any of it. Reviving it is one JSX line in
-> `my-agents/[agentSlug]/page.tsx`. Read this section as the closest working
-> precedent for epic N: N1 copies this schema (including the column-privilege
-> lock on the token), N2 copies the connect/GET/DELETE route shape, and N3
-> copies `channels-section.tsx`.
+> **Live again, alongside Instagram (not instead of it).** WhatsApp was
+> parked 2026-08-31 while Instagram (epic N) was built; D2 (inbound webhook),
+> D4 (outbound adapter), D5 (payment-eligibility gate) and D6 (unified
+> channel-tabs UI) bring it back online — see the "WhatsApp relaunch" section
+> below and decisions.md's 2026-09-04 entries. D1's schema/routes described
+> below were amended in the same pass to become per-agent (see that section)
+> — read the per-company details here as historical context for *why* the
+> tables look the way they do, not as the current shape.
 
 Backend-only ticket: provider decision + schema + the server-side endpoint(s)
 F4 calls — F4 has since shipped for real, see the "Onboarding & admin shell"
@@ -202,6 +202,103 @@ place:
   which doesn't share an in-process mock with the test runner. Stateless,
   driven by magic input values (e.g. `code: "trigger-token-failure"`) so
   different tests can pick a failure mode without shared server state.
+
+### WhatsApp relaunch (Trello D2/D4/D5/D6) — 2026-09-04
+
+D2 (inbound webhook) and D4 (outbound adapter) were never actually built
+before Instagram (N4/N5) superseded them in the plan — this is their first
+real implementation, modeled closely on Instagram's, plus D5 (a gate that
+was scoped back in the original D1 pass but also never built) and D6 (the
+dashboard UI unification).
+
+- **D1 amendment: `company_whatsapp_connections` is now per-agent**
+  (migration `20260905090000`), mirroring N1's Instagram departure — the
+  original per-company design (`unique(company_id)`) left no criterion for
+  deciding which hired agent answers a WhatsApp number once a company has
+  more than one active hire. Now `unique(company_id, agent_id)` plus a
+  platform-wide partial unique index on `phone_number_id` (`where status <>
+  'disconnected'`) — one number answers exactly one agent, the same shape
+  N1 uses for `instagram_user_id`. The connect/GET/DELETE routes moved from
+  `/api/companies/[companyId]/whatsapp/...` to
+  `/api/companies/[companyId]/agents/[agentSlug]/whatsapp/...`, a direct
+  structural copy of N2's routes including the same `force`-to-reassign
+  conflict handling for a number already held by a different agent in the
+  same company. `manual-connect-test` moved the same way.
+- **D2** — `src/app/api/webhooks/whatsapp/route.ts`, structurally identical
+  to Instagram's N4 webhook: GET verify handshake, raw-body signature check
+  (`src/lib/whatsapp/webhook-signature.ts`, `META_APP_SECRET` — WhatsApp is
+  a classic Graph API product, unlike Instagram's separate Business Login
+  secret), connection lookup by `phone_number_id`, K6 paused-hire gate, N9
+  paused-conversation gate, D5's send gate, the billing gate
+  (`evaluateReplyGate`), `AgentEngine.run()`, then D4's send. Idempotency
+  reuses the shared `messages.external_message_id` partial unique index
+  (migration `20260831150000`, originally added for Instagram). Customer
+  find-or-create (`src/lib/whatsapp/session.ts`, `resolveWhatsappSession`)
+  is a sibling of `resolveInstagramSession`, keyed on `(company_id, channel
+  = 'whatsapp', phone)`; a new partial unique index
+  (`customers_company_phone_whatsapp_idx`, migration `20260905090200`)
+  dedupes it the same way Instagram's `instagram_user_id` index does.
+- **D4** — `sendWhatsappMessage` added to `src/lib/whatsapp/meta-graph-api.ts`
+  (`POST /{phoneNumberId}/messages`), modeled on `sendInstagramMessage`: one
+  retry on 5xx, no retry on 4xx. Also added a Graph API error-envelope
+  parser (`parseGraphApiError`, `{ error: { code, error_subcode, message }
+  }`) — the first thing in this codebase to branch on Meta's specific error
+  `code` rather than just success/failure, needed so D5's 131042 can be
+  told apart from every other failure. Three-way result:
+  `token_invalid` (401/403, flips the connection to `disconnected`),
+  `payment_issue` (code 131042, flips `has_payment_issue`), `other` (logged,
+  not retried further). No template-message support — out of scope for this
+  pass, same as the original D4 brief's session-window caveat.
+- **D5** — `company_whatsapp_connections.has_payment_issue` +
+  `payment_issue_detected_at` (migration `20260905090100`, not a new enum
+  value — Postgres can't `ALTER TYPE ... ADD VALUE` in the same transaction
+  as other DDL, and this state is orthogonal to `status` anyway). A pure
+  gate, `decideWhatsappSendGate` (`src/lib/whatsapp/enforcement.ts`),
+  deliberately narrower than billing's `decideReplyGate`: it reads the
+  *last known* state on the connection row rather than a freshly-read
+  source of truth, because that state is written by two separate impure
+  producers — D4's opportunistic 131042 detection (the reliable signal) and
+  a best-effort periodic recheck (`src/app/api/cron/whatsapp/recheck-eligibility`,
+  migration `20260905090300`, same scheduler-agnostic pg_cron/pg_net design
+  as N6's token-refresh job). The recheck's own doc comment is explicit that
+  it can only prove the WABA is reachable, not that a real send would
+  succeed — Meta has no single confirmed "billing eligibility" field to
+  poll (see decisions.md's original D5 research note). On a known payment
+  issue, D2's webhook still runs the engine and persists the reply (so the
+  dashboard shows what would have been said) but skips the delivery
+  attempt.
+- **D6** — `src/app/dashboard/my-agents/[agentSlug]/channel-tabs-card.tsx`
+  replaces four separate full-width cards (WhatsApp, Instagram, widget
+  customize, share/embed) with one `Card` containing a hand-rolled tab bar
+  (no headless-UI library in this codebase, so manual
+  `role="tablist"/"tab"/"tabpanel"`) and four always-mounted panels, hidden
+  via the `hidden` attribute rather than conditional rendering — required
+  because `WidgetCustomizeCard` and the embed snippet are coupled through a
+  `router.refresh()` server round-trip, not props, which has to keep
+  working regardless of which tab is active. Each panel's component
+  (`ChannelsSection`, `InstagramConnectCard`, `WidgetCustomizeCard`) had its
+  own outer `<Card>` stripped to a plain `<div>` — the tabs card is now the
+  only visual boundary. `share-embed-section.tsx` was split into
+  `direct-link-section.tsx` (Link tab) and `embed-snippet-section.tsx`
+  (Embed tab, beside the widget editor), sharing the extracted
+  `use-copy-feedback.ts` hook. `agent-connections-tour.tsx`'s three
+  separate steps that used to target Instagram/embed/share-links
+  individually collapsed into one step targeting the whole tab bar
+  (`data-tour="channels"`) — a hidden, non-active tab panel can't be
+  scrolled-to or spotlighted, and `TourStep` has no "activate this tab
+  first" hook worth adding for a single onboarding step.
+- **D7** (Meta App Review — Advanced Access + Business Verification for
+  WhatsApp) is tracked on Trello but is an external process, not code; it
+  blocks launching to real merchants, not development or testing against
+  Meta's own test numbers via `manual-connect-test`.
+- **Tests**: `tests/integration/whatsapp-webhook.test.ts` mirrors
+  `instagram-webhook.test.ts`'s structure (GET verify, signature rejection,
+  unknown-connection silent 200, idempotent redelivery, engine-failure-
+  still-persists-inbound, paused-conversation stays silent).
+  `tests/unit/whatsapp/enforcement.test.ts` and `graph-api-error.test.ts`
+  cover the two new pure functions. `graph-api-mock.ts` gained a
+  `/{phoneNumberId}/messages` send endpoint with the same
+  magic-value-trigger pattern as `instagram-api-mock.ts`.
 
 ### Internationalization (EN/PT)
 
@@ -584,6 +681,12 @@ Keeps a confirmed appointment's Google Calendar event in sync with `appointments
 - **Hooked into `appointments/route.ts` (POST)** and **`appointments/[appointmentId]/route.ts` (PATCH/DELETE)** — keyed off the appointment's **pre-update** `google_event_id` to decide which of the three mutually-exclusive branches applies (cancel-and-had-one / confirm-and-didn't-have-one / reschedule-and-had-one). A shared file-local `cancelGoogleEventAndClear` helper in `[appointmentId]/route.ts` avoids duplicating the cancel branch between `PATCH` and `DELETE`, which both live in that one file already.
 - Tests: `tests/integration/helpers/google-calendar-mock.ts` was extended (not replaced) with `events` create/update/delete handlers, keyed on `google_calendar_id` the same way its `freeBusy` handler already was (`"trigger-events-failure"` fails every events call; deleting the fixed id `"already-gone-event"` returns `410`). `tests/integration/appointment-calendar-sync.test.ts` covers: auto-confirm creates an event; manual-approval defers creation until the confirming `PATCH`; no connection / an events-API failure both degrade to `google_event_id: null` without erroring the booking; both `DELETE` and `PATCH { status: "cancelled" }` delete the event and clear the column; a reschedule updates the event while keeping the same `google_event_id`; cancelling an appointment whose event was already externally deleted doesn't error. No new unit-test file — unlike I2's chunking algorithm, there's no meaningfully complex pure logic here to isolate; the wrappers are thin IO, covered by the integration suite via the mock.
 
+#### Follow-up — the calendar event shows only the service duration, buffer minutes stay an invisible block (no ticket)
+
+Found via a user question (2026-09-04): the synced Google event spanned `appointments.ends_at` (`duration + buffer`), so a 60-min service with a 15-min buffer showed as one 75-minute event — padding every appointment on the merchant's visible calendar with dead time. **`ends_at` itself is unchanged** (still `duration + buffer`, still what the exclusion constraint and the availability engine both key off, so the buffer still fully blocks the time from new bookings — that enforcement has never depended on what Google shows). Only what gets pushed to Google changed: `calendarVisibleEndsAt(startsAt, durationMinutes)` (new, `src/lib/google-calendar/appointment-sync.ts`) computes `starts_at + duration_minutes` alone, and every one of the four call sites that used to pass the DB `ends_at` straight through now passes this instead — `AppointmentRepository.book()`/`reschedule()`, and both H3 routes' confirm/reschedule branches. `AppointmentSyncDetails.endsAt` and `syncAppointmentRescheduled`'s inline details type were both renamed to `visibleEndsAt`, specifically so the two concepts (the DB's blocking `ends_at` vs. the calendar's shorter visible end) can never be silently swapped for each other again — same field name for both was exactly the trap that produced the padded-event behavior in the first place. The H3 PATCH route's reschedule branch needed a `service.duration_minutes` value hoisted out of the block that fetches it (`rescheduledDurationMinutes`, `let`-declared above the `if ("starts_at" in body || "service_id" in body)` block) since the later Google-sync branch that needs it sits outside that block's scope.
+
+Tests: `tests/unit/google-calendar/appointment-sync.test.ts` (new) covers `calendarVisibleEndsAt`'s pure arithmetic. `tests/integration/helpers/google-calendar-mock.ts` gained a request-capture layer — every events create/update body is now stored (keyed by the event id, the one thing both sides already exchange) and readable via `GET /__events` / clearable via `DELETE /__events`, the same inspection shape as `helpers/email.ts`'s `__sent` for the Resend mock. `googleCalendarMockUrl` is now written to `.test-env.json` (mirroring `emailMockUrl`) so test files can reach it; `helpers/google-calendar-events.ts` (new) wraps the fetch calls. Two new cases in `appointment-calendar-sync.test.ts` assert the *actual sent* `start`/`end` on both a fresh booking and a reschedule, with a service that has a real buffer — the first genuinely end-to-end proof (not just unit-level) that the visible event and the blocking `ends_at` diverge correctly. **Not run locally this session** (Docker was down; per the user, CI is the source of truth for this suite going forward, not a local run) — unit + `tsc` + `eslint` + `next build` are all clean.
+
 ### Ana's scheduling tools (Trello J3)
 
 `src/lib/appointments/repository.ts` (`AppointmentRepository`) + four `AgentTool`s in `src/lib/agent-engine/tools/` — this is the ticket that gives Ana her hands. Structurally a copy of B5's `ProductRepository` + Malu's catalogue tools: a thin deterministic repository behind tools the model calls mid-turn, `companyId`/`customerId`/`conversationId`/`agentId` always taken from `ToolExecutionContext` (never model args), the service-role client by default with an injectable `supabaseClient?` override for tests, and each tool wired into `defaultTools` (`tools/registry.ts`) **and** listed in `AGENT_TOOL_SETS.ana` (`tools/tool-sets.ts`) — a tool in the registry is not offered to anyone until it's in a slug's set (J2).
@@ -703,6 +806,22 @@ The M5 teaser follow-up above named this as a natural next step ("surfacing it i
 - **What the Stitch reference showed that wasn't built as shown**: its mock "Integration Snippet" used a fictional `data-client-id` + a separate `window.SiddeConfig = {...}` script block — this app's actual snippet is the real one already shipped in M5/M6 (`data-company`/`data-agent` attributes directly on the one `<script>` tag, no second config block, no client-id concept anywhere in this schema), just extended with the two new attributes above. The mockup's binary "3D Animation vs. Static Character" choice became three options here (`default`/`video`/`image`) — merchants who haven't uploaded anything yet need an honest default state the mockup didn't show a design for.
 - Tests: `tests/unit/widget/embed-snippet.test.ts` (pure snippet-building logic, including the HTML-escaping case) and `tests/integration/widget-customize.test.ts` (auth/membership, invalid `launcherType`, oversized/wrong-type files, choosing a custom type with nothing to fall back on, and a full upload → replace → revert cycle that fetches the returned public URL directly to confirm it's genuinely unauthenticated-fetchable and that a replaced/reverted object stops resolving).
 - Live-verified against the real project: uploaded a real PNG through the actual UI (file-input selection simulated via a `DataTransfer`-backed `change` event, since the Browser pane has no native OS file-picker automation), confirmed the returned Storage URL is public (`curl -I`, no auth header, `200 image/png`), confirmed the generated snippet included the new `data-launcher-type`/`data-launcher-src` attributes, and confirmed the real `widget.js` (loaded from a real HTTP page, not a static file snapshot) renders that exact uploaded image as the launcher and that the panel still opens correctly. Throwaway company/user/uploaded object all cleaned up afterward (the storage object via the Storage REST API directly, since `storage.objects` blocks plain SQL `DELETE` — `protect_delete()` — by design).
+
+#### Follow-up — agent photo customization (2 curated defaults + a custom upload), per hired agent
+
+User-requested: previously every hire of a given agent slug showed the same single hardcoded photo (`src/lib/agents/media.ts`'s old one-photo-per-slug `AGENT_PHOTOS` map) everywhere — the my-team list, the Connections page's persona card, the scheduling rail, the conversations inbox, the public `/talk` chat page. Now a merchant picks between two curated default photos per agent, or uploads their own, same three-way shape (`default_1`/`default_2`/`custom`) as the widget launcher customization above, and the same "second real bucket" pattern.
+
+- **`company_agents.photo_type`/`photo_asset_url`** (migration `20260905100000_add_agent_photo_customization.sql`), same shape as `widget_launcher_type`/`widget_launcher_asset_url` — a `_type` enum column (`default_1`/`default_2`/`custom`, default `'default_1'`) plus a nullable asset URL, on `company_agents` not `companies`, so one hired employee's photo never affects another's even for the same underlying agent template.
+- **New `agent-photos` bucket** — a separate bucket from `widget-assets`, not a shared one: different asset class (portraits vs. embed-launcher media), kept apart so each bucket's contents stay predictable to reason about later. Public, same reasoning as `widget-assets` (shown on the public `/talk` chat page and in the embeddable widget, both unauthenticated) and the same three RLS policies keyed on `private.is_company_member(((storage.foldername(name))[1])::uuid)` against the `{companyId}/{agentId}/{filename}` path convention.
+- **`src/lib/agents/media.ts`** now exports three functions instead of one: `agentPhoto(slug)` (unchanged signature, now returns the *first* of two curated defaults — still what the generic marketplace/hire pages use, since they deliberately show the generic catalog listing rather than any one company's customization, same reasoning as their own use of `defaultAgentName()` over a hired employee's custom name), `agentDefaultPhotos(slug)` (both curated defaults, for the picker UI), and `resolveAgentPhoto(slug, photoType, photoAssetUrl)` (the one function every per-company display site calls — `custom` returns the stored URL, falling back to the first default if somehow unset; `default_2` returns the second curated photo; anything else, including `null`/an unrecognized value, resolves to the first).
+- **Two new placeholder photos per agent** (`public/agents/malu-2.png`, `ana-1.png`, `ana-2.png`) — Malu keeps her existing real Stitch portrait as `default_1`; there was no second real photo for her and no photo at all yet for Ana (her `AGENT_PHOTOS` entry didn't exist before this — she fell back to the `AgentAvatar` silhouette everywhere), so three flat-color placeholder tiles were generated (a hand-rolled minimal PNG encoder, zero new dependencies — solid brand-tinted background + the same head/shoulders silhouette shape as `AgentAvatar`'s own SVG fallback, just rasterized) to unblock the picker UI without fabricating fake stock photography. Swap the files for real portraits later; nothing else needs to change.
+- **`POST /api/companies/[companyId]/agents/[agentSlug]/photo`** — near-identical structure to the widget route (one endpoint, `photoType` + optional `file`, member-gated, 2MB image cap, same public-URL-to-storage-path recovery for best-effort orphan cleanup on replace/revert), simplified: no video branch, no greeting field.
+- **`src/app/dashboard/my-agents/[agentSlug]/photo-card.tsx`** — unlike the widget card's icon-based launcher options, the two default tiles show the *actual* candidate photos (real thumbnails, not icons) since for a photo picker specifically, seeing the image *is* the preview; there's no separate live-preview pane the way the widget card needs one for its bubble mockup. The custom tile still needs the widget card's local-blob-preview-before-upload trick (`URL.createObjectURL`, revoked on unmount/replacement) and its "arbitrary uploaded source, not a next/image-optimizable build asset" `<img>` escape hatch.
+- **Real bug caught live-testing**: `next/image` (used by `AgentPersonaCard`/`AgentAvatarCircle` for every per-company photo display, unlike the picker's own deliberate `<img>` for its custom tile) throws `Invalid src prop ... hostname "..." is not configured under images` for any remote URL whose host isn't explicitly allow-listed — never hit before this feature, since every `photoSrc` before now was always a local `/agents/*.jpg` build asset. Fixed in `next.config.ts`: `images.remotePatterns` derived from `NEXT_PUBLIC_SUPABASE_URL`'s own hostname at config-load time (not hardcoded — keeps working unchanged against any project/environment) scoped to `/storage/v1/object/public/**`, not the whole host. Required a full dev-server restart to take effect (Next.js doesn't hot-reload `next.config.ts`).
+- **Six call sites now resolve per-company** instead of calling `agentPhoto(slug)` directly: `my-agents/page.tsx` (list), `my-agents/[agentSlug]/page.tsx` (persona card), `dashboard/scheduling/page.tsx` (rail), `lib/conversations/detail.ts` (inbox thread), `talk/[companySlug]/[agentSlug]/page.tsx` (public chat) — each now also selects `photo_type, photo_asset_url` from `company_agents` and calls `resolveAgentPhoto()`. **`dashboard/page.tsx` (marketplace) and `dashboard/agents/[agentSlug]/page.tsx` (the pre-hire detail/hire page) deliberately still call `agentPhoto(slug)` directly** — confirmed by their own existing use of `defaultAgentName()` (never the hired custom name) that these are intentionally the generic, not-company-scoped catalog views, even for an already-hired agent.
+- **The embeddable widget's launcher icon was already fully per-agent** before this task (a user question, not a bug) — `company_agents.widget_launcher_type`/`widget_launcher_asset_url` were already scoped per `(company, agent)` row from the original widget-customization work above, and `buildEmbedSnippet()` bakes that specific agent's launcher into the `<script data-agent="...">` tag it generates — confirmed by reading the existing code, nothing needed to change.
+- Tests: `tests/unit/agents/media.test.ts` (new — `resolveAgentPhoto`'s every branch: both defaults, custom with/without a stored URL, an unrecognized/`null` `photoType`, an unknown slug). `tests/integration/agent-photo.test.ts` (new, mirrors `widget-customize.test.ts`'s structure exactly: auth/membership, invalid `photoType`, oversized/wrong-type file, choosing custom with nothing to fall back on, upload → replace → revert with public-URL fetch checks, keep-existing-asset on a file-less re-save). **Not run locally this session** (Docker was down; per the user, CI is the source of truth going forward) — unit + `tsc` + `eslint` + `next build` are all clean.
+- Live-verified against the real project via a throwaway account: hired Malu, confirmed the Photo card renders all three options with correct thumbnails, switched to `default_2` and confirmed the persona card picked it up after save; uploaded a real PNG directly against the live API route (FormData/File via an in-page `fetch`, same code path a real file-picker selection would hit) and confirmed the returned Storage URL is genuinely public (`200`, `image/png`) and rendered correctly once the `next.config.ts` fix was in place; reverted to `default_1` and confirmed via direct SQL that both the row and the now-orphaned storage object were cleaned up; confirmed the my-team list reflects the same resolved photo. Throwaway account/company deleted afterward via Supabase MCP.
 
 #### Follow-up — Share & Embed section (styled after Stitch "Share & Embed Dialog - Admin Workspace", rendered inline rather than as a dialog)
 

@@ -14,6 +14,7 @@ import {
   syncAppointmentConfirmed,
   syncAppointmentCancelled,
   syncAppointmentRescheduled,
+  calendarVisibleEndsAt,
 } from "@/lib/google-calendar/appointment-sync";
 import {
   validateIntakeAnswer,
@@ -660,7 +661,7 @@ async function book(
       // nameless) -- `customer.name` was read before the blank-fill above.
       customerName: customer.name ?? customerPatch.name ?? "",
       startsAt: appointment.starts_at,
-      endsAt: appointment.ends_at,
+      visibleEndsAt: calendarVisibleEndsAt(appointment.starts_at, service.duration_minutes),
       summary: appointment.summary as string | null,
     });
     if (googleEventId) {
@@ -930,7 +931,7 @@ async function reschedule(
   if (appointment.google_event_id) {
     await syncAppointmentRescheduled(companyId, appointment.google_event_id as string, {
       startsAt: startDate.toISOString(),
-      endsAt: endsAt.toISOString(),
+      visibleEndsAt: calendarVisibleEndsAt(startDate.toISOString(), service.duration_minutes),
     });
   }
 
