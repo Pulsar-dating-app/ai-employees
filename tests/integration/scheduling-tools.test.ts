@@ -26,6 +26,13 @@ import { getTestServiceClient } from "./helpers/service-client";
 // the business_hours row always matches.
 const BOOKING_DATE = "2027-03-01";
 const BOOKING_DOW = new Date(`${BOOKING_DATE}T12:00:00Z`).getUTCDay();
+// Same day-of-week as BOOKING_DATE, so setBusinessHours' single day_of_week
+// row still applies -- used to prove the daily booking cap resets per day.
+const BOOKING_DATE_NEXT_WEEK = (() => {
+  const d = new Date(`${BOOKING_DATE}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 7);
+  return d.toISOString().slice(0, 10);
+})();
 
 function textResponse(text: string) {
   return { output: [], output_text: text };
@@ -978,5 +985,56 @@ describe("scheduling policy (J7)", () => {
       .eq("id", booked.appointmentId)
       .single();
     expect(row!.status).not.toBe("cancelled");
+  });
+});
+
+describe("daily booking cap (abuse guard)", () => {
+  it("allows two same-day bookings for one customer, refuses a third", async () => {
+    const seed = await seedConversation(owner, "Daily Cap Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Slot", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx = toolCtxFor(seed);
+
+    const first = await book({ serviceId, startsAt: `${BOOKING_DATE}T09:00:00Z` }, ctx);
+    expect((first as { booked: boolean }).booked).toBe(true);
+
+    const second = await book({ serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` }, ctx);
+    expect((second as { booked: boolean }).booked).toBe(true);
+
+    const third = await book({ serviceId, startsAt: `${BOOKING_DATE}T11:00:00Z` }, ctx);
+    expect(third).toEqual({ booked: false, reason: "daily_limit_reached" });
+  });
+
+  it("doesn't count another customer's same-day appointments against this one", async () => {
+    const seed = await seedConversation(owner, "Daily Cap Isolation Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Slot", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx = toolCtxFor(seed);
+
+    await book({ serviceId, startsAt: `${BOOKING_DATE}T09:00:00Z` }, ctx);
+    await book({ serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` }, ctx);
+
+    // A different customer, same company, same day -- must not be blocked
+    // by the first customer's count.
+    const otherCustomerId = await createCustomer(owner, seed.companyId, "Other Customer");
+    const otherCtx: ToolExecutionContext = { ...ctx, customerId: otherCustomerId };
+    const result = await book({ serviceId, startsAt: `${BOOKING_DATE}T11:00:00Z` }, otherCtx);
+    expect((result as { booked: boolean }).booked).toBe(true);
+  });
+
+  it("resets on a different calendar day", async () => {
+    const seed = await seedConversation(owner, "Daily Cap Reset Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Slot", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx = toolCtxFor(seed);
+
+    await book({ serviceId, startsAt: `${BOOKING_DATE}T09:00:00Z` }, ctx);
+    await book({ serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` }, ctx);
+
+    const result = await book(
+      { serviceId, startsAt: `${BOOKING_DATE_NEXT_WEEK}T09:00:00Z` },
+      ctx,
+    );
+    expect((result as { booked: boolean }).booked).toBe(true);
   });
 });
