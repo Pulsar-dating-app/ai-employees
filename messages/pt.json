@@ -534,6 +534,11 @@
   "MyAgents": {
     "pageTitle": "Minha equipe",
     "pageSubtitle": "Os integrantes que você já contratou.",
+    "pastDueBanner": {
+      "title": "Pagamento falhou",
+      "body": "Sua equipe inteira está pausada e não responde nenhum cliente, em nenhum canal, até isso ser resolvido.",
+      "action": "Atualizar pagamento"
+    },
     "emptyState": "Você ainda não contratou ninguém.",
     "browseMarketplace": "Ver marketplace",
     "configure": "Configurar",

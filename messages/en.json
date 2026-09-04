@@ -534,6 +534,11 @@
   "MyAgents": {
     "pageTitle": "My team",
     "pageSubtitle": "The team members you've hired.",
+    "pastDueBanner": {
+      "title": "Payment failed",
+      "body": "Your whole team is paused and not replying to any customer, on any channel, until this is fixed.",
+      "action": "Update payment"
+    },
     "emptyState": "You haven't hired anyone yet.",
     "browseMarketplace": "Browse the marketplace",
     "configure": "Configure",

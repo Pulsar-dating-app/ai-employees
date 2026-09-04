@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { isBillingPastDue as checkBillingPastDue } from "@/lib/billing/activation";
 import { TourProvider } from "@/components/tour/tour-provider";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
@@ -42,15 +43,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   // Surfaced everywhere in the shell (not just the billing page's own
-  // banner) so a merchant sees "your team is paused" no matter which tab
-  // they land on. Same past_due/unpaid definition as the billing page's
-  // isLapsedPayment.
+  // banner, and now also the My Team page's) so a merchant sees "your team
+  // is paused" no matter which tab they land on.
   const companyId = companies?.[0]?.id ?? null;
-  const { data: billing } = companyId
-    ? await supabase.from("company_billing").select("subscription_status").eq("company_id", companyId).maybeSingle()
-    : { data: null };
-  const isBillingPastDue =
-    billing?.subscription_status === "past_due" || billing?.subscription_status === "unpaid";
+  const isBillingPastDue = companyId ? await checkBillingPastDue(companyId, supabase) : false;
 
   const hiredAgentSlugs = ((hired ?? []) as unknown as { agents: { slug: string } | null }[])
     .map((row) => row.agents?.slug)
