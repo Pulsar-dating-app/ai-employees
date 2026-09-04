@@ -13,6 +13,15 @@ import type { AddressInfo } from "node:net";
 // - code === "trigger-token-failure" -> the token exchange step fails
 // - phoneNumberId === "trigger-register-failure" -> the register step fails
 // - wabaId === "trigger-subscribe-failure" -> the webhook subscribe step fails
+// - to === "trigger-send-failure" -> POST .../messages 500s on both the
+//   first attempt and the one retry (D4's sendWhatsappMessage)
+// - to === "trigger-send-unauthorized" -> POST .../messages 401s (dead
+//   token, no retry -- only 5xx is retried)
+// - to === "trigger-payment-issue" -> POST .../messages 400s with Meta's
+//   131042 error envelope (D5's PAYMENT_ISSUE_ERROR_CODE)
+// - phoneNumberId (in the GET lookup path) === "trigger-payment-issue" ->
+//   the plain lookup also 400s with 131042, so D5's checkWhatsappEligibility
+//   can be tested against the same magic value
 export function startGraphApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
   const server: Server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
@@ -45,8 +54,36 @@ export function startGraphApiMock(): Promise<{ url: string; stop: () => Promise<
       return send(200, { success: true });
     }
 
+    const messagesMatch = url.pathname.match(/^\/v21\.0\/([^/]+)\/messages$/);
+    if (messagesMatch && req.method === "POST") {
+      let raw = "";
+      req.on("data", (chunk) => (raw += chunk));
+      req.on("end", () => {
+        const parsed = JSON.parse(raw || "{}");
+        const to = parsed?.to ?? "";
+        if (to === "trigger-send-unauthorized") {
+          return send(401, { error: { message: "mock: invalid token", code: 190 } });
+        }
+        if (to === "trigger-send-failure") {
+          return send(500, { error: { message: "mock: send failed" } });
+        }
+        if (to === "trigger-payment-issue") {
+          return send(400, {
+            error: { message: "mock: business eligibility payment issue", code: 131042, error_subcode: 2593109 },
+          });
+        }
+        return send(200, { messages: [{ id: `mock-message-${to}` }] });
+      });
+      return;
+    }
+
     const phoneMatch = url.pathname.match(/^\/v21\.0\/([^/]+)$/);
     if (phoneMatch) {
+      if (phoneMatch[1] === "trigger-payment-issue") {
+        return send(400, {
+          error: { message: "mock: business eligibility payment issue", code: 131042, error_subcode: 2593109 },
+        });
+      }
       return send(200, { id: phoneMatch[1], display_phone_number: "+55 11 91234-5678" });
     }
 

@@ -5,10 +5,18 @@ import { useTranslations } from "next-intl";
 import { useTour } from "@/components/tour/tour-provider";
 
 // One localStorage flag, shared by every hired employee's Connections page --
-// the five steps below point at controls every one of these pages has (name,
-// human handoff, Instagram, widget, links), so there's nothing agent-specific
-// to key the "seen it" flag on. Once a merchant has taken this tour once,
-// on any hire, it doesn't reappear on the others.
+// the three steps below point at controls every one of these pages has
+// (name, human handoff, channels), so there's nothing agent-specific to key
+// the "seen it" flag on. Once a merchant has taken this tour once, on any
+// hire, it doesn't reappear on the others.
+//
+// D6 (2026-09-04): the three separate steps that used to point at
+// Instagram/embed/share-links individually collapsed into one step pointing
+// at the whole channels tab bar (`data-tour="channels"`) -- those three are
+// now tab panels inside one card, and a hidden (non-active) tab panel can't
+// be scrolled-to or spotlighted. TourStep has no "activate this tab first"
+// hook, and adding one for a single onboarding step wasn't worth extending
+// that API.
 const SEEN_KEY = "staffra:tour-seen:agent-connections";
 
 export function AgentConnectionsTour({ agentName }: { agentName: string }) {
@@ -38,19 +46,9 @@ export function AgentConnectionsTour({ agentName }: { agentName: string }) {
         description: t("humanHandoffDescription", { name: agentName }),
       },
       {
-        target: '[data-tour="instagram-connect"]',
-        title: t("instagramTitle"),
-        description: t("instagramDescription", { name: agentName }),
-      },
-      {
-        target: '[data-tour="embed-customize"]',
-        title: t("embedTitle"),
-        description: t("embedDescription", { name: agentName }),
-      },
-      {
-        target: '[data-tour="share-links"]',
-        title: t("linksTitle"),
-        description: t("linksDescription", { name: agentName }),
+        target: '[data-tour="channels"]',
+        title: t("channelsTitle"),
+        description: t("channelsDescription", { name: agentName }),
       },
     ]);
 

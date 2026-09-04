@@ -87,16 +87,16 @@ User-driven: shipping and return policy content is only ever relevant to Malu's 
 - This is a deliberate, narrow exception to the section's own "business knowledge is company-wide, not per-agent" rule stated earlier in this file (and in the per-agent page's own top comment) — Payment policy and "Other information" stayed on Settings because they're genuinely company-wide in a way shipping/returns, tied to one agent's own conversations, are not. A future request to move more Settings content per-agent should be weighed against that same test (is this actually agent-specific, or just convenient to see nearby?) rather than assumed to generalize from this one.
 - Live-verified: hired both Malu and Ana on a throwaway company, confirmed Shipping/Returns render on Malu's page and not on Ana's, confirmed Settings' completeness meter reads "0 of 4" (not 6), and confirmed saving from Malu's new location still `PATCH`es the same `companies` row (`shipping_policy` persisted, visible in the API response). Cleaned up afterward.
 
-### WhatsApp connection (Trello D1) — dormant since 2026-08-31
+### WhatsApp connection (Trello D1) — relaunched 2026-09-04
 
-> **Parked, not removed.** Instagram replaced WhatsApp as the channel being
-> built (Trello epic N; see decisions.md). Every route, migration, helper and
-> test described below still exists and still passes — nothing in the
-> dashboard reaches any of it. Reviving it is one JSX line in
-> `my-agents/[agentSlug]/page.tsx`. Read this section as the closest working
-> precedent for epic N: N1 copies this schema (including the column-privilege
-> lock on the token), N2 copies the connect/GET/DELETE route shape, and N3
-> copies `channels-section.tsx`.
+> **Live again, alongside Instagram (not instead of it).** WhatsApp was
+> parked 2026-08-31 while Instagram (epic N) was built; D2 (inbound webhook),
+> D4 (outbound adapter), D5 (payment-eligibility gate) and D6 (unified
+> channel-tabs UI) bring it back online — see the "WhatsApp relaunch" section
+> below and decisions.md's 2026-09-04 entries. D1's schema/routes described
+> below were amended in the same pass to become per-agent (see that section)
+> — read the per-company details here as historical context for *why* the
+> tables look the way they do, not as the current shape.
 
 Backend-only ticket: provider decision + schema + the server-side endpoint(s)
 F4 calls — F4 has since shipped for real, see the "Onboarding & admin shell"
@@ -202,6 +202,103 @@ place:
   which doesn't share an in-process mock with the test runner. Stateless,
   driven by magic input values (e.g. `code: "trigger-token-failure"`) so
   different tests can pick a failure mode without shared server state.
+
+### WhatsApp relaunch (Trello D2/D4/D5/D6) — 2026-09-04
+
+D2 (inbound webhook) and D4 (outbound adapter) were never actually built
+before Instagram (N4/N5) superseded them in the plan — this is their first
+real implementation, modeled closely on Instagram's, plus D5 (a gate that
+was scoped back in the original D1 pass but also never built) and D6 (the
+dashboard UI unification).
+
+- **D1 amendment: `company_whatsapp_connections` is now per-agent**
+  (migration `20260905090000`), mirroring N1's Instagram departure — the
+  original per-company design (`unique(company_id)`) left no criterion for
+  deciding which hired agent answers a WhatsApp number once a company has
+  more than one active hire. Now `unique(company_id, agent_id)` plus a
+  platform-wide partial unique index on `phone_number_id` (`where status <>
+  'disconnected'`) — one number answers exactly one agent, the same shape
+  N1 uses for `instagram_user_id`. The connect/GET/DELETE routes moved from
+  `/api/companies/[companyId]/whatsapp/...` to
+  `/api/companies/[companyId]/agents/[agentSlug]/whatsapp/...`, a direct
+  structural copy of N2's routes including the same `force`-to-reassign
+  conflict handling for a number already held by a different agent in the
+  same company. `manual-connect-test` moved the same way.
+- **D2** — `src/app/api/webhooks/whatsapp/route.ts`, structurally identical
+  to Instagram's N4 webhook: GET verify handshake, raw-body signature check
+  (`src/lib/whatsapp/webhook-signature.ts`, `META_APP_SECRET` — WhatsApp is
+  a classic Graph API product, unlike Instagram's separate Business Login
+  secret), connection lookup by `phone_number_id`, K6 paused-hire gate, N9
+  paused-conversation gate, D5's send gate, the billing gate
+  (`evaluateReplyGate`), `AgentEngine.run()`, then D4's send. Idempotency
+  reuses the shared `messages.external_message_id` partial unique index
+  (migration `20260831150000`, originally added for Instagram). Customer
+  find-or-create (`src/lib/whatsapp/session.ts`, `resolveWhatsappSession`)
+  is a sibling of `resolveInstagramSession`, keyed on `(company_id, channel
+  = 'whatsapp', phone)`; a new partial unique index
+  (`customers_company_phone_whatsapp_idx`, migration `20260905090200`)
+  dedupes it the same way Instagram's `instagram_user_id` index does.
+- **D4** — `sendWhatsappMessage` added to `src/lib/whatsapp/meta-graph-api.ts`
+  (`POST /{phoneNumberId}/messages`), modeled on `sendInstagramMessage`: one
+  retry on 5xx, no retry on 4xx. Also added a Graph API error-envelope
+  parser (`parseGraphApiError`, `{ error: { code, error_subcode, message }
+  }`) — the first thing in this codebase to branch on Meta's specific error
+  `code` rather than just success/failure, needed so D5's 131042 can be
+  told apart from every other failure. Three-way result:
+  `token_invalid` (401/403, flips the connection to `disconnected`),
+  `payment_issue` (code 131042, flips `has_payment_issue`), `other` (logged,
+  not retried further). No template-message support — out of scope for this
+  pass, same as the original D4 brief's session-window caveat.
+- **D5** — `company_whatsapp_connections.has_payment_issue` +
+  `payment_issue_detected_at` (migration `20260905090100`, not a new enum
+  value — Postgres can't `ALTER TYPE ... ADD VALUE` in the same transaction
+  as other DDL, and this state is orthogonal to `status` anyway). A pure
+  gate, `decideWhatsappSendGate` (`src/lib/whatsapp/enforcement.ts`),
+  deliberately narrower than billing's `decideReplyGate`: it reads the
+  *last known* state on the connection row rather than a freshly-read
+  source of truth, because that state is written by two separate impure
+  producers — D4's opportunistic 131042 detection (the reliable signal) and
+  a best-effort periodic recheck (`src/app/api/cron/whatsapp/recheck-eligibility`,
+  migration `20260905090300`, same scheduler-agnostic pg_cron/pg_net design
+  as N6's token-refresh job). The recheck's own doc comment is explicit that
+  it can only prove the WABA is reachable, not that a real send would
+  succeed — Meta has no single confirmed "billing eligibility" field to
+  poll (see decisions.md's original D5 research note). On a known payment
+  issue, D2's webhook still runs the engine and persists the reply (so the
+  dashboard shows what would have been said) but skips the delivery
+  attempt.
+- **D6** — `src/app/dashboard/my-agents/[agentSlug]/channel-tabs-card.tsx`
+  replaces four separate full-width cards (WhatsApp, Instagram, widget
+  customize, share/embed) with one `Card` containing a hand-rolled tab bar
+  (no headless-UI library in this codebase, so manual
+  `role="tablist"/"tab"/"tabpanel"`) and four always-mounted panels, hidden
+  via the `hidden` attribute rather than conditional rendering — required
+  because `WidgetCustomizeCard` and the embed snippet are coupled through a
+  `router.refresh()` server round-trip, not props, which has to keep
+  working regardless of which tab is active. Each panel's component
+  (`ChannelsSection`, `InstagramConnectCard`, `WidgetCustomizeCard`) had its
+  own outer `<Card>` stripped to a plain `<div>` — the tabs card is now the
+  only visual boundary. `share-embed-section.tsx` was split into
+  `direct-link-section.tsx` (Link tab) and `embed-snippet-section.tsx`
+  (Embed tab, beside the widget editor), sharing the extracted
+  `use-copy-feedback.ts` hook. `agent-connections-tour.tsx`'s three
+  separate steps that used to target Instagram/embed/share-links
+  individually collapsed into one step targeting the whole tab bar
+  (`data-tour="channels"`) — a hidden, non-active tab panel can't be
+  scrolled-to or spotlighted, and `TourStep` has no "activate this tab
+  first" hook worth adding for a single onboarding step.
+- **D7** (Meta App Review — Advanced Access + Business Verification for
+  WhatsApp) is tracked on Trello but is an external process, not code; it
+  blocks launching to real merchants, not development or testing against
+  Meta's own test numbers via `manual-connect-test`.
+- **Tests**: `tests/integration/whatsapp-webhook.test.ts` mirrors
+  `instagram-webhook.test.ts`'s structure (GET verify, signature rejection,
+  unknown-connection silent 200, idempotent redelivery, engine-failure-
+  still-persists-inbound, paused-conversation stays silent).
+  `tests/unit/whatsapp/enforcement.test.ts` and `graph-api-error.test.ts`
+  cover the two new pure functions. `graph-api-mock.ts` gained a
+  `/{phoneNumberId}/messages` send endpoint with the same
+  magic-value-trigger pattern as `instagram-api-mock.ts`.
 
 ### Internationalization (EN/PT)
 
