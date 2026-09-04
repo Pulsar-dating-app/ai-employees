@@ -66,7 +66,7 @@ export const BILLING_PLANS: readonly BillingPlan[] = [
     displayName: "Pro",
     stripeLookupKey: "pro_monthly",
     stripePriceId: "price_1UBD3SHAg1kV3YLSO7xCrO1s",
-    monthlyReplyLimit: 10_000,
+    monthlyReplyLimit: 20_000,
     priceBrlCents: 99_900,
     isSelfServe: true,
   },
