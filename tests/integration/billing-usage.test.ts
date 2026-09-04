@@ -109,17 +109,19 @@ describe("evaluateReplyGate (Trello P7)", () => {
     expect(await evaluateReplyGate(id, svc)).toEqual({ allow: true, overPlan: true });
   });
 
-  it("keeps answering past the grace band by default, blocks only with the hard stop armed", async () => {
+  it("blocks 'grace_exceeded' past the grace band by default (the decided policy); the ops kill switch still allows it through", async () => {
     const owner = await signUpTestUser("owner");
     const { id } = await createCompany(owner.cookieHeader, "P7 Past Grace Co");
     const periodStart = new Date().toISOString();
     await seedBilling(id, { status: "active", periodStart });
     await seedUsage(id, periodStart, 1000, 100);
 
-    expect(await evaluateReplyGate(id, svc)).toEqual({ allow: true, overPlan: true });
-    expect(await evaluateReplyGate(id, svc, { hardStopEnabled: true, graceMultiplier: 1.2 })).toEqual({
-      allow: false,
-      reason: "grace_exceeded",
+    // No options passed -> the shipped default (hard stop armed) applies.
+    expect(await evaluateReplyGate(id, svc)).toEqual({ allow: false, reason: "grace_exceeded" });
+    // Explicit override -- the escape hatch, same shape BILLING_HARD_STOP_ENABLED=false gives ops.
+    expect(await evaluateReplyGate(id, svc, { hardStopEnabled: false, graceMultiplier: 1.2 })).toEqual({
+      allow: true,
+      overPlan: true,
     });
   });
 
