@@ -12,10 +12,11 @@
 const DEFAULT_GRACE_MULTIPLIER = 1.2;
 
 // Whether crossing `reply_limit * grace_multiplier` actually stops the AI.
-// Armed by default: past the 20% grace band, the AI is skipped in favor of
-// the canned QUOTA_EXCEEDED_CUSTOMER_TEXT line (nothing is charged either
-// way -- AgentEngine.run() never runs). Set BILLING_HARD_STOP_ENABLED=false
-// as an escape hatch if the policy ever needs to be paused without a deploy.
+// Armed by default: past the 20% grace band, the AI is skipped and the
+// customer gets no reply at all -- fully silent, see enforcement.ts (nothing
+// is charged either way -- AgentEngine.run() never runs). Set
+// BILLING_HARD_STOP_ENABLED=false as an escape hatch if the policy ever
+// needs to be paused without a deploy.
 const DEFAULT_HARD_STOP_ENABLED = true;
 
 /**

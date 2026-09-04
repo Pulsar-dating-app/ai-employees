@@ -4,7 +4,7 @@ import { AgentEngine } from "@/lib/agent-engine";
 import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
 import { resolveInstagramSession } from "@/lib/instagram/session";
 import { verifyInstagramSignature } from "@/lib/instagram/webhook-signature";
-import { evaluateReplyGate, recordAiReply, QUOTA_EXCEEDED_CUSTOMER_TEXT } from "@/lib/billing/enforcement";
+import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
 
 // Trello N4/N5 -- Meta's single fixed callback URL for every company's
 // Instagram DMs, the way instagram-callback/route.ts is one shared OAuth
@@ -170,33 +170,18 @@ export async function POST(request: Request) {
     if (conversation.status === "paused") continue;
 
     // P4 + P7: the billing gate, same decision web chat makes. A lapsed
-    // subscription silences the AI (skip, like the K6/paused gates above); a
-    // company past its reply-quota grace band is stopped only if the hard
-    // stop is armed (off by default). The inbound message is already
-    // persisted above so a human still sees it. The merchant sees a P5 banner.
+    // subscription or a reply-quota grace band overrun (hard stop armed)
+    // both silence the AI (skip, like the K6/paused gates above) -- no
+    // canned reply. A canned line was tried and dropped: the only string
+    // available is hard-coded Portuguese with no locale detection, so an
+    // English-speaking customer would get a Portuguese DM out of nowhere.
+    // The inbound message is already persisted above so a human still sees
+    // it. The merchant sees a P5 banner / dashboard alert.
     const billingGate = await evaluateReplyGate(connection.company_id, supabase);
     if (!billingGate.allow) {
-      if (billingGate.reason === "grace_exceeded") {
-        console.warn("[billing] instagram reply blocked: reply quota grace exceeded", {
-          companyId: connection.company_id,
-        });
-        const { error: cannedError } = await supabase
-          .from("messages")
-          .insert({
-            company_id: connection.company_id,
-            conversation_id: session.conversationId,
-            role: "agent",
-            content: QUOTA_EXCEEDED_CUSTOMER_TEXT,
-          });
-        if (!cannedError) {
-          await sendInstagramMessage(
-            connection.access_token,
-            connection.instagram_user_id,
-            senderId,
-            QUOTA_EXCEEDED_CUSTOMER_TEXT,
-          );
-        }
-      }
+      console.warn(`[billing] instagram reply blocked (${billingGate.reason})`, {
+        companyId: connection.company_id,
+      });
       continue;
     }
 
