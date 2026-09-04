@@ -171,7 +171,14 @@ export default async function setup() {
   writeFileSync(
     STATE_FILE,
     JSON.stringify(
-      { baseUrl, supabaseUrl: status.API_URL, anonKey: status.PUBLISHABLE_KEY, serviceRoleKey, emailMockUrl: emailMock.url },
+      {
+        baseUrl,
+        supabaseUrl: status.API_URL,
+        anonKey: status.PUBLISHABLE_KEY,
+        serviceRoleKey,
+        emailMockUrl: emailMock.url,
+        googleCalendarMockUrl: googleCalendarMock.url,
+      },
       null,
       2,
     ),

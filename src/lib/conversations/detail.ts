@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { agentPhoto } from "@/lib/agents/media";
+import { resolveAgentPhoto } from "@/lib/agents/media";
 
 // Trello F5 -- shared between the detail page's own server-side fetch and
 // the GET API route the client re-fetches through (e.g. after sending a
@@ -49,12 +49,12 @@ export async function getConversationDetail(
     if (slug) {
       const { data: companyAgent } = await supabase
         .from("company_agents")
-        .select("name")
+        .select("name, photo_type, photo_asset_url")
         .eq("company_id", companyId)
         .eq("agent_id", conv.agent_id)
         .maybeSingle();
       agentName = companyAgent?.name ?? defaultAgentName(slug);
-      agentPhotoSrc = agentPhoto(slug);
+      agentPhotoSrc = resolveAgentPhoto(slug, companyAgent?.photo_type ?? null, companyAgent?.photo_asset_url ?? null);
     }
   }
 

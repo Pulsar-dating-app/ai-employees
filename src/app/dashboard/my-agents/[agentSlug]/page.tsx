@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { agentPhoto } from "@/lib/agents/media";
+import { agentDefaultPhotos, resolveAgentPhoto } from "@/lib/agents/media";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { PolicySection } from "../../settings/policy-section";
 import { ChannelTabsCard } from "./channel-tabs-card";
 import { AvailabilityCard } from "./availability-card";
 import { NameCard } from "./name-card";
+import { PhotoCard } from "./photo-card";
 import { HumanHandoffCard } from "./human-handoff-card";
 import { DevChatTest } from "../../dev-chat-test";
 import { AgentConnectionsTour } from "./agent-connections-tour";
@@ -76,7 +77,9 @@ export default async function AgentConnectionsPage({
   const [{ data: companyAgent }, { data: membership }] = await Promise.all([
     supabase
       .from("company_agents")
-      .select("id, name, status, widget_greeting, widget_launcher_type, widget_launcher_asset_url")
+      .select(
+        "id, name, status, widget_greeting, widget_launcher_type, widget_launcher_asset_url, photo_type, photo_asset_url",
+      )
       .eq("company_id", company.id)
       .eq("agent_id", agent.id)
       .maybeSingle(),
@@ -103,6 +106,7 @@ export default async function AgentConnectionsPage({
 
   const name = companyAgent.name ?? fallbackName;
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
+  const photoSrc = resolveAgentPhoto(agentSlug, companyAgent.photo_type, companyAgent.photo_asset_url);
 
   const baseUrl = resolveCheckoutBaseUrl();
   const chatUrl = `${baseUrl}/talk/${company.slug}/${agentSlug}`;
@@ -132,7 +136,7 @@ export default async function AgentConnectionsPage({
           name={name}
           role={agent.role}
           description={agent.description}
-          photoSrc={agentPhoto(agentSlug)}
+          photoSrc={photoSrc}
           active={companyAgent.status === "active"}
           className="lg:col-span-4"
         />
@@ -146,6 +150,17 @@ export default async function AgentConnectionsPage({
               canEdit={canEdit}
             />
           </div>
+          <PhotoCard
+            companyId={company.id}
+            agentSlug={agentSlug}
+            agentName={name}
+            canEdit={canEdit}
+            defaultPhotos={agentDefaultPhotos(agentSlug)}
+            initial={{
+              photoType: (companyAgent.photo_type as "default_1" | "default_2" | "custom") ?? "default_1",
+              photoAssetUrl: companyAgent.photo_asset_url,
+            }}
+          />
           <AvailabilityCard
             companyId={company.id}
             agentSlug={agentSlug}

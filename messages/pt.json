@@ -437,6 +437,22 @@
       "connectError": "Algo deu errado ao conectar o Instagram. Tente novamente.",
       "disconnectError": "Algo deu errado ao desconectar. Tente novamente."
     },
+    "photo": {
+      "title": "Foto",
+      "description": "Escolha a foto que os clientes veem para {name} — no seu painel, no chat e em todo lugar em que ela aparece.",
+      "defaultLabel": "Opção {number}",
+      "customLabel": "Personalizada",
+      "chooseFileButton": "Escolher arquivo",
+      "noFileChosen": "Nenhum arquivo escolhido",
+      "currentFileHint": "Usando uma foto enviada anteriormente.",
+      "saveButton": "Salvar",
+      "savingButton": "Salvando…",
+      "saved": "Salvo",
+      "chooseFileError": "Escolha uma foto para enviar.",
+      "unsupportedFile": "Use um arquivo PNG, JPEG, WebP ou GIF.",
+      "fileTooLarge": "A foto deve ter no máximo 2MB.",
+      "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
+    },
     "widgetCustomize": {
       "title": "Personalize seu widget",
       "description": "Escolha a aparência da bolha de chat de {name} e o que ela diz ao cumprimentar um visitante.",
