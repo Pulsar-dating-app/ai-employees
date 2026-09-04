@@ -539,6 +539,16 @@
       "body": "Your whole team is paused and not replying to any customer, on any channel, until this is fixed.",
       "action": "Update payment"
     },
+    "overLimitBanner": {
+      "title": "You've used all your replies this period",
+      "body": "Your team keeps answering for a short grace window, then stops. Upgrade your plan to lift the limit.",
+      "action": "View plan"
+    },
+    "nearLimitBanner": {
+      "title": "You're almost out of replies",
+      "body": "{left, plural, one {# reply left} other {# replies left}} this period.",
+      "action": "View plan"
+    },
     "emptyState": "You haven't hired anyone yet.",
     "browseMarketplace": "Browse the marketplace",
     "configure": "Configure",

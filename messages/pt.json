@@ -539,6 +539,16 @@
       "body": "Sua equipe inteira está pausada e não responde nenhum cliente, em nenhum canal, até isso ser resolvido.",
       "action": "Atualizar pagamento"
     },
+    "overLimitBanner": {
+      "title": "Você usou todas as respostas deste período",
+      "body": "Sua equipe continua respondendo por um curto período de tolerância, depois para. Mude de plano para aumentar o limite.",
+      "action": "Ver plano"
+    },
+    "nearLimitBanner": {
+      "title": "Suas respostas estão acabando",
+      "body": "{left, plural, one {# resposta restante} other {# respostas restantes}} neste período.",
+      "action": "Ver plano"
+    },
     "emptyState": "Você ainda não contratou ninguém.",
     "browseMarketplace": "Ver marketplace",
     "configure": "Configurar",

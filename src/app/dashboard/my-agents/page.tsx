@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { isBillingPastDue } from "@/lib/billing/activation";
+import { getUsageSummary } from "@/lib/billing/usage-summary";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { resolveAgentPhoto } from "@/lib/agents/media";
 import { Button } from "@/components/ui/button";
@@ -27,16 +28,27 @@ export default async function MyAgentsPage() {
 
   let hired: HiredAgentRow[] = [];
   let pastDue = false;
+  let overLimit = false;
+  let nearLimit = false;
+  let repliesLeft = 0;
   if (company) {
-    const [{ data }, lapsed] = await Promise.all([
+    const [{ data }, lapsed, usage] = await Promise.all([
       supabase
         .from("company_agents")
         .select("status, name, photo_type, photo_asset_url, agents(slug, role, description)")
         .eq("company_id", company.id),
       isBillingPastDue(company.id, supabase),
+      getUsageSummary(company.id, supabase),
     ]);
     hired = (data as HiredAgentRow[] | null) ?? [];
     pastDue = lapsed;
+
+    if (usage && usage.limit > 0) {
+      const pct = (usage.used / usage.limit) * 100;
+      overLimit = usage.used >= usage.limit;
+      nearLimit = !overLimit && pct >= 80;
+      repliesLeft = Math.max(0, usage.limit - usage.used);
+    }
   }
 
   return (
@@ -48,6 +60,9 @@ export default async function MyAgentsPage() {
           payment failure -- the reply gate is what actually silences
           replies, not this per-card badge. This banner is the one place on
           the team's own page that says so explicitly. */}
+      {/* Payment failure already silences every bot regardless of usage (P4's
+          gate runs before P7's), so it takes priority and the two banners
+          never stack -- only one of the three shows at a time. */}
       {pastDue ? (
         <Alert
           variant="error"
@@ -61,6 +76,34 @@ export default async function MyAgentsPage() {
           }
         >
           {t("pastDueBanner.body")}
+        </Alert>
+      ) : overLimit ? (
+        <Alert
+          variant="error"
+          title={t("overLimitBanner.title")}
+          action={
+            <Link href="/dashboard/settings/billing">
+              <Button type="button" variant="danger" size="sm">
+                {t("overLimitBanner.action")}
+              </Button>
+            </Link>
+          }
+        >
+          {t("overLimitBanner.body")}
+        </Alert>
+      ) : nearLimit ? (
+        <Alert
+          variant="warning"
+          title={t("nearLimitBanner.title")}
+          action={
+            <Link href="/dashboard/settings/billing">
+              <Button type="button" variant="primary" size="sm">
+                {t("nearLimitBanner.action")}
+              </Button>
+            </Link>
+          }
+        >
+          {t("nearLimitBanner.body", { left: repliesLeft })}
         </Alert>
       ) : null}
 

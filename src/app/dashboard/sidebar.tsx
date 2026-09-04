@@ -18,6 +18,7 @@ import {
   ChatIcon,
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import type { UsageSummary } from "@/lib/billing/usage-summary";
 import { BillingPastDueAlert } from "./billing-alert";
 
 // Every tab is always shown. Products → Malu, Scheduling → Ana, Performance
@@ -69,6 +70,38 @@ function SidebarHeader({
   );
 }
 
+// A compact reply-usage readout for the desktop rail -- the same {used,
+// limit} count the billing settings page's own meter shows (P5), just
+// small and always-visible instead of buried a tab away. Neutral while
+// comfortably under the limit, amber ≥80%, red once it's actually at/over
+// (the P7 hard-stop band is what silences bots, not this number -- this is
+// just the same threshold the settings page's own near/over banners use).
+// Links straight to the page that can fix it.
+function UsageTracker({ usage }: { usage: UsageSummary | null }) {
+  const t = useTranslations("Billing.usage");
+  if (!usage || usage.limit <= 0) return null;
+
+  const pct = (usage.used / usage.limit) * 100;
+  const overLimit = usage.used >= usage.limit;
+  const nearLimit = !overLimit && pct >= 80;
+
+  return (
+    <Link
+      href="/dashboard/settings/billing"
+      className={clsx(
+        "mx-3 mb-3 flex items-center rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+        overLimit
+          ? "border-error/30 bg-error-container/40 text-error hover:brightness-95"
+          : nearLimit
+            ? "border-orange-200 bg-orange-50 text-orange-700 hover:brightness-95"
+            : "border-outline-variant/60 bg-surface-container-low text-on-surface-variant hover:bg-surface-container",
+      )}
+    >
+      <span className="truncate">{t("count", { used: usage.used, limit: usage.limit })}</span>
+    </Link>
+  );
+}
+
 // Staffra "Human-Centric AI" admin shell (Stitch): a light persistent rail on
 // desktop, a slim top bar + thumb-reachable bottom tab bar on mobile. All
 // three read the same NAV_ITEMS so active state never drifts.
@@ -78,12 +111,14 @@ export function Sidebar({
   locale,
   hiredAgentSlugs,
   isBillingPastDue,
+  usage,
 }: {
   companyName: string | null;
   email: string | null;
   locale: "en" | "pt";
   hiredAgentSlugs: string[];
   isBillingPastDue: boolean;
+  usage: UsageSummary | null;
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
@@ -131,6 +166,8 @@ export function Sidebar({
             );
           })}
         </nav>
+
+        <UsageTracker usage={usage} />
 
         <div className="border-t border-outline-variant p-3">
           <form action={logout}>

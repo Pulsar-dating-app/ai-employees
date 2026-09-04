@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { isBillingPastDue as checkBillingPastDue } from "@/lib/billing/activation";
+import { getUsageSummary } from "@/lib/billing/usage-summary";
 import { TourProvider } from "@/components/tour/tour-provider";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
@@ -46,7 +47,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // banner, and now also the My Team page's) so a merchant sees "your team
   // is paused" no matter which tab they land on.
   const companyId = companies?.[0]?.id ?? null;
-  const isBillingPastDue = companyId ? await checkBillingPastDue(companyId, supabase) : false;
+  const [isBillingPastDue, usage] = companyId
+    ? await Promise.all([checkBillingPastDue(companyId, supabase), getUsageSummary(companyId, supabase)])
+    : [false, null];
 
   const hiredAgentSlugs = ((hired ?? []) as unknown as { agents: { slug: string } | null }[])
     .map((row) => row.agents?.slug)
@@ -62,6 +65,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           locale={locale as "en" | "pt"}
           hiredAgentSlugs={hiredAgentSlugs}
           isBillingPastDue={isBillingPastDue}
+          usage={usage}
         />
         <div className="relative z-10 sm:pl-64">
           <TopBar locale={locale as "en" | "pt"} isBillingPastDue={isBillingPastDue} />
