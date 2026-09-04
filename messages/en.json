@@ -386,6 +386,7 @@
   "Dashboard": {
     "logout": "Log out",
     "workspaceLabel": "Workspace",
+    "billingPastDueAlert": "Payment failed — team paused",
     "tabs": {
       "marketplace": "Marketplace",
       "myAgents": "My team",

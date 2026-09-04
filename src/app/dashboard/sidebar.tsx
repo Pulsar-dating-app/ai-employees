@@ -18,6 +18,7 @@ import {
   ChatIcon,
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { BillingPastDueAlert } from "./billing-alert";
 
 // Every tab is always shown. Products → Malu, Scheduling → Ana, Performance
 // → any hire: while that team member isn't hired the tab is **muted + gets a
@@ -76,11 +77,13 @@ export function Sidebar({
   email,
   locale,
   hiredAgentSlugs,
+  isBillingPastDue,
 }: {
   companyName: string | null;
   email: string | null;
   locale: "en" | "pt";
   hiredAgentSlugs: string[];
+  isBillingPastDue: boolean;
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
@@ -149,6 +152,7 @@ export function Sidebar({
           <span className="text-base font-bold tracking-tight text-primary">Staffra</span>
         </div>
         <div className="flex items-center gap-2">
+          {isBillingPastDue ? <BillingPastDueAlert compact /> : null}
           <LanguageSwitcher currentLocale={locale} />
           <form action={logout}>
             <button type="submit" aria-label={tDash("logout")} className="p-1.5 text-on-surface-variant">

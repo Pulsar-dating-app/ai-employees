@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { BillingPastDueAlert } from "./billing-alert";
 
 const SECTIONS = [
   { key: "marketplace" as const, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
@@ -13,9 +14,15 @@ const SECTIONS = [
 ];
 
 // Sticky top app bar (Stitch admin shell) — desktop only; the mobile top
-// bar lives in <Sidebar>. Shows the current section and the language
-// toggle. No notification/help affordances — nothing backs them yet.
-export function TopBar({ locale }: { locale: "en" | "pt" }) {
+// bar lives in <Sidebar>. Shows the current section, the past-due billing
+// alert (if any), and the language toggle.
+export function TopBar({
+  locale,
+  isBillingPastDue,
+}: {
+  locale: "en" | "pt";
+  isBillingPastDue: boolean;
+}) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
   const section = SECTIONS.find((s) => s.match(pathname))?.key ?? "marketplace";
@@ -23,7 +30,10 @@ export function TopBar({ locale }: { locale: "en" | "pt" }) {
   return (
     <header className="sticky top-0 z-30 hidden h-16 items-center justify-between border-b border-outline-variant bg-surface/80 px-10 backdrop-blur-md sm:flex">
       <span className="text-lg font-extrabold tracking-tight text-primary">{t(section)}</span>
-      <LanguageSwitcher currentLocale={locale} />
+      <div className="flex items-center gap-3">
+        {isBillingPastDue ? <BillingPastDueAlert /> : null}
+        <LanguageSwitcher currentLocale={locale} />
+      </div>
     </header>
   );
 }

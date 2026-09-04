@@ -24,7 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     locale,
   ] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.from("companies").select("name"),
+    supabase.from("companies").select("id, name"),
     // Only used to mute + lock-icon the tabs whose team member isn't hired
     // (the page itself is the real gate). `company_agents`' select policy is
     // `is_company_member`, so this is already scoped to the user's companies.
@@ -41,6 +41,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/onboarding");
   }
 
+  // Surfaced everywhere in the shell (not just the billing page's own
+  // banner) so a merchant sees "your team is paused" no matter which tab
+  // they land on. Same past_due/unpaid definition as the billing page's
+  // isLapsedPayment.
+  const companyId = companies?.[0]?.id ?? null;
+  const { data: billing } = companyId
+    ? await supabase.from("company_billing").select("subscription_status").eq("company_id", companyId).maybeSingle()
+    : { data: null };
+  const isBillingPastDue =
+    billing?.subscription_status === "past_due" || billing?.subscription_status === "unpaid";
+
   const hiredAgentSlugs = ((hired ?? []) as unknown as { agents: { slug: string } | null }[])
     .map((row) => row.agents?.slug)
     .filter((slug): slug is string => Boolean(slug));
@@ -54,9 +65,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           email={user?.email ?? null}
           locale={locale as "en" | "pt"}
           hiredAgentSlugs={hiredAgentSlugs}
+          isBillingPastDue={isBillingPastDue}
         />
         <div className="relative z-10 sm:pl-64">
-          <TopBar locale={locale as "en" | "pt"} />
+          <TopBar locale={locale as "en" | "pt"} isBillingPastDue={isBillingPastDue} />
           <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
             {children}
           </main>
