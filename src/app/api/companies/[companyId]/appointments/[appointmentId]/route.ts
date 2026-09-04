@@ -4,6 +4,7 @@ import {
   syncAppointmentConfirmed,
   syncAppointmentRescheduled,
   syncAppointmentCancelled,
+  calendarVisibleEndsAt,
 } from "@/lib/google-calendar/appointment-sync";
 import { notifyAppointmentConfirmed, notifyAppointmentDeclined } from "@/lib/email/appointments";
 import { notifyWaitlistForFreedSlot } from "@/lib/appointments/waitlist";
@@ -154,7 +155,10 @@ export async function PATCH(
 
   // Reschedule: either starts_at or service_id (or both) changing means
   // ends_at has to be recomputed — never left stale, never trusted from the
-  // client, same "always server-computed" rule as creation.
+  // client, same "always server-computed" rule as creation. Hoisted so the
+  // Google-sync branch below (outside this block) can compute the calendar
+  // event's visible end without a second services fetch.
+  let rescheduledDurationMinutes: number | null = null;
   if ("starts_at" in body || "service_id" in body) {
     const effectiveServiceId =
       "service_id" in body ? body.service_id : appointmentLookup.appointment.service_id;
@@ -179,6 +183,7 @@ export async function PATCH(
     if (!service) {
       return NextResponse.json({ error: "service not found for this company" }, { status: 400 });
     }
+    rescheduledDurationMinutes = service.duration_minutes;
 
     const startsAtRaw = "starts_at" in body ? body.starts_at : appointmentLookup.appointment.starts_at;
     const startsAt = typeof startsAtRaw === "string" ? new Date(startsAtRaw) : null;
@@ -292,7 +297,7 @@ export async function PATCH(
     if (synced) return NextResponse.json({ appointment: synced });
   } else if (update.status === "confirmed" && !preUpdateGoogleEventId) {
     const [{ data: service }, { data: customer }] = await Promise.all([
-      supabase.from("services").select("name").eq("id", data.service_id).maybeSingle(),
+      supabase.from("services").select("name, duration_minutes").eq("id", data.service_id).maybeSingle(),
       supabase.from("customers").select("name").eq("id", data.customer_id).maybeSingle(),
     ]);
     if (service && customer) {
@@ -303,7 +308,7 @@ export async function PATCH(
           (data.intake_answers as Record<string, string> | null)?.full_name ??
           "",
         startsAt: data.starts_at,
-        endsAt: data.ends_at,
+        visibleEndsAt: calendarVisibleEndsAt(data.starts_at, service.duration_minutes),
         // Ana's recap, captured at booking time (K-epic summary work).
         summary: data.summary as string | null,
       });
@@ -318,9 +323,11 @@ export async function PATCH(
       }
     }
   } else if (preUpdateGoogleEventId && rescheduled && update.status !== "cancelled") {
+    // rescheduledDurationMinutes is always set here: `rescheduled` is true
+    // only when the block above (which sets it) ran.
     await syncAppointmentRescheduled(companyId, preUpdateGoogleEventId, {
       startsAt: data.starts_at,
-      endsAt: data.ends_at,
+      visibleEndsAt: calendarVisibleEndsAt(data.starts_at, rescheduledDurationMinutes!),
     });
   }
 

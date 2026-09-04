@@ -437,6 +437,22 @@
       "connectError": "Something went wrong connecting Instagram. Please try again.",
       "disconnectError": "Something went wrong disconnecting. Please try again."
     },
+    "photo": {
+      "title": "Photo",
+      "description": "Choose the photo customers see for {name} — on your dashboard, in chat, and everywhere else they show up.",
+      "defaultLabel": "Option {number}",
+      "customLabel": "Custom",
+      "chooseFileButton": "Choose file",
+      "noFileChosen": "No file chosen",
+      "currentFileHint": "Using a previously uploaded photo.",
+      "saveButton": "Save",
+      "savingButton": "Saving…",
+      "saved": "Saved",
+      "chooseFileError": "Choose a photo to upload.",
+      "unsupportedFile": "Use a PNG, JPEG, WebP, or GIF file.",
+      "fileTooLarge": "Photo must be 2MB or smaller.",
+      "saveError": "Something went wrong saving that setting. Please try again."
+    },
     "widgetCustomize": {
       "title": "Customize your widget",
       "description": "Choose how {name}'s chat bubble looks and what it says when it greets a visitor.",

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { agentPhoto } from "@/lib/agents/media";
+import { resolveAgentPhoto } from "@/lib/agents/media";
 import { Button } from "@/components/ui/button";
 import { UsersIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
@@ -11,6 +11,8 @@ import { AgentPersonaCard } from "./agent-persona-card";
 type HiredAgentRow = {
   status: string;
   name: string | null;
+  photo_type: string | null;
+  photo_asset_url: string | null;
   agents: { slug: string; role: string | null; description: string | null } | null;
 };
 
@@ -25,7 +27,7 @@ export default async function MyAgentsPage() {
   if (company) {
     const { data } = await supabase
       .from("company_agents")
-      .select("status, name, agents(slug, role, description)")
+      .select("status, name, photo_type, photo_asset_url, agents(slug, role, description)")
       .eq("company_id", company.id);
     hired = (data as HiredAgentRow[] | null) ?? [];
   }
@@ -55,7 +57,7 @@ export default async function MyAgentsPage() {
                   name={row.name ?? defaultAgentName(row.agents.slug)}
                   role={row.agents.role}
                   description={row.agents.description}
-                  photoSrc={agentPhoto(row.agents.slug)}
+                  photoSrc={resolveAgentPhoto(row.agents.slug, row.photo_type, row.photo_asset_url)}
                   active={row.status === "active"}
                   className="h-full transition-shadow hover:shadow-level2"
                 />

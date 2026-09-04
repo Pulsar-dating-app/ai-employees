@@ -18,8 +18,26 @@ import type { AddressInfo } from "node:net";
 //   succeed (create returns an incrementing mock-event-N id)
 // Deleting the fixed event id "already-gone-event" returns 410, simulating
 // an event removed by hand -- I3 treats that as a successful delete.
+//
+// Every create/update body is captured (keyed by the event id both sides
+// already exchange, e.g. `google_event_id`), readable via GET /__events and
+// clearable via DELETE /__events -- same inspection shape as
+// tests/integration/helpers/email.ts's `__sent`, for tests that need to
+// assert on what was actually sent to "Google" (start/end/summary/
+// description), not just that a sync happened. Requests for the magic
+// scenario ids above still succeed/fail as documented and are never
+// captured -- they're not simulating a real event.
+export type CapturedCalendarEvent = {
+  id: string;
+  summary?: string;
+  description?: string | null;
+  start?: { dateTime: string };
+  end?: { dateTime: string };
+};
+
 export function startGoogleCalendarMock(): Promise<{ url: string; stop: () => Promise<void> }> {
   let nextEventId = 1;
+  const capturedEvents = new Map<string, CapturedCalendarEvent>();
 
   const server: Server = createServer((req, res) => {
     const send = (status: number, body: unknown) => {
@@ -28,6 +46,15 @@ export function startGoogleCalendarMock(): Promise<{ url: string; stop: () => Pr
     };
 
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
+
+    if (url.pathname === "/__events" && req.method === "GET") {
+      return send(200, [...capturedEvents.values()]);
+    }
+    if (url.pathname === "/__events" && req.method === "DELETE") {
+      capturedEvents.clear();
+      res.writeHead(204);
+      return res.end();
+    }
 
     if (url.pathname === "/calendar/v3/freeBusy" && req.method === "POST") {
       return readJsonBody(req, (body: { timeMin: string; timeMax: string; items: { id: string }[] }) => {
@@ -55,13 +82,22 @@ export function startGoogleCalendarMock(): Promise<{ url: string; stop: () => Pr
       }
 
       if (req.method === "POST" && !eventId) {
-        return readJsonBody(req, () => send(200, { id: `mock-event-${nextEventId++}` }));
+        return readJsonBody(req, (body: Omit<CapturedCalendarEvent, "id">) => {
+          const id = `mock-event-${nextEventId++}`;
+          capturedEvents.set(id, { ...body, id });
+          send(200, { id });
+        });
       }
       if (req.method === "PATCH" && eventId) {
-        return readJsonBody(req, () => send(200, { id: eventId }));
+        return readJsonBody(req, (body: Partial<Omit<CapturedCalendarEvent, "id">>) => {
+          const existing = capturedEvents.get(eventId);
+          capturedEvents.set(eventId, { ...existing, ...body, id: eventId });
+          send(200, { id: eventId });
+        });
       }
       if (req.method === "DELETE" && eventId) {
         if (eventId === "already-gone-event") return send(410, { error: { message: "mock: gone" } });
+        capturedEvents.delete(eventId);
         res.writeHead(204);
         return res.end();
       }

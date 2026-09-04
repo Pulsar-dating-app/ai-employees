@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { addDays, isValidTimeZone, localToday } from "@/lib/analytics/load";
 import { zonedTimeToUtc } from "@/lib/availability/engine";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { agentPhoto } from "@/lib/agents/media";
+import { resolveAgentPhoto } from "@/lib/agents/media";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { CalendarIcon } from "@/components/ui/icons";
@@ -113,7 +113,10 @@ export default async function AppointmentsPage() {
       .gte("starts_at", dayStart)
       .lt("starts_at", dayEnd)
       .eq("status", "completed"),
-    supabase.from("company_agents").select("status, name, agents(slug)").eq("company_id", company.id),
+    supabase
+      .from("company_agents")
+      .select("status, name, photo_type, photo_asset_url, agents(slug)")
+      .eq("company_id", company.id),
     supabase
       .from("company_calendar_connections")
       .select("status")
@@ -197,6 +200,8 @@ export default async function AppointmentsPage() {
   const hiredRows = (hired ?? []) as unknown as {
     status: string;
     name: string | null;
+    photo_type: string | null;
+    photo_asset_url: string | null;
     agents: { slug: string } | null;
   }[];
   const schedulingRow = hiredRows.find((row) => row.agents?.slug === SCHEDULING_AGENT_SLUG);
@@ -222,7 +227,11 @@ export default async function AppointmentsPage() {
   const teamMember: SchedulingTeamMember | null = schedulingRow?.agents
     ? {
         name: schedulingRow.name ?? defaultAgentName(schedulingRow.agents.slug),
-        photoSrc: agentPhoto(schedulingRow.agents.slug),
+        photoSrc: resolveAgentPhoto(
+          schedulingRow.agents.slug,
+          schedulingRow.photo_type,
+          schedulingRow.photo_asset_url,
+        ),
         isActive: schedulingRow.status === "active",
       }
     : null;
