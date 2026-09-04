@@ -106,6 +106,11 @@ export default async function setup() {
         INSTAGRAM_API_BASE_URL: instagramApiMock.url,
         INSTAGRAM_GRAPH_BASE_URL: instagramApiMock.url,
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: "test-instagram-verify-token",
+        // Trello D2 -- WhatsApp signs with META_APP_SECRET (a classic Graph
+        // API product, unlike Instagram's separate credentials), so this
+        // reuses the same test secret above; only the verify token is its
+        // own value.
+        WHATSAPP_WEBHOOK_VERIFY_TOKEN: "test-whatsapp-verify-token",
         // N6's cron route bearer. instagram-token-refresh.test.ts hits the
         // route directly with this value; the pg_cron schedule itself is a
         // production-only concern (guarded on Vault secrets that don't

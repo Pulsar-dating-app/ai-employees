@@ -3,31 +3,25 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { finishConnection, generateRegistrationPin } from "@/lib/whatsapp/meta-graph-api";
 
-// TODO(D1-TEST-ONLY): delete this file (and the manual-entry form in
-// dev-whatsapp-connect-test) once F4 ships and the app has real Embedded
-// Signup access -- it exists purely to unblock manual testing before that
-// approval comes through.
+// TODO(D1-TEST-ONLY): delete this file once D7's Embedded Signup Advanced
+// Access is approved -- it exists purely to unblock manual testing before
+// that approval comes through. Nested under [agentSlug] now, mirroring the
+// real connect route's 2026-09-04 per-agent move (migration
+// 20260905090000).
 //
-// TEMPORARY DEV-ONLY ROUTE -- Trello D1.
+// TEMPORARY DEV-ONLY ROUTE -- Trello D1/D7.
 //
-// Lets D1 be validated against the real Meta Graph API before the app's
-// Embedded Signup access is approved (Advanced Access + Business
-// Verification, both external/unpredictable-timeline steps -- see
-// decisions.md). Meta gives every app a free test WhatsApp number under
-// WhatsApp -> API Setup with its own access token, phone_number_id, and
-// waba_id, with no approval needed since it's the developer's own test
-// setup, not onboarding a third-party business. This route takes those
-// pasted-in values directly instead of a code, and does the exact same
+// Lets D2/D4 be validated against the real Meta Graph API before the app's
+// Embedded Signup access is approved. Meta gives every app a free test
+// WhatsApp number under WhatsApp -> API Setup with its own access token,
+// phone_number_id, and waba_id, with no approval needed since it's the
+// developer's own test setup. This route takes those pasted-in values
+// directly instead of a code, and does the exact same
 // register/subscribe/lookup/upsert as the real POST .../whatsapp/connect --
 // only the code-exchange step is skipped, since there's already a token.
 
-// Gated inside the POST handler below, not at module scope: throwing here
-// broke `next build`'s page-data collection for this route entirely
-// (NODE_ENV is "production" during build, not just at request time) even
-// though the handler's own in-body check already 404s correctly at runtime.
-
 const SAFE_COLUMNS =
-  "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at";
+  "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at, has_payment_issue, payment_issue_detected_at";
 
 async function requireAdmin(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -56,15 +50,52 @@ async function requireAdmin(
   return { error: null };
 }
 
+async function resolveAgentId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+  agentSlug: string,
+) {
+  const { data: agent, error: agentError } = await supabase
+    .from("agents")
+    .select("id")
+    .eq("slug", agentSlug)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (agentError) {
+    return { error: NextResponse.json({ error: agentError.message }, { status: 500 }), agentId: null };
+  }
+  if (!agent) {
+    return { error: NextResponse.json({ error: "Agent not found" }, { status: 404 }), agentId: null };
+  }
+
+  const { data: companyAgent, error: companyAgentError } = await supabase
+    .from("company_agents")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("agent_id", agent.id)
+    .maybeSingle();
+  if (companyAgentError) {
+    return { error: NextResponse.json({ error: companyAgentError.message }, { status: 500 }), agentId: null };
+  }
+  if (!companyAgent) {
+    return {
+      error: NextResponse.json({ error: "This company hasn't hired this agent" }, { status: 400 }),
+      agentId: null,
+    };
+  }
+
+  return { error: null, agentId: agent.id as string };
+}
+
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ companyId: string }> },
+  { params }: { params: Promise<{ companyId: string; agentSlug: string }> },
 ) {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const { companyId } = await params;
+  const { companyId, agentSlug } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -76,6 +107,9 @@ export async function POST(
 
   const adminCheck = await requireAdmin(supabase, companyId, user.id);
   if (adminCheck.error) return adminCheck.error;
+
+  const agentCheck = await resolveAgentId(supabase, companyId, agentSlug);
+  if (agentCheck.error) return agentCheck.error;
 
   const body = await request.json().catch(() => null);
   const accessToken = typeof body?.accessToken === "string" ? body.accessToken : "";
@@ -96,7 +130,7 @@ export async function POST(
   const { data: existing } = await serviceClient
     .from("company_whatsapp_connections")
     .select("two_step_pin")
-    .eq("company_id", companyId)
+    .eq("phone_number_id", phoneNumberId)
     .maybeSingle();
   const pin = existing?.two_step_pin ?? generateRegistrationPin();
 
@@ -117,6 +151,7 @@ export async function POST(
     .upsert(
       {
         company_id: companyId,
+        agent_id: agentCheck.agentId,
         phone_number_id: phoneNumberId,
         waba_id: wabaId,
         display_phone_number: displayPhoneNumber,
@@ -124,13 +159,14 @@ export async function POST(
         access_token: accessToken,
         // Meta's test-number tokens from API Setup are typically short-lived
         // (~24h) unless exchanged for a System User token -- not tracked
-        // precisely here since this path is throwaway; the real connect
-        // route (via Embedded Signup) is what records a real expiry.
+        // precisely here since this path is throwaway.
         token_expires_at: null,
         two_step_pin: pin,
         connected_at: new Date().toISOString(),
+        has_payment_issue: false,
+        payment_issue_detected_at: null,
       },
-      { onConflict: "company_id" },
+      { onConflict: "company_id,agent_id" },
     )
     .select(SAFE_COLUMNS)
     .single();
