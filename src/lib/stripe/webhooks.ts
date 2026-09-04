@@ -6,11 +6,14 @@ import { getPlan, getPlanByLookupKey, type PlanKey } from "@/lib/billing/plans";
 // Trello P4 -- the handlers behind POST /api/webhooks/stripe. Everything
 // funnels through `syncBillingFromSubscription`: given a Stripe.Subscription
 // (which every relevant event either *is* or points at), it writes the full
-// current state onto `company_billing` and, when the billing period has
-// advanced, opens the next `company_message_usage` row (the monthly reset).
-// Full-state / last-write-wins + `on conflict do nothing` on the usage row
-// makes every handler idempotent and order-tolerant, on top of the route's
-// event-id dedup.
+// current state onto `company_billing`. If the billing period has advanced,
+// it opens the next `company_message_usage` row (the monthly reset). If the
+// period is unchanged but the plan changed underneath it -- a same-cycle
+// Portal upgrade/downgrade, which doesn't move the billing anchor -- it
+// re-snapshots that period's `reply_limit` onto the new plan without
+// touching `replies_used`. Full-state / last-write-wins + `on conflict do
+// nothing` on the usage row makes every handler idempotent and
+// order-tolerant, on top of the route's event-id dedup.
 //
 // `plan_key` is derived from the subscription item's `price.lookup_key`
 // (the Customer Portal changes the price, never our metadata) -> plans.ts.
@@ -170,6 +173,21 @@ async function syncBillingFromSubscription(
       { onConflict: "company_id,period_start", ignoreDuplicates: true },
     );
     if (usageError) throw new Error(`company_message_usage insert failed: ${usageError.message}`);
+  } else if (periodStart && resolvedPlan && existing?.plan_key && resolvedPlan.key !== existing.plan_key) {
+    // Same period, but the plan changed under it -- an immediate Portal
+    // upgrade/downgrade (proration, no new billing cycle), so the rollover
+    // branch above never fires and this period's row would otherwise keep
+    // the old plan's ceiling for the rest of the cycle. Move reply_limit to
+    // the new plan; replies_used is untouched -- usage already spent this
+    // period doesn't reset just because the plan changed mid-cycle.
+    const { error: limitError } = await service
+      .from("company_message_usage")
+      .update({ reply_limit: getPlan(resolvedPlan.key).monthlyReplyLimit })
+      .eq("company_id", companyId)
+      .eq("period_start", periodStart);
+    if (limitError) {
+      throw new Error(`company_message_usage reply_limit update failed: ${limitError.message}`);
+    }
   }
 }
 
