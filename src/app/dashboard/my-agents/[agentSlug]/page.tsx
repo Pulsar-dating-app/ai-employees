@@ -11,9 +11,7 @@ import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { AgentPersonaCard } from "../agent-persona-card";
 import { PolicySection } from "../../settings/policy-section";
-import { WebChatChannelCard } from "./web-chat-channel-card";
-import { WidgetCustomizeCard } from "./widget-customize-card";
-import { InstagramConnectCard } from "./instagram-connect-card";
+import { ChannelTabsCard } from "./channel-tabs-card";
 import { AvailabilityCard } from "./availability-card";
 import { NameCard } from "./name-card";
 import { HumanHandoffCard } from "./human-handoff-card";
@@ -35,12 +33,10 @@ import { AgentConnectionsTour } from "./agent-connections-tour";
 // actively misleading. Payment/Other policy stay on Settings — genuinely
 // company-wide, not agent-specific in the same way.
 //
-// The WhatsApp card (`channels-section.tsx`) is deliberately NOT rendered
-// here: as of 2026-08-31 Instagram replaces WhatsApp as the messaging
-// channel we're building (epic N). D1's backend, its migrations and
-// `channels-section.tsx` itself all stay in the tree, dormant and
-// unreferenced, so re-mounting one JSX line brings the whole flow back if
-// that decision reverses — nothing about it was deleted.
+// D6 (2026-09-04): WhatsApp is back online, alongside Instagram (not
+// replacing it) — both connection cards, plus the embeddable widget and the
+// direct chat link, are consolidated into one `ChannelTabsCard` rather than
+// four separate full-width cards on this page.
 export default async function AgentConnectionsPage({
   params,
 }: {
@@ -183,26 +179,24 @@ export default async function AgentConnectionsPage({
               initialAllowHumanHandoff={company.allow_human_handoff}
             />
           </div>
-          <div data-tour="instagram-connect">
+          <div data-tour="channels">
             <Suspense fallback={null}>
-              <InstagramConnectCard companyId={company.id} agentSlug={agentSlug} canEdit={canEdit} />
+              <ChannelTabsCard
+                companyId={company.id}
+                agentSlug={agentSlug}
+                agentName={name}
+                canEdit={canEdit}
+                metaAppId={process.env.META_APP_ID ?? ""}
+                metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
+                chatUrl={chatUrl}
+                embedSnippet={embedSnippet}
+                widgetInitial={{
+                  greeting: companyAgent.widget_greeting,
+                  launcherType: companyAgent.widget_launcher_type,
+                  launcherAssetUrl: companyAgent.widget_launcher_asset_url,
+                }}
+              />
             </Suspense>
-          </div>
-          <div data-tour="embed-customize">
-            <WidgetCustomizeCard
-              companyId={company.id}
-              agentSlug={agentSlug}
-              agentName={name}
-              canEdit={canEdit}
-              initial={{
-                greeting: companyAgent.widget_greeting,
-                launcherType: companyAgent.widget_launcher_type,
-                launcherAssetUrl: companyAgent.widget_launcher_asset_url,
-              }}
-            />
-          </div>
-          <div data-tour="share-links">
-            <WebChatChannelCard agentName={name} chatUrl={chatUrl} embedSnippet={embedSnippet} />
           </div>
           {process.env.NODE_ENV !== "production" ? (
             <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />

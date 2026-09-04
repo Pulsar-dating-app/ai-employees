@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WhatsAppIcon, CheckIcon } from "@/components/ui/icons";
 
@@ -25,20 +24,26 @@ type Connection = {
   display_phone_number: string | null;
   status: "pending" | "connected" | "disconnected";
   connected_at: string | null;
+  has_payment_issue: boolean;
+  payment_issue_detected_at: string | null;
 };
 
 type ViewState = "loading" | "idle" | "connecting" | "disconnecting" | "confirmingDisconnect";
 
 // The real merchant-facing WhatsApp connect screen — Meta Embedded Signup
-// (D1's backend), presented as the Stitch "Connect to WhatsApp" card with a
-// two-step setup guide. Connect/disconnect mechanics are unchanged.
+// (D1's backend), presented with a two-step setup guide. Connect/disconnect
+// mechanics are unchanged; routes moved under [agentSlug] on 2026-09-04
+// (migration 20260905090000 made the connection per-agent, mirroring
+// Instagram's N1).
 export function ChannelsSection({
   companyId,
+  agentSlug,
   canEdit,
   metaAppId,
   metaConfigId,
 }: {
   companyId: string;
+  agentSlug: string;
   canEdit: boolean;
   metaAppId: string;
   metaConfigId: string;
@@ -48,9 +53,10 @@ export function ChannelsSection({
   const [view, setView] = useState<ViewState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
+  const statusUrl = `/api/companies/${companyId}/agents/${agentSlug}/whatsapp`;
 
   useEffect(() => {
-    fetch(`/api/companies/${companyId}/whatsapp`)
+    fetch(statusUrl)
       .then((res) => res.json())
       .then((data: { connection: Connection | null }) => {
         setConnection(data.connection);
@@ -89,13 +95,13 @@ export function ChannelsSection({
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId, metaAppId]);
+  }, [statusUrl, metaAppId]);
 
   function maybeSubmit() {
     const { code, phoneNumberId, wabaId } = pendingSignup.current;
     if (!code || !phoneNumberId || !wabaId) return;
 
-    fetch(`/api/companies/${companyId}/whatsapp/connect`, {
+    fetch(`${statusUrl}/connect`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, phoneNumberId, wabaId }),
@@ -146,7 +152,7 @@ export function ChannelsSection({
 
   async function confirmDisconnect() {
     setView("disconnecting");
-    const res = await fetch(`/api/companies/${companyId}/whatsapp`, { method: "DELETE" });
+    const res = await fetch(statusUrl, { method: "DELETE" });
     if (!res.ok) {
       setErrorMessage(t("disconnectError"));
       setView("idle");
@@ -158,9 +164,14 @@ export function ChannelsSection({
   }
 
   const isConnected = connection?.status === "connected";
+  // D5: a connected number Meta has flagged for a payment issue can't
+  // deliver anything -- distinct from "not connected", since the merchant
+  // already completed Embedded Signup and needs a different fix (add a
+  // payment method in Meta Business Manager), not to reconnect.
+  const hasPaymentIssue = isConnected && connection?.has_payment_issue === true;
 
   return (
-    <Card className="relative overflow-hidden">
+    <div className="relative overflow-hidden">
       <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-secondary-container/25 blur-3xl" />
 
       <div className="relative flex items-center gap-3">
@@ -189,6 +200,14 @@ export function ChannelsSection({
                       {connection?.display_phone_number}
                     </span>
                   </div>
+                  {hasPaymentIssue ? (
+                    <div className="flex items-start gap-3 rounded-md border border-error/30 bg-error/5 p-3">
+                      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-error/15 px-2.5 py-1 text-xs font-semibold text-error">
+                        {t("paymentIssueBadge")}
+                      </span>
+                      <p className="text-sm text-on-surface-variant">{t("paymentIssueDescription")}</p>
+                    </div>
+                  ) : null}
                   {canEdit &&
                     (view === "confirmingDisconnect" || view === "disconnecting" ? (
                       <div className="flex flex-wrap items-center gap-3">
@@ -255,7 +274,7 @@ export function ChannelsSection({
           </p>
         ) : null}
       </div>
-    </Card>
+    </div>
   );
 }
 
