@@ -41,6 +41,75 @@ describe("WhatsApp inbound webhook (GET verify, POST receive)", () => {
     return connected.json.connection.phone_number_id;
   }
 
+  // Trello D8 -- no phoneNumberId supplied by the caller; the connect route
+  // resolves it server-side via finishCoexistenceConnection's
+  // GET /{wabaId}/phone_numbers call (mocked in graph-api-mock.ts).
+  async function connectedCoexistenceAgent(ownerCookie: string, companyId: string, agentSlug: string, wabaId: string) {
+    await api("POST", `/api/companies/${companyId}/agents/${agentSlug}`, ownerCookie);
+    return api<{ connection: { phone_number_id: string; is_coexistence: boolean } }>(
+      "POST",
+      `/api/companies/${companyId}/agents/${agentSlug}/whatsapp/connect`,
+      ownerCookie,
+      { code: "any-code", wabaId, isCoexistence: true },
+    );
+  }
+
+  function echoPayload(phoneNumberId: string, to: string, text: string, messageId: string) {
+    return JSON.stringify({
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          id: "waba-irrelevant",
+          changes: [
+            {
+              value: {
+                metadata: { phone_number_id: phoneNumberId },
+                message_echoes: [{ id: messageId, from: phoneNumberId, to, type: "text", text: { body: text } }],
+              },
+            },
+          ],
+        },
+      ],
+    });
+  }
+
+  function historyPayload(
+    phoneNumberId: string,
+    customerPhone: string,
+    threadMessages: { from: string; text: string; messageId: string }[],
+  ) {
+    return JSON.stringify({
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          id: "waba-irrelevant",
+          changes: [
+            {
+              value: {
+                metadata: { phone_number_id: phoneNumberId },
+                history: [
+                  {
+                    threads: [
+                      {
+                        id: customerPhone,
+                        messages: threadMessages.map((m) => ({
+                          id: m.messageId,
+                          from: m.from,
+                          type: "text",
+                          text: { body: m.text },
+                        })),
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+  }
+
   function messagingPayload(phoneNumberId: string, from: string, text: string, messageId: string) {
     return JSON.stringify({
       object: "whatsapp_business_account",
@@ -264,6 +333,119 @@ describe("WhatsApp inbound webhook (GET verify, POST receive)", () => {
         .select("role, content")
         .eq("conversation_id", pausedConversationId);
       expect(messages).toEqual([{ role: "customer", content: "are you there?" }]);
+    });
+  });
+
+  describe("Trello D8 -- coexistence connect", () => {
+    it("resolves the phone number from the WABA and marks is_coexistence", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "WA Coexistence Connect Co");
+      const res = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "waba-coex-happy-path");
+      expect(res.status).toBe(200);
+      expect(res.json.connection.phone_number_id).toBe("waba-coex-happy-path-phone");
+      expect(res.json.connection.is_coexistence).toBe(true);
+    });
+
+    it("502s when the WABA has zero phone numbers", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "WA Coexistence Zero Numbers Co");
+      const res = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "trigger-zero-numbers");
+      expect(res.status).toBe(502);
+    });
+
+    it("502s when the WABA has multiple phone numbers", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "WA Coexistence Multiple Numbers Co");
+      const res = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "trigger-multiple-numbers");
+      expect(res.status).toBe(502);
+    });
+  });
+
+  describe("Trello D8 -- message echoes and history backfill", () => {
+    it("persists a merchant echo and pauses the conversation", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "WA Echo Co");
+      const connected = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "waba-echo-test");
+      const phoneNumberId = connected.json.connection.phone_number_id;
+
+      const body = echoPayload(phoneNumberId, "+5511900000010", "já te respondi por aqui!", "echo-msg-1");
+      const res = await postWebhook(body, sign(body));
+      expect(res.status).toBe(200);
+
+      const { data: customer } = await service
+        .from("customers")
+        .select("id")
+        .eq("company_id", companyId)
+        .eq("channel", "whatsapp")
+        .eq("phone", "+5511900000010")
+        .single();
+      const { data: conversation } = await service
+        .from("conversations")
+        .select("id, status")
+        .eq("customer_id", (customer as { id: string }).id)
+        .single();
+      expect((conversation as { status: string }).status).toBe("paused");
+
+      const { data: messages } = await service
+        .from("messages")
+        .select("role, content, external_message_id")
+        .eq("conversation_id", (conversation as { id: string }).id);
+      expect(messages).toEqual([{ role: "merchant", content: "já te respondi por aqui!", external_message_id: "echo-msg-1" }]);
+    });
+
+    it("is idempotent: a repeat delivery of the same echo id changes nothing", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "WA Echo Idempotent Co");
+      const connected = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "waba-echo-idempotent");
+      const phoneNumberId = connected.json.connection.phone_number_id;
+
+      const body = echoPayload(phoneNumberId, "+5511900000011", "primeira vez", "echo-msg-repeat");
+      await postWebhook(body, sign(body));
+      const res = await postWebhook(body, sign(body));
+      expect(res.status).toBe(200);
+
+      const { data: messages } = await service.from("messages").select("id").eq("company_id", companyId);
+      expect(messages).toHaveLength(1);
+    });
+
+    it("backfills history with correct roles and never touches conversation status or the engine", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "WA History Co");
+      const connected = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "waba-history-test");
+      const phoneNumberId = connected.json.connection.phone_number_id;
+      const customerPhone = "+5511900000012";
+
+      const body = historyPayload(phoneNumberId, customerPhone, [
+        { from: customerPhone, text: "oi, vocês têm entrega?", messageId: "history-msg-1" },
+        { from: phoneNumberId, text: "sim, entregamos sim!", messageId: "history-msg-2" },
+      ]);
+      const res = await postWebhook(body, sign(body));
+      expect(res.status).toBe(200);
+
+      const { data: customer } = await service
+        .from("customers")
+        .select("id")
+        .eq("company_id", companyId)
+        .eq("channel", "whatsapp")
+        .eq("phone", customerPhone)
+        .single();
+      const { data: conversation } = await service
+        .from("conversations")
+        .select("id, status")
+        .eq("customer_id", (customer as { id: string }).id)
+        .single();
+      // History backfill is sync, not a handoff signal -- status untouched.
+      expect((conversation as { status: string }).status).toBe("active");
+
+      const { data: messages } = await service
+        .from("messages")
+        .select("role, content")
+        .eq("conversation_id", (conversation as { id: string }).id)
+        .order("created_at", { ascending: true });
+      expect(messages).toEqual([
+        { role: "customer", content: "oi, vocês têm entrega?" },
+        { role: "merchant", content: "sim, entregamos sim!" },
+      ]);
     });
   });
 });

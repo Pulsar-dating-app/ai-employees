@@ -300,6 +300,80 @@ dashboard UI unification).
   `/{phoneNumberId}/messages` send endpoint with the same
   magic-value-trigger pattern as `instagram-api-mock.ts`.
 
+### WhatsApp coexistence (Trello D8) — 2026-09-05
+
+Discovered live-testing the real Embedded Signup popup (not
+`manual-connect-test`): registering a number the normal way removes it from
+the merchant's WhatsApp Business mobile app — Cloud API only from then on.
+Most merchants use that app daily and won't accept losing it. Meta's answer
+is **Coexistence** — mobile app and Cloud API on the same number, in sync.
+
+- **How the merchant chooses**: not a second button on our side.
+  `channels-section.tsx`'s `startSignup()` passes
+  `extras: { featureType: "whatsapp_business_app_onboarding" }` on every
+  `FB.login()` call now (confirmed against the current **v4** docs, not
+  stale v2 material — v2 is deprecated 2026-10-15). With that flag set,
+  Meta's own popup replaces its WABA-selection screen with one offering the
+  merchant an inline choice to connect their existing app account. The
+  choice comes back as which completion event fires:
+  `FINISH` (regular, unchanged) or `FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING`
+  (coexistence) — the latter's `postMessage` payload carries only
+  `waba_id`, never `phone_number_id`.
+- **`company_whatsapp_connections.is_coexistence`** (migration
+  `20260905120000`) — set on connect, lets the route (and any future UI)
+  tell the two paths apart. Not sensitive, same open grant as
+  `has_payment_issue`.
+- **`finishCoexistenceConnection`** (`src/lib/whatsapp/meta-graph-api.ts`) —
+  the coexistence counterpart to `finishConnection`: **skips `/register`
+  entirely** (no PIN — the number is already registered via the merchant's
+  own app), still calls `/{wabaId}/subscribed_apps`, and resolves the phone
+  number via a new `GET /{wabaId}/phone_numbers` call (nothing in the
+  codebase queried this endpoint before). Throws if the WABA doesn't have
+  exactly one phone number — MVP targets the single-number case Embedded
+  Signup's own flow funnels merchants into, rather than silently guessing.
+- **Connect route** (`.../agents/[agentSlug]/whatsapp/connect/route.ts`) —
+  body gains `isCoexistence: boolean`; when true, `phoneNumberId` may be
+  absent (resolved server-side instead), the PIN-reuse lookup is skipped
+  entirely, and the existing holder/conflict check (by `phone_number_id`)
+  runs *after* resolution rather than before, since the coexistence path
+  doesn't know the number until the WABA lookup completes.
+- **D2's webhook** gained two new payload branches, both **after** the
+  existing `messages[]` loop, neither touching the billing gate or
+  `AgentEngine.run()`:
+  - **`message_echoes[]`** — every message the merchant sends manually from
+    their own phone. Persisted as `role: 'merchant'` (enum value already
+    existed, migration `20260831235249`), then the conversation is set
+    `status = 'paused'` — **the exact same mechanism as C5's human-handoff
+    pause, reused as-is, per an explicit product decision**: no new state
+    machine, no timer, a human took over and stays in control until someone
+    reopens the conversation.
+  - **`history[]`** — one-time backfill of pre-existing chat history on
+    connect. Role is derived by comparing each message's `from` to the
+    thread's own `id` (`thread.id` **is** the customer's phone number in
+    this payload shape, simpler than comparing against the business
+    number). Pure sync — never calls the engine, never touches
+    `conversations.status` (unlike an echo, catching up on old messages
+    isn't a handoff signal). An `errors[]` array instead of `threads`
+    (merchant declined history sharing) is a clean no-op.
+  - **`smb_app_state_sync`** (contact sync) — **deliberately not handled**;
+    no feature reads contact data. Not subscribed to in the Meta dashboard.
+  - No new webhook signature/verify-token handling needed — same
+    `META_APP_SECRET`, same route, same connection lookup by
+    `phone_number_id`.
+- **Tests**: two new `describe` blocks in
+  `tests/integration/whatsapp-webhook.test.ts` — coexistence connect
+  (happy path resolves the number and sets `is_coexistence`; zero- and
+  multiple-phone-number WABAs 502 instead of guessing) and
+  echoes/history (echo pauses + persists as `merchant`, idempotent
+  redelivery, history backfills both roles without touching engine or
+  status). `graph-api-mock.ts` gained a `GET /{wabaId}/phone_numbers`
+  handler with the same magic-value-trigger pattern as the rest of the file.
+- **Not yet manually live-verified**: unlike D2–D6, this pass has no real
+  end-to-end confirmation — it needs an actual merchant WhatsApp Business
+  app account on a spare number, which wasn't available during
+  development. Code-complete and integration-tested only until that
+  happens.
+
 ### Internationalization (EN/PT)
 
 `next-intl`, cookie-based with **no `[locale]` URL segment** — deliberately, to avoid restructuring every `redirect()` call in `src/lib/auth/actions.ts`, the `proxy.ts` matcher, and every internal link (see decisions.md for why locale-prefixed routing was rejected). **The project rule — never hardcode a UI string, always add it to both message files — lives in [CLAUDE.md](../../CLAUDE.md#internationalization), not here; this section is how it's implemented, that one is what to do every time.**
