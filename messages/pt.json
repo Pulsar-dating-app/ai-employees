@@ -410,7 +410,12 @@
       "stepTwoTitle": "Comece a falar com os clientes",
       "stepTwoDescription": "Depois de conectado, sua equipe responde no WhatsApp automaticamente — dia e noite.",
       "paymentIssueBadge": "Pagamento pendente",
-      "paymentIssueDescription": "O WhatsApp não consegue entregar mensagens até que uma forma de pagamento seja adicionada à sua conta no Meta Business Manager."
+      "paymentIssueDescription": "O WhatsApp não consegue entregar mensagens até que uma forma de pagamento seja adicionada à sua conta no Meta Business Manager.",
+      "billingDisclosureTitle": "Antes de conectar",
+      "billingDisclosurePaymentMethod": "Você vai precisar adicionar uma forma de pagamento na sua conta do WhatsApp Business no Meta Business Manager — sem isso, as mensagens não são entregues mesmo depois de conectado.",
+      "billingDisclosureBilling": "A Meta cobra você diretamente pelo uso do WhatsApp, separado da sua assinatura do Staffra, depois de um certo volume gratuito. Os valores mudam com o tempo, então confira sempre os atuais aqui:",
+      "billingDisclosureLinkText": "tabela de preços oficial da Meta para WhatsApp",
+      "billingAcknowledgeLabel": "Entendo que a Meta cobra separadamente pelo uso do WhatsApp e que preciso adicionar uma forma de pagamento."
     },
     "channelTabs": {
       "tablistLabel": "Formas de os clientes falarem com este funcionário",

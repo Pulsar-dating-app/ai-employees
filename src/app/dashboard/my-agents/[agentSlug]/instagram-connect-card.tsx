@@ -88,9 +88,7 @@ export function InstagramConnectCard({
   const isConnected = connection?.status === "connected";
 
   return (
-    <div className="relative overflow-hidden">
-      <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-secondary-container/25 blur-3xl" />
-
+    <div className="relative">
       <div className="relative flex items-center gap-3">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-sm">
           <InstagramIcon className="h-6 w-6" />

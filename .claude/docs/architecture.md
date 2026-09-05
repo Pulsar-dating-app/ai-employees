@@ -374,6 +374,23 @@ is **Coexistence** — mobile app and Cloud API on the same number, in sync.
   development. Code-complete and integration-tested only until that
   happens.
 
+### WhatsApp connect: billing/payment-method disclosure — 2026-09-05
+
+`channels-section.tsx`'s not-connected state gates the "Conectar WhatsApp"
+button behind an explicit checkbox acknowledgment, shown alongside a warning
+`Alert` covering two costs the connect flow otherwise never mentions: the
+merchant must add a payment method to the WABA in Meta Business Manager
+(D5's `has_payment_issue` only surfaces the consequence *after* a send
+fails), and Meta bills the merchant directly, separately from Staffra, once
+usage passes a free allowance. **No BRL rate is hardcoded anywhere** — the
+copy links to Meta's own live pricing page instead. This is deliberate:
+Meta's pricing changes materially on 2026-10-01 (service-window replies,
+today unconditionally free — the mode this codebase's agents rely on —
+start being billed past a free allowance), and the exact post-change rate
+isn't confirmed from an authoritative source as of this writing. See
+decisions.md's 2026-09-05 entry for the full reasoning and what to update
+once the real rate is confirmed.
+
 ### Internationalization (EN/PT)
 
 `next-intl`, cookie-based with **no `[locale]` URL segment** — deliberately, to avoid restructuring every `redirect()` call in `src/lib/auth/actions.ts`, the `proxy.ts` matcher, and every internal link (see decisions.md for why locale-prefixed routing was rejected). **The project rule — never hardcode a UI string, always add it to both message files — lives in [CLAUDE.md](../../CLAUDE.md#internationalization), not here; this section is how it's implemented, that one is what to do every time.**
