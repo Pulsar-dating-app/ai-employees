@@ -194,8 +194,14 @@ export type SendWhatsappMessageResult =
   // payment_issue: Meta's 131042 -- the caller should set D5's
   // has_payment_issue flag, not retry.
   // other: anything else (network blip, a 4xx that isn't one of the above,
-  // a 5xx that failed both attempts) -- log and move on.
-  | { ok: false; kind: "token_invalid" | "payment_issue" | "other" };
+  // a 5xx that failed both attempts) -- log and move on. `errorDetail`
+  // carries Meta's own error code/message for server-side logs only --
+  // never shown to a merchant (D1's don't-leak-raw-API-errors convention is
+  // about merchant-facing UI, not our own diagnostics). Added after "other"
+  // was a total black box in production for a real newly-created WABA still
+  // finishing Meta's own setup steps -- see decisions.md's 2026-09-05 entry.
+  | { ok: false; kind: "token_invalid" | "payment_issue" }
+  | { ok: false; kind: "other"; errorDetail?: string };
 
 export async function sendWhatsappMessage(
   accessToken: string,
@@ -233,7 +239,13 @@ export async function sendWhatsappMessage(
   if (res.status === 401 || res.status === 403) {
     return { ok: false, kind: "token_invalid" };
   }
-  return { ok: false, kind: "other" };
+  return {
+    ok: false,
+    kind: "other",
+    errorDetail: parsedError
+      ? `code ${parsedError.code}${parsedError.errorSubcode ? `/${parsedError.errorSubcode}` : ""}: ${parsedError.message}`
+      : `HTTP ${res.status}`,
+  };
 }
 
 // Trello D5 -- a lightweight, non-sending probe used by the periodic
