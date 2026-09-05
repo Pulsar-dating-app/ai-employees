@@ -135,6 +135,51 @@ export async function finishConnection(
   return { displayPhoneNumber: displayPhoneNumber ?? null };
 }
 
+// Trello D8 -- the coexistence counterpart to finishConnection. A merchant
+// who picks "connect my existing WhatsApp Business app account" (Meta's
+// FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING event, triggered by passing
+// extras.featureType: "whatsapp_business_app_onboarding" to FB.login) has a
+// number that's already registered on Meta's side via their own app --
+// calling /register again would be wrong, not just redundant, so this skips
+// it entirely (no PIN involved). Still subscribes the app to the WABA's
+// webhooks, same as the regular path. The browser only gets `waba_id` from
+// this event (no phone_number_id), so this also resolves the phone number
+// server-side via the WABA's own phone number list.
+export async function finishCoexistenceConnection(accessToken: string, wabaId: string) {
+  const authHeaders = { Authorization: `Bearer ${accessToken}` };
+
+  const subscribeRes = await fetch(graphApiUrl(`/${wabaId}/subscribed_apps`), {
+    method: "POST",
+    headers: authHeaders,
+  });
+  if (!subscribeRes.ok) throw new Error(`Meta webhook subscription failed: ${await subscribeRes.text()}`);
+
+  const phoneNumbersRes = await fetch(
+    graphApiUrl(`/${wabaId}/phone_numbers`, { fields: "display_phone_number" }),
+    { headers: authHeaders },
+  );
+  if (!phoneNumbersRes.ok) {
+    throw new Error(`Meta phone number lookup failed: ${await phoneNumbersRes.text()}`);
+  }
+  const { data: phoneNumbers } = (await phoneNumbersRes.json()) as {
+    data?: { id: string; display_phone_number?: string }[];
+  };
+
+  // MVP coexistence targets the single-number-per-WABA case Embedded
+  // Signup's own flow funnels merchants into -- zero or multiple numbers is
+  // an ambiguity worth a clear error rather than silently picking one.
+  if (!phoneNumbers || phoneNumbers.length !== 1) {
+    throw new Error(
+      `Expected exactly one phone number on WABA ${wabaId}, found ${phoneNumbers?.length ?? 0}`,
+    );
+  }
+
+  return {
+    phoneNumberId: phoneNumbers[0].id,
+    displayPhoneNumber: phoneNumbers[0].display_phone_number ?? null,
+  };
+}
+
 // Trello D4 -- delivery, the other end of D2's inbound webhook. Modeled
 // directly on sendInstagramMessage (src/lib/instagram/meta-instagram-api.ts):
 // one retry on a transient 5xx, no retry on a 4xx (fails identically). The

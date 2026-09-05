@@ -22,6 +22,10 @@ import type { AddressInfo } from "node:net";
 // - phoneNumberId (in the GET lookup path) === "trigger-payment-issue" ->
 //   the plain lookup also 400s with 131042, so D5's checkWhatsappEligibility
 //   can be tested against the same magic value
+// - wabaId (in the GET /{wabaId}/phone_numbers lookup) === "trigger-zero-numbers"
+//   -> empty phone_numbers list; "trigger-multiple-numbers" -> two entries
+//   (D8's finishCoexistenceConnection must throw on either); otherwise one
+//   entry, id derived from the wabaId so it stays unique per test
 export function startGraphApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
   const server: Server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
@@ -75,6 +79,21 @@ export function startGraphApiMock(): Promise<{ url: string; stop: () => Promise<
         return send(200, { messages: [{ id: `mock-message-${to}` }] });
       });
       return;
+    }
+
+    const phoneNumbersMatch = url.pathname.match(/^\/v21\.0\/([^/]+)\/phone_numbers$/);
+    if (phoneNumbersMatch) {
+      const wabaId = phoneNumbersMatch[1];
+      if (wabaId === "trigger-zero-numbers") return send(200, { data: [] });
+      if (wabaId === "trigger-multiple-numbers") {
+        return send(200, {
+          data: [
+            { id: `${wabaId}-phone-1`, display_phone_number: "+55 11 91111-1111" },
+            { id: `${wabaId}-phone-2`, display_phone_number: "+55 11 92222-2222" },
+          ],
+        });
+      }
+      return send(200, { data: [{ id: `${wabaId}-phone`, display_phone_number: "+55 11 93333-3333" }] });
     }
 
     const phoneMatch = url.pathname.match(/^\/v21\.0\/([^/]+)$/);

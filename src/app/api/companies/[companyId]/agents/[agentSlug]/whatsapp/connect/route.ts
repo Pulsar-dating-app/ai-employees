@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import {
   exchangeCodeForToken,
   finishConnection,
+  finishCoexistenceConnection,
   generateRegistrationPin,
 } from "@/lib/whatsapp/meta-graph-api";
 
@@ -28,7 +29,7 @@ import {
 //     auto-resolved -- that would mean reassigning something this caller
 //     doesn't own.
 const SAFE_COLUMNS =
-  "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at, has_payment_issue, payment_issue_detected_at";
+  "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at, has_payment_issue, payment_issue_detected_at, is_coexistence";
 
 async function requireAdmin(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -126,23 +127,50 @@ export async function POST(
   const phoneNumberId = typeof body?.phoneNumberId === "string" ? body.phoneNumberId : "";
   const wabaId = typeof body?.wabaId === "string" ? body.wabaId : "";
   const force = body?.force === true;
+  // Trello D8 -- a merchant who chose to connect their existing WhatsApp
+  // Business app number (Meta's FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING
+  // event) never gets a phoneNumberId from the browser; it's resolved
+  // server-side from the WABA instead, and D1's /register+PIN step is
+  // skipped entirely since the number is already registered.
+  const isCoexistence = body?.isCoexistence === true;
 
-  if (!code || !phoneNumberId || !wabaId) {
+  if (!code || !wabaId || (!isCoexistence && !phoneNumberId)) {
     return NextResponse.json(
-      { error: "code, phoneNumberId, and wabaId are required" },
+      { error: "code and wabaId are required (phoneNumberId too, unless isCoexistence)" },
       { status: 400 },
     );
   }
 
   const serviceClient = createServiceClient();
 
+  let accessToken = "";
+  let resolvedPhoneNumberId = phoneNumberId;
+  let displayPhoneNumber: string | null = null;
+  let tokenExpiresAt: string | null = null;
+  let pin: string | null = null;
+
+  if (isCoexistence) {
+    // Nothing to check for an existing holder before exchanging the code --
+    // unlike the regular path, the phone number isn't known until after the
+    // token exchange resolves it from the WABA.
+    try {
+      ({ accessToken, tokenExpiresAt } = await exchangeCodeForToken(code));
+      ({ phoneNumberId: resolvedPhoneNumberId, displayPhoneNumber } = await finishCoexistenceConnection(accessToken, wabaId));
+    } catch {
+      return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
+    }
+  } else {
+    resolvedPhoneNumberId = phoneNumberId;
+  }
+
   // Check for a live holder of this number before writing -- turns the
   // unique-index violation into an answer the UI can act on, rather than a
-  // raw 23505 surfacing as a 500.
+  // raw 23505 surfacing as a 500. Runs after resolution above so the
+  // coexistence path checks the *real* number, not a guess.
   const { data: holder, error: holderError } = await serviceClient
     .from("company_whatsapp_connections")
     .select("id, company_id, agent_id, two_step_pin")
-    .eq("phone_number_id", phoneNumberId)
+    .eq("phone_number_id", resolvedPhoneNumberId)
     .neq("status", "disconnected")
     .maybeSingle();
   if (holderError) {
@@ -171,31 +199,31 @@ export async function POST(
     }
   }
 
-  // Reuse the PIN from a prior connection attempt for this exact number if
-  // one exists -- Meta ties a phone number to a PIN on its first /register
-  // call and rejects any later /register with a different one ("PIN
-  // Mismatch"), so a reconnect (including one moved over via `force`) must
-  // supply the same PIN, not a fresh random one.
-  const { data: existing } = await serviceClient
-    .from("company_whatsapp_connections")
-    .select("two_step_pin")
-    .eq("phone_number_id", phoneNumberId)
-    .maybeSingle();
-  const pin = existing?.two_step_pin ?? holder?.two_step_pin ?? generateRegistrationPin();
+  if (!isCoexistence) {
+    // Reuse the PIN from a prior connection attempt for this exact number if
+    // one exists -- Meta ties a phone number to a PIN on its first /register
+    // call and rejects any later /register with a different one ("PIN
+    // Mismatch"), so a reconnect (including one moved over via `force`) must
+    // supply the same PIN, not a fresh random one.
+    const { data: existing } = await serviceClient
+      .from("company_whatsapp_connections")
+      .select("two_step_pin")
+      .eq("phone_number_id", resolvedPhoneNumberId)
+      .maybeSingle();
+    const resolvedPin: string = existing?.two_step_pin ?? holder?.two_step_pin ?? generateRegistrationPin();
+    pin = resolvedPin;
 
-  let accessToken: string;
-  let displayPhoneNumber: string | null;
-  let tokenExpiresAt: string | null;
-  try {
-    ({ accessToken, displayPhoneNumber, tokenExpiresAt } = await finishEmbeddedSignup(
-      code,
-      phoneNumberId,
-      wabaId,
-      pin,
-    ));
-  } catch {
-    // Never leak Meta's raw error text to the merchant-facing UI.
-    return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
+    try {
+      ({ accessToken, displayPhoneNumber, tokenExpiresAt } = await finishEmbeddedSignup(
+        code,
+        resolvedPhoneNumberId,
+        wabaId,
+        resolvedPin,
+      ));
+    } catch {
+      // Never leak Meta's raw error text to the merchant-facing UI.
+      return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
+    }
   }
 
   const { data: connection, error } = await serviceClient
@@ -204,7 +232,7 @@ export async function POST(
       {
         company_id: companyId,
         agent_id: agent.id,
-        phone_number_id: phoneNumberId,
+        phone_number_id: resolvedPhoneNumberId,
         waba_id: wabaId,
         display_phone_number: displayPhoneNumber,
         status: "connected",
@@ -214,6 +242,7 @@ export async function POST(
         connected_at: new Date().toISOString(),
         has_payment_issue: false,
         payment_issue_detected_at: null,
+        is_coexistence: isCoexistence,
       },
       { onConflict: "company_id,agent_id" },
     )

@@ -52,7 +52,7 @@ export function ChannelsSection({
   const [connection, setConnection] = useState<Connection | null>(null);
   const [view, setView] = useState<ViewState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
+  const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string; isCoexistence?: boolean }>({});
   const statusUrl = `/api/companies/${companyId}/agents/${agentSlug}/whatsapp`;
 
   useEffect(() => {
@@ -86,6 +86,16 @@ export function ChannelsSection({
           pendingSignup.current.phoneNumberId = data.data?.phone_number_id;
           pendingSignup.current.wabaId = data.data?.waba_id;
           maybeSubmit();
+        } else if (data.event === "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING") {
+          // Trello D8 -- the merchant chose to connect the number they
+          // already use in the WhatsApp Business app (offered inline by
+          // Meta's popup because startSignup() passes
+          // extras.featureType: "whatsapp_business_app_onboarding" below).
+          // This event carries only waba_id, never phone_number_id -- the
+          // connect route resolves the number server-side instead.
+          pendingSignup.current.wabaId = data.data?.waba_id;
+          pendingSignup.current.isCoexistence = true;
+          maybeSubmit();
         }
       } catch {
         // Not a JSON message we care about.
@@ -98,13 +108,15 @@ export function ChannelsSection({
   }, [statusUrl, metaAppId]);
 
   function maybeSubmit() {
-    const { code, phoneNumberId, wabaId } = pendingSignup.current;
-    if (!code || !phoneNumberId || !wabaId) return;
+    const { code, phoneNumberId, wabaId, isCoexistence } = pendingSignup.current;
+    // A coexistence connection (D8) never gets a phoneNumberId from the
+    // browser -- the connect route resolves it from the WABA itself.
+    if (!code || !wabaId || (!isCoexistence && !phoneNumberId)) return;
 
     fetch(`${statusUrl}/connect`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, phoneNumberId, wabaId }),
+      body: JSON.stringify({ code, phoneNumberId, wabaId, isCoexistence }),
     })
       .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
       .then(({ ok, json }) => {
@@ -145,7 +157,14 @@ export function ChannelsSection({
         config_id: metaConfigId,
         response_type: "code",
         override_default_response_type: true,
-        extras: { setup: {} },
+        // Trello D8 -- featureType tells Meta's popup to offer the merchant
+        // an inline choice to connect the number they already use in the
+        // WhatsApp Business app, instead of only offering a fresh
+        // Cloud-API-only registration. The merchant's choice comes back as
+        // which completion event fires (FINISH vs
+        // FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING), handled in onMessage
+        // above -- this is not a second button on our side.
+        extras: { setup: {}, featureType: "whatsapp_business_app_onboarding" },
       },
     );
   }
