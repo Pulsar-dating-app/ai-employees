@@ -410,7 +410,12 @@
       "stepTwoTitle": "Start talking to customers",
       "stepTwoDescription": "Once connected, your team answers on WhatsApp automatically — day and night.",
       "paymentIssueBadge": "Payment needed",
-      "paymentIssueDescription": "WhatsApp can't deliver messages until a payment method is added to your account in Meta Business Manager."
+      "paymentIssueDescription": "WhatsApp can't deliver messages until a payment method is added to your account in Meta Business Manager.",
+      "billingDisclosureTitle": "Before you connect",
+      "billingDisclosurePaymentMethod": "You'll need to add a payment method to your WhatsApp Business account in Meta Business Manager — without it, messages won't be delivered even after connecting.",
+      "billingDisclosureBilling": "Meta charges you directly for WhatsApp usage, separately from your Staffra subscription, once you go past a free allowance. Rates change over time, so always check the current ones here:",
+      "billingDisclosureLinkText": "Meta's official WhatsApp pricing",
+      "billingAcknowledgeLabel": "I understand Meta bills me separately for WhatsApp usage and that I need to add a payment method."
     },
     "channelTabs": {
       "tablistLabel": "Ways customers can reach this employee",

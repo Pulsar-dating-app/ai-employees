@@ -3,7 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import { WhatsAppIcon, CheckIcon } from "@/components/ui/icons";
+
+// The exact rate is deliberately never hardcoded anywhere in this file (or
+// any copy in messages/*.json) -- see decisions.md's 2026-09-05 entry.
+// Meta's own pricing is changing materially on 2026-10-01 (service-window
+// replies, today unconditionally free, start being billed past a free
+// allowance) and the post-change BRL rate isn't reliably confirmed from an
+// authoritative source yet. Linking to Meta's own live page means the
+// merchant always sees a real, current number instead of one we could get
+// wrong on their actual card.
+const WHATSAPP_PRICING_URL = "https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing";
 
 declare global {
   interface Window {
@@ -52,6 +63,11 @@ export function ChannelsSection({
   const [connection, setConnection] = useState<Connection | null>(null);
   const [view, setView] = useState<ViewState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Gates the connect button on the billing/payment-method disclosure below
+  // being explicitly acknowledged -- a real financial decision (Meta bills
+  // the merchant directly, separately from Staffra), not copy that should
+  // be skimmable past.
+  const [acknowledged, setAcknowledged] = useState(false);
   const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string; isCoexistence?: boolean }>({});
   const statusUrl = `/api/companies/${companyId}/agents/${agentSlug}/whatsapp`;
 
@@ -164,7 +180,7 @@ export function ChannelsSection({
         // which completion event fires (FINISH vs
         // FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING), handled in onMessage
         // above -- this is not a second button on our side.
-        extras: { setup: {}, featureType: "whatsapp_business_app_onboarding" },
+        extras: { setup: {}, featureType: "whatsapp_business_app_onboarding", version: "v4", sessionInfoVersion: "3" },
       },
     );
   }
@@ -190,9 +206,7 @@ export function ChannelsSection({
   const hasPaymentIssue = isConnected && connection?.has_payment_issue === true;
 
   return (
-    <div className="relative overflow-hidden">
-      <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-secondary-container/25 blur-3xl" />
-
+    <div className="relative">
       <div className="relative flex items-center gap-3">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#25D366] text-white shadow-sm">
           <WhatsAppIcon className="h-6 w-6" />
@@ -267,15 +281,40 @@ export function ChannelsSection({
                 <div className="flex flex-col gap-3">
                   <p className="text-sm text-on-surface-variant">{t("notConnected")}</p>
                   {canEdit ? (
-                    <div>
-                      <Button
-                        type="button"
-                        isLoading={view === "connecting"}
-                        onClick={startSignup}
-                      >
-                        {view === "connecting" ? t("connecting") : t("connectButton")}
-                      </Button>
-                    </div>
+                    <>
+                      <Alert variant="warning" title={t("billingDisclosureTitle")}>
+                        {t("billingDisclosurePaymentMethod")}
+                        <br />
+                        {t("billingDisclosureBilling")}{" "}
+                        <a
+                          href={WHATSAPP_PRICING_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                        >
+                          {t("billingDisclosureLinkText")}
+                        </a>
+                      </Alert>
+                      <label className="flex items-start gap-2 text-sm text-on-surface-variant">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5"
+                          checked={acknowledged}
+                          onChange={(e) => setAcknowledged(e.target.checked)}
+                        />
+                        {t("billingAcknowledgeLabel")}
+                      </label>
+                      <div>
+                        <Button
+                          type="button"
+                          isLoading={view === "connecting"}
+                          disabled={!acknowledged}
+                          onClick={startSignup}
+                        >
+                          {view === "connecting" ? t("connecting") : t("connectButton")}
+                        </Button>
+                      </div>
+                    </>
                   ) : null}
                 </div>
               )}
