@@ -313,7 +313,11 @@ export async function POST(request: Request) {
 
     const sendResult = await sendWhatsappMessage(connection.access_token, connection.phone_number_id, from, result.responseText);
     if (!sendResult.ok) {
-      console.error("WhatsApp webhook: failed to deliver reply", { companyId: connection.company_id, kind: sendResult.kind });
+      console.error("WhatsApp webhook: failed to deliver reply", {
+        companyId: connection.company_id,
+        kind: sendResult.kind,
+        errorDetail: sendResult.kind === "other" ? sendResult.errorDetail : undefined,
+      });
       try {
         if (sendResult.kind === "token_invalid") {
           // Best-effort -- an expired/revoked token is not transient, so
