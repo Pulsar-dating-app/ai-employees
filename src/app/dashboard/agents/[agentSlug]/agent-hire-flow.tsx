@@ -7,11 +7,10 @@ import { useTranslations } from "next-intl";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { CheckIcon, XIcon, BadgeCheckIcon } from "@/components/ui/icons";
 import { DevChatTest } from "../../dev-chat-test";
 
-type Stage = "browsing" | "confirming" | "hired";
+type Stage = "browsing" | "hired";
 
 function TraitChip({ children }: { children: React.ReactNode }) {
   return (
@@ -30,9 +29,9 @@ export function AgentHireFlow({
   traits,
   should,
   never,
-  monthlyPriceBRL,
   companyId,
   initialIsHired,
+  isBillingActive,
   showDevChatTest,
 }: {
   agentSlug: string;
@@ -43,9 +42,11 @@ export function AgentHireFlow({
   traits: string[];
   should: string[];
   never: string[];
-  monthlyPriceBRL: number;
   companyId: string;
   initialIsHired: boolean;
+  // Trello P6: hiring is an activation, so it needs an active plan. When
+  // false, the card sends the merchant to billing instead of hiring.
+  isBillingActive: boolean;
   showDevChatTest: boolean;
 }) {
   const t = useTranslations("AgentDetail");
@@ -57,8 +58,11 @@ export function AgentHireFlow({
   const [stage, setStage] = useState<Stage>(initialIsHired ? "hired" : "browsing");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // A 402 here means the plan lapsed between page load and the click (the
+  // button is only shown when isBillingActive) -- fall back to the billing CTA.
+  const [needsPlan, setNeedsPlan] = useState(false);
 
-  async function handleConfirmHire() {
+  async function handleHire() {
     setErrorMessage(null);
     setIsSubmitting(true);
 
@@ -68,6 +72,10 @@ export function AgentHireFlow({
 
     setIsSubmitting(false);
 
+    if (hireRes.status === 402) {
+      setNeedsPlan(true);
+      return;
+    }
     if (!hireRes.ok) {
       setErrorMessage(t("hireError", { name }));
       return;
@@ -144,48 +152,25 @@ export function AgentHireFlow({
                 <DevChatTest companyId={companyId} agentSlug={agentSlug} agentName={name} />
               ) : null}
             </div>
-          ) : stage === "confirming" ? (
-            <div className="flex flex-col gap-4">
-              <div>
-                <h2 className="text-sm font-semibold text-on-surface">{t("mockPaymentTitle")}</h2>
-                <p className="mt-1 text-sm text-on-surface-variant">{t("mockPaymentSubtitle")}</p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Input label={t("cardNumberLabel")} value="4242 4242 4242 4242" disabled />
-                <Input label={t("cardNameLabel")} value={name} disabled />
-                <Input label={t("cardExpiryLabel")} value="12/30" disabled />
-                <Input label={t("cardCvcLabel")} value="123" disabled />
-              </div>
-
+          ) : !isBillingActive || needsPlan ? (
+            <div className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-on-surface">{t("needsPlanTitle")}</h2>
+              <p className="text-sm text-on-surface-variant">{t("needsPlanBody", { name })}</p>
+              <Link href="/dashboard/settings/billing">
+                <Button type="button">{t("goToBilling")}</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <span className="text-sm text-on-surface-variant">{t("includedInPlan")}</span>
               {errorMessage ? (
                 <p role="alert" className="text-sm text-error">
                   {errorMessage}
                 </p>
               ) : null}
-
-              <div className="flex items-center gap-3">
-                <Button type="button" isLoading={isSubmitting} onClick={handleConfirmHire}>
-                  {isSubmitting ? t("confirming") : t("confirmHire", { price: monthlyPriceBRL })}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={isSubmitting}
-                  onClick={() => setStage("browsing")}
-                >
-                  {t("cancel")}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <span className="text-lg font-semibold text-on-surface">
-                {t("priceLabel", { price: monthlyPriceBRL })}
-              </span>
               <div>
-                <Button type="button" onClick={() => setStage("confirming")}>
-                  {t("hireButton", { name })}
+                <Button type="button" isLoading={isSubmitting} onClick={handleHire}>
+                  {isSubmitting ? t("confirming") : t("hireButton", { name })}
                 </Button>
               </div>
             </div>

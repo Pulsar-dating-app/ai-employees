@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
 
 // Trello P7 -- usage metering + the per-channel reply gate, against the real
@@ -108,17 +109,19 @@ describe("evaluateReplyGate (Trello P7)", () => {
     expect(await evaluateReplyGate(id, svc)).toEqual({ allow: true, overPlan: true });
   });
 
-  it("keeps answering past the grace band by default, blocks only with the hard stop armed", async () => {
+  it("blocks 'grace_exceeded' past the grace band by default (the decided policy); the ops kill switch still allows it through", async () => {
     const owner = await signUpTestUser("owner");
     const { id } = await createCompany(owner.cookieHeader, "P7 Past Grace Co");
     const periodStart = new Date().toISOString();
     await seedBilling(id, { status: "active", periodStart });
     await seedUsage(id, periodStart, 1000, 100);
 
-    expect(await evaluateReplyGate(id, svc)).toEqual({ allow: true, overPlan: true });
-    expect(await evaluateReplyGate(id, svc, { hardStopEnabled: true, graceMultiplier: 1.2 })).toEqual({
-      allow: false,
-      reason: "grace_exceeded",
+    // No options passed -> the shipped default (hard stop armed) applies.
+    expect(await evaluateReplyGate(id, svc)).toEqual({ allow: false, reason: "grace_exceeded" });
+    // Explicit override -- the escape hatch, same shape BILLING_HARD_STOP_ENABLED=false gives ops.
+    expect(await evaluateReplyGate(id, svc, { hardStopEnabled: false, graceMultiplier: 1.2 })).toEqual({
+      allow: true,
+      overPlan: true,
     });
   });
 
@@ -191,14 +194,16 @@ describe("recordAiReply (Trello P7)", () => {
 
 describe("web chat route billing gate (Trello P7)", () => {
   async function hireMalu(ownerCookie: string, companyId: string) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     await api("POST", `/api/companies/${companyId}/agents/malu`, ownerCookie, {});
   }
 
   it("a lapsed subscription gets no AI reply, and the customer's message is still persisted", async () => {
     const owner = await signUpTestUser("owner");
     const company = await createCompany(owner.cookieHeader, "P7 Chat Lapsed Co");
-    await hireMalu(owner.cookieHeader, company.id);
-    await seedBilling(company.id, { status: "past_due", periodStart: new Date().toISOString() });
+    await hireMalu(owner.cookieHeader, company.id); // hires with an active plan
+    // ...then the subscription lapses.
+    await svc.from("company_billing").update({ subscription_status: "past_due" }).eq("company_id", company.id);
 
     const { data: agent } = await svc.from("agents").select("id").eq("slug", "malu").single();
     const sessionId = randomUUID();

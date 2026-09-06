@@ -4,7 +4,7 @@ import { AgentEngine } from "@/lib/agent-engine";
 import { resolveWebChatSession } from "@/lib/web-chat/session";
 import { isEmbedOriginAllowed } from "@/lib/web-chat/embed-authorization";
 import { checkAndRecordIpRateLimit, checkConversationRateLimit, getClientIp } from "@/lib/web-chat/rate-limit";
-import { evaluateReplyGate, recordAiReply, QUOTA_EXCEEDED_CUSTOMER_TEXT } from "@/lib/billing/enforcement";
+import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
 
 // Trello M3 -- the public, unauthenticated chat API a website visitor (or
 // the embeddable widget, M5) talks to. Public and slug-based, so it lives
@@ -207,33 +207,18 @@ export async function POST(
   }
 
   // P4 + P7 -- the billing gate. A lapsed subscription (card declined /
-  // unpaid / canceled) silences the AI on every channel, same shape as the
-  // 'paused' gate above; a company past its reply quota's grace band is
-  // stopped only if the hard stop is armed (off by default -- "never stop
-  // from nowhere"). The customer's message is already persisted either way;
-  // the merchant sees a P5 banner. A company that never subscribed is
-  // untouched here (P6).
+  // unpaid / canceled) or a reply quota past its grace band (hard stop
+  // armed) both silence the AI, same shape as the 'paused' gate above --
+  // fully silent, no canned reply. A canned line was tried and deliberately
+  // dropped (2026-09-04, see decisions.md): the only string available would
+  // have been hard-coded Portuguese with no locale detection, so an
+  // English-speaking customer would get a Portuguese reply out of nowhere --
+  // worse than no reply at all. The customer's message is already persisted
+  // either way; the merchant sees a P5 banner / dashboard alert. A company
+  // that never subscribed is untouched here (P6).
   const billingGate = await evaluateReplyGate(companyId, supabase);
   if (!billingGate.allow) {
-    if (billingGate.reason === "grace_exceeded") {
-      // Past the grace band with the hard stop on: acknowledge the customer
-      // with a canned line (zero AI spend) and leave the thread for a human.
-      console.warn("[billing] web chat reply blocked: reply quota grace exceeded", { companyId });
-      const { data: cannedReply, error: cannedError } = await supabase
-        .from("messages")
-        .insert({
-          company_id: companyId,
-          conversation_id: session.conversationId,
-          role: "agent",
-          content: QUOTA_EXCEEDED_CUSTOMER_TEXT,
-        })
-        .select("role, content, created_at")
-        .single();
-      if (cannedError) return NextResponse.json({ error: cannedError.message }, { status: 500 });
-      return NextResponse.json({ reply: cannedReply });
-    }
-    // lapsed -- fully silent, exactly as the 'paused' gate. Recovers on
-    // invoice.paid flipping company_billing back to 'active'.
+    console.warn(`[billing] web chat reply blocked (${billingGate.reason})`, { companyId });
     return NextResponse.json({ reply: null });
   }
 

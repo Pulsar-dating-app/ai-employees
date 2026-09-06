@@ -7,6 +7,7 @@ import { getTestEnv } from "./helpers/env";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
 import { sentEmails, clearEmails, waitForEmail } from "./helpers/email";
+import { seedActivePlan } from "./helpers/billing";
 
 // book_appointment runs in-process in this worker (not the spawned next
 // server), so sendEmail() here needs the mock URL + creds in *this*
@@ -36,6 +37,7 @@ async function seed(companyName: string, opts: { requiresApproval?: boolean } = 
     name: companyName,
   });
   const companyId = created.json.company.id;
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
   await api("PATCH", `/api/companies/${companyId}`, owner.cookieHeader, {
     timezone: "UTC",
     email: "studio@example.test",

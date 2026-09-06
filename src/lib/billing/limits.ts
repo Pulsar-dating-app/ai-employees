@@ -1,21 +1,23 @@
 // Trello P7 -- the soft-cap knobs for the monthly AI-reply quota.
 //
-// Nothing here is final. The plan reply limits themselves are placeholders
-// (`plans.ts`), and the exact grace percentage / whether a hard stop exists
-// at all are still undecided product calls. Both live in env with a
-// conservative built-in default so a deploy can tune them with no code
-// change -- and so the call sites never carry a magic number.
+// The plan reply limits themselves are still placeholders (`plans.ts`), but
+// the grace policy itself is decided (2026-09-04, see decisions.md): 20%
+// head-room past 100%, then blocked. Both knobs still live in env so a
+// deploy can tune the number or, as an ops kill switch, disarm the hard
+// stop without a code change -- but the *shipped* default now enforces it.
 
 // How far past 100% of the plan's snapshotted `reply_limit` the bots keep
-// answering before the hard stop (if enabled) engages. 1.2 = 20% head-room.
-// Override with BILLING_GRACE_MULTIPLIER.
+// answering before the hard stop engages. 1.2 = 20% head-room -- the
+// decided number. Override with BILLING_GRACE_MULTIPLIER.
 const DEFAULT_GRACE_MULTIPLIER = 1.2;
 
 // Whether crossing `reply_limit * grace_multiplier` actually stops the AI.
-// Off by default: the P-epic rule is "never stop from nowhere" -- until a
-// grace policy is signed off we keep answering and only let the merchant-
-// facing banner (P5) escalate. Set BILLING_HARD_STOP_ENABLED=true to arm it.
-const DEFAULT_HARD_STOP_ENABLED = false;
+// Armed by default: past the 20% grace band, the AI is skipped and the
+// customer gets no reply at all -- fully silent, see enforcement.ts (nothing
+// is charged either way -- AgentEngine.run() never runs). Set
+// BILLING_HARD_STOP_ENABLED=false as an escape hatch if the policy ever
+// needs to be paused without a deploy.
+const DEFAULT_HARD_STOP_ENABLED = true;
 
 /**
  * The grace multiplier from env, or {@link DEFAULT_GRACE_MULTIPLIER}. A
@@ -31,7 +33,7 @@ export function getGraceMultiplier(): number {
   return parsed;
 }
 
-/** Whether the hard stop past the grace band is armed (default: no). */
+/** Whether the hard stop past the grace band is armed (default: yes). */
 export function isHardStopEnabled(): boolean {
   if (process.env.BILLING_HARD_STOP_ENABLED === undefined) return DEFAULT_HARD_STOP_ENABLED;
   return process.env.BILLING_HARD_STOP_ENABLED === "true";

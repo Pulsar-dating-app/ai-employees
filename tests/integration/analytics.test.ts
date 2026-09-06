@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello ticket E2 -- the analytics aggregation API F6's dashboard reads.
 // Real local Postgres throughout (real signed-up users, real RLS), same as
@@ -25,6 +26,7 @@ async function seedCompany(
     name,
   });
   const companyId = created.json.company.id;
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
 
   if (timezone) {
     await api("PATCH", `/api/companies/${companyId}`, owner.cookieHeader, { timezone });

@@ -4,6 +4,7 @@ import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestEnv } from "./helpers/env";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello M3 -- the public chat API, tested over real HTTP. Every case here
 // short-circuits before AgentEngine.run() would ever be called (auth,
@@ -25,6 +26,7 @@ describe("Public chat API GET/POST /api/chat/:companySlug/:agentSlug", () => {
   }
 
   async function hireMalu(ownerCookie: string, companyId: string) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     await api("POST", `/api/companies/${companyId}/agents/malu`, ownerCookie, {});
   }
 

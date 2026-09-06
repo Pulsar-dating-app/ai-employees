@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { AgentEngine } from "@/lib/agent-engine";
 import { sendTelegramMessage } from "@/lib/telegram/bot-api";
 import { resolveTelegramSession } from "@/lib/telegram/session";
-import { evaluateReplyGate, recordAiReply, QUOTA_EXCEEDED_CUSTOMER_TEXT } from "@/lib/billing/enforcement";
+import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
 
 // Trello O1 -- one shared bot for every company's Telegram customers,
 // unlike WhatsApp/Instagram's per-merchant assets. There is no connect
@@ -142,16 +142,13 @@ export async function POST(request: Request) {
   // N9: a 'paused' conversation means a human has taken this thread over.
   if (conversation.status === "paused") return new NextResponse(null, { status: 200 });
 
-  // P4 + P7: the billing gate, same decision every other channel makes.
+  // P4 + P7: the billing gate, same decision every other channel makes. A
+  // lapsed subscription or a reply-quota grace band overrun both silence the
+  // AI -- no canned reply (a hard-coded PT-only line was tried and dropped;
+  // see decisions.md). The inbound message is already persisted above.
   const billingGate = await evaluateReplyGate(customer.company_id, supabase);
   if (!billingGate.allow) {
-    if (billingGate.reason === "grace_exceeded") {
-      console.warn("[billing] telegram reply blocked: reply quota grace exceeded", { companyId: customer.company_id });
-      const { error: cannedError } = await supabase
-        .from("messages")
-        .insert({ company_id: customer.company_id, conversation_id: conversation.id, role: "agent", content: QUOTA_EXCEEDED_CUSTOMER_TEXT });
-      if (!cannedError) await sendTelegramMessage(chatId, QUOTA_EXCEEDED_CUSTOMER_TEXT);
-    }
+    console.warn(`[billing] telegram reply blocked (${billingGate.reason})`, { companyId: customer.company_id });
     return new NextResponse(null, { status: 200 });
   }
 

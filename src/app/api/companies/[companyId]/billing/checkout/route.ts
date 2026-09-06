@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getPlan, type PlanKey } from "@/lib/billing/plans";
+import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import {
   createBillingPortalSession,
@@ -98,13 +99,31 @@ export async function POST(
     return NextResponse.json({ error: "Company not found" }, { status: 404 });
   }
 
-  const { data: billing, error: billingError } = await supabase
+  const { data: billingRow, error: billingError } = await supabase
     .from("company_billing")
     .select("stripe_customer_id, stripe_subscription_id, subscription_status")
     .eq("company_id", companyId)
     .maybeSingle();
   if (billingError) {
     return NextResponse.json({ error: billingError.message }, { status: 500 });
+  }
+  let billing = billingRow;
+
+  // Backstop for a missed billing webhook before deciding checkout-vs-portal:
+  // a lost checkout.session.completed leaves a stub `incomplete` row while
+  // Stripe already has a live sub (adopt it -> open the Portal, don't mint a
+  // second subscription); a Portal plan change whose webhook was lost leaves
+  // a stale `plan_key` (re-sync it). No-op when nothing drifted.
+  if (billing?.stripe_customer_id) {
+    const reconciled = await reconcileBillingFromStripe(createServiceClient(), companyId);
+    if (reconciled) {
+      const { data: fresh } = await supabase
+        .from("company_billing")
+        .select("stripe_customer_id, stripe_subscription_id, subscription_status")
+        .eq("company_id", companyId)
+        .maybeSingle();
+      billing = fresh ?? billing;
+    }
   }
 
   const returnUrl = `${resolveCheckoutBaseUrl()}/dashboard/settings/billing`;
@@ -121,12 +140,40 @@ export async function POST(
         { status: 500 },
       );
     }
-    const { url } = await createBillingPortalSession({
-      customerId: billing!.stripe_customer_id,
-      returnUrl,
-      subscriptionId: billing!.stripe_subscription_id,
-    });
-    return NextResponse.json({ ok: true, mode: "portal", url });
+    // Deep-link into the Portal's plan-switch flow. That flow needs the
+    // "subscription update" feature enabled (with an allowed product list)
+    // in the Stripe Customer Portal configuration; if it isn't, Stripe
+    // throws. Rather than 500, fall back to the plain Portal home so the
+    // merchant can still manage card / invoices / cancellation.
+    try {
+      const { url } = await createBillingPortalSession({
+        customerId: billing!.stripe_customer_id,
+        returnUrl,
+        subscriptionId: billing!.stripe_subscription_id,
+      });
+      return NextResponse.json({ ok: true, mode: "portal", url });
+    } catch (err) {
+      console.error(
+        `billing checkout: subscription_update Portal flow failed for company ${companyId} -- falling back to Portal home. Enable "Customers can switch plans" in the Stripe Customer Portal config.`,
+        err,
+      );
+      try {
+        const { url } = await createBillingPortalSession({
+          customerId: billing!.stripe_customer_id,
+          returnUrl,
+        });
+        return NextResponse.json({ ok: true, mode: "portal", url });
+      } catch (fallbackErr) {
+        console.error(`billing checkout: Portal home also unavailable for company ${companyId}`, fallbackErr);
+        return NextResponse.json(
+          {
+            error: "The billing portal isn't available. Check the Stripe Customer Portal configuration.",
+            code: "portal_unavailable",
+          },
+          { status: 502 },
+        );
+      }
+    }
   }
 
   // --- No subscription yet -> Checkout ----------------------------------

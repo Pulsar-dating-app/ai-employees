@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { AGENT_ENRICHMENT, DEFAULT_MONTHLY_PRICE_BRL } from "@/lib/agents/catalog";
 import { resolveAgentDescription } from "@/lib/agents/copy";
+import { isBillingActive } from "@/lib/billing/activation";
 import { agentPhoto } from "@/lib/agents/media";
 import { MarketplaceGrid } from "./marketplace-grid";
 import type { MarketplaceAgent } from "./agent-card";
@@ -24,17 +24,18 @@ export default async function MarketplacePage() {
   const company = companies?.[0] ?? null;
 
   let hiredAgentIds = new Set<string>();
+  let billingActive = false;
   if (company) {
-    const { data: companyAgents } = await supabase
-      .from("company_agents")
-      .select("agent_id")
-      .eq("company_id", company.id);
+    const [{ data: companyAgents }, active] = await Promise.all([
+      supabase.from("company_agents").select("agent_id").eq("company_id", company.id),
+      isBillingActive(company.id, supabase),
+    ]);
     hiredAgentIds = new Set((companyAgents ?? []).map((ca) => ca.agent_id as string));
+    billingActive = active;
   }
 
   const cards: MarketplaceAgent[] = await Promise.all(
     (agents ?? []).map(async (agent) => {
-      const enrichment = AGENT_ENRICHMENT[agent.slug];
       return {
         slug: agent.slug,
         name: defaultAgentName(agent.slug),
@@ -44,7 +45,6 @@ export default async function MarketplacePage() {
           agent.description,
           defaultAgentName(agent.slug),
         ),
-        monthlyPriceBRL: enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL,
         isHired: hiredAgentIds.has(agent.id),
         photoSrc: agentPhoto(agent.slug),
       };
@@ -54,7 +54,7 @@ export default async function MarketplacePage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader icon={SearchIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
-      <MarketplaceGrid agents={cards} />
+      <MarketplaceGrid agents={cards} billingActive={billingActive} />
     </div>
   );
 }

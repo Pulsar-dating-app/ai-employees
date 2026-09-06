@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello F5 -- the merchant-facing Conversations list/detail/reply/resume
 // API, tested over real HTTP. Conversations and their messages are seeded
@@ -21,6 +22,7 @@ describe("Conversations API", () => {
   }
 
   async function hireMalu(ownerCookie: string, companyId: string) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     await api("POST", `/api/companies/${companyId}/agents/malu`, ownerCookie, {});
   }
 

@@ -435,6 +435,7 @@
   "Dashboard": {
     "logout": "Sair",
     "workspaceLabel": "Espaço de trabalho",
+    "billingPastDueAlert": "Pagamento falhou — equipe pausada",
     "tabs": {
       "marketplace": "Marketplace",
       "myAgents": "Minha equipe",
@@ -523,7 +524,8 @@
     "viewDetails": "Ver detalhes",
     "searchPlaceholder": "Buscar por nome ou cargo…",
     "noResults": "Nenhum integrante corresponde a “{query}”.",
-    "priceLabel": "R$ {price}/mês",
+    "includedInPlan": "Incluído no seu plano",
+    "needsPlan": "Precisa de um plano",
     "backToMarketplace": "Voltar para o marketplace",
     "traits": {
       "warm": "Caloroso(a)",
@@ -547,17 +549,12 @@
       "inventInfo": "Inventar preços, estoque ou políticas",
       "soundGeneric": "Soar como um chatbot genérico"
     },
-    "priceLabel": "R$ {price}/mês",
+    "includedInPlan": "Incluído no seu plano",
     "hireButton": "Contratar {name}",
-    "mockPaymentTitle": "Confirme e pague",
-    "mockPaymentSubtitle": "Esta é uma prévia do fluxo de contratação — nenhum pagamento é cobrado ainda.",
-    "cardNumberLabel": "Número do cartão",
-    "cardNameLabel": "Nome no cartão",
-    "cardExpiryLabel": "Validade",
-    "cardCvcLabel": "CVC",
-    "confirmHire": "Confirmar — R$ {price}/mês",
     "confirming": "Contratando…",
-    "cancel": "Cancelar",
+    "needsPlanTitle": "Escolha um plano para contratar sua equipe",
+    "needsPlanBody": "Contratar {name} exige um plano ativo — ele cobre todos os integrantes que você colocar para trabalhar. Escolha um e {name} já começa.",
+    "goToBilling": "Ir para cobrança",
     "hiredBadge": "{name} está contratada",
     "hiredDescription": "{name} já faz parte da sua equipe — acesse as configurações para ensinar {name} sobre o seu negócio e definir onde {name} conversa com os seus clientes.",
     "goToSettings": "Ir para configurações",
@@ -586,6 +583,21 @@
   "MyAgents": {
     "pageTitle": "Minha equipe",
     "pageSubtitle": "Os integrantes que você já contratou.",
+    "pastDueBanner": {
+      "title": "Pagamento falhou",
+      "body": "Sua equipe inteira está pausada e não responde nenhum cliente, em nenhum canal, até isso ser resolvido.",
+      "action": "Atualizar pagamento"
+    },
+    "overLimitBanner": {
+      "title": "Você usou todas as respostas deste período",
+      "body": "Sua equipe continua respondendo por um curto período de tolerância, depois para. Mude de plano para aumentar o limite.",
+      "action": "Ver plano"
+    },
+    "nearLimitBanner": {
+      "title": "Suas respostas estão acabando",
+      "body": "{left, plural, one {# resposta restante} other {# respostas restantes}} neste período.",
+      "action": "Ver plano"
+    },
     "emptyState": "Você ainda não contratou ninguém.",
     "browseMarketplace": "Ver marketplace",
     "configure": "Configurar",
@@ -617,7 +629,9 @@
       "pauseConfirm": "Pausar {name}? Vai parar de responder em todos os canais até você reativar.",
       "pauseConfirmButton": "Sim, pausar",
       "cancel": "Cancelar",
-      "updateError": "Algo deu errado. Tente novamente."
+      "updateError": "Algo deu errado. Tente novamente.",
+      "planRequired": "Reativar {name} exige um plano ativo.",
+      "goToBilling": "Ir para cobrança"
     },
     "humanHandoff": {
       "title": "Transferência para humano",
@@ -1521,7 +1535,6 @@
     "pageSubtitle": "Seu plano, uso e pagamentos.",
     "readOnly": "Você pode ver a cobrança, mas só donos e administradores podem alterar.",
     "perMonth": "/ mês",
-    "currencyNote": "Valores em reais. No checkout você verá o preço na sua moeda local.",
     "renewsOn": "Renova em {date}",
     "endsOn": "Encerra em {date}",
     "noRenewalDate": "Data de renovação pendente",
@@ -1548,13 +1561,16 @@
       },
       "overLimit": {
         "title": "Você usou todas as respostas deste período",
-        "body": "Sua equipe continua respondendo por um curto período de tolerância. Mude para o Pro para aumentar o limite.",
-        "action": "Mudar de plano"
+        "body": "Sua equipe continua respondendo por um curto período de tolerância. Mude de plano para aumentar o limite.",
+        "bodyMaxPlan": "Sua equipe continua respondendo por um curto período de tolerância. Você já está no nosso maior plano — fale com a gente para mais capacidade.",
+        "action": "Mudar de plano",
+        "actionContact": "Fale conosco"
       },
       "nearLimit": {
         "title": "Suas respostas estão acabando",
         "body": "{left, plural, one {# resposta restante} other {# respostas restantes}} neste período.",
-        "action": "Mudar de plano"
+        "action": "Mudar de plano",
+        "actionContact": "Fale conosco"
       },
       "canceled": {
         "title": "Seu plano encerrou em {date}",
@@ -1577,7 +1593,8 @@
     },
     "plan": {
       "replies": "{limit, number} respostas por mês",
-      "teammates": "Membros ilimitados na sua conta"
+      "teammates": "Membros ilimitados na sua conta",
+      "custom": "Preço personalizado"
     },
     "enterprise": {
       "title": "Precisa de mais volume ou condições sob medida?",

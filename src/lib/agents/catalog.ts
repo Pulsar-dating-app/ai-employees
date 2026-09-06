@@ -13,13 +13,13 @@ export type AgentEnrichment = {
   traits: string[];
   should: string[];
   never: string[];
-  monthlyPriceBRL: number;
 };
 
-// No `agents` column holds a price — there is no billing system yet (see
-// PRODUCT.md's MVP scope). This is what the mocked hire flow displays and
-// confirms, not a real charge.
-export const DEFAULT_MONTHLY_PRICE_BRL = 197;
+// Trello P6: agents are no longer individually priced. Access to every
+// hired agent is covered by the company's subscription plan (a monthly
+// AI-reply quota shared across all active bots — see
+// .claude/docs/architecture.md#billing-stripe--epic-p). Price display lives
+// on /dashboard/settings/billing, not per agent.
 
 // MOCK. There is no conversations/analytics aggregation yet (the `events`
 // and `conversations` tables exist but nothing rolls them up). The
@@ -32,6 +32,5 @@ export const AGENT_ENRICHMENT: Record<string, AgentEnrichment> = {
     traits: ["warm", "attentive", "persuasive", "knowledgeable", "proactive"],
     should: ["askFollowUp", "explainFit", "handleObjections", "guideCheckout"],
     never: ["pushAggressively", "inventInfo", "soundGeneric"],
-    monthlyPriceBRL: 197,
   },
 };

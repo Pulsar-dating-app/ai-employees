@@ -6,11 +6,14 @@ import { getPlan, getPlanByLookupKey, type PlanKey } from "@/lib/billing/plans";
 // Trello P4 -- the handlers behind POST /api/webhooks/stripe. Everything
 // funnels through `syncBillingFromSubscription`: given a Stripe.Subscription
 // (which every relevant event either *is* or points at), it writes the full
-// current state onto `company_billing` and, when the billing period has
-// advanced, opens the next `company_message_usage` row (the monthly reset).
-// Full-state / last-write-wins + `on conflict do nothing` on the usage row
-// makes every handler idempotent and order-tolerant, on top of the route's
-// event-id dedup.
+// current state onto `company_billing`. If the billing period has advanced,
+// it opens the next `company_message_usage` row (the monthly reset). If the
+// period is unchanged but the plan changed underneath it -- a same-cycle
+// Portal upgrade/downgrade, which doesn't move the billing anchor -- it
+// re-snapshots that period's `reply_limit` onto the new plan without
+// touching `replies_used`. Full-state / last-write-wins + `on conflict do
+// nothing` on the usage row makes every handler idempotent and
+// order-tolerant, on top of the route's event-id dedup.
 //
 // `plan_key` is derived from the subscription item's `price.lookup_key`
 // (the Customer Portal changes the price, never our metadata) -> plans.ts.
@@ -165,12 +168,108 @@ async function syncBillingFromSubscription(
         company_id: companyId,
         period_start: periodStart,
         replies_used: 0,
-        reply_limit: getPlan(effectivePlanKey).monthlyReplyLimit,
+        // Non-null: this branch only ever resolves a plan Stripe itself sent
+        // back on a subscription (effectivePlanKey came from a lookup key),
+        // and Enterprise has no Stripe Price to ever produce one here.
+        reply_limit: getPlan(effectivePlanKey).monthlyReplyLimit!,
       },
       { onConflict: "company_id,period_start", ignoreDuplicates: true },
     );
     if (usageError) throw new Error(`company_message_usage insert failed: ${usageError.message}`);
+  } else if (periodStart && resolvedPlan && existing?.plan_key && resolvedPlan.key !== existing.plan_key) {
+    // Same period, but the plan changed under it -- an immediate Portal
+    // upgrade/downgrade (proration, no new billing cycle), so the rollover
+    // branch above never fires and this period's row would otherwise keep
+    // the old plan's ceiling for the rest of the cycle. Move reply_limit to
+    // the new plan; replies_used is untouched -- usage already spent this
+    // period doesn't reset just because the plan changed mid-cycle.
+    const { error: limitError } = await service
+      .from("company_message_usage")
+      // Same reasoning as above: resolvedPlan came from a Stripe subscription,
+      // so it's never Enterprise.
+      .update({ reply_limit: getPlan(resolvedPlan.key).monthlyReplyLimit! })
+      .eq("company_id", companyId)
+      .eq("period_start", periodStart);
+    if (limitError) {
+      throw new Error(`company_message_usage reply_limit update failed: ${limitError.message}`);
+    }
   }
+}
+
+// Backstop for a lost or late billing webhook -- webhooks stay the
+// real-time path (Stripe retries them for ~3 days), this catches drift
+// when one never lands: endpoint down, a handler 500 loop, a Portal
+// upgrade/downgrade/cancel whose `customer.subscription.updated` went
+// missing, or -- in local dev -- no `stripe listen`.
+//
+// Called on the billing page load and by the checkout route before it
+// decides checkout-vs-portal. Given a company:
+//   - a known `stripe_subscription_id`  -> retrieve it, re-sync if the
+//     status / plan / period / renewal flag drifted from our row
+//   - no sub id but status `incomplete` -> the P3 stub: adopt the
+//     customer's newest live subscription (a lost checkout.session.completed)
+// Runs everything through the same `syncBillingFromSubscription` the
+// webhook uses -- fully idempotent; a webhook that arrives later is just
+// another full-state write. Returns true if it wrote anything.
+export async function reconcileBillingFromStripe(
+  service: Service,
+  companyId: string,
+): Promise<boolean> {
+  const { data: row } = await service
+    .from("company_billing")
+    .select(
+      "subscription_status, stripe_customer_id, stripe_subscription_id, plan_key, current_period_start, cancel_at_period_end",
+    )
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (!row) return false;
+  const customerId = (row.stripe_customer_id as string | null) ?? null;
+  const knownSubId = (row.stripe_subscription_id as string | null) ?? null;
+  if (!customerId && !knownSubId) return false;
+
+  const stripe = getStripeClient();
+  let subscription: Stripe.Subscription | null = null;
+  try {
+    if (knownSubId) {
+      subscription = await stripe.subscriptions.retrieve(knownSubId);
+    } else if (row.subscription_status === "incomplete") {
+      const list = await stripe.subscriptions.list({
+        customer: customerId as string,
+        status: "all",
+        limit: 10,
+      });
+      subscription =
+        list.data
+          .filter((s) => LIVE_STATUSES.has(s.status))
+          .sort((a, b) => b.created - a.created)[0] ?? null;
+    }
+  } catch (err) {
+    console.error(`billing reconcile: Stripe lookup failed for company ${companyId}`, err);
+    return false;
+  }
+
+  if (!subscription) return false;
+
+  // Skip the write when nothing we mirror has changed -- keeps a plain
+  // billing-page view from bumping `updated_at` and re-opening usage rows
+  // on every load.
+  const item = subscription.items.data[0];
+  const lookupKey = item?.price?.lookup_key ?? null;
+  const stripePlanKey = lookupKey ? (getPlanByLookupKey(lookupKey)?.key ?? null) : null;
+  const stripePeriodStart = unixToIso(item?.current_period_start);
+  const stripeWillNotRenew =
+    subscription.cancel_at_period_end === true ||
+    (subscription.cancel_at != null && subscription.status !== "canceled");
+  const unchanged =
+    row.subscription_status === subscription.status &&
+    (stripePlanKey === null || stripePlanKey === row.plan_key) &&
+    sameSecond(stripePeriodStart, (row.current_period_start as string | null) ?? null) &&
+    row.cancel_at_period_end === stripeWillNotRenew;
+  if (unchanged) return false;
+
+  await syncBillingFromSubscription(service, subscription, { companyId });
+  return true;
 }
 
 export async function handleCheckoutSessionCompleted(

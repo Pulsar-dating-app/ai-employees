@@ -2,10 +2,10 @@ import type { ReactNode } from "react";
 import { WarningIcon, InfoIcon } from "./icons";
 
 // Stitch "Alert Component System - Showcase" — reproduced from the four
-// variants shown there (warning/info/success/error); only the two this app
-// actually needs yet (warning, info — Scheduling's missing-config banners)
-// are wired up. Add "success"/"error" to VARIANT_STYLES the same way when a
-// real caller needs one, rather than pre-building unused variants now.
+// variants shown there (warning/info/success/error); three of the four this
+// app actually needs are wired up (warning, info — Scheduling's
+// missing-config banners; error — a lapsed payment). Add "success" the same
+// way when a real caller needs it, rather than pre-building it unused.
 //
 // Colors: info/warning use this app's own design tokens (primary-fixed
 // family) where the showcase did too. The showcase's warning swatch has no
@@ -13,8 +13,10 @@ import { WarningIcon, InfoIcon } from "./icons";
 // role) — its own comment says as much and falls back to raw amber RGB,
 // which is Tailwind's stock `orange-50/500/600/700/800` scale exactly, so
 // those are used directly rather than inventing new CSS variables for a
-// one-variant need.
-export type AlertVariant = "warning" | "info";
+// one-variant need. `error` uses this app's actual error/error-container
+// tokens (same ones the billing settings page's own past-due banner uses),
+// which do exist in this palette.
+export type AlertVariant = "warning" | "info" | "error";
 
 const VARIANT_STYLES: Record<
   AlertVariant,
@@ -45,6 +47,15 @@ const VARIANT_STYLES: Record<
     title: "text-on-primary-fixed",
     body: "text-on-primary-fixed-variant",
     Icon: InfoIcon,
+  },
+  error: {
+    bg: "bg-error-container/50",
+    border: "border-error/30",
+    bar: "bg-error",
+    icon: "text-error",
+    title: "text-on-error-container",
+    body: "text-on-error-container",
+    Icon: WarningIcon,
   },
 };
 

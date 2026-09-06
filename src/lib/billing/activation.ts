@@ -48,3 +48,26 @@ export async function isBillingLapsed(
 
   return data ? !BILLING_ACTIVE_STATUSES.has(data.subscription_status as string) : false;
 }
+
+// A payment-failure predicate, narrower than isBillingLapsed: only
+// `past_due`/`unpaid` (a card declined, retries in progress or exhausted).
+// Deliberately excludes `canceled`/`incomplete`/`incomplete_expired` --
+// those already get their own "choose a plan" messaging (P5, P6's
+// activation gate), which is a different situation for a merchant to see
+// than "your payment failed, fix your card". Used to decide whether to
+// show the dashboard-wide BillingPastDueAlert / "team is paused" banners.
+const PAST_DUE_STATUSES = new Set(["past_due", "unpaid"]);
+
+export async function isBillingPastDue(
+  companyId: string,
+  client?: SupabaseClient,
+): Promise<boolean> {
+  const supabase = client ?? createServiceClient();
+  const { data } = await supabase
+    .from("company_billing")
+    .select("subscription_status")
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  return data ? PAST_DUE_STATUSES.has(data.subscription_status as string) : false;
+}

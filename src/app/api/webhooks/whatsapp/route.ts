@@ -5,7 +5,7 @@ import { sendWhatsappMessage } from "@/lib/whatsapp/meta-graph-api";
 import { resolveWhatsappSession } from "@/lib/whatsapp/session";
 import { verifyWhatsappSignature } from "@/lib/whatsapp/webhook-signature";
 import { decideWhatsappSendGate } from "@/lib/whatsapp/enforcement";
-import { evaluateReplyGate, recordAiReply, QUOTA_EXCEEDED_CUSTOMER_TEXT } from "@/lib/billing/enforcement";
+import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
 
 // Trello D2/D4 -- Meta's single fixed callback URL for every company's
 // WhatsApp numbers, the same shape as the Instagram webhook
@@ -254,25 +254,15 @@ export async function POST(request: Request) {
       hasPaymentIssue: connection.has_payment_issue as boolean,
     });
 
-    // P4 + P7: the billing gate, same decision every other channel makes.
+    // P4 + P7: the billing gate, same decision every other channel makes. A
+    // lapsed subscription or a reply-quota grace band overrun both silence
+    // the AI -- no canned reply (a hard-coded PT-only line was tried and
+    // dropped; see decisions.md). The inbound message is already persisted.
     const billingGate = await evaluateReplyGate(connection.company_id, supabase);
     if (!billingGate.allow) {
-      if (billingGate.reason === "grace_exceeded") {
-        console.warn("[billing] whatsapp reply blocked: reply quota grace exceeded", {
-          companyId: connection.company_id,
-        });
-        const { error: cannedError } = await supabase
-          .from("messages")
-          .insert({
-            company_id: connection.company_id,
-            conversation_id: session.conversationId,
-            role: "agent",
-            content: QUOTA_EXCEEDED_CUSTOMER_TEXT,
-          });
-        if (!cannedError && sendGate.allow) {
-          await sendWhatsappMessage(connection.access_token, connection.phone_number_id, from, QUOTA_EXCEEDED_CUSTOMER_TEXT);
-        }
-      }
+      console.warn(`[billing] whatsapp reply blocked (${billingGate.reason})`, {
+        companyId: connection.company_id,
+      });
       continue;
     }
 

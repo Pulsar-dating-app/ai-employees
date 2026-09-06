@@ -26,11 +26,14 @@ describe("billing plan catalog (Trello P1)", () => {
     }
   });
 
-  it("leaves the contact-us plan with no Stripe Price", () => {
+  it("leaves the contact-us plan with no Stripe Price, quota, or price", () => {
     const enterprise = getPlan("enterprise");
     expect(enterprise.isSelfServe).toBe(false);
     expect(enterprise.stripeLookupKey).toBeNull();
     expect(enterprise.stripePriceId).toBeNull();
+    // Enterprise terms are negotiated per deal, not fixed in the catalog.
+    expect(enterprise.monthlyReplyLimit).toBeNull();
+    expect(enterprise.priceBrlCents).toBeNull();
   });
 
   it("keeps lookup keys unique across plans", () => {
@@ -40,9 +43,10 @@ describe("billing plan catalog (Trello P1)", () => {
     expect(new Set(lookupKeys).size).toBe(lookupKeys.length);
   });
 
-  it("has a positive reply allowance on every plan", () => {
-    for (const plan of BILLING_PLANS) {
+  it("has a positive reply allowance and price on every self-serve plan", () => {
+    for (const plan of getSelfServePlans()) {
       expect(plan.monthlyReplyLimit, plan.key).toBeGreaterThan(0);
+      expect(plan.priceBrlCents, plan.key).toBeGreaterThan(0);
     }
   });
 
@@ -53,7 +57,10 @@ describe("billing plan catalog (Trello P1)", () => {
   });
 
   it("reverse-resolves a plan from its Stripe lookup key", () => {
-    expect(getPlanByLookupKey("starter_monthly")?.key).toBe("starter");
+    // Derived from the catalog rather than a literal, so swapping a Price's
+    // lookup_key in plans.ts doesn't break this round-trip check.
+    const starterLookupKey = getPlan("starter").stripeLookupKey!;
+    expect(getPlanByLookupKey(starterLookupKey)?.key).toBe("starter");
     expect(getPlanByLookupKey("nope")).toBeUndefined();
   });
 });

@@ -4,6 +4,7 @@ import { api } from "./helpers/request";
 import { getTestEnv } from "./helpers/env";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello N4/N5. The signature is computed with the exact same literal
 // INSTAGRAM_APP_SECRET global-setup.ts spawns the test Next.js server with
@@ -27,6 +28,7 @@ describe("Instagram inbound webhook (GET verify, POST receive)", () => {
   }
 
   async function connectedAgent(ownerCookie: string, companyId: string, agentSlug: string, code: string) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     await api("POST", `/api/companies/${companyId}/agents/${agentSlug}`, ownerCookie);
     const connected = await api<{ connection: { instagram_user_id: string } }>(
       "POST",
@@ -162,23 +164,21 @@ describe("Instagram inbound webhook (GET verify, POST receive)", () => {
         external_message_id: "mid-repeat",
       });
 
-      // P7: an active plan with a used-up-to-N counter for the period. A
-      // redelivery must not tick this -- the 23505 on the mid stops the
-      // route before the gate or recordAiReply.
-      const periodStart = new Date().toISOString();
-      await service.from("company_billing").insert({
-        company_id: companyId,
-        plan_key: "starter",
-        subscription_status: "active",
-        current_period_start: periodStart,
-        current_period_end: new Date(Date.now() + 30 * 24 * 3600_000).toISOString(),
-      });
-      await service.from("company_message_usage").insert({
-        company_id: companyId,
-        period_start: periodStart,
-        replies_used: 7,
-        reply_limit: 10_000,
-      });
+      // P7: connectedAgent already seeded an active plan (P6 needs one to
+      // hire). Bump this period's counter to a known value -- a redelivery
+      // must not tick it, since the 23505 on the mid stops the route before
+      // the gate or recordAiReply.
+      const { data: billingRow } = await service
+        .from("company_billing")
+        .select("current_period_start")
+        .eq("company_id", companyId)
+        .single();
+      const periodStart = (billingRow as { current_period_start: string }).current_period_start;
+      await service
+        .from("company_message_usage")
+        .update({ replies_used: 7 })
+        .eq("company_id", companyId)
+        .eq("period_start", periodStart);
 
       const body = messagingPayload(recipientId, "sender-idempotent", "a different retried text", "mid-repeat");
       const res = await postWebhook(body, sign(body));

@@ -8,6 +8,7 @@ import { UNGROUNDED_FALLBACK_TEXT } from "@/lib/agent-engine/constants";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello ticket C1 -- unlike every other file in this directory, this test
 // imports AgentEngine.run() directly instead of going over HTTP: there is
@@ -41,6 +42,7 @@ async function seedConversation(owner: Awaited<ReturnType<typeof signUpTestUser>
     name: companyName,
   });
   const companyId = created.json.company.id;
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
 
   const hired = await api<{ companyAgent: { agent_id: string } }>(
     "POST",

@@ -12,6 +12,7 @@ import { formatWallClock } from "@/lib/appointments/time-format";
 import { api } from "./helpers/request";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello J3 -- Ana's scheduling tools. Like checkout-link.test.ts / the rest
 // of the agent-engine suite, this imports the tool modules directly rather
@@ -61,6 +62,7 @@ async function seedConversation(owner: TestUser, companyName: string): Promise<S
     name: companyName,
   });
   const companyId = created.json.company.id;
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
 
   // Deterministic timezone so BOOKING_DOW / business hours line up.
   await api("PATCH", `/api/companies/${companyId}`, owner.cookieHeader, { timezone: "UTC" });

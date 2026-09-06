@@ -151,7 +151,7 @@ describe("Stripe webhook (Trello P4)", () => {
         id: "sub_idem",
         companyId,
         status: "past_due",
-        lookupKey: "starter_monthly",
+        lookupKey: "starter2_monthly",
         periodStartSec: unix(),
       }),
       `evt_idem_${crypto.randomUUID()}`,
@@ -185,7 +185,7 @@ describe("Stripe webhook (Trello P4)", () => {
           id: "sub_pd",
           companyId,
           status: "past_due",
-          lookupKey: "starter_monthly",
+          lookupKey: "starter2_monthly",
           periodStartSec: Math.floor(periodStart.getTime() / 1000),
         }),
       ),
@@ -269,6 +269,59 @@ describe("Stripe webhook (Trello P4)", () => {
     expect((await readBilling(companyId))?.plan_key).toBe("pro");
   });
 
+  it("an immediate mid-period upgrade moves reply_limit to the new plan without touching replies_used", async () => {
+    const companyId = await createCompany("P4 MidPeriod Upgrade Co");
+    const t0 = new Date("2026-06-15T00:00:00Z");
+    await svc.from("company_billing").insert({
+      company_id: companyId,
+      stripe_customer_id: "cus_mpu",
+      stripe_subscription_id: "sub_mpu",
+      subscription_status: "active",
+      plan_key: "starter",
+      current_period_start: t0.toISOString(),
+    });
+    // Company already spent 80% of the Starter allowance this period. The
+    // snapshotted limit is a deliberately distinct sentinel (not
+    // getPlan("starter").monthlyReplyLimit) so this test still proves the
+    // sync actually moved it, even on days the placeholder plan numbers
+    // happen to collide.
+    await svc.from("company_message_usage").insert({
+      company_id: companyId,
+      period_start: t0.toISOString(),
+      replies_used: 8_000,
+      reply_limit: 5_000,
+    });
+
+    // A Portal upgrade applied immediately (proration) keeps the SAME
+    // billing anchor -- current_period_start doesn't move, only the price
+    // (and therefore plan_key) does.
+    const res = await postEvent(
+      stripeEvent(
+        "customer.subscription.updated",
+        subscriptionObject({
+          id: "sub_mpu",
+          companyId,
+          status: "active",
+          lookupKey: "pro_monthly",
+          periodStartSec: Math.floor(t0.getTime() / 1000),
+        }),
+      ),
+    );
+    expect(res.status).toBe(200);
+
+    expect((await readBilling(companyId))?.plan_key).toBe("pro");
+
+    const { data: rows } = await svc
+      .from("company_message_usage")
+      .select("period_start, replies_used, reply_limit")
+      .eq("company_id", companyId);
+    // Still the ONE row for this period -- no rollover, no second row.
+    expect(rows).toHaveLength(1);
+    expect(rows![0].replies_used).toBe(8_000); // untouched
+    expect(rows![0].reply_limit).not.toBe(5_000); // moved off the old sentinel
+    expect(rows![0].reply_limit).toBe(getPlan("pro").monthlyReplyLimit); // onto the new plan
+  });
+
   it("an unknown price lookup_key keeps the existing plan_key but still syncs status", async () => {
     const companyId = await createCompany("P4 Unknown Key Co");
     await svc.from("company_billing").insert({
@@ -316,7 +369,7 @@ describe("Stripe webhook (Trello P4)", () => {
           id: "sub_cx",
           companyId,
           status: "canceled",
-          lookupKey: "starter_monthly",
+          lookupKey: "starter2_monthly",
           periodStartSec: unix(),
         }),
       ),

@@ -61,14 +61,16 @@ describe("getGraceMultiplier (Trello P7)", () => {
 describe("isHardStopEnabled (Trello P7)", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("is off by default", () => {
+  it("is on by default -- the grace policy is decided (2026-09-04)", () => {
     vi.stubEnv("BILLING_HARD_STOP_ENABLED", undefined as unknown as string);
-    expect(isHardStopEnabled()).toBe(false);
+    expect(isHardStopEnabled()).toBe(true);
   });
 
-  it("only 'true' arms it", () => {
+  it("any explicitly-set non-'true' value is the ops kill switch (disarms it)", () => {
     vi.stubEnv("BILLING_HARD_STOP_ENABLED", "true");
     expect(isHardStopEnabled()).toBe(true);
+    vi.stubEnv("BILLING_HARD_STOP_ENABLED", "false");
+    expect(isHardStopEnabled()).toBe(false);
     vi.stubEnv("BILLING_HARD_STOP_ENABLED", "1");
     expect(isHardStopEnabled()).toBe(false);
     vi.stubEnv("BILLING_HARD_STOP_ENABLED", "yes");

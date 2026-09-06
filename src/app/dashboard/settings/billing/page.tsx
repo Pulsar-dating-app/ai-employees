@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import clsx from "clsx";
 import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { BILLING_PLANS, getPlan, type PlanKey } from "@/lib/billing/plans";
 import { CartIcon, CalendarIcon, InfoIcon, WarningIcon } from "@/components/ui/icons";
 import { PageHeader } from "../../page-header";
@@ -114,7 +116,25 @@ export default async function BillingPage() {
       .maybeSingle(),
   ]);
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
-  const billing = billingRow as Billing | null;
+  let billing = billingRow as Billing | null;
+
+  // Backstop for a missed billing webhook (a lost checkout.session.completed,
+  // or a Portal plan change / cancellation whose customer.subscription.updated
+  // never landed): re-read the subscription from Stripe and re-sync if it
+  // drifted from our row. No-op when nothing changed.
+  if (billing?.stripe_customer_id) {
+    const reconciled = await reconcileBillingFromStripe(createServiceClient(), company.id);
+    if (reconciled) {
+      const { data: fresh } = await supabase
+        .from("company_billing")
+        .select(
+          "plan_key, subscription_status, current_period_start, current_period_end, cancel_at_period_end, stripe_customer_id",
+        )
+        .eq("company_id", company.id)
+        .maybeSingle();
+      billing = (fresh as Billing | null) ?? billing;
+    }
+  }
 
   let usage: { replies_used: number; reply_limit: number } | null = null;
   if (billing?.current_period_start) {
@@ -146,7 +166,19 @@ export default async function BillingPage() {
   const nearLimit = limit > 0 && rawPct >= 80 && !overLimit;
 
   const selfServePlans = BILLING_PLANS.filter((p) => p.isSelfServe);
-  const currencyNote = t("currencyNote");
+
+  // The near/over-limit banners offer an upgrade -- but only when a higher
+  // self-serve plan actually exists. A company already on the top tier
+  // (Pro today) has nowhere to self-serve upgrade to; Enterprise is
+  // contact-only and isn't in the Portal's plan-switch config, so sending
+  // that company through CheckoutButton would just land them on a Portal
+  // screen with no more room to move. Point them at "talk to us" instead.
+  const currentSelfServeIndex = selfServePlans.findIndex((p) => p.key === billing?.plan_key);
+  const nextSelfServePlan =
+    currentSelfServeIndex >= 0 && currentSelfServeIndex < selfServePlans.length - 1
+      ? selfServePlans[currentSelfServeIndex + 1]
+      : null;
+  const ENTERPRISE_MAILTO = "mailto:contato@staffra.com?subject=Enterprise";
 
   return (
     <div className="flex flex-col gap-8">
@@ -182,10 +214,23 @@ export default async function BillingPage() {
             <Banner
               tone="error"
               title={t("banner.overLimit.title")}
-              body={t("banner.overLimit.body")}
+              body={nextSelfServePlan ? t("banner.overLimit.body") : t("banner.overLimit.bodyMaxPlan")}
               action={
                 canEdit ? (
-                  <CheckoutButton companyId={company.id} planKey="pro" label={t("banner.overLimit.action")} />
+                  nextSelfServePlan ? (
+                    <CheckoutButton
+                      companyId={company.id}
+                      planKey={nextSelfServePlan.key as "starter" | "pro"}
+                      label={t("banner.overLimit.action")}
+                    />
+                  ) : (
+                    <a
+                      href={ENTERPRISE_MAILTO}
+                      className="inline-flex h-11 items-center justify-center rounded-lg bg-error px-5 text-label-md font-semibold text-on-error transition-colors hover:brightness-95"
+                    >
+                      {t("banner.overLimit.actionContact")}
+                    </a>
+                  )
                 ) : null
               }
             />
@@ -196,7 +241,20 @@ export default async function BillingPage() {
               body={t("banner.nearLimit.body", { left: Math.max(0, limit - used) })}
               action={
                 canEdit ? (
-                  <CheckoutButton companyId={company.id} planKey="pro" label={t("banner.nearLimit.action")} />
+                  nextSelfServePlan ? (
+                    <CheckoutButton
+                      companyId={company.id}
+                      planKey={nextSelfServePlan.key as "starter" | "pro"}
+                      label={t("banner.nearLimit.action")}
+                    />
+                  ) : (
+                    <a
+                      href={ENTERPRISE_MAILTO}
+                      className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-label-md font-semibold text-on-primary transition-all hover:brightness-90"
+                    >
+                      {t("banner.nearLimit.actionContact")}
+                    </a>
+                  )
                 ) : null
               }
             />
@@ -212,11 +270,12 @@ export default async function BillingPage() {
                 </div>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="text-headline-lg font-semibold tracking-tight text-on-surface">
-                    {BRL.format(plan!.priceBrlCents / 100)}
+                    {plan!.priceBrlCents !== null ? BRL.format(plan!.priceBrlCents / 100) : t("plan.custom")}
                   </span>
-                  <span className="text-on-surface-variant">{t("perMonth")}</span>
+                  {plan!.priceBrlCents !== null ? (
+                    <span className="text-on-surface-variant">{t("perMonth")}</span>
+                  ) : null}
                 </div>
-                <p className="mt-1 text-sm text-on-surface-variant">{currencyNote}</p>
 
                 <div className="mt-6 flex flex-col gap-4 border-t border-outline-variant/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
                   <p className="flex items-center gap-2 text-label-md text-on-surface">
@@ -312,12 +371,13 @@ export default async function BillingPage() {
                     <h3 className="text-label-md font-bold text-on-surface">{p.displayName}</h3>
                     <div className="mt-2 flex items-baseline gap-1.5">
                       <span className="text-headline-lg font-semibold text-on-surface">
-                        {BRL.format(p.priceBrlCents / 100)}
+                        {/* Non-null: this loop is over selfServePlans only. */}
+                        {BRL.format(p.priceBrlCents! / 100)}
                       </span>
                       <span className="text-sm text-on-surface-variant">{t("perMonth")}</span>
                     </div>
                     <p className="mt-3 text-sm text-on-surface-variant">
-                      {t("plan.replies", { limit: p.monthlyReplyLimit })}
+                      {t("plan.replies", { limit: p.monthlyReplyLimit! })}
                     </p>
                     <p className="mt-1 text-sm text-on-surface-variant">{t("plan.teammates")}</p>
                     <div className="mt-5">
@@ -333,8 +393,6 @@ export default async function BillingPage() {
                   </div>
                 ))}
               </div>
-
-              <p className="mt-4 text-sm text-on-surface-variant">{currencyNote}</p>
             </div>
           )}
 

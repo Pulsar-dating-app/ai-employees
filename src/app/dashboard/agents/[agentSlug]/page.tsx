@@ -2,8 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { AGENT_ENRICHMENT, DEFAULT_MONTHLY_PRICE_BRL } from "@/lib/agents/catalog";
+import { AGENT_ENRICHMENT } from "@/lib/agents/catalog";
 import { resolveAgentDescription } from "@/lib/agents/copy";
+import { isBillingActive } from "@/lib/billing/activation";
 import { agentPhoto } from "@/lib/agents/media";
 import { BackLink } from "../../back-link";
 import { AgentHireFlow } from "./agent-hire-flow";
@@ -35,12 +36,15 @@ export default async function AgentDetailPage({
   const company = companies?.[0] ?? null;
   if (!company) redirect("/onboarding");
 
-  const { data: companyAgent } = await supabase
-    .from("company_agents")
-    .select("id")
-    .eq("company_id", company.id)
-    .eq("agent_id", agent.id)
-    .maybeSingle();
+  const [{ data: companyAgent }, billingActive] = await Promise.all([
+    supabase
+      .from("company_agents")
+      .select("id")
+      .eq("company_id", company.id)
+      .eq("agent_id", agent.id)
+      .maybeSingle(),
+    isBillingActive(company.id, supabase),
+  ]);
   const isHired = Boolean(companyAgent);
 
   const enrichment = AGENT_ENRICHMENT[agent.slug];
@@ -62,9 +66,9 @@ export default async function AgentDetailPage({
         traits={enrichment?.traits ?? []}
         should={enrichment?.should ?? []}
         never={enrichment?.never ?? []}
-        monthlyPriceBRL={enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL}
         companyId={company.id}
         initialIsHired={isHired}
+        isBillingActive={billingActive}
         showDevChatTest={process.env.NODE_ENV !== "production"}
       />
     </div>

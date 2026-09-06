@@ -435,6 +435,7 @@
   "Dashboard": {
     "logout": "Log out",
     "workspaceLabel": "Workspace",
+    "billingPastDueAlert": "Payment failed — team paused",
     "tabs": {
       "marketplace": "Marketplace",
       "myAgents": "My team",
@@ -523,7 +524,8 @@
     "viewDetails": "View details",
     "searchPlaceholder": "Search by name or role…",
     "noResults": "No team members match “{query}”.",
-    "priceLabel": "R$ {price}/month",
+    "includedInPlan": "Included in your plan",
+    "needsPlan": "Needs a plan",
     "backToMarketplace": "Back to marketplace",
     "traits": {
       "warm": "Warm",
@@ -547,17 +549,12 @@
       "inventInfo": "Invent prices, stock, or policies",
       "soundGeneric": "Sound like a generic chatbot"
     },
-    "priceLabel": "R$ {price}/month",
+    "includedInPlan": "Included in your plan",
     "hireButton": "Hire {name}",
-    "mockPaymentTitle": "Confirm and pay",
-    "mockPaymentSubtitle": "This is a preview of the hiring flow — no payment is actually charged yet.",
-    "cardNumberLabel": "Card number",
-    "cardNameLabel": "Name on card",
-    "cardExpiryLabel": "Expiry",
-    "cardCvcLabel": "CVC",
-    "confirmHire": "Confirm — R$ {price}/month",
     "confirming": "Hiring…",
-    "cancel": "Cancel",
+    "needsPlanTitle": "Pick a plan to hire your team",
+    "needsPlanBody": "Hiring {name} needs an active plan — it covers every team member you put to work. Choose one and {name} can start right away.",
+    "goToBilling": "Go to billing",
     "hiredBadge": "{name} is hired",
     "hiredDescription": "{name} is on your team — head to settings to teach them about your business and set up where they talk to your customers.",
     "goToSettings": "Go to settings",
@@ -586,6 +583,21 @@
   "MyAgents": {
     "pageTitle": "My team",
     "pageSubtitle": "The team members you've hired.",
+    "pastDueBanner": {
+      "title": "Payment failed",
+      "body": "Your whole team is paused and not replying to any customer, on any channel, until this is fixed.",
+      "action": "Update payment"
+    },
+    "overLimitBanner": {
+      "title": "You've used all your replies this period",
+      "body": "Your team keeps answering for a short grace window, then stops. Upgrade your plan to lift the limit.",
+      "action": "View plan"
+    },
+    "nearLimitBanner": {
+      "title": "You're almost out of replies",
+      "body": "{left, plural, one {# reply left} other {# replies left}} this period.",
+      "action": "View plan"
+    },
     "emptyState": "You haven't hired anyone yet.",
     "browseMarketplace": "Browse the marketplace",
     "configure": "Configure",
@@ -617,7 +629,9 @@
       "pauseConfirm": "Pause {name}? They'll stop replying on every channel until you turn them back on.",
       "pauseConfirmButton": "Yes, pause",
       "cancel": "Cancel",
-      "updateError": "Something went wrong. Please try again."
+      "updateError": "Something went wrong. Please try again.",
+      "planRequired": "Turning {name} back on needs an active plan.",
+      "goToBilling": "Go to billing"
     },
     "humanHandoff": {
       "title": "Human handoff",
@@ -1521,7 +1535,6 @@
     "pageSubtitle": "Your plan, usage, and payments.",
     "readOnly": "You can view billing, but only owners and admins can make changes.",
     "perMonth": "/ month",
-    "currencyNote": "Shown in Brazilian real. At checkout you'll see the price in your local currency.",
     "renewsOn": "Renews on {date}",
     "endsOn": "Ends on {date}",
     "noRenewalDate": "Renewal date pending",
@@ -1548,13 +1561,16 @@
       },
       "overLimit": {
         "title": "You've used all your replies this period",
-        "body": "Your team keeps answering for a short grace window. Upgrade to Pro to lift the limit.",
-        "action": "Upgrade plan"
+        "body": "Your team keeps answering for a short grace window. Upgrade your plan to lift the limit.",
+        "bodyMaxPlan": "Your team keeps answering for a short grace window. You're already on our highest plan — talk to us for more capacity.",
+        "action": "Upgrade plan",
+        "actionContact": "Contact us"
       },
       "nearLimit": {
         "title": "You're almost out of replies",
         "body": "{left, plural, one {# reply left} other {# replies left}} this period.",
-        "action": "Upgrade plan"
+        "action": "Upgrade plan",
+        "actionContact": "Contact us"
       },
       "canceled": {
         "title": "Your plan ended on {date}",
@@ -1577,7 +1593,8 @@
     },
     "plan": {
       "replies": "{limit, number} replies per month",
-      "teammates": "Unlimited teammates on your account"
+      "teammates": "Unlimited teammates on your account",
+      "custom": "Custom pricing"
     },
     "enterprise": {
       "title": "Need higher volume or custom terms?",

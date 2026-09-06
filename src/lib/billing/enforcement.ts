@@ -10,17 +10,16 @@ import { classifyUsage, isHardStopEnabled } from "./limits";
 
 const BILLING_ACTIVE_STATUSES = new Set(["active", "trialing"]);
 
-// Sent to the customer only when the hard stop is armed AND this period is
-// past the grace band -- an honest "we got it, a person will follow up"
-// instead of an AI reply that would cost money the plan no longer covers.
-//
-// Like UNGROUNDED_FALLBACK_TEXT in the agent engine, this is a hard-coded
-// Portuguese string: at this point no model turn runs to phrase it and
-// nothing here detects the customer's language. Portuguese is the launch
-// language (spec §19). If channel routing ever learns the locale, this is
-// the seam to localise.
-export const QUOTA_EXCEEDED_CUSTOMER_TEXT =
-  "Recebemos a sua mensagem e já vamos te responder por aqui. Obrigado pela paciência! 😊";
+// A blocked reply gate (either reason below) is fully silent -- no canned
+// customer-facing line. One was tried for `grace_exceeded` and dropped
+// (2026-09-04): the only string available would have to be hard-coded in
+// one language with no locale detection (same limitation as
+// UNGROUNDED_FALLBACK_TEXT in the agent engine), so a customer writing in
+// any other language would get a reply in the wrong one out of nowhere --
+// worse than silence. Silence also keeps `lapsed` and `grace_exceeded`
+// handled identically at every call site: `!allow` always means "persist
+// the inbound message (already done upstream), send nothing back, let the
+// merchant's dashboard alert be what surfaces it."
 
 export type ReplyGateDecision =
   | { allow: true; overPlan: boolean }
