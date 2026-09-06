@@ -1541,7 +1541,8 @@
     },
     "plan": {
       "replies": "{limit, number} respostas por mês",
-      "teammates": "Membros ilimitados na sua conta"
+      "teammates": "Membros ilimitados na sua conta",
+      "custom": "Preço personalizado"
     },
     "enterprise": {
       "title": "Precisa de mais volume ou condições sob medida?",

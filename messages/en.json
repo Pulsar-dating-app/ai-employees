@@ -1541,7 +1541,8 @@
     },
     "plan": {
       "replies": "{limit, number} replies per month",
-      "teammates": "Unlimited teammates on your account"
+      "teammates": "Unlimited teammates on your account",
+      "custom": "Custom pricing"
     },
     "enterprise": {
       "title": "Need higher volume or custom terms?",

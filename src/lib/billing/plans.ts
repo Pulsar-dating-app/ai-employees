@@ -40,13 +40,17 @@ export interface BillingPlan {
   /**
    * PLACEHOLDER. Monthly AI-reply allowance, seeded into
    * `company_message_usage.reply_limit` (Trello P2) when a period opens.
+   * `null` for contact-us plans -- Enterprise has no fixed quota, it's
+   * negotiated per deal (a real number lives on that company's own
+   * `company_message_usage` row, never in this catalog).
    */
-  monthlyReplyLimit: number;
+  monthlyReplyLimit: number | null;
   /**
    * PLACEHOLDER, display only. The real charge amount/currency comes from
    * the Stripe Price plus Adaptive Pricing, not from this field.
+   * `null` for contact-us plans -- Enterprise has no fixed price to show.
    */
-  priceBrlCents: number;
+  priceBrlCents: number | null;
   /** Self-serve = reachable via Stripe Checkout. Enterprise is contact-us. */
   isSelfServe: boolean;
 }
@@ -75,8 +79,8 @@ export const BILLING_PLANS: readonly BillingPlan[] = [
     displayName: "Enterprise",
     stripeLookupKey: null,
     stripePriceId: null,
-    monthlyReplyLimit: 10_000,
-    priceBrlCents: 99_900,
+    monthlyReplyLimit: null,
+    priceBrlCents: null,
     isSelfServe: false,
   },
 ] as const;

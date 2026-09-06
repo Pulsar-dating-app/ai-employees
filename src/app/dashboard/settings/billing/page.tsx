@@ -270,9 +270,11 @@ export default async function BillingPage() {
                 </div>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="text-headline-lg font-semibold tracking-tight text-on-surface">
-                    {BRL.format(plan!.priceBrlCents / 100)}
+                    {plan!.priceBrlCents !== null ? BRL.format(plan!.priceBrlCents / 100) : t("plan.custom")}
                   </span>
-                  <span className="text-on-surface-variant">{t("perMonth")}</span>
+                  {plan!.priceBrlCents !== null ? (
+                    <span className="text-on-surface-variant">{t("perMonth")}</span>
+                  ) : null}
                 </div>
 
                 <div className="mt-6 flex flex-col gap-4 border-t border-outline-variant/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
@@ -369,12 +371,13 @@ export default async function BillingPage() {
                     <h3 className="text-label-md font-bold text-on-surface">{p.displayName}</h3>
                     <div className="mt-2 flex items-baseline gap-1.5">
                       <span className="text-headline-lg font-semibold text-on-surface">
-                        {BRL.format(p.priceBrlCents / 100)}
+                        {/* Non-null: this loop is over selfServePlans only. */}
+                        {BRL.format(p.priceBrlCents! / 100)}
                       </span>
                       <span className="text-sm text-on-surface-variant">{t("perMonth")}</span>
                     </div>
                     <p className="mt-3 text-sm text-on-surface-variant">
-                      {t("plan.replies", { limit: p.monthlyReplyLimit })}
+                      {t("plan.replies", { limit: p.monthlyReplyLimit! })}
                     </p>
                     <p className="mt-1 text-sm text-on-surface-variant">{t("plan.teammates")}</p>
                     <div className="mt-5">

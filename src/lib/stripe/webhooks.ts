@@ -168,7 +168,10 @@ async function syncBillingFromSubscription(
         company_id: companyId,
         period_start: periodStart,
         replies_used: 0,
-        reply_limit: getPlan(effectivePlanKey).monthlyReplyLimit,
+        // Non-null: this branch only ever resolves a plan Stripe itself sent
+        // back on a subscription (effectivePlanKey came from a lookup key),
+        // and Enterprise has no Stripe Price to ever produce one here.
+        reply_limit: getPlan(effectivePlanKey).monthlyReplyLimit!,
       },
       { onConflict: "company_id,period_start", ignoreDuplicates: true },
     );
@@ -182,7 +185,9 @@ async function syncBillingFromSubscription(
     // period doesn't reset just because the plan changed mid-cycle.
     const { error: limitError } = await service
       .from("company_message_usage")
-      .update({ reply_limit: getPlan(resolvedPlan.key).monthlyReplyLimit })
+      // Same reasoning as above: resolvedPlan came from a Stripe subscription,
+      // so it's never Enterprise.
+      .update({ reply_limit: getPlan(resolvedPlan.key).monthlyReplyLimit! })
       .eq("company_id", companyId)
       .eq("period_start", periodStart);
     if (limitError) {
