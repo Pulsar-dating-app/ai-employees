@@ -4,10 +4,11 @@
 // DB or HTTP, matching how B5 (ProductRepository) and C4 (checkout/links)
 // split their pure logic out of the IO layer.
 //
-// Covers exactly the five metrics spec §15 names for the initial dashboard:
-// Conversations, Customers, Product recommendations, Buying intent,
-// Checkout clicks. Nothing here touches revenue or attribution -- out of
-// MVP scope by that same section.
+// Covers the metrics spec §15 names for the initial dashboard --
+// Conversations, Customers, Product recommendations, Buying intent, Checkout
+// clicks -- plus Messages (raw message volume, from the `messages` table).
+// Nothing here touches revenue or attribution -- out of MVP scope by that
+// same section.
 
 export type Granularity = "day" | "week";
 
@@ -19,6 +20,7 @@ export type MetricSeries = { metric: MetricKey; total: number; series: MetricSer
 // `events` rows filtered by `type`.
 export const METRIC_KEYS = [
   "conversations",
+  "messages",
   "customers",
   "product_recommendations",
   "buying_intent",
@@ -40,6 +42,7 @@ export type AggregateInput = {
   from: string;
   to: string;
   conversations: readonly { created_at: string }[];
+  messages: readonly { created_at: string }[];
   customers: readonly { created_at: string }[];
   events: readonly { created_at: string; type: string }[];
 };
@@ -109,6 +112,7 @@ export function aggregateAnalytics(input: AggregateInput): MetricSeries[] {
 
   const counts: Record<MetricKey, Map<string, number>> = {
     conversations: new Map(buckets.map((b) => [b, 0])),
+    messages: new Map(buckets.map((b) => [b, 0])),
     customers: new Map(buckets.map((b) => [b, 0])),
     product_recommendations: new Map(buckets.map((b) => [b, 0])),
     buying_intent: new Map(buckets.map((b) => [b, 0])),
@@ -126,6 +130,7 @@ export function aggregateAnalytics(input: AggregateInput): MetricSeries[] {
   };
 
   for (const row of input.conversations) tally(row.created_at, "conversations");
+  for (const row of input.messages) tally(row.created_at, "messages");
   for (const row of input.customers) tally(row.created_at, "customers");
   for (const row of input.events) {
     const metric = EVENT_TYPE_TO_METRIC[row.type];

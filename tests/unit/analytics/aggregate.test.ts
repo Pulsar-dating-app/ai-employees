@@ -44,11 +44,12 @@ describe("aggregateAnalytics", () => {
     from: "2026-08-01",
     to: "2026-08-03",
     conversations: [],
+    messages: [],
     customers: [],
     events: [],
   };
 
-  it("returns exactly the five spec §15 metrics, in order, all zero for empty input", () => {
+  it("returns every metric key, in order, all zero for empty input", () => {
     const result = aggregateAnalytics(base);
     expect(result.map((m) => m.metric)).toEqual([...METRIC_KEYS]);
     for (const m of result) {
@@ -61,13 +62,19 @@ describe("aggregateAnalytics", () => {
     }
   });
 
-  it("counts conversations and customers into their own day buckets", () => {
+  it("counts conversations, messages and customers into their own day buckets", () => {
     const result = aggregateAnalytics({
       ...base,
       conversations: [
         { created_at: "2026-08-01T09:00:00Z" },
         { created_at: "2026-08-01T23:30:00Z" },
         { created_at: "2026-08-03T12:00:00Z" },
+      ],
+      messages: [
+        { created_at: "2026-08-01T09:01:00Z" },
+        { created_at: "2026-08-01T09:02:00Z" },
+        { created_at: "2026-08-01T09:03:00Z" },
+        { created_at: "2026-08-03T12:05:00Z" },
       ],
       customers: [{ created_at: "2026-08-02T00:00:00Z" }],
     });
@@ -76,6 +83,14 @@ describe("aggregateAnalytics", () => {
     expect(conversations.total).toBe(3);
     expect(conversations.series).toEqual([
       { date: "2026-08-01", count: 2 },
+      { date: "2026-08-02", count: 0 },
+      { date: "2026-08-03", count: 1 },
+    ]);
+
+    const messages = result.find((m) => m.metric === "messages")!;
+    expect(messages.total).toBe(4);
+    expect(messages.series).toEqual([
+      { date: "2026-08-01", count: 3 },
       { date: "2026-08-02", count: 0 },
       { date: "2026-08-03", count: 1 },
     ]);
@@ -140,6 +155,7 @@ describe("aggregateAnalytics", () => {
         { created_at: "2026-08-09T00:00:00Z" }, // same week as Aug 4
         { created_at: "2026-08-11T00:00:00Z" }, // next week
       ],
+      messages: [],
       customers: [],
       events: [],
     });

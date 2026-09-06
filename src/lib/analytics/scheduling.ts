@@ -6,7 +6,7 @@ import {
   type Granularity,
   type MetricSeriesPoint,
 } from "./aggregate";
-import { resolveAnalyticsRange, type LoadAnalyticsOptions } from "./load";
+import { fetchMessagesWindow, resolveAnalyticsRange, type LoadAnalyticsOptions } from "./load";
 
 // Which metric set the Performance page shows for a given hired agent.
 // Keyed on slug (the same signal `SCHEDULING_AGENT_SLUG` uses on the
@@ -25,6 +25,7 @@ export function agentMetricRole(slug: string): AgentMetricRole {
 // `i18n` is the suffix under `Metrics.metrics.*` for its label/caption.
 export const SALES_METRIC_ORDER = [
   { key: "conversations", i18n: "conversations" },
+  { key: "messages", i18n: "messages" },
   { key: "product_recommendations", i18n: "productRecommendations" },
   { key: "buying_intent", i18n: "buyingIntent" },
   { key: "checkout_clicks", i18n: "checkoutClicks" },
@@ -32,9 +33,12 @@ export const SALES_METRIC_ORDER = [
 
 export const SCHEDULING_METRIC_ORDER = [
   { key: "conversations", i18n: "conversations" },
+  { key: "messages", i18n: "messages" },
   { key: "appointments_booked", i18n: "appointmentsBooked" },
   { key: "appointments_completed", i18n: "appointmentsCompleted" },
   { key: "appointments_cancelled", i18n: "appointmentsCancelled" },
+  { key: "appointments_no_show", i18n: "appointmentsNoShow" },
+  { key: "waitlist_added", i18n: "waitlistAdded" },
 ] as const;
 
 export type GenericMetricSeries = {
@@ -70,8 +74,11 @@ type SchedulingLoadOptions = Pick<
 //   this month, which is what "how much did the assistant do this period"
 //   means. `status` is the row's *current* status (no per-status-change
 //   events exist yet — follow-up ticket, see .claude/docs/decisions.md), so
-//   `appointments_booked` ≥ completed + cancelled and a still-future booking
-//   sits in `booked` only.
+//   `appointments_booked` ≥ completed + cancelled + no_show, a still-future
+//   booking sits in `booked` only, and a no_show / completion marked this
+//   month for a booking taken last month counts in *last* month's bucket.
+// - **Waitlist adds** (`appointment_waitlist`) are company-scoped and bucket
+//   on `created_at` (when the customer asked to be waitlisted), same shape.
 // - **Conversations stay agent-scoped** (bucketed on `created_at`) — those
 //   genuinely are this agent's threads.
 export async function loadSchedulingAnalytics(
@@ -81,7 +88,7 @@ export async function loadSchedulingAnalytics(
   const localDateOf = makeLocalDateFn(timezone);
   const buckets = bucketKeysInRange(from, to, granularity);
 
-  const [conv, appt] = await Promise.all([
+  const [conv, msgs, appt, wait] = await Promise.all([
     opts.supabase
       .from("conversations")
       .select("created_at")
@@ -89,22 +96,35 @@ export async function loadSchedulingAnalytics(
       .eq("agent_id", opts.agentId)
       .gte("created_at", startUtc)
       .lt("created_at", endUtc),
+    fetchMessagesWindow(opts.supabase, opts.companyId, startUtc, endUtc, opts.agentId),
     opts.supabase
       .from("appointments")
       .select("created_at, status")
       .eq("company_id", opts.companyId)
       .gte("created_at", startUtc)
       .lt("created_at", endUtc),
+    // Waitlist entries are company-scoped and bucket on `created_at` (when
+    // the customer asked to be waitlisted), same shape as appointments.
+    opts.supabase
+      .from("appointment_waitlist")
+      .select("created_at")
+      .eq("company_id", opts.companyId)
+      .gte("created_at", startUtc)
+      .lt("created_at", endUtc),
   ]);
   if (conv.error) throw new Error(conv.error.message);
   if (appt.error) throw new Error(appt.error.message);
+  if (wait.error) throw new Error(wait.error.message);
 
   const zeroed = () => new Map<string, number>(buckets.map((b) => [b, 0]));
   const counts: Record<string, Map<string, number>> = {
     conversations: zeroed(),
+    messages: zeroed(),
     appointments_booked: zeroed(),
     appointments_completed: zeroed(),
     appointments_cancelled: zeroed(),
+    appointments_no_show: zeroed(),
+    waitlist_added: zeroed(),
   };
 
   const tally = (instant: string, metric: string) => {
@@ -119,10 +139,17 @@ export async function loadSchedulingAnalytics(
   for (const r of (conv.data ?? []) as { created_at: string }[]) {
     tally(r.created_at, "conversations");
   }
+  for (const r of msgs as { created_at: string }[]) {
+    tally(r.created_at, "messages");
+  }
   for (const r of (appt.data ?? []) as { created_at: string; status: string }[]) {
     tally(r.created_at, "appointments_booked");
     if (r.status === "completed") tally(r.created_at, "appointments_completed");
     if (r.status === "cancelled") tally(r.created_at, "appointments_cancelled");
+    if (r.status === "no_show") tally(r.created_at, "appointments_no_show");
+  }
+  for (const r of (wait.data ?? []) as { created_at: string }[]) {
+    tally(r.created_at, "waitlist_added");
   }
 
   const metrics: GenericMetricSeries[] = Object.keys(counts).map((metric) => {

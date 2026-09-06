@@ -471,6 +471,10 @@
         "label": "Conversas",
         "caption": "Total de conversas no período"
       },
+      "messages": {
+        "label": "Mensagens",
+        "caption": "Total de mensagens no período"
+      },
       "customers": {
         "label": "Clientes",
         "caption": "Pessoas com quem sua equipe falou"
@@ -498,6 +502,14 @@
       "appointmentsCancelled": {
         "label": "Cancelados",
         "caption": "Já cancelados"
+      },
+      "appointmentsNoShow": {
+        "label": "No-shows",
+        "caption": "Marcados como falta"
+      },
+      "waitlistAdded": {
+        "label": "Lista de espera",
+        "caption": "Clientes adicionados no período"
       }
     },
     "notASale": "Um clique para o checkout significa que o cliente abriu sua loja, não que uma venda foi concluída.",

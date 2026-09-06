@@ -34,7 +34,37 @@ async function seed(owner: Awaited<ReturnType<typeof signUpTestUser>>, name: str
     .single();
   if (customerError) throw customerError;
 
-  return { companyId, anaId, customerId: customer.id as string };
+  // Every company is created with a default service ("Avaliação") -- reuse it
+  // for the waitlist rows (that FK is NOT NULL).
+  const { data: service, error: serviceError } = await owner.client
+    .from("services")
+    .select("id")
+    .eq("company_id", companyId)
+    .limit(1)
+    .single();
+  if (serviceError) throw serviceError;
+
+  return {
+    companyId,
+    anaId,
+    customerId: customer.id as string,
+    serviceId: service.id as string,
+  };
+}
+
+async function insertWaitlist(
+  owner: Awaited<ReturnType<typeof signUpTestUser>>,
+  args: { companyId: string; serviceId: string; customerId: string; createdAt: string; desired: string },
+) {
+  const { error } = await owner.client.from("appointment_waitlist").insert({
+    company_id: args.companyId,
+    service_id: args.serviceId,
+    customer_id: args.customerId,
+    desired_from: args.desired,
+    desired_to: args.desired,
+    created_at: args.createdAt,
+  });
+  if (error) throw error;
 }
 
 async function insertConversation(
@@ -43,13 +73,34 @@ async function insertConversation(
   agentId: string,
   customerId: string,
   createdAt: string,
+): Promise<string> {
+  const { data, error } = await owner.client
+    .from("conversations")
+    .insert({
+      company_id: companyId,
+      agent_id: agentId,
+      customer_id: customerId,
+      channel: "whatsapp",
+      status: "active",
+      created_at: createdAt,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
+}
+
+async function insertMessage(
+  owner: Awaited<ReturnType<typeof signUpTestUser>>,
+  companyId: string,
+  conversationId: string,
+  createdAt: string,
 ) {
-  const { error } = await owner.client.from("conversations").insert({
+  const { error } = await owner.client.from("messages").insert({
     company_id: companyId,
-    agent_id: agentId,
-    customer_id: customerId,
-    channel: "whatsapp",
-    status: "active",
+    conversation_id: conversationId,
+    role: "customer",
+    content: "hi",
     created_at: createdAt,
   });
   if (error) throw error;
@@ -61,7 +112,7 @@ async function insertAppointment(
     companyId: string;
     agentId: string | null;
     customerId: string;
-    status: "confirmed" | "completed" | "cancelled" | "requested";
+    status: "confirmed" | "completed" | "cancelled" | "requested" | "no_show";
     createdAt: string;
     // distinct day in 2027 so the EXCLUDE constraint (no overlapping bookings
     // per company) is never hit; the slot date itself doesn't affect counts.
@@ -92,21 +143,30 @@ function total(
 }
 
 describe("loadSchedulingAnalytics", () => {
-  it("counts conversations and appointments booked in the window, split by status", async () => {
+  it("counts conversations, appointments (split by status), no-shows and waitlist adds in the window", async () => {
     const owner = await signUpTestUser("owner");
-    const { companyId, anaId, customerId } = await seed(owner, "Sched Metrics Co");
+    const { companyId, anaId, customerId, serviceId } = await seed(owner, "Sched Metrics Co");
 
     for (const day of ["05", "12", "20"]) {
-      await insertConversation(owner, companyId, anaId, customerId, `2026-06-${day}T12:00:00.000Z`);
+      const conv = await insertConversation(owner, companyId, anaId, customerId, `2026-06-${day}T12:00:00.000Z`);
+      await insertMessage(owner, companyId, conv, `2026-06-${day}T12:01:00.000Z`);
+      await insertMessage(owner, companyId, conv, `2026-06-${day}T12:02:00.000Z`);
     }
 
-    // All five booked inside the window. Their slots are in 2027 — including
+    // All six booked inside the window. Their slots are in 2027 — including
     // the confirmed ones, which are still "upcoming" — and every one counts.
     await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", createdAt: "2026-06-05T09:00:00.000Z", slotDay: 1 });
     await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", createdAt: "2026-06-06T09:00:00.000Z", slotDay: 2 });
     await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "completed", createdAt: "2026-06-10T09:00:00.000Z", slotDay: 3 });
     await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "cancelled", createdAt: "2026-06-15T09:00:00.000Z", slotDay: 4 });
     await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "requested", createdAt: "2026-06-18T09:00:00.000Z", slotDay: 5 });
+    await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "no_show", createdAt: "2026-06-20T09:00:00.000Z", slotDay: 6 });
+
+    // Two waitlist adds in the window (distinct windows — the open-entry
+    // dedupe index is per customer+service+range) + one outside it.
+    await insertWaitlist(owner, { companyId, serviceId, customerId, createdAt: "2026-06-09T10:00:00.000Z", desired: "2026-06-20" });
+    await insertWaitlist(owner, { companyId, serviceId, customerId, createdAt: "2026-06-11T10:00:00.000Z", desired: "2026-06-21" });
+    await insertWaitlist(owner, { companyId, serviceId, customerId, createdAt: "2026-05-25T10:00:00.000Z", desired: "2026-06-22" });
 
     const res = await loadSchedulingAnalytics({
       supabase: owner.client,
@@ -119,9 +179,12 @@ describe("loadSchedulingAnalytics", () => {
     });
 
     expect(total(res, "conversations")).toBe(3);
-    expect(total(res, "appointments_booked")).toBe(5);
+    expect(total(res, "messages")).toBe(6);
+    expect(total(res, "appointments_booked")).toBe(6);
     expect(total(res, "appointments_completed")).toBe(1);
     expect(total(res, "appointments_cancelled")).toBe(1);
+    expect(total(res, "appointments_no_show")).toBe(1);
+    expect(total(res, "waitlist_added")).toBe(2); // the May 25 one is out of range
   });
 
   it("mirrors a real account: one completed + one cancelled + one still-future all count", async () => {
@@ -147,29 +210,33 @@ describe("loadSchedulingAnalytics", () => {
     expect(total(res, "appointments_cancelled")).toBe(1);
   });
 
-  it("scopes appointments to the company (any agent_id) and conversations to the agent", async () => {
+  it("scopes appointments to the company (any agent_id), conversations and messages to the agent", async () => {
     const owner = await signUpTestUser("owner");
     const { companyId, anaId, customerId } = await seed(owner, "Sched Scoping Co");
 
-    // Second agent in the same company. Her conversation must NOT count; a
-    // Malu-tagged appointment and one with no agent_id both SHOULD.
+    // Second agent in the same company. Her conversation + messages must NOT
+    // count; a Malu-tagged appointment and one with no agent_id both SHOULD.
     const hireMalu = await api<{ companyAgent: { agent_id: string } }>(
       "POST",
       `/api/companies/${companyId}/agents/malu`,
       owner.cookieHeader,
     );
     const maluId = hireMalu.json.companyAgent.agent_id;
-    await insertConversation(owner, companyId, maluId, customerId, "2026-06-07T12:00:00.000Z");
+    const maluConv = await insertConversation(owner, companyId, maluId, customerId, "2026-06-07T12:00:00.000Z");
+    await insertMessage(owner, companyId, maluConv, "2026-06-07T12:01:00.000Z");
     await insertAppointment(owner, { companyId, agentId: maluId, customerId, status: "confirmed", createdAt: "2026-06-07T09:00:00.000Z", slotDay: 20 });
     await insertAppointment(owner, { companyId, agentId: null, customerId, status: "confirmed", createdAt: "2026-06-08T09:00:00.000Z", slotDay: 21 });
 
     // Other company — nothing from it counts.
     const other = await seed(owner, "Sched Other Co");
-    await insertConversation(owner, other.companyId, other.anaId, other.customerId, "2026-06-08T12:00:00.000Z");
+    const otherConv = await insertConversation(owner, other.companyId, other.anaId, other.customerId, "2026-06-08T12:00:00.000Z");
+    await insertMessage(owner, other.companyId, otherConv, "2026-06-08T12:01:00.000Z");
     await insertAppointment(owner, { companyId: other.companyId, agentId: other.anaId, customerId: other.customerId, status: "completed", createdAt: "2026-06-08T09:00:00.000Z", slotDay: 22 });
 
-    // Ana's own booking + conversation in the target company.
-    await insertConversation(owner, companyId, anaId, customerId, "2026-06-09T12:00:00.000Z");
+    // Ana's own booking + conversation (with two messages) in the target company.
+    const anaConv = await insertConversation(owner, companyId, anaId, customerId, "2026-06-09T12:00:00.000Z");
+    await insertMessage(owner, companyId, anaConv, "2026-06-09T12:01:00.000Z");
+    await insertMessage(owner, companyId, anaConv, "2026-06-09T12:02:00.000Z");
     await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "confirmed", createdAt: "2026-06-09T09:00:00.000Z", slotDay: 23 });
 
     const res = await loadSchedulingAnalytics({
@@ -183,6 +250,7 @@ describe("loadSchedulingAnalytics", () => {
     });
 
     expect(total(res, "conversations")).toBe(1);
+    expect(total(res, "messages")).toBe(2); // Ana's two only — not Malu's, not the other company's
     expect(total(res, "appointments_booked")).toBe(3);
   });
 
