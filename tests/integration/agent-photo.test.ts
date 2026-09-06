@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { getTestEnv } from "./helpers/env";
 import { signUpTestUser } from "./helpers/auth";
+import { seedActivePlan } from "./helpers/billing";
 
 // Agent photo customization -- POST /api/companies/:id/agents/:slug/photo.
 // Mirrors widget-customize.test.ts field-for-field (same FormData shape,
@@ -22,6 +23,7 @@ async function createCompany(ownerCookie: string, name: string) {
 }
 
 async function hireMalu(ownerCookie: string, companyId: string) {
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
   await api("POST", `/api/companies/${companyId}/agents/malu`, ownerCookie);
 }
 

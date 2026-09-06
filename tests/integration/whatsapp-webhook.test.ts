@@ -4,6 +4,7 @@ import { api } from "./helpers/request";
 import { getTestEnv } from "./helpers/env";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello D2/D4. WhatsApp Cloud API is a classic Graph API product, so its
 // webhook is signed with META_APP_SECRET (unlike Instagram's separate
@@ -31,6 +32,7 @@ describe("WhatsApp inbound webhook (GET verify, POST receive)", () => {
     phoneNumberId: string,
     wabaId: string,
   ) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     await api("POST", `/api/companies/${companyId}/agents/${agentSlug}`, ownerCookie);
     const connected = await api<{ connection: { phone_number_id: string } }>(
       "POST",
@@ -45,6 +47,7 @@ describe("WhatsApp inbound webhook (GET verify, POST receive)", () => {
   // resolves it server-side via finishCoexistenceConnection's
   // GET /{wabaId}/phone_numbers call (mocked in graph-api-mock.ts).
   async function connectedCoexistenceAgent(ownerCookie: string, companyId: string, agentSlug: string, wabaId: string) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     await api("POST", `/api/companies/${companyId}/agents/${agentSlug}`, ownerCookie);
     return api<{ connection: { phone_number_id: string; is_coexistence: boolean } }>(
       "POST",
