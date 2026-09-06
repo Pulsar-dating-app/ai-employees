@@ -4,14 +4,15 @@ import { useState } from "react";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/card";
-import { WhatsAppIcon, InstagramIcon, CodeIcon, LinkIcon } from "@/components/ui/icons";
+import { WhatsAppIcon, InstagramIcon, TelegramIcon, CodeIcon, LinkIcon } from "@/components/ui/icons";
 import { ChannelsSection } from "./channels-section";
 import { InstagramConnectCard } from "./instagram-connect-card";
 import { WidgetCustomizeCard } from "./widget-customize-card";
 import { EmbedSnippetSection } from "./embed-snippet-section";
 import { DirectLinkSection } from "./direct-link-section";
+import { TelegramLinkSection } from "./telegram-link-section";
 
-type TabKey = "whatsapp" | "instagram" | "embed" | "link";
+type TabKey = "whatsapp" | "instagram" | "telegram" | "embed" | "link";
 
 // Trello D6 -- one card for every way a customer can reach a hired agent,
 // replacing four separate full-width cards (WhatsApp, Instagram, widget
@@ -35,6 +36,7 @@ export function ChannelTabsCard({
   metaConfigId,
   chatUrl,
   embedSnippet,
+  telegramLink,
   widgetInitial,
 }: {
   companyId: string;
@@ -45,6 +47,7 @@ export function ChannelTabsCard({
   metaConfigId: string;
   chatUrl: string;
   embedSnippet: string;
+  telegramLink: string;
   widgetInitial: {
     greeting: string | null;
     launcherType: "default" | "video" | "image";
@@ -57,6 +60,7 @@ export function ChannelTabsCard({
   const tabs: { key: TabKey; label: string; icon: typeof WhatsAppIcon }[] = [
     { key: "whatsapp", label: t("whatsapp"), icon: WhatsAppIcon },
     { key: "instagram", label: t("instagram"), icon: InstagramIcon },
+    { key: "telegram", label: t("telegram"), icon: TelegramIcon },
     { key: "embed", label: t("embed"), icon: CodeIcon },
     { key: "link", label: t("link"), icon: LinkIcon },
   ];
@@ -102,6 +106,15 @@ export function ChannelTabsCard({
         hidden={activeTab !== "instagram"}
       >
         <InstagramConnectCard companyId={companyId} agentSlug={agentSlug} canEdit={canEdit} />
+      </div>
+
+      <div
+        role="tabpanel"
+        id="channel-tabpanel-telegram"
+        aria-labelledby="channel-tab-telegram"
+        hidden={activeTab !== "telegram"}
+      >
+        <TelegramLinkSection agentName={agentName} telegramLink={telegramLink} />
       </div>
 
       <div

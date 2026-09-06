@@ -115,6 +115,9 @@ export default async function AgentConnectionsPage({
     launcherType: companyAgent.widget_launcher_type,
     launcherAssetUrl: companyAgent.widget_launcher_asset_url,
   });
+  // Trello O1 -- the deep link IS the connection (no connect flow); the
+  // payload is company_agents.id itself, resolved directly by the webhook.
+  const telegramLink = `https://t.me/${process.env.TELEGRAM_BOT_USERNAME ?? ""}?start=${companyAgent.id}`;
 
   return (
     <div className="flex flex-col gap-6">
@@ -205,6 +208,7 @@ export default async function AgentConnectionsPage({
                 metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
                 chatUrl={chatUrl}
                 embedSnippet={embedSnippet}
+                telegramLink={telegramLink}
                 widgetInitial={{
                   greeting: companyAgent.widget_greeting,
                   launcherType: companyAgent.widget_launcher_type,
