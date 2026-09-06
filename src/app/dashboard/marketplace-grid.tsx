@@ -20,7 +20,7 @@ export function MarketplaceGrid({ agents }: { agents: MarketplaceAgent[] }) {
   }, [agents, query]);
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
+    <div className="flex max-w-3xl flex-col gap-5">
       <div className="relative w-full sm:max-w-xs sm:self-end">
         <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
         <Input
@@ -38,7 +38,7 @@ export function MarketplaceGrid({ agents }: { agents: MarketplaceAgent[] }) {
           {t("noResults", { query })}
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5">
           {filtered.map((agent, index) => (
             <HireableAgentCard
               key={agent.slug}

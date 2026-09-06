@@ -207,7 +207,7 @@ export function ChannelsSection({
 
   return (
     <div className="relative">
-      <div className="relative flex items-center gap-3">
+      <div className="relative flex items-start gap-3">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#25D366] text-white shadow-sm">
           <WhatsAppIcon className="h-6 w-6" />
         </span>

@@ -14,12 +14,16 @@ export function TelegramLinkSection({ agentName, telegramLink }: { agentName: st
   const link = useCopyFeedback();
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <TelegramIcon className="h-5 w-5 text-primary" />
-        <h3 className="text-sm font-semibold text-on-surface">{t("title")}</h3>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-start gap-3">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#229ED9] text-white shadow-sm">
+          <TelegramIcon className="h-6 w-6" />
+        </span>
+        <div>
+          <h2 className="text-lg font-semibold text-on-surface">{t("title")}</h2>
+          <p className="text-sm text-on-surface-variant">{t("description", { name: agentName })}</p>
+        </div>
       </div>
-      <p className="text-sm text-on-surface-variant">{t("description", { name: agentName })}</p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="flex flex-1 items-center rounded-lg border border-transparent bg-surface-container-low px-4 py-3 transition-colors focus-within:border-primary focus-within:bg-surface-container-lowest focus-within:ring-2 focus-within:ring-primary/20">
           <input

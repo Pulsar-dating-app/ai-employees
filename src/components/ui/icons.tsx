@@ -242,9 +242,17 @@ export function ActivityIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export function TelegramIcon(props: React.SVGProps<SVGSVGElement>) {
+  // Filled disc (r=9, spans y3–21 — the same drawn bounds as InstagramIcon's
+  // rounded rect) with a paper-plane knockout. Matches Instagram's size and
+  // vertical position in the connections tab bar; reads as the Telegram mark
+  // on the colored header tile.
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M21.05 3.16 2.7 10.31c-1.25.5-1.24 1.19-.23 1.5l4.7 1.47 1.82 5.6c.22.6.38.84.78.84.36 0 .53-.16.75-.38l1.83-1.78 4.68 3.45c.86.48 1.48.23 1.7-.8l3.07-14.5c.32-1.32-.5-1.9-1.75-1.55Zm-4.65 3.98-6.83 6.18-.28 3-1.37-4.24 8.19-5.16c.39-.24.75.06.29.46Z" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm3.86 5.28-1.42 6.68c-.1.47-.38.59-.78.37l-2.17-1.6-1.05 1.01a.53.53 0 0 1-.42.2l.15-2.13 3.9-3.52c.17-.15-.04-.24-.26-.1l-4.82 3.04-2.08-.65c-.45-.14-.46-.45.1-.67l8.12-3.13c.38-.14.7.09.6.7Z"
+      />
     </svg>
   );
 }

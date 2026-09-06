@@ -30,8 +30,8 @@
   },
   "Agents": {
     "descriptions": {
-      "malu": "A Malu conduz as conversas da sua loja do primeiro \"oi\" até o checkout. Ela aprende seu catálogo, entende o que cada cliente realmente procura e recomenda os produtos que fazem sentido — respondendo sobre preço, estoque e políticas com base no que você cadastrou, sem inventar. Atenciosa e acolhedora, ela conduz quem está pronto para comprar até o checkout, sem nunca ser insistente.",
-      "ana": "A Ana tira a agenda das suas mãos. Ela confere a disponibilidade real considerando seu horário de funcionamento, os agendamentos existentes e o calendário conectado, e então oferece aos clientes horários que estão de fato livres. Coleta as informações que você precisa antes de confirmar, resolve remarcações e cancelamentos na hora, e coloca clientes numa lista de espera quando você está lotado — sempre com um tom pontual, tranquilo e a cara do seu negócio."
+      "malu": "{name} conduz as conversas da sua loja do primeiro \"oi\" até o checkout. Ela aprende seu catálogo, entende o que cada cliente realmente procura e recomenda os produtos que fazem sentido — respondendo sobre preço, estoque e políticas com base no que você cadastrou, sem inventar. Atenciosa e acolhedora, ela conduz quem está pronto para comprar até o checkout, sem nunca ser insistente.",
+      "ana": "{name} tira a agenda das suas mãos. Ela confere a disponibilidade real considerando seu horário de funcionamento, os agendamentos existentes e o calendário conectado, e então oferece aos clientes horários que estão de fato livres. Coleta as informações que você precisa antes de confirmar, resolve remarcações e cancelamentos na hora, e coloca clientes numa lista de espera quando você está lotado — sempre com um tom pontual, tranquilo e a cara do seu negócio."
     }
   },
   "Onboarding": {
@@ -48,153 +48,339 @@
     "body": "O link que você abriu é inválido ou expirou. Mande uma mensagem para a loja de novo que eles enviam um novo."
   },
   "LandingV2": {
-    "switcher": {
-      "label": "Comparar designs da landing",
-      "a": "Versão A",
-      "b": "Versão B"
-    },
-    "nav": {
-      "features": "Recursos",
-      "employees": "Nossos funcionários de IA",
-      "pricing": "Preços",
-      "login": "Entrar",
-      "cta": "Começar agora",
-      "menu": "Abrir menu"
+    "header": {
+      "navAgents": "Agentes de IA",
+      "navWorkforce": "AI Workforce",
+      "navChannels": "Canais & WhatsApp",
+      "navPricing": "Planos & Preços",
+      "navDemo": "Demonstração",
+      "trial": "Testar 15 Dias",
+      "login": "Entrar"
     },
     "hero": {
-      "badge": "Contratando talentos de IA especializados",
-      "headline": "Funcionários de IA para o seu negócio.",
-      "sub": "Contrate talentos de IA especializados que entendem o seu negócio, ajudam os seus clientes e impulsionam as vendas naturalmente no seu canal de comunicação.",
-      "primaryCta": "Contrate o seu primeiro funcionário",
-      "secondaryCta": "Ver equipe",
-      "imageAlt": "Um funcionário de IA da Staffra trabalhando"
-    },
-    "spotlight": {
-      "heading": "Conheça a sua equipe",
-      "sub": "Cada funcionário da Staffra tem um papel definido e uma personalidade que combina com ele — não é uma assistente genérica que você precisa configurar.",
-      "badge": "IA Centrada no Humano Verificada",
-      "agents": {
-        "malu": {
-          "name": "Malu — Representante de Vendas de IA",
-          "tagline": "A Malu não é um chatbot. Ela é uma funcionária de vendas.",
-          "cta": "Conheça a Malu",
-          "badgeSub": "Divisão de Vendas e Parcerias",
-          "imageAlt": "Retrato da Malu, Representante de Vendas de IA",
-          "features": {
-            "warm": {
-              "title": "Acolhedora e empática",
-              "description": "Conecta-se com os clientes num nível humano, entendendo as suas necessidades."
-            },
-            "negotiator": {
-              "title": "Negociadora confiante",
-              "description": "Conduz as conversas para a conversão sem ser insistente."
-            },
-            "expert": {
-              "title": "Especialista que domina o assunto",
-              "description": "Aprende todo o seu catálogo instantaneamente e lembra de tudo com precisão."
-            }
-          }
-        },
-        "ana": {
-          "name": "Ana — Assistente de Agendamentos de IA",
-          "tagline": "A Ana não é um formulário de agendamento. Ela é a funcionária que cuida da sua agenda.",
-          "cta": "Conheça a Ana",
-          "badgeSub": "Divisão de Agendamentos e Operações",
-          "features": {
-            "punctual": {
-              "title": "Organizada e pontual",
-              "description": "Confere a sua agenda em tempo real e nunca marca dois horários juntos, então cada agendamento vale."
-            },
-            "availability": {
-              "title": "Acompanhamento confiável",
-              "description": "Marca horários que os seus clientes podem confiar, sem idas e vindas para fechar um horário."
-            }
-          }
-        }
+      "badgeMain": "✨ Plataforma de AI Workforce & WhatsApp Oficial",
+      "badgeSub": "• Teste 15 dias grátis",
+      "headlinePre": "Contrate",
+      "headlineHighlight": "funcionários de IA",
+      "headlinePost": "que vendem, atendem e agendam 24/7",
+      "sub": "Crie agentes inteligentes treinados com seus documentos, catálogos e processos. Conecte no WhatsApp Oficial, Instagram e CRM em menos de 15 minutos sem programar.",
+      "ctaPrimary": "Testar 15 Dias Grátis",
+      "ctaSecondary": "Ver Demonstração Ao Vivo",
+      "ctaTertiary": "Falar com Especialista",
+      "trust1": "API WhatsApp Oficial (Meta)",
+      "trust2": "Sem cartão para testar",
+      "trust3": "RAG seguro sem alucinação",
+      "chat": {
+        "agentName": "Malu (AI Vendas)",
+        "status": "Online no WhatsApp Oficial",
+        "badge": "SDR 24/7",
+        "msg1": "Olá Roberto! Vi que sua equipe atende mais de 400 contatos/dia. Como você gostaria que eu acelerasse o fechamento de propostas hoje?",
+        "msg2": "Oi Malu! Precisamos responder cotações técnicas de maquinário em menos de 2 minutos e enviar o link de pagamento.",
+        "msg3a": "Perfeito! Acabei de cruzar as especificações do catálogo PDF com seu estoque no ERP. Segue proposta detalhada em anexo:",
+        "fileName": "Proposta_Tecnica_642.pdf",
+        "msg3b": "Posso agendar 15 min com o Roberto da engenharia ou você prefere gerar o link de adiantamento agora?",
+        "msg3meta": "10:43 • Respondido em 1.2s",
+        "inputPlaceholder": "Digite uma pergunta para testar a Malu...",
+        "inputValue": "Qual o desconto para pagamento à vista?",
+        "send": "Enviar"
+      },
+      "workspace": {
+        "imageAlt": "Workspace central da Staffra",
+        "eyebrow": "Orquestrador Staffra OS",
+        "title": "Workspace Central Multi-Agente"
+      },
+      "metrics": {
+        "m1Label": "Taxa de Resolução",
+        "m1Sub": "Sem transbordo humano",
+        "m2Label": "Tempo de Resposta",
+        "m2Sub": "Instantâneo no Zap",
+        "m3Label": "Reuniões Marcadas",
+        "m3Sub": "Google Calendar Sync"
       }
     },
-    "flow": {
-      "heading": "Contrate. Ensine. Conecte. Trabalhe.",
-      "sub": "Começar com um funcionário de IA da Staffra é mais simples do que integrar uma pessoa, e igualmente eficaz.",
-      "stepLabel": "Passo {number}",
-      "steps": {
-        "hire": {
-          "title": "Contrate o seu primeiro funcionário",
-          "description": "Escolha o primeiro talento da nossa equipe de profissionais de IA especializados."
-        },
-        "teach": {
-          "title": "Ensine a sua equipe",
-          "description": "Envie o seu catálogo de produtos, perguntas frequentes e políticas do negócio para aprendizado instantâneo."
-        },
-        "connect": {
-          "title": "Conecte o seu canal",
-          "description": "Ligue diretamente ao seu principal canal de comunicação com clientes."
-        },
-        "work": {
-          "title": "Deixe a sua equipe trabalhar",
-          "description": "Sua equipe cuida das conversas, qualifica leads e acompanha a intenção de compra 24 horas por dia."
-        }
-      }
-    },
-    "comparison": {
-      "heading": "Conversas humanizadas",
-      "sub": "Os clientes querem falar com pessoas, não com menus de telefone.",
-      "oldWay": "O jeito antigo",
-      "staffraWay": "O jeito Staffra",
-      "oldContact": "Atendente virtual",
-      "customerMessage": "Oi! Tô procurando um presente pra minha namorada.",
-      "botReply": "Selecione uma opção:\n1. Ver catálogo\n2. Horário da loja\n3. Falar com um atendente"
-    },
-    "measure": {
-      "heading": "Meça o que importa.",
-      "sub": "A Malu não só conversa; ela trabalha pelos objetivos do seu negócio. Acompanhe o desempenho dela em tempo real pelo nosso painel intuitivo.",
-      "intent": {
-        "title": "Intenção de compra",
-        "description": "Acompanhe com que eficácia a Malu leva as conversas rumo a uma compra."
-      },
-      "checkout": {
-        "title": "Cliques no checkout",
-        "description": "Acompanhe as conversões diretas originadas nas conversas com clientes."
-      },
-      "imageAlt": "Prévia do painel de desempenho da Staffra"
-    },
-    "footer": {
-      "blurb": "Construindo o futuro da força de trabalho de IA para negócios modernos.",
-      "product": "Produto",
-      "company": "Empresa",
-      "legal": "Jurídico",
-      "links": {
-        "features": "Recursos",
-        "pricing": "Preços",
-        "docs": "Documentação",
-        "support": "Fale com o suporte",
-        "privacy": "Política de privacidade",
-        "terms": "Termos de serviço"
-      },
-      "rights": "© {year} Staffra by Pulsar LTDA. Todos os direitos reservados."
-    },
-    "demo": {
-      "transcriptLabel": "Exemplo de conversa entre um cliente e a Malu",
-      "customerLabel": "Cliente",
-      "online": "online",
-      "messages": [
+    "socialProof": {
+      "title": "Utilizamos as melhores tecnologias do mercado",
+      "logos": [
         {
-          "from": "customer",
-          "text": "Oi! Tô procurando um presente pra minha namorada."
+          "name": "Google"
         },
         {
-          "from": "malu",
-          "text": "Que legal! 😊 Do que ela costuma gostar? E tem algum valor em mente?"
+          "name": "Telegram"
         },
         {
-          "from": "customer",
-          "text": "Ela curte moda. Uns R$300."
+          "name": "Meta"
         },
         {
-          "from": "malu",
-          "text": "Separei duas que combinam — R$249, mais casual, e R$289, mais elegante."
+          "name": "Instagram"
+        },
+        {
+          "name": "WhatsApp"
+        },
+        {
+          "name": "OpenAI"
         }
       ]
+    },
+    "channels": {
+      "eyebrow": "Atendimento Omnichannel Real",
+      "heading": "Aonde o seu cliente chamar, o seu agente de IA responde",
+      "sub": "Conecte a inteligência da Staffra diretamente na API Oficial do WhatsApp e em todos os pontos de contato da sua empresa. Uma só memória, múltiplos canais.",
+      "badge": "Meta Tech Provider Credenciado",
+      "cards": [
+        {
+          "tag": "Oficial Meta Cloud API",
+          "title": "WhatsApp Business",
+          "desc": "Responde áudios em segundos, envia faturas, lê fotos de produtos e orçamentos direto no número oficial da sua marca.",
+          "bullets": [
+            "Disparo de modelos aprovados",
+            "Transcrição de áudio automática"
+          ]
+        },
+        {
+          "tag": "Direct & Comentários",
+          "title": "Instagram Direct",
+          "desc": "Converte comentários de reels e posts em mensagens privadas com link direto para o catálogo e fechamento via checkout.",
+          "bullets": [
+            "Automação 'Comente EU QUERO'",
+            "Histórico unificado no CRM"
+          ]
+        },
+        {
+          "tag": "1 Linha de Código",
+          "title": "Widget Web Whitelabel",
+          "desc": "Incorpore no seu site ou app em segundos com as cores, logotipo e avatar exclusivo da sua identidade corporativa.",
+          "bullets": [
+            "Totalmente customizável",
+            "Modo pop-up ou tela cheia"
+          ]
+        },
+        {
+          "tag": "Sincronização Ativa",
+          "title": "Calendar & CRM Sync",
+          "desc": "Seu agente checa horários livres no Google Calendar ou Outlook e insere o evento no HubSpot ou RD Station em tempo real.",
+          "bullets": [
+            "Zero conflitos de agenda",
+            "Disparo automático de lembretes"
+          ]
+        }
+      ]
+    },
+    "workforce": {
+      "badge": "Funcionários de IA Especializados",
+      "heading": "Cada função com um funcionário de IA dedicado",
+      "sub": "Diferente de um chatbot genérico, cada funcionário da Staffra tem um papel definido: a Malu cuida das vendas no atendimento inbound e a Ana organiza a sua agenda. Você contrata só quem precisa.",
+      "viewProfile": "Ver Perfil",
+      "agents": [
+        {
+          "name": "Malu",
+          "role": "Agente de Vendas & SDR",
+          "sub": "Inbound WhatsApp & Web",
+          "desc": "Especialista em entender dores do cliente, qualificar no framework BANT, contornar objeções de preço e enviar propostas comerciais personalizadas em instantes.",
+          "statLabel": "Taxa de conversão:",
+          "statValue": "28.4%"
+        },
+        {
+          "name": "Ana",
+          "role": "Agente de Agendamento",
+          "sub": "Sincronização de Calendário",
+          "desc": "Negocia o melhor horário entre o cliente e a sua equipe, cria os eventos direto no Google Calendar e envia lembretes automáticos para reduzir as faltas.",
+          "statLabel": "No-show reduzido:",
+          "statValue": "-42%"
+        }
+      ],
+      "handoffTitle": "Transbordo para Humano Sem Fricção",
+      "handoffDesc": "Quando a conversa sai do script ou o cliente pede, o funcionário passa o atendimento para uma pessoa do seu time — com todo o histórico e o resumo da conversa à mão.",
+      "handoffCta": "Conheça os funcionários disponíveis"
+    },
+    "rag": {
+      "eyebrow": "Treinamento sem Código",
+      "heading": "Treine sua IA em minutos com o conteúdo real da sua empresa",
+      "sub": "Sem criar linhas de código ou configurar servidores vetoriais complexos. Arraste seus arquivos para o dashboard da Staffra e nosso motor RAG corporativo cuida de indexar, vetorizar e proteger suas regras de negócio.",
+      "steps": [
+        {
+          "title": "Envie seus Documentos & URLs",
+          "desc": "PDFs de propostas, catálogos em planilha, links do seu site ou manuais técnicos em PDF."
+        },
+        {
+          "title": "Defina o Tom de Voz & Guardrails",
+          "desc": "Estabeleça limites rígidos, respostas proibidas, tom formal ou descontraído e regras de desconto."
+        },
+        {
+          "title": "Conecte no WhatsApp Oficial",
+          "desc": "Em menos de 15 minutos sua equipe de IA já está interagindo com clientes reais 24 horas por dia."
+        }
+      ],
+      "cardTitle": "Fontes de Conhecimento Suportadas",
+      "cardBadge": "Auto-Sync Ativo",
+      "sources": [
+        {
+          "title": "PDFs & Manuais",
+          "sub": "Até 500 páginas"
+        },
+        {
+          "title": "Planilhas & ERP",
+          "sub": "Tabelas de Preço"
+        },
+        {
+          "title": "Website Crawling",
+          "sub": "Varredura de URLs"
+        },
+        {
+          "title": "Histórico de SAC",
+          "sub": "Zendesk / WhatsApp"
+        },
+        {
+          "title": "Áudios & Vídeos",
+          "sub": "Transcrição Whisper"
+        },
+        {
+          "title": "APIs Customizadas",
+          "sub": "Webhooks Rest"
+        }
+      ],
+      "imageAlt": "Dashboard de analytics da Staffra"
+    },
+    "pricing": {
+      "eyebrow": "Planos Transparentes",
+      "heading": "Escolha o tamanho ideal da sua equipe de inteligência",
+      "sub": "Comece agora mesmo com 15 dias de garantia incondicional. Sem taxa oculta de setup ou fidelidade obrigatória.",
+      "featuredBadge": "Mais Escolhido por Empresas",
+      "plans": [
+        {
+          "tier": "Mini",
+          "name": "Automação Individual",
+          "desc": "Ideal para autônomos e pequenos comércios que precisam de atendimento ágil.",
+          "price": "R$ 399",
+          "priceSuffix": "/ mês",
+          "priceNote": "Cobrança mensal recorrente",
+          "features": [
+            "1 Agente de IA Personalizado",
+            "Conexão com WhatsApp Oficial (Meta)",
+            "1 Widget Web Embed no site",
+            "Base de conhecimento até 50MB",
+            "Painel de conversas e transbordo",
+            "Modelos GPT-4o Mini & Gemini"
+          ],
+          "cta": "Testar 15 Dias Grátis"
+        },
+        {
+          "tier": "Starter Multi-Agente",
+          "name": "Operação Comercial Completa",
+          "desc": "Para empresas em expansão que exigem qualificação de leads e agendamento.",
+          "price": "R$ 990",
+          "priceSuffix": "/ mês",
+          "priceNote": "Economize 20% no faturamento anual",
+          "features": [
+            "Até 3 Agentes de IA Colaborativos",
+            "Multi-canal: WhatsApp + Instagram DM + Web",
+            "Integração Nativa com Google Calendar",
+            "RAG Avançado: PDFs, Planilhas e URLs",
+            "Transcrição e Resposta com Áudio de Voz",
+            "Dashboard de Conversão & Buying Intent",
+            "Suporte Prioritário com Gerente de Contas"
+          ],
+          "cta": "Começar Teste com 3 Agentes"
+        },
+        {
+          "tier": "Enterprise",
+          "name": "Escala Corporativa & SLA",
+          "desc": "Volume massivo de mensagens, múltiplos departamentos e segurança LGPD/SOC2.",
+          "price": "Customizado",
+          "priceNote": "Projetos a partir de R$ 3.900/mês",
+          "features": [
+            "Agentes de IA Ilimitados",
+            "Integração direta via API / ERP SAP / Salesforce",
+            "Fine-tuning com modelos dedicados",
+            "SLA de Atendimento 99.9% garantido em contrato",
+            "Onboarding com Engenheiro de IA Dedicado",
+            "Whitelabel completo com domínio próprio"
+          ],
+          "cta": "Falar com Engenheiro de Contas"
+        }
+      ]
+    },
+    "impact": {
+      "stats": [
+        {
+          "value": "-55%",
+          "title": "Redução nos Chamados Repetitivos",
+          "desc": "Resolução instantânea sem transbordo desnecessário para atendentes humanos."
+        },
+        {
+          "value": "3.8x",
+          "title": "Mais Reuniões Agendadas",
+          "desc": "Follow-up automático e persistente enquanto o lead está quente no WhatsApp."
+        },
+        {
+          "value": "99.4%",
+          "title": "Precisão Sem Alucinações",
+          "desc": "Arquitetura RAG com guardrails corporativos que respeitam 100% o seu documento."
+        }
+      ]
+    },
+    "faq": {
+      "eyebrow": "Perguntas Frequentes",
+      "heading": "Tudo o que você precisa saber sobre a Staffra",
+      "items": [
+        {
+          "q": "Como o funcionário de IA aprende sobre minha empresa?",
+          "a": "Você apenas faz o upload dos seus arquivos (PDFs, catálogos, políticas comerciais, histórico de atendimento ou link do seu site). A Staffra processa esses dados em nossa infraestrutura RAG corporativa, garantindo que o agente responda estritamente de acordo com o que foi fornecido."
+        },
+        {
+          "q": "A integração utiliza a API Oficial do WhatsApp? Há risco de banimento?",
+          "a": "Sim, conectamos diretamente via WhatsApp Cloud API Oficial da Meta. Isso garante estabilidade total, alta taxa de entrega, suporte a selo de verificação e conformidade integral com as diretrizes da Meta, eliminando riscos de banimento de linhas."
+        },
+        {
+          "q": "O que acontece se um cliente fizer uma pergunta fora do manual?",
+          "a": "Nossos agentes possuem guardrails estritos. Se uma pergunta estiver fora da base ou envolver negociações sensíveis, ele avisa cordialmente o cliente e realiza a transferência (transbordo) imediata para um operador humano do seu time, mantendo todo o resumo da conversa acessível."
+        },
+        {
+          "q": "Quanto tempo demora para colocar um agente no ar?",
+          "a": "A configuração padrão leva em média 15 a 30 minutos. Nosso onboarding guiado orienta passo a passo: upload da base, personalização do avatar e vinculação do QR Code do WhatsApp."
+        }
+      ]
+    },
+    "finalCta": {
+      "eyebrow": "Comece Hoje Mesmo",
+      "heading": "Pronto para multiplicar sua capacidade de vendas e atendimento?",
+      "sub": "Crie seu primeiro agente de IA em menos de 15 minutos e experimente o poder de uma equipe trabalhando sem pausas para o seu negócio.",
+      "ctaPrimary": "Começar Teste de 15 Dias",
+      "ctaSecondary": "Falar com Consultor Staffra",
+      "fine": "Sem fidelidade • Cancele a qualquer momento com 1 clique"
+    },
+    "footer": {
+      "blurb": "Plataforma corporativa de colaboradores digitais inteligentes e orquestração de multi-agentes autônomos para escalar operações com precisão.",
+      "columns": [
+        {
+          "title": "Soluções",
+          "links": [
+            "Agentes de IA",
+            "AI Workforce",
+            "Integrações WhatsApp & Meta",
+            "Demonstração Guiada"
+          ]
+        },
+        {
+          "title": "Recursos & Preço",
+          "links": [
+            "Planos & Preços",
+            "Central de Ajuda & FAQ",
+            "Falar com Especialista",
+            "Testar Gratuitamente"
+          ]
+        },
+        {
+          "title": "Segurança & Legal",
+          "links": [
+            "Termos de Serviço",
+            "Privacidade & LGPD",
+            "Conformidade Corporativa",
+            "Segurança de Dados"
+          ]
+        }
+      ],
+      "rights": "© 2025 Staffra AI Technologies Inc. Todos os direitos reservados.",
+      "tagline": "Arquitetura Multi-Agente Corporativa de Alta Performance"
     }
   },
   "Dashboard": {
@@ -513,6 +699,11 @@
       "humanHandoffDescription": "Ative para que você ou sua equipe possam assumir uma conversa sempre que {name} precisar transferir para um humano.",
       "channelsTitle": "Alcance clientes em todo lugar",
       "channelsDescription": "Conecte {name} ao WhatsApp ou Instagram, personalize o widget de chat do seu site, ou compartilhe um link direto — alterne entre eles com essas abas."
+    },
+    "identity": {
+      "title": "Perfil",
+      "description": "O nome e a foto que os clientes veem para este integrante da equipe — no seu painel, na página de conversa e em todo lugar em que ele aparece.",
+      "photoLabel": "Foto"
     }
   },
   "Teach": {

@@ -4,17 +4,15 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { agentDefaultPhotos, resolveAgentPhoto } from "@/lib/agents/media";
+import { agentDefaultPhotos } from "@/lib/agents/media";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
-import { AgentPersonaCard } from "../agent-persona-card";
 import { PolicySection } from "../../settings/policy-section";
 import { ChannelTabsCard } from "./channel-tabs-card";
 import { AvailabilityCard } from "./availability-card";
-import { NameCard } from "./name-card";
-import { PhotoCard } from "./photo-card";
+import { IdentityEditor } from "./identity-editor";
 import { HumanHandoffCard } from "./human-handoff-card";
 import { DevChatTest } from "../../dev-chat-test";
 import { AgentConnectionsTour } from "./agent-connections-tour";
@@ -106,7 +104,6 @@ export default async function AgentConnectionsPage({
 
   const name = companyAgent.name ?? fallbackName;
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
-  const photoSrc = resolveAgentPhoto(agentSlug, companyAgent.photo_type, companyAgent.photo_asset_url);
 
   const baseUrl = resolveCheckoutBaseUrl();
   const chatUrl = `${baseUrl}/talk/${company.slug}/${agentSlug}`;
@@ -133,94 +130,78 @@ export default async function AgentConnectionsPage({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <AgentPersonaCard
-          slug={agentSlug}
-          name={name}
+      <div className="flex max-w-4xl flex-col gap-6">
+        <IdentityEditor
+          companyId={company.id}
+          agentSlug={agentSlug}
           role={agent.role}
-          description={agent.description}
-          photoSrc={photoSrc}
+          dbDescription={agent.description}
           active={companyAgent.status === "active"}
-          className="lg:col-span-4"
+          canEdit={canEdit}
+          initialName={name}
+          defaultName={fallbackName}
+          defaultPhotos={agentDefaultPhotos(agentSlug)}
+          initialPhoto={{
+            photoType: (companyAgent.photo_type as "default_1" | "default_2" | "custom") ?? "default_1",
+            photoAssetUrl: companyAgent.photo_asset_url,
+          }}
         />
-        <div className="flex flex-col gap-6 lg:col-span-8">
-          <div data-tour="agent-name">
-            <NameCard
+        <AvailabilityCard
+          companyId={company.id}
+          agentSlug={agentSlug}
+          agentName={name}
+          initialActive={companyAgent.status === "active"}
+          canEdit={canEdit}
+        />
+        {agentSlug === "malu" ? (
+          <>
+            <PolicySection
+              companyId={company.id}
+              fieldName="shipping_policy"
+              sectionKey="shipping"
+              initialValue={company.shipping_policy}
+              canEdit={canEdit}
+            />
+            <PolicySection
+              companyId={company.id}
+              fieldName="return_policy"
+              sectionKey="returns"
+              initialValue={company.return_policy}
+              canEdit={canEdit}
+            />
+          </>
+        ) : null}
+        <div data-tour="human-handoff">
+          <HumanHandoffCard
+            companyId={company.id}
+            agentName={name}
+            canEdit={canEdit}
+            initialAllowHumanHandoff={company.allow_human_handoff}
+          />
+        </div>
+        <div data-tour="channels">
+          <Suspense fallback={null}>
+            <ChannelTabsCard
               companyId={company.id}
               agentSlug={agentSlug}
-              initialName={name}
-              defaultName={fallbackName}
-              canEdit={canEdit}
-            />
-          </div>
-          <PhotoCard
-            companyId={company.id}
-            agentSlug={agentSlug}
-            agentName={name}
-            canEdit={canEdit}
-            defaultPhotos={agentDefaultPhotos(agentSlug)}
-            initial={{
-              photoType: (companyAgent.photo_type as "default_1" | "default_2" | "custom") ?? "default_1",
-              photoAssetUrl: companyAgent.photo_asset_url,
-            }}
-          />
-          <AvailabilityCard
-            companyId={company.id}
-            agentSlug={agentSlug}
-            agentName={name}
-            initialActive={companyAgent.status === "active"}
-            canEdit={canEdit}
-          />
-          {agentSlug === "malu" ? (
-            <>
-              <PolicySection
-                companyId={company.id}
-                fieldName="shipping_policy"
-                sectionKey="shipping"
-                initialValue={company.shipping_policy}
-                canEdit={canEdit}
-              />
-              <PolicySection
-                companyId={company.id}
-                fieldName="return_policy"
-                sectionKey="returns"
-                initialValue={company.return_policy}
-                canEdit={canEdit}
-              />
-            </>
-          ) : null}
-          <div data-tour="human-handoff">
-            <HumanHandoffCard
-              companyId={company.id}
               agentName={name}
               canEdit={canEdit}
-              initialAllowHumanHandoff={company.allow_human_handoff}
+              metaAppId={process.env.META_APP_ID ?? ""}
+              metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
+              chatUrl={chatUrl}
+              embedSnippet={embedSnippet}
+              telegramLink={telegramLink}
+              widgetInitial={{
+                greeting: companyAgent.widget_greeting,
+                launcherType: companyAgent.widget_launcher_type,
+                launcherAssetUrl: companyAgent.widget_launcher_asset_url,
+              }}
             />
-          </div>
-          <div data-tour="channels">
-            <Suspense fallback={null}>
-              <ChannelTabsCard
-                companyId={company.id}
-                agentSlug={agentSlug}
-                agentName={name}
-                canEdit={canEdit}
-                metaAppId={process.env.META_APP_ID ?? ""}
-                metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
-                chatUrl={chatUrl}
-                embedSnippet={embedSnippet}
-                telegramLink={telegramLink}
-                widgetInitial={{
-                  greeting: companyAgent.widget_greeting,
-                  launcherType: companyAgent.widget_launcher_type,
-                  launcherAssetUrl: companyAgent.widget_launcher_asset_url,
-                }}
-              />
-            </Suspense>
-          </div>
-          {process.env.NODE_ENV !== "production" ? (
-            <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />
-          ) : null}
+          </Suspense>
         </div>
+        {process.env.NODE_ENV !== "production" ? (
+          <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />
+        ) : null}
       </div>
     </div>
   );

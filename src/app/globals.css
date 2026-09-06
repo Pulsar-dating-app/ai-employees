@@ -197,51 +197,6 @@ select:not(:disabled) {
   }
 }
 
-/* ============================================================
-   Public landing — WhatsApp conversation demo
-   (src/components/landing/whatsapp-thread.tsx)
-
-   The landing (src/components/landing/landing-page-2.tsx) reproduces the
-   Stitch "Sidde Human-Centric AI" system and styles itself inline with
-   Tailwind; only these two chat keyframes need a stylesheet home.
-   ============================================================ */
-@keyframes v2-bubble-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.v2-bubble-in {
-  animation: v2-bubble-in 0.36s cubic-bezier(0.2, 1, 0.3, 1) both;
-}
-
-@keyframes v2-typing-dot {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.45;
-  }
-  30% {
-    transform: translateY(-3.5px);
-    opacity: 1;
-  }
-}
-.v2-typing-dot {
-  animation: v2-typing-dot 1s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .v2-bubble-in,
-  .v2-typing-dot {
-    animation: none;
-  }
-}
-
 /* Stitch's own `.card-hover` (the "Bookings & Appointments Dashboard" screen
    defines it inline in its <style> block): a card lifts 2px and its ambient
    shadow spreads on hover. Reproduced verbatim rather than approximated with
