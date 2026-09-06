@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { InstagramIcon, CheckIcon } from "@/components/ui/icons";
+import { ChannelPanelHeader } from "./channel-panel-header";
+import { ChannelPreview } from "./channel-preview";
 
 // Trello N3 -- the Instagram equivalent of channels-section.tsx's WhatsApp
 // card (that one is still in the tree, unmounted -- see decisions.md
@@ -28,10 +30,16 @@ type ViewState = "loading" | "idle" | "disconnecting" | "confirmingDisconnect";
 export function InstagramConnectCard({
   companyId,
   agentSlug,
+  agentName,
+  agentPhotoSrc,
+  accent,
   canEdit,
 }: {
   companyId: string;
   agentSlug: string;
+  agentName: string;
+  agentPhotoSrc: string | null;
+  accent: string;
   canEdit: boolean;
 }) {
   const t = useTranslations("MyAgents.instagram");
@@ -89,25 +97,22 @@ export function InstagramConnectCard({
 
   return (
     <div className="relative">
-      <div className="relative flex items-start gap-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-sm">
-          <InstagramIcon className="h-6 w-6" />
-        </span>
-        <div>
-          <h2 className="text-lg font-semibold text-on-surface">{t("title")}</h2>
-          <p className="text-sm text-on-surface-variant">{t("description")}</p>
-        </div>
-      </div>
+      <ChannelPanelHeader
+        icon={<InstagramIcon className="h-6 w-6" />}
+        tileClassName="bg-gradient-to-br from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white"
+        title={t("title")}
+        description={t("description")}
+      />
 
-      <div className="relative mt-8 flex flex-col gap-6">
+      <div className="relative mt-6 flex flex-col gap-6">
         {view === "loading" ? (
           <p className="text-sm text-on-surface-variant">{t("loading")}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {isConnected ? (
               <>
-                <div className="flex items-center gap-3 rounded-md border border-outline-variant p-3">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary-container/40 px-2.5 py-1 text-xs font-semibold text-on-secondary-container">
+                <div className="flex items-center gap-3 rounded-lg border border-tertiary-container/30 bg-tertiary-container/10 p-3">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-tertiary-container/25 px-2.5 py-1 text-xs font-semibold text-on-tertiary-container">
                     {t("connectedBadge")}
                   </span>
                   <span className="text-sm font-medium text-on-surface">
@@ -153,6 +158,7 @@ export function InstagramConnectCard({
             ) : (
               <>
                 <p className="text-sm text-on-surface-variant">{t("notConnected")}</p>
+                <ChannelPreview agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={accent} />
                 <ul className="flex flex-col gap-1 text-xs text-on-surface-variant">
                   <li>{t("prereqProfessional")}</li>
                   <li>{t("prereqAllowMessages")}</li>

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
-import { agentDefaultPhotos } from "@/lib/agents/media";
+import { agentDefaultPhotos, resolveAgentPhoto } from "@/lib/agents/media";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 import { Button } from "@/components/ui/button";
@@ -104,6 +104,7 @@ export default async function AgentConnectionsPage({
 
   const name = companyAgent.name ?? fallbackName;
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
+  const photoSrc = resolveAgentPhoto(agentSlug, companyAgent.photo_type, companyAgent.photo_asset_url);
 
   const baseUrl = resolveCheckoutBaseUrl();
   const chatUrl = `${baseUrl}/talk/${company.slug}/${agentSlug}`;
@@ -185,6 +186,7 @@ export default async function AgentConnectionsPage({
               companyId={company.id}
               agentSlug={agentSlug}
               agentName={name}
+              agentPhotoSrc={photoSrc}
               canEdit={canEdit}
               metaAppId={process.env.META_APP_ID ?? ""}
               metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}

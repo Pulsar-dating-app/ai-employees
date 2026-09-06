@@ -63,26 +63,27 @@
       "headlinePre": "Hire",
       "headlineHighlight": "AI employees",
       "headlinePost": "that sell, support and book 24/7",
-      "sub": "Build intelligent agents trained on your documents, catalogues and processes. Connect to Official WhatsApp, Instagram and your CRM in under 15 minutes — no code.",
+      "sub": "Build intelligent agents trained on your documents, catalogues and processes. Connect to Official WhatsApp, Instagram, Telegram and your website under 15 minutes — no code.",
       "ctaPrimary": "Start 15-Day Free Trial",
       "ctaSecondary": "Watch Live Demo",
       "ctaTertiary": "Talk to a Specialist",
       "trust1": "Official WhatsApp API (Meta)",
-      "trust2": "No card required to try",
+      "trust2": "Multiple agents",
       "trust3": "Safe RAG, no hallucination",
       "chat": {
-        "agentName": "Malu (AI Sales)",
+        "agentName": "Malu · Sales",
         "status": "Online on Official WhatsApp",
-        "badge": "SDR 24/7",
-        "msg1": "Hi Roberto! I saw your team handles more than 400 contacts a day. How would you like me to speed up closing proposals today?",
-        "msg2": "Hi Malu! We need to answer technical machinery quotes in under 2 minutes and send the payment link.",
-        "msg3a": "Perfect! I just cross-checked the PDF catalogue specs against your ERP stock. Here is the detailed proposal, attached:",
-        "fileName": "Technical_Proposal_642.pdf",
-        "msg3b": "I can book 15 minutes with Roberto from engineering, or would you rather I generate the deposit link now?",
+        "badge": "Sales 24/7",
+        "msg1": "Hi! I'm Malu from the sales team. Tell me what you're looking for and I'll help you find it.",
+        "msg2": "Hi Malu! I want a gift for my wife, she's into skincare. Up to around R$ 250.",
+        "msg3a": "Got it! I picked one option that's in stock and matches what you described:",
+        "msg3b": "Delivery in up to 3 days in your area. Want me to send you the link to check out now?",
         "msg3meta": "10:43 • Answered in 1.2s",
         "inputPlaceholder": "Type a question to test Malu...",
-        "inputValue": "What's the discount for upfront payment?",
-        "send": "Send"
+        "inputValue": "Does this kit come in other shades?",
+        "send": "Send",
+        "productName": "Facial Hydration Kit",
+        "productPrice": "R$ 219"
       },
       "workspace": {
         "imageAlt": "Staffra central workspace",
@@ -122,48 +123,74 @@
       ]
     },
     "channels": {
-      "eyebrow": "Real Omnichannel Support",
-      "heading": "Wherever your customer reaches out, your AI agent replies",
-      "sub": "Connect Staffra's intelligence directly to the Official WhatsApp API and every touchpoint of your company. One memory, many channels.",
-      "badge": "Accredited Meta Tech Provider",
-      "cards": [
+      "partnerLabel": "Accredited Tech Provider",
+      "heading": "One AI employee, every channel",
+      "sub": "Connect your AI employee to Official WhatsApp, Instagram, Telegram and your website. 24/7 sales and support with your business context — one shared memory.",
+      "tablistLabel": "Select channel",
+      "cta": "Start 15-day free trial",
+      "items": [
         {
-          "tag": "Official Meta Cloud API",
-          "title": "WhatsApp Business",
-          "desc": "Answers audio in seconds, sends invoices, reads product photos and quotes right on your brand's official number.",
-          "bullets": [
-            "Approved template broadcasts",
-            "Automatic audio transcription"
+          "key": "whatsapp",
+          "brand": "WhatsApp",
+          "name": "WhatsApp",
+          "headline": "Sell on Official WhatsApp",
+          "caption": "Your employee answers on your brand’s official number, via the Meta API — with audio, images and history.",
+          "points": [
+            "Official connection (WhatsApp Cloud API)",
+            "Recommends products and sends the checkout link",
+            "Hands off to a human agent when needed"
           ]
         },
         {
-          "tag": "Direct & Comments",
-          "title": "Instagram Direct",
-          "desc": "Turns comments on reels and posts into private messages with a direct link to the catalogue and checkout.",
-          "bullets": [
-            "'Comment I WANT' automation",
-            "Unified history in the CRM"
+          "key": "instagram",
+          "brand": "Instagram",
+          "name": "Instagram",
+          "headline": "Answer your Instagram Direct",
+          "caption": "The same employee and the same memory, now in your Instagram conversations.",
+          "points": [
+            "Professional account connected in minutes",
+            "History unified with the other channels",
+            "From the first “hi” to checkout"
           ]
         },
         {
-          "tag": "1 Line of Code",
-          "title": "White-label Web Widget",
-          "desc": "Embed it on your site or app in seconds with your own colours, logo and a bespoke avatar for your corporate identity.",
-          "bullets": [
-            "Fully customizable",
+          "key": "telegram",
+          "brand": "Telegram",
+          "name": "Telegram",
+          "headline": "Answer on Telegram",
+          "caption": "One link and you’re live. No setup, no server, no extra app.",
+          "points": [
+            "One deep link per employee",
+            "Runs in the same dashboard",
+            "Zero setup"
+          ]
+        },
+        {
+          "key": "site",
+          "brand": "Site",
+          "name": "Website",
+          "headline": "Put it on your website",
+          "caption": "A chat widget with your colors and your avatar, in one line of code.",
+          "points": [
+            "One line of <script>",
+            "Custom colors, logo and greeting",
             "Pop-up or full-screen mode"
           ]
         },
         {
-          "tag": "Active Sync",
-          "title": "Calendar & CRM Sync",
-          "desc": "Your agent checks free slots in Google Calendar or Outlook and adds the event to HubSpot or RD Station in real time.",
-          "bullets": [
-            "Zero calendar conflicts",
-            "Automatic reminder dispatch"
+          "key": "hosted",
+          "brand": "Chat",
+          "name": "Chat link",
+          "headline": "Share a chat link",
+          "caption": "A chat page hosted by Staffra, ready to drop in your bio, a QR code, or anywhere — no website needed.",
+          "points": [
+            "A ready-to-share link",
+            "Nothing to install or host",
+            "Same memory as the other channels"
           ]
         }
-      ]
+      ],
+      "teamCaption": "The same team, every channel"
     },
     "workforce": {
       "badge": "Specialized AI Employees",
@@ -173,9 +200,9 @@
       "agents": [
         {
           "name": "Malu",
-          "role": "Sales & SDR Agent",
+          "role": "Sales on WhatsApp & Web",
           "sub": "Inbound WhatsApp & Web",
-          "desc": "Expert at understanding customer pain, qualifying with the BANT framework, handling price objections and sending personalized commercial proposals in an instant.",
+          "desc": "Understands what the shopper is after, recommends the right products from your catalogue, and answers price, stock and policy questions straight from what you have registered — never guessing. Guides ready buyers to checkout without being pushy.",
           "statLabel": "Conversion rate:",
           "statValue": "28.4%"
         },
@@ -183,7 +210,7 @@
           "name": "Ana",
           "role": "Scheduling Agent",
           "sub": "Calendar Sync",
-          "desc": "Negotiates the best time between the customer and your team, creates events straight in Google Calendar and sends automatic reminders to cut down on no-shows.",
+          "desc": "Checks real availability (opening hours, existing bookings and your connected calendar) and offers customers only the slots that are genuinely free. Handles reschedules and cancellations on the spot, and adds people to the waitlist when you are fully booked.",
           "statLabel": "No-show reduced:",
           "statValue": "-42%"
         }
@@ -345,7 +372,6 @@
       "heading": "Ready to multiply your sales and support capacity?",
       "sub": "Create your first AI agent in under 15 minutes and experience the power of a team that works without breaks for your business.",
       "ctaPrimary": "Start 15-Day Trial",
-      "ctaSecondary": "Talk to a Staffra Consultant",
       "fine": "No lock-in • Cancel any time with one click"
     },
     "footer": {
@@ -354,33 +380,56 @@
         {
           "title": "Solutions",
           "links": [
-            "AI Agents",
-            "AI Workforce",
-            "WhatsApp & Meta Integrations",
-            "Guided Demo"
+            {
+              "label": "AI Agents",
+              "href": "#workforce"
+            },
+            {
+              "label": "AI Workforce",
+              "href": "#workforce"
+            },
+            {
+              "label": "WhatsApp & Meta Integrations",
+              "href": "#canais"
+            },
+            {
+              "label": "Guided Demo",
+              "href": "#demo"
+            }
           ]
         },
         {
           "title": "Resources & Pricing",
           "links": [
-            "Plans & Pricing",
-            "Help Center & FAQ",
-            "Talk to a Specialist",
-            "Try for Free"
+            {
+              "label": "Plans & Pricing",
+              "href": "#planos"
+            },
+            {
+              "label": "Help Center & FAQ",
+              "href": "#faq"
+            },
+            {
+              "label": "Try for Free",
+              "href": "/?auth=signup"
+            }
           ]
         },
         {
           "title": "Security & Legal",
           "links": [
-            "Terms of Service",
-            "Privacy & LGPD",
-            "Corporate Compliance",
-            "Data Security"
+            {
+              "label": "Terms of Service",
+              "href": "/terms"
+            },
+            {
+              "label": "Privacy & LGPD",
+              "href": "/privacy"
+            }
           ]
         }
       ],
-      "rights": "© 2025 Staffra AI Technologies Inc. All rights reserved.",
-      "tagline": "High-Performance Corporate Multi-Agent Architecture"
+      "rights": "© 2026 Pulsar LTDA. All rights reserved."
     }
   },
   "Dashboard": {
@@ -609,7 +658,9 @@
       "instagram": "Instagram",
       "telegram": "Telegram",
       "embed": "Embed",
-      "link": "Link"
+      "link": "Link",
+      "previewLabel": "How customers will see it",
+      "previewMessage": "Hi! I'm {name}. How can I help you today?"
     },
     "telegram": {
       "title": "Telegram",
@@ -690,7 +741,8 @@
       "embedSectionLabel": "Embed on your site",
       "htmlSnippetLabel": "HTML Snippet",
       "copyScriptButton": "Copy Script",
-      "embedInfoText": "Paste this code into your website, right before the closing body tag, to start sharing {name}'s chat. The bubble will appear automatically in the bottom-right corner."
+      "embedInfoText": "Paste this code into your website, right before the closing body tag, to start sharing {name}'s chat. The bubble will appear automatically in the bottom-right corner.",
+      "openLink": "Open link"
     },
     "tour": {
       "nameTitle": "Make it yours",
