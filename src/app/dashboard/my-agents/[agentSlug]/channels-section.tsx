@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { WhatsAppIcon, CheckIcon } from "@/components/ui/icons";
+import { ChannelPanelHeader } from "./channel-panel-header";
+import { ChannelPreview } from "./channel-preview";
 
 // The exact rate is deliberately never hardcoded anywhere in this file (or
 // any copy in messages/*.json) -- see decisions.md's 2026-09-05 entry.
@@ -49,12 +51,18 @@ type ViewState = "loading" | "idle" | "connecting" | "disconnecting" | "confirmi
 export function ChannelsSection({
   companyId,
   agentSlug,
+  agentName,
+  agentPhotoSrc,
+  accent,
   canEdit,
   metaAppId,
   metaConfigId,
 }: {
   companyId: string;
   agentSlug: string;
+  agentName: string;
+  agentPhotoSrc: string | null;
+  accent: string;
   canEdit: boolean;
   metaAppId: string;
   metaConfigId: string;
@@ -207,17 +215,14 @@ export function ChannelsSection({
 
   return (
     <div className="relative">
-      <div className="relative flex items-start gap-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#25D366] text-white shadow-sm">
-          <WhatsAppIcon className="h-6 w-6" />
-        </span>
-        <div>
-          <h2 className="text-lg font-semibold text-on-surface">{t("title")}</h2>
-          <p className="text-sm text-on-surface-variant">{t("description")}</p>
-        </div>
-      </div>
+      <ChannelPanelHeader
+        icon={<WhatsAppIcon className="h-6 w-6" />}
+        tileClassName="bg-[#25D366] text-white"
+        title={t("title")}
+        description={t("description")}
+      />
 
-      <div className="relative mt-8 flex flex-col gap-6">
+      <div className="relative mt-6 flex flex-col gap-6">
         {view === "loading" ? (
           <p className="text-sm text-on-surface-variant">{t("loading")}</p>
         ) : (
@@ -225,8 +230,8 @@ export function ChannelsSection({
             <Step index={1} done={isConnected} title={t("stepOneTitle")}>
               {isConnected ? (
                 <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-3 rounded-md border border-outline-variant p-3">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary-container/40 px-2.5 py-1 text-xs font-semibold text-on-secondary-container">
+                  <div className="flex items-center gap-3 rounded-lg border border-tertiary-container/30 bg-tertiary-container/10 p-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-tertiary-container/25 px-2.5 py-1 text-xs font-semibold text-on-tertiary-container">
                       {t("connectedBadge")}
                     </span>
                     <span className="text-sm font-medium text-on-surface">
@@ -234,7 +239,7 @@ export function ChannelsSection({
                     </span>
                   </div>
                   {hasPaymentIssue ? (
-                    <div className="flex items-start gap-3 rounded-md border border-error/30 bg-error/5 p-3">
+                    <div className="flex items-start gap-3 rounded-lg border border-error/30 bg-error/5 p-3">
                       <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-error/15 px-2.5 py-1 text-xs font-semibold text-error">
                         {t("paymentIssueBadge")}
                       </span>
@@ -278,8 +283,9 @@ export function ChannelsSection({
                     ))}
                 </div>
               ) : (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                   <p className="text-sm text-on-surface-variant">{t("notConnected")}</p>
+                  <ChannelPreview agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={accent} />
                   {canEdit ? (
                     <>
                       <Alert variant="warning" title={t("billingDisclosureTitle")}>

@@ -189,7 +189,8 @@
             "Same memory as the other channels"
           ]
         }
-      ]
+      ],
+      "teamCaption": "The same team, every channel"
     },
     "workforce": {
       "badge": "Specialized AI Employees",
@@ -657,7 +658,9 @@
       "instagram": "Instagram",
       "telegram": "Telegram",
       "embed": "Embed",
-      "link": "Link"
+      "link": "Link",
+      "previewLabel": "How customers will see it",
+      "previewMessage": "Hi! I'm {name}. How can I help you today?"
     },
     "telegram": {
       "title": "Telegram",
@@ -738,7 +741,8 @@
       "embedSectionLabel": "Embed on your site",
       "htmlSnippetLabel": "HTML Snippet",
       "copyScriptButton": "Copy Script",
-      "embedInfoText": "Paste this code into your website, right before the closing body tag, to start sharing {name}'s chat. The bubble will appear automatically in the bottom-right corner."
+      "embedInfoText": "Paste this code into your website, right before the closing body tag, to start sharing {name}'s chat. The bubble will appear automatically in the bottom-right corner.",
+      "openLink": "Open link"
     },
     "tour": {
       "nameTitle": "Make it yours",

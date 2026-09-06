@@ -189,7 +189,8 @@
             "Mesma memória dos outros canais"
           ]
         }
-      ]
+      ],
+      "teamCaption": "A mesma equipe, em todos os canais"
     },
     "workforce": {
       "badge": "Funcionários de IA Especializados",
@@ -657,7 +658,9 @@
       "instagram": "Instagram",
       "telegram": "Telegram",
       "embed": "Incorporar",
-      "link": "Link"
+      "link": "Link",
+      "previewLabel": "Como o cliente vai ver",
+      "previewMessage": "Oi! Sou a {name}. Como posso te ajudar hoje?"
     },
     "telegram": {
       "title": "Telegram",
@@ -738,7 +741,8 @@
       "embedSectionLabel": "Incorporar no seu site",
       "htmlSnippetLabel": "Trecho HTML",
       "copyScriptButton": "Copiar script",
-      "embedInfoText": "Cole este código no seu site, logo antes da tag de fechamento do body, para começar a compartilhar o chat de {name}. A bolha aparece automaticamente no canto inferior direito."
+      "embedInfoText": "Cole este código no seu site, logo antes da tag de fechamento do body, para começar a compartilhar o chat de {name}. A bolha aparece automaticamente no canto inferior direito.",
+      "openLink": "Abrir link"
     },
     "tour": {
       "nameTitle": "Deixe com a sua cara",
