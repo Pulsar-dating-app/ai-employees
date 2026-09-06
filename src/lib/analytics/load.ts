@@ -102,6 +102,41 @@ async function fetchWindow(
   return rows;
 }
 
+// `messages` has no `agent_id` of its own -- a per-agent read filters
+// through the conversation it belongs to (`conversations!inner(agent_id)`,
+// resolved via the messages.conversation_id FK). Company-wide (no agentId)
+// skips the join. Paged the same way as `fetchWindow`. Exported so the
+// per-agent scheduling aggregator reuses the exact query.
+export async function fetchMessagesWindow(
+  supabase: SupabaseClient,
+  companyId: string,
+  startUtc: string,
+  endUtc: string,
+  agentId?: string | null,
+): Promise<Row[]> {
+  const columns = agentId ? "created_at, conversations!inner(agent_id)" : "created_at";
+  const rows: Row[] = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    let query = supabase
+      .from("messages")
+      .select(columns)
+      .eq("company_id", companyId)
+      .gte("created_at", startUtc)
+      .lt("created_at", endUtc)
+      .order("created_at", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (agentId) query = query.eq("conversations.agent_id", agentId);
+
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    const batch = (data ?? []) as unknown as Row[];
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+  }
+  return rows;
+}
+
 export type AnalyticsResult = {
   granularity: Granularity;
   timezone: string;
@@ -170,8 +205,9 @@ export async function loadCompanyAnalytics(opts: LoadAnalyticsOptions): Promise<
   const { granularity, timezone, from, to, startUtc, endUtc } = resolveAnalyticsRange(opts);
   const agentId = opts.agentId ?? null;
 
-  const [conversations, customers, events] = await Promise.all([
+  const [conversations, messages, customers, events] = await Promise.all([
     fetchWindow(opts.supabase, "conversations", "created_at", opts.companyId, startUtc, endUtc, agentId),
+    fetchMessagesWindow(opts.supabase, opts.companyId, startUtc, endUtc, agentId),
     agentId
       ? Promise.resolve([] as Row[])
       : fetchWindow(opts.supabase, "customers", "created_at", opts.companyId, startUtc, endUtc),
@@ -184,6 +220,7 @@ export async function loadCompanyAnalytics(opts: LoadAnalyticsOptions): Promise<
     from,
     to,
     conversations: conversations as { created_at: string }[],
+    messages: messages as { created_at: string }[],
     customers: customers as { created_at: string }[],
     events: events as { created_at: string; type: string }[],
   });

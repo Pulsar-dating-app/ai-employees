@@ -10,8 +10,11 @@ import {
   ChatIcon,
   CheckIcon,
   LightbulbIcon,
+  ListIcon,
+  SendIcon,
   TargetIcon,
   UsersIcon,
+  WarningIcon,
   XIcon,
 } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
@@ -23,6 +26,7 @@ type IconComponent = (props: React.SVGProps<SVGSVGElement>) => React.ReactElemen
 
 const METRIC_ICON: Record<string, IconComponent> = {
   conversations: ChatIcon,
+  messages: SendIcon,
   customers: UsersIcon,
   product_recommendations: LightbulbIcon,
   buying_intent: TargetIcon,
@@ -30,6 +34,8 @@ const METRIC_ICON: Record<string, IconComponent> = {
   appointments_booked: CalendarIcon,
   appointments_completed: CheckIcon,
   appointments_cancelled: XIcon,
+  appointments_no_show: WarningIcon,
+  waitlist_added: ListIcon,
 };
 
 export type MetricCardData = {

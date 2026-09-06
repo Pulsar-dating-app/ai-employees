@@ -470,6 +470,10 @@
         "label": "Conversations",
         "caption": "Total conversations in this period"
       },
+      "messages": {
+        "label": "Messages",
+        "caption": "Total messages in this period"
+      },
       "customers": {
         "label": "Customers",
         "caption": "People your team talked with"
@@ -497,6 +501,14 @@
       "appointmentsCancelled": {
         "label": "Cancelled",
         "caption": "Now cancelled"
+      },
+      "appointmentsNoShow": {
+        "label": "No-shows",
+        "caption": "Marked as a no-show"
+      },
+      "waitlistAdded": {
+        "label": "Waitlist",
+        "caption": "Customers added in this period"
       }
     },
     "notASale": "A checkout click means a customer opened your store, not that a sale was completed.",

@@ -107,6 +107,21 @@ async function insertEventAt(
   if (error) throw error;
 }
 
+async function insertMessageAt(
+  owner: Awaited<ReturnType<typeof signUpTestUser>>,
+  seed: Awaited<ReturnType<typeof seedCompany>>,
+  createdAt: string,
+) {
+  const { error } = await owner.client.from("messages").insert({
+    company_id: seed.companyId,
+    conversation_id: seed.conversationId,
+    role: "customer",
+    content: "hi",
+    created_at: createdAt,
+  });
+  if (error) throw error;
+}
+
 function metric(res: AnalyticsResponse, key: string): MetricSeries {
   const found = res.metrics.find((m) => m.metric === key);
   if (!found) throw new Error(`metric ${key} missing from response`);
@@ -128,7 +143,7 @@ describe("GET /api/companies/[companyId]/analytics", () => {
     expect(res.status).toBe(403);
   });
 
-  it("returns the five spec §15 metrics as zeroed, continuous day series for an empty company", async () => {
+  it("returns every dashboard metric as zeroed, continuous day series for an empty company", async () => {
     const owner = await signUpTestUser("owner");
     const seed = await seedCompany(owner, "Empty Analytics Co");
 
@@ -143,6 +158,7 @@ describe("GET /api/companies/[companyId]/analytics", () => {
     expect(res.json.range).toEqual({ from: "2026-06-01", to: "2026-06-05" });
     expect(res.json.metrics.map((m) => m.metric)).toEqual([
       "conversations",
+      "messages",
       "customers",
       "product_recommendations",
       "buying_intent",
@@ -157,7 +173,7 @@ describe("GET /api/companies/[companyId]/analytics", () => {
     // far outside the June window -- so they must not be counted.
   });
 
-  it("counts conversations, customers and each event type into day buckets, scoped to the company", async () => {
+  it("counts conversations, messages, customers and each event type into day buckets, scoped to the company", async () => {
     const owner = await signUpTestUser("owner");
     const seed = await seedCompany(owner, "Busy Analytics Co", "UTC");
     const other = await seedCompany(owner, "Other Tenant Analytics Co", "UTC");
@@ -166,6 +182,9 @@ describe("GET /api/companies/[companyId]/analytics", () => {
     await insertConversationAt(owner, seed, "2026-05-10T08:00:00Z");
     await insertConversationAt(owner, seed, "2026-05-10T20:00:00Z");
     await insertConversationAt(owner, seed, "2026-05-12T09:00:00Z");
+    await insertMessageAt(owner, seed, "2026-05-10T08:01:00Z");
+    await insertMessageAt(owner, seed, "2026-05-10T08:02:00Z");
+    await insertMessageAt(owner, seed, "2026-05-12T09:05:00Z");
     await insertCustomerAt(owner, seed, "2026-05-11T09:00:00Z");
     await insertEventAt(owner, seed, "product_recommendation", "2026-05-10T10:00:00Z");
     await insertEventAt(owner, seed, "product_recommendation", "2026-05-12T10:00:00Z");
@@ -174,6 +193,7 @@ describe("GET /api/companies/[companyId]/analytics", () => {
 
     // Noise: another tenant's activity in the same window must not leak in.
     await insertConversationAt(owner, other, "2026-05-10T08:00:00Z");
+    await insertMessageAt(owner, other, "2026-05-10T08:01:00Z");
     await insertEventAt(owner, other, "buying_intent", "2026-05-12T11:00:00Z");
 
     // Noise: this tenant, but outside the requested window.
@@ -190,6 +210,15 @@ describe("GET /api/companies/[companyId]/analytics", () => {
     const conversations = metric(res.json, "conversations");
     expect(conversations.total).toBe(3);
     expect(conversations.series).toEqual([
+      { date: "2026-05-10", count: 2 },
+      { date: "2026-05-11", count: 0 },
+      { date: "2026-05-12", count: 1 },
+      { date: "2026-05-13", count: 0 },
+    ]);
+
+    const messages = metric(res.json, "messages");
+    expect(messages.total).toBe(3); // the other tenant's message must not leak in
+    expect(messages.series).toEqual([
       { date: "2026-05-10", count: 2 },
       { date: "2026-05-11", count: 0 },
       { date: "2026-05-12", count: 1 },
