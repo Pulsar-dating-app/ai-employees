@@ -421,8 +421,15 @@
       "tablistLabel": "Ways customers can reach this employee",
       "whatsapp": "WhatsApp",
       "instagram": "Instagram",
+      "telegram": "Telegram",
       "embed": "Embed",
       "link": "Link"
+    },
+    "telegram": {
+      "title": "Telegram",
+      "description": "Share this link so customers can start chatting with {name} on Telegram — no setup needed on your end.",
+      "copyLinkButton": "Copy Link",
+      "copiedButton": "Copied!"
     },
     "instagram": {
       "title": "Instagram",

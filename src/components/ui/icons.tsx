@@ -241,6 +241,14 @@ export function ActivityIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function TelegramIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M21.05 3.16 2.7 10.31c-1.25.5-1.24 1.19-.23 1.5l4.7 1.47 1.82 5.6c.22.6.38.84.78.84.36 0 .53-.16.75-.38l1.83-1.78 4.68 3.45c.86.48 1.48.23 1.7-.8l3.07-14.5c.32-1.32-.5-1.9-1.75-1.55Zm-4.65 3.98-6.83 6.18-.28 3-1.37-4.24 8.19-5.16c.39-.24.75.06.29.46Z" />
+    </svg>
+  );
+}
+
 export function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>

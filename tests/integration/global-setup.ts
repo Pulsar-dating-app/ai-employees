@@ -4,6 +4,7 @@ import { writeFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { startGraphApiMock } from "./helpers/graph-api-mock";
 import { startInstagramApiMock } from "./helpers/instagram-api-mock";
+import { startTelegramApiMock } from "./helpers/telegram-api-mock";
 import { startEmailMock } from "./helpers/email-mock";
 import { startGoogleOAuthMock } from "./helpers/google-oauth-mock";
 import { startGoogleCalendarMock } from "./helpers/google-calendar-mock";
@@ -64,6 +65,8 @@ export default async function setup() {
   const graphApiMock = await startGraphApiMock();
   // Same reasoning, for Trello N2's Instagram connect flow.
   const instagramApiMock = await startInstagramApiMock();
+  // Same reasoning, for Trello O1's Telegram send/webhook flow.
+  const telegramApiMock = await startTelegramApiMock();
   // Same reasoning, for Trello I1's Google Calendar connect route.
   const googleOAuthMock = await startGoogleOAuthMock();
   // Same reasoning, for Trello I2's freeBusy.query call.
@@ -105,6 +108,10 @@ export default async function setup() {
         META_GRAPH_API_BASE_URL: graphApiMock.url,
         INSTAGRAM_API_BASE_URL: instagramApiMock.url,
         INSTAGRAM_GRAPH_BASE_URL: instagramApiMock.url,
+        TELEGRAM_BOT_TOKEN: "test-telegram-bot-token",
+        TELEGRAM_BOT_USERNAME: "TestSiddeBot",
+        TELEGRAM_WEBHOOK_SECRET: "test-telegram-webhook-secret",
+        TELEGRAM_API_BASE_URL: telegramApiMock.url,
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: "test-instagram-verify-token",
         // Trello D2 -- WhatsApp signs with META_APP_SECRET (a classic Graph
         // API product, unlike Instagram's separate credentials), so this
@@ -156,6 +163,7 @@ export default async function setup() {
     killProcessTree(nextProcess);
     await graphApiMock.stop();
     await instagramApiMock.stop();
+    await telegramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
     await emailMock.stop();
@@ -188,6 +196,7 @@ export default async function setup() {
     killProcessTree(nextProcess);
     await graphApiMock.stop();
     await instagramApiMock.stop();
+    await telegramApiMock.stop();
     await googleOAuthMock.stop();
     await googleCalendarMock.stop();
     await emailMock.stop();

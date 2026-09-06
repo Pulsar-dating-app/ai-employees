@@ -391,6 +391,68 @@ isn't confirmed from an authoritative source as of this writing. See
 decisions.md's 2026-09-05 entry for the full reasoning and what to update
 once the real rate is confirmed.
 
+### Telegram channel (Trello O1) — 2026-09-06
+
+Added after the WhatsApp Embedded Signup ordeal (PIN mismatch, a brand-new
+WABA restricted by Meta's own anti-abuse system, mandatory payment method,
+per-message billing looming) as a deliberately low-effort, low-drama extra
+channel — not a WhatsApp replacement. Brazil's SMB customer base is
+overwhelmingly on WhatsApp, so this is a "nice to have" sales-copy line
+("multi-canal"), not a priority.
+
+- **Architecture is not a copy of D1/N1.** WhatsApp/Instagram each need the
+  merchant's own account connected (their number, their IG). Telegram
+  doesn't: **one bot for the whole app** (a single `@BotFather` token,
+  `TELEGRAM_BOT_TOKEN`), and each hired agent gets a **deep link**
+  (`t.me/<TELEGRAM_BOT_USERNAME>?start=<company_agents.id>`) instead of a
+  connect flow. Opening the link sends `/start <payload>` to the webhook,
+  which resolves `company_agents.id` directly to `(company_id, agent_id)`
+  — no connection table, no per-company token, nothing to persist beyond
+  what the link already encodes. `company_agents.id` (a uuid, 36 chars) was
+  chosen over concatenating `company_slug`+`agent_slug` for the payload:
+  Telegram caps `/start` payloads at 64 chars, and company slugs are
+  derived from free-text company names with no length bound, so
+  concatenation could silently exceed the limit for a long company name.
+  This makes the channel closer in shape to M-epic's web chat
+  (`/talk/{company}/{agent}`, also no connection table) than to D1/N1.
+- **`src/app/api/webhooks/telegram/route.ts`** — verifies the
+  `X-Telegram-Bot-Api-Secret-Token` header against `TELEGRAM_WEBHOOK_SECRET`
+  (a static header check, not a body signature the way Meta's webhooks
+  work — Telegram has no HMAC scheme here). A `/start <company_agents.id>`
+  message creates the `customers`/`conversations` pair on the spot (via
+  `resolveTelegramSession`, `src/lib/telegram/session.ts`, sibling of the
+  WhatsApp/Instagram session helpers) and sends a welcome reply — no
+  `AgentEngine.run()` call for this turn, it's purely connection setup. A
+  plain message is routed by `telegram_chat_id` alone; an unrecognized
+  `chat_id` (never opened a deep link) is silently dropped. From there: the
+  same pipeline as every other channel — K6 paused-hire gate, N9
+  paused-conversation gate, the billing gate, `AgentEngine.run()`, persist,
+  reply. Idempotency reuses the shared `messages.external_message_id`
+  partial unique index, keyed `tg-<chatId>-<messageId>` (Telegram's
+  `message_id` is only unique per chat, not globally).
+- **`src/lib/telegram/bot-api.ts`** — `sendTelegramMessage`, modeled on
+  `sendWhatsappMessage`/`sendInstagramMessage` (one retry on 5xx, no retry
+  on 4xx) but with only two outcomes, not three: Telegram has no template
+  categories, no session-window restriction, and no per-message cost, so
+  there's no `payment_issue`-shaped state to track. `errorDetail` (for
+  server-side logs only, never merchant-facing) follows the same convention
+  just added for WhatsApp's `sendWhatsappMessage`.
+- **`customers.telegram_chat_id`** (migration `20260906100100`) + a partial
+  unique index on `(company_id, telegram_chat_id)`, mirroring
+  `instagram_user_id`'s exact shape. `conversation_channel` gained
+  `'telegram'` in its own migration (`20260906100000` — Postgres can't use a
+  new enum value in the same transaction that adds it).
+- **UI**: a "Telegram" tab in D6's `ChannelTabsCard`
+  (`telegram-link-section.tsx`), shaped like the **Link** tab, not like
+  WhatsApp/Instagram's — there is no connect/disconnect state machine to
+  render, just the deep link and a copy button.
+- **Tests**: `tests/integration/telegram-webhook.test.ts` mirrors the
+  WhatsApp/Instagram webhook tests' structure (secret rejection, `/start`
+  creates the pair + sends a welcome reply with no `messages` row,
+  unknown-chat-id silent 200, idempotent redelivery, K6/N9 paused-silent).
+  `tests/integration/helpers/telegram-api-mock.ts` mirrors
+  `instagram-api-mock.ts`'s magic-value pattern for `sendMessage`.
+
 ### Internationalization (EN/PT)
 
 `next-intl`, cookie-based with **no `[locale]` URL segment** — deliberately, to avoid restructuring every `redirect()` call in `src/lib/auth/actions.ts`, the `proxy.ts` matcher, and every internal link (see decisions.md for why locale-prefixed routing was rejected). **The project rule — never hardcode a UI string, always add it to both message files — lives in [CLAUDE.md](../../CLAUDE.md#internationalization), not here; this section is how it's implemented, that one is what to do every time.**

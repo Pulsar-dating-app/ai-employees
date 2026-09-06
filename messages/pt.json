@@ -421,8 +421,15 @@
       "tablistLabel": "Formas de os clientes falarem com este funcionário",
       "whatsapp": "WhatsApp",
       "instagram": "Instagram",
+      "telegram": "Telegram",
       "embed": "Incorporar",
       "link": "Link"
+    },
+    "telegram": {
+      "title": "Telegram",
+      "description": "Compartilhe esse link pra clientes começarem a conversar com {name} no Telegram — sem nenhuma configuração da sua parte.",
+      "copyLinkButton": "Copiar link",
+      "copiedButton": "Copiado!"
     },
     "instagram": {
       "title": "Instagram",
