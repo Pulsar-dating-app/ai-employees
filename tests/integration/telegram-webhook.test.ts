@@ -3,6 +3,7 @@ import { api } from "./helpers/request";
 import { getTestEnv } from "./helpers/env";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello O1. Unlike WhatsApp/Instagram, there's no connect route to call
 // first -- the deep link (company_agents.id as the /start payload) IS the
@@ -20,6 +21,7 @@ describe("Telegram inbound webhook (POST receive)", () => {
   }
 
   async function hireAgent(ownerCookie: string, companyId: string, agentSlug: string) {
+    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
     const hired = await api<{ companyAgent: { id: string } }>(
       "POST",
       `/api/companies/${companyId}/agents/${agentSlug}`,

@@ -8,6 +8,7 @@ import { api } from "./helpers/request";
 import { getTestEnv } from "./helpers/env";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { seedActivePlan } from "./helpers/billing";
 import { sentEmails, clearEmails, waitForEmail } from "./helpers/email";
 
 // Trello R5 -- the waitlist. add_to_waitlist runs in-process in this worker,
@@ -49,6 +50,7 @@ async function seed(companyName: string): Promise<Seed> {
     timezone: "UTC",
     email: "studio@example.test",
   });
+  await seedActivePlan(companyId); // P6: the hire POST needs an active plan
   const hired = await api<{ companyAgent: { agent_id: string } }>(
     "POST",
     `/api/companies/${companyId}/agents/ana`,
