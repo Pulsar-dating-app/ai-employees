@@ -71,9 +71,9 @@
       "trust2": "Múltiplos agentes",
       "trust3": "RAG seguro sem alucinação",
       "chat": {
-        "agentName": "Malu (AI Vendas)",
+        "agentName": "Malu · Vendas",
         "status": "Online no WhatsApp Oficial",
-        "badge": "SDR 24/7",
+        "badge": "Vendas 24/7",
         "msg1": "Oi! Sou a Malu, do time de vendas. Me conta o que você procura que eu te ajudo a achar.",
         "msg2": "Oi Malu! Quero um presente pra minha esposa, ela curte skincare. Até uns R$ 250.",
         "msg3a": "Fechou! Separei uma opção que está em estoque e combina bem com o que você descreveu:",
@@ -200,9 +200,9 @@
       "agents": [
         {
           "name": "Malu",
-          "role": "Agente de Vendas & SDR",
+          "role": "Vendas no WhatsApp & Web",
           "sub": "Inbound WhatsApp & Web",
-          "desc": "Especialista em entender dores do cliente, qualificar no framework BANT, contornar objeções de preço e enviar propostas comerciais personalizadas em instantes.",
+          "desc": "Entende o que o cliente procura, recomenda os produtos certos do seu catálogo e responde preço, estoque e políticas com base no que você cadastrou — sem inventar. Conduz quem está pronto para comprar até o checkout, sem ser insistente.",
           "statLabel": "Taxa de conversão:",
           "statValue": "28.4%"
         },
@@ -210,7 +210,7 @@
           "name": "Ana",
           "role": "Agente de Agendamento",
           "sub": "Sincronização de Calendário",
-          "desc": "Negocia o melhor horário entre o cliente e a sua equipe, cria os eventos direto no Google Calendar e envia lembretes automáticos para reduzir as faltas.",
+          "desc": "Confere a disponibilidade real (horário de funcionamento, agenda existente e calendário conectado) e oferece aos clientes só os horários de fato livres. Resolve remarcações e cancelamentos na hora, e coloca na lista de espera quando você está lotado.",
           "statLabel": "No-show reduzido:",
           "statValue": "-42%"
         }
