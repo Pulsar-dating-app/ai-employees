@@ -53,7 +53,11 @@ export default async function AgentDetailPage({
         agentSlug={agent.slug}
         name={defaultAgentName(agent.slug)}
         role={agent.role ?? ""}
-        description={await resolveAgentDescription(agent.slug, agent.description)}
+        description={await resolveAgentDescription(
+          agent.slug,
+          agent.description,
+          defaultAgentName(agent.slug),
+        )}
         photoSrc={agentPhoto(agent.slug)}
         traits={enrichment?.traits ?? []}
         should={enrichment?.should ?? []}

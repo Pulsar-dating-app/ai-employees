@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "src/components/landing/landing-page-2.tsx"
+        ],
+        "createdAt": "2026-09-06T10:32:49.295Z",
+        "reason": "user confirmed: faithful reproduction of Stitch 'Staffra - Landing Page Oficial' hero headline, which uses an indigo→cyan gradient on the highlighted words by design"
+      }
+    ]
+  }
+}

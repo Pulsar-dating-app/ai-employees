@@ -54,7 +54,7 @@ export function AgentAvatar({
       )}
     >
       {photoSrc ? (
-        <Image src={photoSrc} alt={alt} fill sizes="80px" className="object-cover object-top" />
+        <Image src={photoSrc} alt={alt} fill sizes="80px" className="object-cover object-center" />
       ) : (
         <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className={clsx("h-2/3 w-2/3", fg)}>
           <circle cx="20" cy="15" r="7" fill="currentColor" />

@@ -39,7 +39,11 @@ export default async function MarketplacePage() {
         slug: agent.slug,
         name: defaultAgentName(agent.slug),
         role: agent.role ?? "",
-        description: await resolveAgentDescription(agent.slug, agent.description),
+        description: await resolveAgentDescription(
+          agent.slug,
+          agent.description,
+          defaultAgentName(agent.slug),
+        ),
         monthlyPriceBRL: enrichment?.monthlyPriceBRL ?? DEFAULT_MONTHLY_PRICE_BRL,
         isHired: hiredAgentIds.has(agent.id),
         photoSrc: agentPhoto(agent.slug),

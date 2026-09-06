@@ -89,7 +89,7 @@ export function InstagramConnectCard({
 
   return (
     <div className="relative">
-      <div className="relative flex items-center gap-3">
+      <div className="relative flex items-start gap-3">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-sm">
           <InstagramIcon className="h-6 w-6" />
         </span>

@@ -5,8 +5,8 @@
 // back to the authored `AgentAvatar` silhouette (pass the result straight
 // to its `photoSrc`).
 const AGENT_DEFAULT_PHOTOS: Record<string, readonly [string, string]> = {
-  malu: ["/agents/malu.jpg", "/agents/malu-2.png"],
-  ana: ["/agents/ana-1.png", "/agents/ana-2.png"],
+  malu: ["/agents/sales-1.png", "/agents/sales-2.png"],
+  ana: ["/agents/secretary-1.png", "/agents/secretary-2.png"],
 };
 
 export type AgentPhotoType = "default_1" | "default_2" | "custom";
