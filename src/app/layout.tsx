@@ -34,19 +34,20 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description,
     applicationName: siteName,
+    // `images` is deliberately omitted — the app/opengraph-image.tsx and
+    // app/twitter-image.tsx file conventions generate the card and inject the
+    // tags (with width/height/type). Setting `images` here would override them.
     openGraph: {
       type: "website",
       url: absoluteUrl("/"),
       siteName,
       title,
       description,
-      images: [{ url: "/logo.png", alt: t("ogImageAlt") }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["/logo.png"],
     },
   };
 }
