@@ -463,6 +463,17 @@ overwhelmingly on WhatsApp, so this is a "nice to have" sales-copy line
 - Because locale resolution reads cookies/headers on every request, the app can no longer statically prerender any page (`next build`'s route list now shows everything as `ƒ` dynamic) — an expected, accepted tradeoff of request-time locale detection, not a regression to chase.
 - `next.config.ts` is wrapped with `createNextIntlPlugin()`, required by the library regardless of routing mode.
 
+### SEO & metadata
+
+Baseline SEO shipped in the "[SEO] MR1/MR2" cards (2026-09-07). See decisions.md for the calls made.
+- `src/lib/seo/site.ts` — `SITE_URL` (from `NEXT_PUBLIC_SITE_URL`, no trailing slash; fallback `https://www.staffra.io` for dev/preview) and `absoluteUrl()`. Single source of truth for the public origin; used by metadata, `robots.ts`, `sitemap.ts`, and the JSON-LD builder. The www-vs-apex decision is still open (see the "padronizar domínio canônico" card) — this constant just follows the env.
+- `src/app/layout.tsx` — `generateMetadata()` (async, so title/description track the request locale via the new `Seo` message namespace): `metadataBase`, `title` template `%s · Staffra`, `openGraph` + `twitter` (both currently pointing `images` at `/logo.png` — a real 1200×630 OG image is the "[SEO] MR3" card).
+- `src/app/robots.ts` / `src/app/sitemap.ts` — served at `/robots.txt` and `/sitemap.xml` (both static in the build). Sitemap lists only `/`, `/privacy`, `/terms`; `/sign-up` is a redirect and `/talk/*` is noindex, so neither is listed.
+- **noindex surfaces:** `src/app/dashboard/layout.tsx` (whole authenticated app) and `talk/[companySlug]/[agentSlug]/page.tsx` (per-merchant hosted chat — thin/duplicate) set `robots: { index: false, follow: false }` in metadata. `page.tsx` (landing) sets `alternates: { canonical: "/" }` so `?auth=` query variants fold into the bare `/`.
+- `src/app/privacy/page.tsx` / `terms/page.tsx` return a bare `t("…title")` — the root title template appends ` · Staffra` (they used to concatenate it by hand).
+- **JSON-LD:** `src/lib/seo/structured-data.ts` — pure, unit-tested builders for the schema.org `@graph` (`Organization`, `WebSite`, `SoftwareApplication` with an `Offer` per pricing plan, `FAQPage`). `src/components/seo/landing-json-ld.tsx` is the server component that resolves the translated FAQ/pricing message data and renders the `<script type="application/ld+json">`; it's mounted once in the landing `page.tsx`, not the root layout, so it never loads on dashboard pages. The FAQ/pricing content is the same `LandingV2` message data the visible sections render, so the structured data can't drift from the page.
+- The landing's `widget.js` `<script>` was switched to `next/script` with `strategy="lazyOnload"` (was a synchronous `<script>` — an eslint error and an LCP cost on the most SEO-important page).
+
 ### Product catalog API (Trello B3)
 
 Route Handlers under `src/app/api/companies/[companyId]/products/`, following A3/B1's shape (explicit `requireMember` check for a clean 403, file-local, duplicated per file rather than shared):

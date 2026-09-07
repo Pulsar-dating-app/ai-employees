@@ -1,9 +1,18 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Script from "next/script";
 import { createClient } from "@/lib/supabase/server";
 import { LandingPageV2 } from "@/components/landing/landing-page-2";
 import { AuthModalController } from "@/components/auth/auth-modal-controller";
+import { LandingJsonLd } from "@/components/seo/landing-json-ld";
+
+// `?auth=signup` / `?auth=login` render the same landing with an overlay —
+// self-referential canonical so Google folds those query variants into the
+// bare `/` rather than treating them as duplicate pages.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 // Signed-in visitors go straight to the app; everyone else sees the real
 // public landing page instead of being bounced to /login. Login / sign-up
@@ -18,11 +27,21 @@ export default async function Home() {
 
   return (
     <>
+      <LandingJsonLd />
       <LandingPageV2 />
       <Suspense fallback={null}>
         <AuthModalController />
       </Suspense>
-      <script src="https://www.staffra.io/widget.js" data-company="staffra" data-agent="ana" data-greeting="Bom dia!"></script>
+      {/* Staffra's own chat widget, dogfooded on the landing. `lazyOnload`
+          keeps this third-party script off the critical path so it never
+          costs LCP/TBT on the most SEO-important page. */}
+      <Script
+        src="https://www.staffra.io/widget.js"
+        strategy="lazyOnload"
+        data-company="staffra"
+        data-agent="ana"
+        data-greeting="Bom dia!"
+      />
     </>
   );
 }

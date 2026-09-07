@@ -74,10 +74,16 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { companySlug, agentSlug } = await params;
   const resolved = await resolveChat(companySlug, agentSlug);
-  if (resolved.kind === "not-found") return { title: "Staffra" };
+
+  // Per-merchant hosted chat: thin, near-duplicate pages a merchant links to
+  // privately (bio, QR code, email signature) — never something Google
+  // should index or surface.
+  const robots = { index: false, follow: false } as const;
+
+  if (resolved.kind === "not-found") return { title: { absolute: "Staffra" }, robots };
 
   const name = resolved.kind === "active" ? resolved.agentName : defaultAgentName(agentSlug);
-  return { title: `${name} · ${resolved.companyName}` };
+  return { title: `${name} · ${resolved.companyName}`, robots };
 }
 
 export default async function TalkPage({
