@@ -6,7 +6,10 @@ import { SITE_URL, absoluteUrl } from "@/lib/seo/site";
 import "./globals.css";
 
 // Inter is the Staffra "Human-Centric AI" design-system typeface (Stitch).
-// Geist Mono stays wired as --font-mono; no surface uses it yet.
+// Geist Mono backs --font-mono (globals.css) — used by the `font-mono`
+// code blocks on the dashboard (embed snippet, copy fields). Not on the
+// landing's critical path: the browser only fetches the file when a rendered
+// element actually uses `font-mono`, and no landing surface does.
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
