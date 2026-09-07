@@ -4,7 +4,8 @@ import { LegalDocument } from "@/components/legal/legal-document";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Legal");
-  return { title: `${t("privacy.title")} · Staffra` };
+  // Root layout's title template appends " · Staffra".
+  return { title: t("privacy.title") };
 }
 
 export default function PrivacyPage() {

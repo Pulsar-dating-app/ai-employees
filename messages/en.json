@@ -1,4 +1,10 @@
 {
+  "Seo": {
+    "siteName": "Staffra",
+    "defaultTitle": "Staffra — Hire AI employees that sell, support and book 24/7",
+    "description": "Build intelligent agents trained on your documents, catalogues and processes and connect them to Official WhatsApp, Instagram, Telegram and your website in under 15 minutes — no code.",
+    "ogImageAlt": "Staffra — AI employees for your business"
+  },
   "Auth": {
     "close": "Close",
     "login": {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
@@ -7,6 +8,13 @@ import { TourProvider } from "@/components/tour/tour-provider";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
 import { DashboardBackdrop } from "./backdrop";
+
+// The whole authenticated app is off-limits to crawlers. `proxy.ts` already
+// bounces logged-out `/dashboard*` requests to `/login`, so this is belt-and
+// -braces, but it also covers any future public-ish dashboard sub-route.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 // Every /dashboard/* route renders under this shell — a persistent light
 // rail + sticky top bar on desktop, a top bar + bottom tab bar on mobile
