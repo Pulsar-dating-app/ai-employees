@@ -29,6 +29,21 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = t("description");
   const siteName = t("siteName");
 
+  // Search-engine ownership verification via the HTML-tag method. Set the
+  // token env(s) to whatever Google Search Console / Bing Webmaster Tools
+  // hand you; leaving them unset renders no tag. (The DNS-TXT method needs
+  // nothing here and is preferable when you have registrar access — it
+  // covers every subdomain and protocol at once.)
+  const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
+  const bingVerification = process.env.BING_SITE_VERIFICATION?.trim();
+  const verification =
+    googleVerification || bingVerification
+      ? {
+          ...(googleVerification ? { google: googleVerification } : {}),
+          ...(bingVerification ? { other: { "msvalidate.01": bingVerification } } : {}),
+        }
+      : undefined;
+
   return {
     metadataBase: new URL(SITE_URL),
     title: {
@@ -37,6 +52,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description,
     applicationName: siteName,
+    ...(verification ? { verification } : {}),
     // `images` is deliberately omitted — the app/opengraph-image.tsx and
     // app/twitter-image.tsx file conventions generate the card and inject the
     // tags (with width/height/type). Setting `images` here would override them.
