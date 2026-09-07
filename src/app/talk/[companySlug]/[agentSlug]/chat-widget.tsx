@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { SendIcon, XIcon } from "@/components/ui/icons";
+import { LinkifiedText } from "@/components/chat/linkified-text";
 
 // F5 -- 'merchant' is a human teammate replying manually from the
 // Conversations dashboard (as opposed to 'agent', the AI's own reply).
@@ -312,13 +313,13 @@ export function ChatWidget({
                     <div className="flex w-full max-w-[85%] gap-3">
                       <AgentAvatarCircle photoSrc={agentPhotoSrc} name={agentName} size="bubble" />
                       <div className="rounded-2xl rounded-tl-sm border border-outline-variant/30 bg-surface-container-lowest p-4 text-body-md text-on-surface shadow-level1">
-                        <p className="whitespace-pre-wrap">{m.content}</p>
+                        <LinkifiedText text={m.content} className="whitespace-pre-wrap" />
                       </div>
                     </div>
                   ) : (
                     <div className="flex w-full justify-end">
                       <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-primary p-4 text-body-md text-on-primary shadow-sm">
-                        <p className="whitespace-pre-wrap">{m.content}</p>
+                        <LinkifiedText text={m.content} className="whitespace-pre-wrap" />
                       </div>
                     </div>
                   )}
