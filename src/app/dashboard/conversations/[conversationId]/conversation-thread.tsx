@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { LinkifiedText } from "@/components/chat/linkified-text";
 import type { ConversationDetail, ConversationMessage } from "@/lib/conversations/detail";
 
 const POLL_INTERVAL_MS = 5000;
@@ -186,7 +187,7 @@ export function ConversationThread({
                         : "rounded-tl-sm border border-outline-variant/30 bg-surface-container-low text-on-surface",
                     )}
                   >
-                    <p className="whitespace-pre-wrap">{m.content}</p>
+                    <LinkifiedText text={m.content} className="whitespace-pre-wrap" />
                   </div>
                 </div>
               </div>
