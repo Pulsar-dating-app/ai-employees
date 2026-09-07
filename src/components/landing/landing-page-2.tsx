@@ -106,7 +106,7 @@ export async function LandingPageV2() {
       <header className="fixed inset-x-0 top-0 z-50 bg-white/80 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-2 px-4 md:px-10">
           <Link href="/" className="flex items-center gap-2">
-            <Image src={logo} alt="Staffra" className="h-8 w-auto object-contain" priority />
+            <Image src={logo} alt="Staffra" sizes="88px" className="h-8 w-auto object-contain" priority />
           </Link>
 
           <nav className="hidden items-center gap-2 lg:flex">
@@ -228,6 +228,7 @@ export async function LandingPageV2() {
                           <Image
                             src={maluImg}
                             alt="Malu"
+                            sizes="48px"
                             className="h-12 w-12 rounded-full object-cover object-center shadow-sm"
                           />
                           <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-[#10b981] ring-2 ring-white" />
@@ -303,6 +304,7 @@ export async function LandingPageV2() {
                       <Image
                         src={workspaceImg}
                         alt={t("hero.workspace.imageAlt")}
+                        sizes="(min-width: 1024px) 780px, 100vw"
                         className="h-auto w-full rounded-lg object-contain"
                       />
                       <div className="absolute inset-0 flex items-end bg-gradient-to-t from-[#0f172a]/60 via-transparent to-transparent p-3">
@@ -406,6 +408,7 @@ export async function LandingPageV2() {
                         <Image
                           src={s.img}
                           alt={agent.name}
+                          sizes="96px"
                           className="h-24 w-24 shrink-0 rounded-xl object-cover object-center shadow-sm"
                         />
                         <div className="text-left">
@@ -511,6 +514,7 @@ export async function LandingPageV2() {
                 <Image
                   src={analyticsImg}
                   alt={t("rag.imageAlt")}
+                  sizes="(min-width: 1024px) 620px, 100vw"
                   className="max-h-[190px] w-full object-cover"
                 />
               </div>
@@ -704,7 +708,7 @@ export async function LandingPageV2() {
         <div className="mx-auto max-w-[1440px] px-4 md:px-10">
           <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
             <div className="flex flex-col items-start gap-3 lg:col-span-2">
-              <Image src={logo} alt="Staffra" className="h-8 w-auto self-start object-contain" />
+              <Image src={logo} alt="Staffra" sizes="88px" className="h-8 w-auto self-start object-contain" />
               <p className="max-w-sm text-[16px] leading-[24px] text-[#464555]">{t("footer.blurb")}</p>
               <div className="flex items-center gap-3 pt-2">
                 {["share", "public", "mail"].map((icon) => (
