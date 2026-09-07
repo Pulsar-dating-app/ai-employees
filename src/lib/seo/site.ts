@@ -1,21 +1,23 @@
 // Single source of truth for the site's public origin, used by metadata,
 // the sitemap, robots.txt and the JSON-LD builder.
 //
-// `NEXT_PUBLIC_SITE_URL` is the canonical, protocol-qualified origin with no
-// trailing slash (e.g. `https://www.staffra.io`). It is read once here so a
-// change of domain (apex vs. www, a staging host) is a single env change.
-// The fallback keeps local dev and preview builds working before the env is
-// set; production must set it explicitly. Whether the canonical host keeps
-// the `www.` prefix is still an open decision — see the "padronizar domínio
-// canônico" SEO card — this constant follows whatever that env says.
-const FALLBACK_SITE_URL = "https://www.staffra.io";
+// This is the same value as `STAFFRA_CHECKOUT_BASE_URL` — "this app's public
+// origin", as its .env comment puts it — so it reads that env var rather
+// than inventing a second name for the same thing. Server-only code (all of
+// the SEO surface is), so no `NEXT_PUBLIC_` prefix is needed. The fallback
+// is the real production apex, keeping local dev, preview builds and CI
+// working without the env set; production sets it explicitly. Whether the
+// canonical host keeps a `www.` prefix is a separate decision — see the
+// "padronizar domínio canônico" SEO card — this constant just follows the
+// env.
+const FALLBACK_SITE_URL = "https://staffra.io";
 
 function normalize(url: string): string {
   return url.replace(/\/+$/, "");
 }
 
 export const SITE_URL = normalize(
-  process.env.NEXT_PUBLIC_SITE_URL?.trim() || FALLBACK_SITE_URL,
+  process.env.STAFFRA_CHECKOUT_BASE_URL?.trim() || FALLBACK_SITE_URL,
 );
 
 /** Absolute URL for a site-relative path (`/`, `/privacy`, …). */
