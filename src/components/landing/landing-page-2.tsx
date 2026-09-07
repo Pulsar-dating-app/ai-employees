@@ -5,6 +5,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { landingV2Sans } from "./fonts";
 import { BrandLogo } from "./brand-logos";
 import { ChannelShowcase, type ChannelItem } from "./channel-showcase";
+import { M } from "./landing-icons";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 import workspaceImg from "../../../public/landing-v2/workspace.jpg";
@@ -35,36 +36,10 @@ const HIRE = "/?auth=signup";
 const LOGIN = "/?auth=login";
 const SALES = "/talk";
 
-// Google Material Symbols — the icon set the Stitch export uses. The
-// stylesheet defines the `.material-symbols-outlined` class itself, so the
-// <link> is all that's needed. Next hoists it into <head>.
-const MATERIAL_SYMBOLS_HREF =
-  "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200";
-
-function M({
-  name,
-  className,
-  size,
-  fill,
-}: {
-  name: string;
-  className?: string;
-  size?: number;
-  fill?: boolean;
-}) {
-  return (
-    <span
-      className={`material-symbols-outlined ${className ?? ""}`}
-      style={{
-        fontSize: size ? `${size}px` : undefined,
-        fontVariationSettings: fill ? '"FILL" 1' : undefined,
-      }}
-      aria-hidden="true"
-    >
-      {name}
-    </span>
-  );
-}
+// Icons (`<M name=… />`) are inline SVGs from ./landing-icons — the Stitch
+// export used the Material Symbols icon *font*, loaded as a render-blocking
+// <link> to fonts.googleapis.com, which cost LCP on the page that most needs
+// it. The component keeps the same call signature.
 
 type LogoItem = { name: string };
 type Agent = {
@@ -127,8 +102,6 @@ export async function LandingPageV2() {
     <div
       className={`${landingV2Sans.className} min-h-screen scroll-smooth bg-[#fcf8ff] text-[#1b1b24] antialiased [&_section]:scroll-mt-24`}
     >
-      <link rel="stylesheet" href={MATERIAL_SYMBOLS_HREF} />
-
       {/* ── Header ─────────────────────────────────────────────── */}
       <header className="fixed inset-x-0 top-0 z-50 bg-white/80 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-2 px-4 md:px-10">
