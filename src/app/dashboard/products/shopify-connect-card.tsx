@@ -22,6 +22,8 @@ type ShopifyConnection = {
 };
 
 type SyncResult = {
+  mode: "full" | "delta";
+  status: "completed" | "running";
   synced: number;
   deactivated: number;
   skipped: { title: string; reason: string }[];
@@ -52,6 +54,7 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<"idle" | "syncing" | "confirmingDisconnect">("idle");
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+  const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [banner] = useState<{ kind: "success" | "error"; text: string } | null>(() => {
@@ -85,31 +88,40 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
     };
   }, [companyId]);
 
-  async function handleSync() {
+  async function handleSync(full = false) {
     setError(null);
     setSyncResult(null);
+    setRunning(false);
     setView("syncing");
-    const res = await fetch(`/api/companies/${companyId}/shopify/sync`, { method: "POST" });
-    if (res.ok) {
-      const json = (await res.json()) as SyncResult;
+    const res = await fetch(`/api/companies/${companyId}/shopify/sync`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ full }),
+    });
+    const json = (await res.json().catch(() => null)) as (SyncResult & { error?: string }) | null;
+    setView("idle");
+
+    if (res.status === 202 && json?.status === "running") {
+      // Bulk export still running on Shopify's side -- they click Sync again.
+      setRunning(true);
+      return;
+    }
+    if (res.ok && json) {
       setSyncResult(json);
-      setView("idle");
       onSynced();
       // Reflect the new last_synced_at.
       fetch(`/api/companies/${companyId}/shopify`)
         .then((r) => (r.ok ? r.json() : null))
         .then((j) => j && setConnection(j.connection ?? null));
-    } else {
-      const body = (await res.json().catch(() => null)) as { error?: string } | null;
-      setView("idle");
-      if (body?.error === "reauth_required") {
-        // The stored refresh token is dead -- surface the reconnect form.
-        setError(t("reauthError"));
-        setConnection(null);
-      } else {
-        setError(t("syncError"));
-      }
+      return;
     }
+    if (json?.error === "reauth_required") {
+      // The stored refresh token is dead -- surface the reconnect form.
+      setError(t("reauthError"));
+      setConnection(null);
+      return;
+    }
+    setError(t("syncError"));
   }
 
   async function handleDisconnect() {
@@ -185,10 +197,16 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
             <p className="text-sm text-on-surface-variant">{t("neverSynced")}</p>
           )}
 
+          {running ? (
+            <p className="rounded-md border border-outline-variant bg-surface-container-low px-3 py-3 text-sm text-on-surface-variant">
+              {t("syncRunning")}
+            </p>
+          ) : null}
+
           {syncResult ? (
             <div className="flex flex-col gap-2 rounded-md border border-outline-variant bg-surface-container-low px-3 py-3">
               <p className="text-sm text-on-surface">
-                {t("syncResult", {
+                {t(syncResult.mode === "delta" ? "syncResultDelta" : "syncResult", {
                   synced: syncResult.synced,
                   deactivated: syncResult.deactivated,
                   skipped: syncResult.skipped.length,
@@ -221,9 +239,21 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
           ) : null}
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" isLoading={view === "syncing"} onClick={handleSync}>
+            <Button type="button" isLoading={view === "syncing"} onClick={() => handleSync(false)}>
               {view === "syncing" ? t("syncingButton") : t("syncButton")}
             </Button>
+
+            {canManageConnection ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={view === "syncing"}
+                onClick={() => handleSync(true)}
+              >
+                {t("syncFullButton")}
+              </Button>
+            ) : null}
 
             {canManageConnection ? (
               view === "confirmingDisconnect" ? (

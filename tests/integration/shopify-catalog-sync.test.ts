@@ -3,32 +3,34 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
-import { setMockCatalogue } from "./helpers/shopify";
+import { completeMockBulk, setMockCatalogue } from "./helpers/shopify";
 
 // Exercises src/lib/shopify/catalog-sync.ts end to end through POST
-// /shopify/sync: map Shopify products -> `products` rows, upsert by
-// (company_id, external_id), deactivate anything a later run no longer
-// sees. The Shopify Admin API is the mock; the products table, the partial
-// unique index, and the sync itself are the real local Supabase stack.
-// (Embeddings are disabled suite-wide, so synced rows persist embedding: null.)
+// /shopify/sync. Two modes:
+//  - FULL (no last_synced_at, or ?full=true, or resuming a bulk op): the
+//    GraphQL Bulk Operations path; deactivates rows the export didn't hold.
+//  - DELTA (a watermark exists): `updated_at:>` paginated query; upsert only.
+// The Shopify Admin API is the mock; the products table and the sync are
+// the real local Supabase stack. (Embeddings are disabled suite-wide, so
+// synced rows persist embedding: null.)
 describe("Shopify catalogue sync (POST /shopify/sync)", () => {
   async function createCompany(ownerCookie: string, name: string) {
     const created = await api<{ company: { id: string } }>("POST", "/api/companies", ownerCookie, { name });
     return created.json.company.id;
   }
 
-  // Seeds a `connected` row directly (access_token is column-locked, so this
-  // has to go through the service client). Shop domain + token are unique
-  // per call so the suite is rerun-safe (the platform-wide shop_domain
-  // index would otherwise collide across runs) and the mock keys its
-  // catalogue off the token. `tokenHint` lets a test force a mock path
-  // (a token containing "graphql-failure"); `opts` controls token freshness
-  // -- by default the access token is well within its lifetime so the sync
-  // uses it directly without a refresh.
+  // Seeds a `connected` row directly (tokens are column-locked). Unique
+  // shop domain + token per call so the suite is rerun-safe and the mock
+  // keys its catalogue off the token. Defaults: fresh access token, no
+  // watermark (so the first sync is FULL).
   async function seedConnection(
     companyId: string,
     tokenHint = "ok",
-    opts: { expiresAt?: string | null; refreshToken?: string | null } = {},
+    opts: {
+      expiresAt?: string | null;
+      refreshToken?: string | null;
+      lastSyncedAt?: string | null;
+    } = {},
   ) {
     const unique = randomUUID().slice(0, 8);
     const shop = `sync-${unique}.myshopify.com`;
@@ -45,10 +47,21 @@ describe("Shopify catalogue sync (POST /shopify/sync)", () => {
           opts.expiresAt === undefined
             ? new Date(Date.now() + 60 * 60 * 1000).toISOString()
             : opts.expiresAt,
+        last_synced_at: opts.lastSyncedAt ?? null,
         currency: "BRL",
       });
     if (error) throw error;
     return { shop, token, unique };
+  }
+
+  function sync(companyId: string, cookie: string, full = false) {
+    return api<{
+      mode: string;
+      status: string;
+      synced: number;
+      deactivated: number;
+      skipped: { title: string; reason: string }[];
+    }>("POST", `/api/companies/${companyId}/shopify/sync`, cookie, { full });
   }
 
   async function syncedProducts(companyId: string) {
@@ -73,9 +86,9 @@ describe("Shopify catalogue sync (POST /shopify/sync)", () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Shopify Sync Unconnected Co");
 
-    const result = await api<{ error: string }>("POST", `/api/companies/${companyId}/shopify/sync`, owner.cookieHeader);
+    const result = await sync(companyId, owner.cookieHeader);
     expect(result.status).toBe(409);
-    expect(result.json.error).toBe("not_connected");
+    expect((result.json as unknown as { error: string }).error).toBe("not_connected");
   });
 
   it("returns 502 when the Shopify round trip fails", async () => {
@@ -83,125 +96,174 @@ describe("Shopify catalogue sync (POST /shopify/sync)", () => {
     const companyId = await createCompany(owner.cookieHeader, "Shopify Sync Failure Co");
     await seedConnection(companyId, "graphql-failure");
 
-    const result = await api("POST", `/api/companies/${companyId}/shopify/sync`, owner.cookieHeader);
+    const result = await sync(companyId, owner.cookieHeader);
     expect(result.status).toBe(502);
   });
 
-  it("imports the catalogue, skips unmappable rows, and re-syncs in place", async () => {
+  it("first sync runs a full bulk import, skipping unmappable rows", async () => {
     const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Shopify Sync Co");
+    const companyId = await createCompany(owner.cookieHeader, "Shopify Full Sync Co");
     const { token } = await seedConnection(companyId);
 
-    // --- first sync -------------------------------------------------------
     await setMockCatalogue(token, [
       { id: 1, title: "Camiseta Azul", price: "50.00", status: "ACTIVE", productType: "Roupas" },
       { id: 2, title: "Boné Preto", price: "30.00", status: "ACTIVE" },
-      { id: 3, title: "Meia Branca", price: "15.00", status: "ACTIVE" },
+      { id: 3, title: "Rascunho", price: "10.00", status: "DRAFT" },
       { id: 4, title: "Preço Inválido", price: "-5", status: "ACTIVE" },
     ]);
 
-    const first = await api<{ synced: number; deactivated: number; skipped: { title: string }[] }>(
-      "POST",
-      `/api/companies/${companyId}/shopify/sync`,
-      owner.cookieHeader,
-    );
-    expect(first.status).toBe(200);
-    expect(first.json.synced).toBe(3);
-    expect(first.json.deactivated).toBe(0);
-    expect(first.json.skipped).toEqual([{ title: "Preço Inválido", reason: "price must be a number >= 0" }]);
+    const res = await sync(companyId, owner.cookieHeader);
+    expect(res.status).toBe(200);
+    expect(res.json.mode).toBe("full");
+    expect(res.json.status).toBe("completed");
+    expect(res.json.synced).toBe(3);
+    expect(res.json.skipped).toEqual([{ title: "Preço Inválido", reason: "price must be a number >= 0" }]);
 
-    let rows = await syncedProducts(companyId);
+    const rows = await syncedProducts(companyId);
     expect(rows.map((r) => r.external_id)).toEqual(["shopify:1", "shopify:2", "shopify:3"]);
     const camiseta = rows.find((r) => r.external_id === "shopify:1")!;
     expect(camiseta.name).toBe("Camiseta Azul");
     expect(Number(camiseta.price)).toBe(50);
     expect(camiseta.currency).toBe("BRL");
-    expect(camiseta.is_active).toBe(true);
     expect(camiseta.metadata?.source).toBe("shopify");
-
-    // --- second sync: rename #1, drop #3 and #4 -------------------------
-    await setMockCatalogue(token, [
-      { id: 1, title: "Camiseta Azul Escuro", price: "50.00", status: "ACTIVE", productType: "Roupas" },
-      { id: 2, title: "Boné Preto", price: "30.00", status: "ACTIVE" },
-    ]);
-
-    const second = await api<{ synced: number; deactivated: number; skipped: unknown[] }>(
-      "POST",
-      `/api/companies/${companyId}/shopify/sync`,
-      owner.cookieHeader,
-    );
-    expect(second.status).toBe(200);
-    expect(second.json.synced).toBe(2);
-    expect(second.json.deactivated).toBe(1); // shopify:3 no longer in the catalogue
-    expect(second.json.skipped).toEqual([]);
-
-    rows = await syncedProducts(companyId);
-    // Still exactly three rows -- the re-sync updated in place, no duplicates
-    // (proves the (company_id, external_id) unique index + onConflict).
-    expect(rows).toHaveLength(3);
-    expect(rows.find((r) => r.external_id === "shopify:1")!.name).toBe("Camiseta Azul Escuro");
-    expect(rows.find((r) => r.external_id === "shopify:2")!.is_active).toBe(true);
+    // DRAFT -> inactive.
     expect(rows.find((r) => r.external_id === "shopify:3")!.is_active).toBe(false);
 
-    // last_synced_at was stamped on the connection.
     const conn = await getTestServiceClient()
       .from("company_shopify_connections")
-      .select("last_synced_at")
+      .select("last_synced_at, bulk_sync_op_id")
       .eq("company_id", companyId)
       .single();
     expect(conn.data?.last_synced_at).not.toBeNull();
+    expect(conn.data?.bulk_sync_op_id).toBeNull();
   });
 
-  it("marks DRAFT / ARCHIVED products inactive", async () => {
+  it("subsequent syncs are deltas: only changed products, no deactivation", async () => {
     const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Shopify Sync Draft Co");
+    const companyId = await createCompany(owner.cookieHeader, "Shopify Delta Co");
+    // Watermark already set -> DELTA mode.
+    const { token } = await seedConnection(companyId, "ok", {
+      lastSyncedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    });
+
+    // #1 seeded as if a prior full sync had imported it.
+    await getTestServiceClient()
+      .from("products")
+      .insert({
+        company_id: companyId,
+        external_id: "shopify:1",
+        name: "Camiseta (antiga)",
+        price: "50.00",
+        currency: "BRL",
+        is_active: true,
+        metadata: { source: "shopify", sync_run: "old-run" },
+      });
+
+    await setMockCatalogue(token, [
+      // changed recently -> in the delta
+      { id: 1, title: "Camiseta Nova", price: "55.00", status: "ACTIVE", updatedAt: new Date().toISOString() },
+      // untouched long ago -> NOT in the delta
+      { id: 2, title: "Boné", price: "30.00", status: "ACTIVE", updatedAt: "2001-01-01T00:00:00Z" },
+    ]);
+
+    const res = await sync(companyId, owner.cookieHeader);
+    expect(res.status).toBe(200);
+    expect(res.json.mode).toBe("delta");
+    expect(res.json.synced).toBe(1);
+    expect(res.json.deactivated).toBe(0);
+
+    const rows = await syncedProducts(companyId);
+    // #1 updated in place; #2 never touched (delta didn't see it); #1 still
+    // active (delta never deactivates).
+    expect(rows.map((r) => r.external_id)).toEqual(["shopify:1"]);
+    expect(rows[0].name).toBe("Camiseta Nova");
+    expect(rows[0].is_active).toBe(true);
+  });
+
+  it("a full re-sync (?full=true) deactivates products removed from Shopify", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Shopify Full Resync Co");
     const { token } = await seedConnection(companyId);
 
     await setMockCatalogue(token, [
-      { id: 10, title: "Publicado", price: "20.00", status: "ACTIVE" },
-      { id: 11, title: "Rascunho", price: "20.00", status: "DRAFT" },
+      { id: 1, title: "Fica", price: "10.00", status: "ACTIVE" },
+      { id: 2, title: "Sai depois", price: "20.00", status: "ACTIVE" },
     ]);
+    await sync(companyId, owner.cookieHeader); // first sync (full)
 
-    const result = await api<{ synced: number }>("POST", `/api/companies/${companyId}/shopify/sync`, owner.cookieHeader);
-    expect(result.status).toBe(200);
-    expect(result.json.synced).toBe(2);
+    // #2 removed from the store.
+    await setMockCatalogue(token, [{ id: 1, title: "Fica", price: "10.00", status: "ACTIVE" }]);
+
+    const res = await sync(companyId, owner.cookieHeader, true);
+    expect(res.status).toBe(200);
+    expect(res.json.mode).toBe("full");
+    expect(res.json.deactivated).toBe(1);
 
     const rows = await syncedProducts(companyId);
-    expect(rows.find((r) => r.external_id === "shopify:10")!.is_active).toBe(true);
-    expect(rows.find((r) => r.external_id === "shopify:11")!.is_active).toBe(false);
+    expect(rows.find((r) => r.external_id === "shopify:1")!.is_active).toBe(true);
+    expect(rows.find((r) => r.external_id === "shopify:2")!.is_active).toBe(false);
+  });
+
+  it("hands back status:running for a slow bulk export and resumes it on the next sync", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Shopify Bulk Slow Co");
+    const { token } = await seedConnection(companyId, "bulk-slow");
+    await setMockCatalogue(token, [{ id: 7, title: "Produto", price: "12.00", status: "ACTIVE" }]);
+
+    const running = await sync(companyId, owner.cookieHeader);
+    expect(running.status).toBe(202);
+    expect(running.json.status).toBe("running");
+    expect(running.json.synced).toBe(0);
+
+    const mid = await getTestServiceClient()
+      .from("company_shopify_connections")
+      .select("bulk_sync_op_id")
+      .eq("company_id", companyId)
+      .single();
+    expect(mid.data?.bulk_sync_op_id).not.toBeNull();
+
+    await completeMockBulk(token);
+
+    const done = await sync(companyId, owner.cookieHeader);
+    expect(done.status).toBe(200);
+    expect(done.json.status).toBe("completed");
+    expect(done.json.synced).toBe(1);
+
+    const rows = await syncedProducts(companyId);
+    expect(rows.map((r) => r.external_id)).toEqual(["shopify:7"]);
+
+    const after = await getTestServiceClient()
+      .from("company_shopify_connections")
+      .select("bulk_sync_op_id, last_synced_at")
+      .eq("company_id", companyId)
+      .single();
+    expect(after.data?.bulk_sync_op_id).toBeNull();
+    expect(after.data?.last_synced_at).not.toBeNull();
   });
 
   it("refreshes an expired access token before syncing and persists the rotated tokens", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Shopify Sync Refresh Co");
-    // Access token already expired; a usable refresh token is on file.
-    const { token, unique } = await seedConnection(companyId, "ok", {
+    const { unique } = await seedConnection(companyId, "ok", {
       expiresAt: new Date(Date.now() - 60_000).toISOString(),
       refreshToken: `refresh-live-${randomUUID().slice(0, 8)}`,
     });
-    // The mock keys its catalogue off the token the request actually uses --
-    // after a refresh that's `shopify-token-refreshed-<oldRefreshToken>`.
-    // Register the catalogue under BOTH so whichever token is used finds it.
-    const products = [{ id: 1, title: `Item ${unique}`, price: "10.00", status: "ACTIVE" as const }];
-    await setMockCatalogue(token, products);
 
+    // After the refresh the request uses `shopify-token-refreshed-<oldRT>` --
+    // register the catalogue under that token.
     const connBefore = await getTestServiceClient()
       .from("company_shopify_connections")
       .select("refresh_token")
       .eq("company_id", companyId)
       .single();
-    await setMockCatalogue(`shopify-token-refreshed-${connBefore.data?.refresh_token}`, products);
+    await setMockCatalogue(`shopify-token-refreshed-${connBefore.data?.refresh_token}`, [
+      { id: 1, title: `Item ${unique}`, price: "10.00", status: "ACTIVE" },
+    ]);
 
-    const result = await api<{ synced: number }>(
-      "POST",
-      `/api/companies/${companyId}/shopify/sync`,
-      owner.cookieHeader,
-    );
-    expect(result.status).toBe(200);
-    expect(result.json.synced).toBe(1);
+    const res = await sync(companyId, owner.cookieHeader);
+    expect(res.status).toBe(200);
+    expect(res.json.synced).toBe(1);
 
-    // The connection now holds the refreshed access token, the rotated
-    // refresh token, and a fresh future expiry.
     const conn = await getTestServiceClient()
       .from("company_shopify_connections")
       .select("access_token, refresh_token, token_expires_at")
@@ -220,12 +282,8 @@ describe("Shopify catalogue sync (POST /shopify/sync)", () => {
       refreshToken: "refresh-expired-token",
     });
 
-    const result = await api<{ error: string }>(
-      "POST",
-      `/api/companies/${companyId}/shopify/sync`,
-      owner.cookieHeader,
-    );
+    const result = await sync(companyId, owner.cookieHeader);
     expect(result.status).toBe(409);
-    expect(result.json.error).toBe("reauth_required");
+    expect((result.json as unknown as { error: string }).error).toBe("reauth_required");
   });
 });

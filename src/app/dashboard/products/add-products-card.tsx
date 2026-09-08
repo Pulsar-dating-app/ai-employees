@@ -21,13 +21,13 @@ import { ShopifyConnectCard } from "./shopify-connect-card";
 // coloured Shopify brand mark alongside its label -- an explicit ask, and
 // the only third-party surface here.
 
-type TabKey = "manual" | "csv" | "shopify";
-const TAB_KEYS: TabKey[] = ["manual", "csv", "shopify"];
+type TabKey = "csv" | "shopify" | "manual";
+const TAB_KEYS: TabKey[] = ["csv", "shopify", "manual"];
 
 const ACCENT: Record<TabKey, string> = {
-  manual: "#3525cd",
   csv: "#3525cd",
   shopify: "#95BF47",
+  manual: "#3525cd",
 };
 
 export function AddProductsCard({
@@ -42,7 +42,7 @@ export function AddProductsCard({
   onCatalogChanged: () => void;
 }) {
   const t = useTranslations("Products");
-  const [activeTab, setActiveTab] = useState<TabKey>("manual");
+  const [activeTab, setActiveTab] = useState<TabKey>("csv");
   // Remounts ProductForm to clear it when the user cancels.
   const [formKey, setFormKey] = useState(0);
   const tabRefs = useRef<Partial<Record<TabKey, HTMLButtonElement | null>>>({});

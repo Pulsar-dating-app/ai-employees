@@ -219,9 +219,16 @@ export async function registerAppUninstalledWebhook(shop: string, accessToken: s
   });
 }
 
-const PRODUCTS_QUERY = `
-  query Products($cursor: String) {
-    products(first: ${PAGE_SIZE}, after: $cursor) {
+// --- delta read (paginated, filtered by updated_at) ------------------------
+//
+// Every sync after the first only pulls products changed since the last
+// one, so this stays small and fits a single serverless request even for a
+// huge catalogue. Deletions can't be seen this way -- a "full re-sync"
+// (bulk) reconciles those.
+
+const CHANGED_PRODUCTS_QUERY = `
+  query ChangedProducts($cursor: String, $q: String!) {
+    products(first: ${PAGE_SIZE}, after: $cursor, query: $q) {
       pageInfo { hasNextPage endCursor }
       nodes {
         id
@@ -245,20 +252,23 @@ type ProductsPage = {
   };
 };
 
-// Cursor-paginated full catalogue read, capped at SHOPIFY_SYNC_MAX_PRODUCTS.
-// `truncated` tells the caller the store has more products than were pulled.
-export async function fetchAllProducts(
+export async function fetchChangedProducts(
   shop: string,
   accessToken: string,
+  sinceIso: string,
 ): Promise<{ products: ShopifyProduct[]; truncated: boolean }> {
   const products: ShopifyProduct[] = [];
   let cursor: string | null = null;
   let truncated = false;
+  const q = `updated_at:>${sinceIso}`;
 
   for (;;) {
-    const data: ProductsPage = await shopifyGraphql<ProductsPage>(shop, accessToken, PRODUCTS_QUERY, {
-      cursor,
-    });
+    const data: ProductsPage = await shopifyGraphql<ProductsPage>(
+      shop,
+      accessToken,
+      CHANGED_PRODUCTS_QUERY,
+      { cursor, q },
+    );
     products.push(...data.products.nodes);
 
     if (products.length >= SHOPIFY_SYNC_MAX_PRODUCTS) {
@@ -271,4 +281,163 @@ export async function fetchAllProducts(
   }
 
   return { products, truncated };
+}
+
+// --- full read (GraphQL Bulk Operations) ----------------------------------
+//
+// The Bulk Operations API runs a query async on Shopify's side and writes
+// every matching object to a JSONL file -- no pagination, no per-page rate
+// limit, no product-count ceiling. Used for the first sync and an explicit
+// full re-sync. A bulk op can outlast one serverless request, so the id is
+// persisted and a follow-up "Sync now" resumes it.
+//
+// Bulk query rules: nested connections take no arguments (so `variants`,
+// not `variants(first: 1)`), and every connection is `edges { node }`.
+// Nested connection items come back as their own JSONL lines carrying a
+// `__parentId`; a parent line always precedes its children.
+
+const BULK_PRODUCTS_QUERY = `
+{
+  products {
+    edges {
+      node {
+        id
+        handle
+        title
+        descriptionHtml
+        productType
+        status
+        onlineStoreUrl
+        featuredImage { url }
+        variants { edges { node { id price sku } } }
+      }
+    }
+  }
+}`;
+
+export type BulkOperationState = {
+  id: string;
+  status: "CREATED" | "RUNNING" | "COMPLETED" | "CANCELING" | "CANCELED" | "FAILED" | "EXPIRED";
+  url: string | null;
+  objectCount: number;
+};
+
+async function currentBulkOperation(shop: string, accessToken: string): Promise<BulkOperationState | null> {
+  const data = await shopifyGraphql<{ currentBulkOperation: BulkOperationState | null }>(
+    shop,
+    accessToken,
+    `query { currentBulkOperation(type: QUERY) { id status url objectCount } }`,
+  );
+  return data.currentBulkOperation;
+}
+
+export async function getBulkOperation(
+  shop: string,
+  accessToken: string,
+  opId: string,
+): Promise<BulkOperationState | null> {
+  const data = await shopifyGraphql<{ node: BulkOperationState | null }>(
+    shop,
+    accessToken,
+    `query($id: ID!) { node(id: $id) { ... on BulkOperation { id status url objectCount } } }`,
+    { id: opId },
+  );
+  return data.node;
+}
+
+async function cancelBulkOperation(shop: string, accessToken: string, opId: string): Promise<void> {
+  await shopifyGraphql(
+    shop,
+    accessToken,
+    `mutation($id: ID!) { bulkOperationCancel(id: $id) { userErrors { message } } }`,
+    { id: opId },
+  );
+}
+
+// Submits the products bulk export and returns the operation id. Only one
+// bulk QUERY op can run per app+shop, so a stale/running one is cancelled
+// first.
+export async function startBulkProductsExport(shop: string, accessToken: string): Promise<string> {
+  const running = await currentBulkOperation(shop, accessToken);
+  if (running && (running.status === "CREATED" || running.status === "RUNNING")) {
+    await cancelBulkOperation(shop, accessToken, running.id);
+  }
+
+  const data = await shopifyGraphql<{
+    bulkOperationRunQuery: {
+      bulkOperation: { id: string; status: string } | null;
+      userErrors: { field: string[] | null; message: string }[];
+    };
+  }>(
+    shop,
+    accessToken,
+    `mutation($q: String!) {
+       bulkOperationRunQuery(query: $q) {
+         bulkOperation { id status }
+         userErrors { field message }
+       }
+     }`,
+    { q: BULK_PRODUCTS_QUERY },
+  );
+
+  const { bulkOperation, userErrors } = data.bulkOperationRunQuery;
+  if (bulkOperation?.id) return bulkOperation.id;
+
+  // Race: another request already started one between our check and submit.
+  if (userErrors.some((e) => /already in progress/i.test(e.message))) {
+    const current = await currentBulkOperation(shop, accessToken);
+    if (current?.id) return current.id;
+  }
+  throw new Error(`Shopify bulk export failed: ${JSON.stringify(userErrors)}`);
+}
+
+type BulkProductLine = {
+  id: string;
+  __parentId?: string;
+  handle?: string;
+  title?: string;
+  descriptionHtml?: string | null;
+  productType?: string | null;
+  status?: ShopifyProduct["status"];
+  onlineStoreUrl?: string | null;
+  featuredImage?: { url: string } | null;
+  price?: string | null;
+  sku?: string | null;
+};
+
+// Downloads a completed bulk op's JSONL and reassembles products, keeping
+// only the first variant per product (no variant model).
+export async function downloadBulkProducts(url: string): Promise<ShopifyProduct[]> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Shopify bulk result download failed: ${res.status}`);
+  const text = await res.text();
+
+  const byId = new Map<string, ShopifyProduct>();
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (!line) continue;
+    const obj = JSON.parse(line) as BulkProductLine;
+
+    if (obj.__parentId && obj.id.includes("/ProductVariant/")) {
+      const parent = byId.get(obj.__parentId);
+      if (parent && parent.variants.nodes.length === 0) {
+        parent.variants.nodes.push({ price: obj.price ?? null, sku: obj.sku ?? null });
+      }
+      continue;
+    }
+    if (obj.id.includes("/Product/")) {
+      byId.set(obj.id, {
+        id: obj.id,
+        handle: obj.handle ?? "",
+        title: obj.title ?? "",
+        descriptionHtml: obj.descriptionHtml ?? null,
+        productType: obj.productType ?? null,
+        status: obj.status ?? "ACTIVE",
+        onlineStoreUrl: obj.onlineStoreUrl ?? null,
+        featuredImage: obj.featuredImage ?? null,
+        variants: { nodes: [] },
+      });
+    }
+  }
+  return [...byId.values()];
 }

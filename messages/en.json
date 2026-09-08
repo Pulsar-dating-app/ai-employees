@@ -937,7 +937,7 @@
     "addTabs": {
       "cardTitle": "Add products",
       "tablistLabel": "Ways to add products",
-      "manual": "One by one",
+      "manual": "Individual",
       "csv": "Spreadsheet",
       "shopify": "Shopify"
     },
@@ -972,8 +972,11 @@
       "lastSynced": "Last updated {when}",
       "neverSynced": "Not imported yet — run the first import below.",
       "syncButton": "Sync now",
+      "syncFullButton": "Full re-sync",
       "syncingButton": "Syncing…",
+      "syncRunning": "Import in progress — for a large catalog this can take a few minutes. Click Sync now again to pick up where it left off.",
       "syncResult": "{synced} products updated, {deactivated} removed, {skipped} skipped",
+      "syncResultDelta": "{synced} products updated, {skipped} skipped",
       "truncated": "Only the first {max} products were imported — contact support if your catalog is larger.",
       "skippedProductHeader": "Product",
       "skippedReasonHeader": "Reason",
