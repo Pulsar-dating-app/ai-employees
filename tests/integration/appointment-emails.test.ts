@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { bookAppointmentTool } from "@/lib/agent-engine/tools/book-appointment";
 import type { ToolExecutionContext } from "@/lib/agent-engine/tools/types";
 import { api } from "./helpers/request";
@@ -24,15 +24,15 @@ process.env.EMAIL_FROM ??= "Staffra <test@staffra.test>";
 const BOOKING_DATE = "2027-04-05";
 const BOOKING_DOW = new Date(`${BOOKING_DATE}T12:00:00Z`).getUTCDay();
 
-let owner: TestUser;
-beforeAll(async () => {
-  owner = await signUpTestUser("owner");
-});
 beforeEach(async () => {
   await clearEmails();
 });
 
+// Each call signs up its own owner -- one company per account (see
+// decisions.md 2026-09-08), so a shared module-level owner across every
+// `it()` in this file would only get its first company.
 async function seed(companyName: string, opts: { requiresApproval?: boolean } = {}) {
+  const owner: TestUser = await signUpTestUser("owner");
   const created = await api<{ company: { id: string } }>("POST", "/api/companies", owner.cookieHeader, {
     name: companyName,
   });
@@ -77,7 +77,7 @@ async function seed(companyName: string, opts: { requiresApproval?: boolean } = 
     supabase: svc,
     openai: {} as ToolExecutionContext["openai"],
   };
-  return { companyId, serviceId: (service as { id: string }).id, customerId: (customer as { id: string }).id, ctx, svc };
+  return { companyId, serviceId: (service as { id: string }).id, customerId: (customer as { id: string }).id, ctx, svc, owner };
 }
 
 function bookVia(ctx: ToolExecutionContext, serviceId: string, startsAt: string, email?: string) {
@@ -120,7 +120,7 @@ describe("R3 -- booking confirmation / decline emails", () => {
   });
 
   it("emails a confirmation when the merchant approves a pending request", async () => {
-    const { ctx, serviceId, companyId } = await seed("R3 Approve Later Co", { requiresApproval: true });
+    const { ctx, serviceId, companyId, owner } = await seed("R3 Approve Later Co", { requiresApproval: true });
     const to = `c-${randomUUID()}@example.test`;
     const booked = (await bookVia(ctx, serviceId, `${BOOKING_DATE}T12:00:00Z`, to)) as { appointmentId: string };
     await clearEmails();
@@ -135,7 +135,7 @@ describe("R3 -- booking confirmation / decline emails", () => {
   });
 
   it("emails a decline note when the merchant declines a pending request", async () => {
-    const { ctx, serviceId, companyId } = await seed("R3 Decline Co", { requiresApproval: true });
+    const { ctx, serviceId, companyId, owner } = await seed("R3 Decline Co", { requiresApproval: true });
     const to = `c-${randomUUID()}@example.test`;
     const booked = (await bookVia(ctx, serviceId, `${BOOKING_DATE}T13:00:00Z`, to)) as { appointmentId: string };
     await clearEmails();

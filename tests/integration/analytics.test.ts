@@ -177,8 +177,9 @@ describe("GET /api/companies/[companyId]/analytics", () => {
 
   it("counts conversations, messages, customers and each event type into day buckets, scoped to the company", async () => {
     const owner = await signUpTestUser("owner");
+    const otherOwner = await signUpTestUser("other-owner");
     const seed = await seedCompany(owner, "Busy Analytics Co", "UTC");
-    const other = await seedCompany(owner, "Other Tenant Analytics Co", "UTC");
+    const other = await seedCompany(otherOwner, "Other Tenant Analytics Co", "UTC");
 
     // In-window activity for the company under test.
     await insertConversationAt(owner, seed, "2026-05-10T08:00:00Z");
@@ -194,9 +195,9 @@ describe("GET /api/companies/[companyId]/analytics", () => {
     await insertEventAt(owner, seed, "checkout_click", "2026-05-12T12:00:00Z");
 
     // Noise: another tenant's activity in the same window must not leak in.
-    await insertConversationAt(owner, other, "2026-05-10T08:00:00Z");
-    await insertMessageAt(owner, other, "2026-05-10T08:01:00Z");
-    await insertEventAt(owner, other, "buying_intent", "2026-05-12T11:00:00Z");
+    await insertConversationAt(otherOwner, other, "2026-05-10T08:00:00Z");
+    await insertMessageAt(otherOwner, other, "2026-05-10T08:01:00Z");
+    await insertEventAt(otherOwner, other, "buying_intent", "2026-05-12T11:00:00Z");
 
     // Noise: this tenant, but outside the requested window.
     await insertEventAt(owner, seed, "checkout_click", "2026-05-20T12:00:00Z");

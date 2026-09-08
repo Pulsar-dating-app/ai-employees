@@ -132,35 +132,38 @@ describe("Services CRUD /api/companies/:id/services", () => {
   });
 
   it("404s updating/deleting a service that doesn't exist or belongs to another company", async () => {
-    const owner = await signUpTestUser("owner");
-    const companyA = await createCompany(owner.cookieHeader, "Company A");
-    const companyB = await createCompany(owner.cookieHeader, "Company B");
-    const serviceInA = await createService(owner.cookieHeader, companyA, { name: "A's Service", duration_minutes: 20 });
+    const ownerA = await signUpTestUser("owner-a");
+    const ownerB = await signUpTestUser("owner-b");
+    const companyA = await createCompany(ownerA.cookieHeader, "Company A");
+    const companyB = await createCompany(ownerB.cookieHeader, "Company B");
+    const serviceInA = await createService(ownerA.cookieHeader, companyA, { name: "A's Service", duration_minutes: 20 });
 
     expect(
       (
         await api(
           "PATCH",
           `/api/companies/${companyA}/services/00000000-0000-0000-0000-000000000000`,
-          owner.cookieHeader,
+          ownerA.cookieHeader,
           { name: "X" },
         )
       ).status,
     ).toBe(404);
 
+    // ownerB is a legitimate member of companyB -- proves the 404 comes from
+    // the service lookup being scoped to companyB, not a membership check.
     expect(
       (
         await api(
           "PATCH",
           `/api/companies/${companyB}/services/${serviceInA.json.service.id}`,
-          owner.cookieHeader,
+          ownerB.cookieHeader,
           { name: "X" },
         )
       ).status,
     ).toBe(404);
 
     expect(
-      (await api("DELETE", `/api/companies/${companyB}/services/${serviceInA.json.service.id}`, owner.cookieHeader)).status,
+      (await api("DELETE", `/api/companies/${companyB}/services/${serviceInA.json.service.id}`, ownerB.cookieHeader)).status,
     ).toBe(404);
   });
 

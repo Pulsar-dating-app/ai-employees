@@ -67,7 +67,12 @@ export async function POST(request: Request) {
       details: error.details,
       hint: error.hint,
     });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // 23505 here is the `company_users_user_id_key` unique violation: the
+    // caller already belongs to a company (one company per account, see
+    // decisions.md) — a clean 409 like the members route already gives for
+    // the same underlying constraint, not a raw 500.
+    const status = error.code === "23505" ? 409 : 500;
+    return NextResponse.json({ error: error.message }, { status });
   }
 
   return NextResponse.json({ company: data }, { status: 201 });

@@ -34,6 +34,18 @@ describe("GET/POST /api/companies", () => {
     expect(result.status).toBe(400);
   });
 
+  it("rejects a second company for an account that already has one", async () => {
+    const owner = await signUpTestUser("owner");
+    const first = await api("POST", "/api/companies", owner.cookieHeader, { name: "One Co" });
+    expect(first.status).toBe(201);
+
+    const second = await api("POST", "/api/companies", owner.cookieHeader, { name: "Two Co" });
+    expect(second.status).toBe(409);
+
+    const after = await api<{ companies: unknown[] }>("GET", "/api/companies", owner.cookieHeader);
+    expect(after.json.companies).toHaveLength(1);
+  });
+
   // create_company_with_owner used to 500 here: generate_unique_company_slug
   // checks for a free slug and then inserts, which isn't atomic, so two
   // callers racing on the same name both picked the same candidate and the
@@ -134,6 +146,29 @@ describe("POST /api/companies/:id/members", () => {
       { userId: target.userId, role: "member" },
     );
     expect(adminAddsMember.status).toBe(201);
+  });
+
+  it("rejects inviting a user who already belongs to another company", async () => {
+    const ownerA = await signUpTestUser("owner-a");
+    const ownerB = await signUpTestUser("owner-b");
+    const companyA = await createCompany(ownerA.cookieHeader, "Multi A Co");
+    await createCompany(ownerB.cookieHeader, "Multi B Co"); // ownerB already has a company
+
+    const result = await api(
+      "POST",
+      `/api/companies/${companyA}/members`,
+      ownerA.cookieHeader,
+      { userId: ownerB.userId, role: "member" },
+    );
+    expect(result.status).toBe(409);
+
+    const stillOnlyB = await api<{ companies: { name: string }[] }>(
+      "GET",
+      "/api/companies",
+      ownerB.cookieHeader,
+    );
+    expect(stillOnlyB.json.companies).toHaveLength(1);
+    expect(stillOnlyB.json.companies[0].name).toBe("Multi B Co");
   });
 });
 

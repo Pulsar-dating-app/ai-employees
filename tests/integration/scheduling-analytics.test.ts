@@ -228,10 +228,11 @@ describe("loadSchedulingAnalytics", () => {
     await insertAppointment(owner, { companyId, agentId: null, customerId, status: "confirmed", createdAt: "2026-06-08T09:00:00.000Z", slotDay: 21 });
 
     // Other company — nothing from it counts.
-    const other = await seed(owner, "Sched Other Co");
-    const otherConv = await insertConversation(owner, other.companyId, other.anaId, other.customerId, "2026-06-08T12:00:00.000Z");
-    await insertMessage(owner, other.companyId, otherConv, "2026-06-08T12:01:00.000Z");
-    await insertAppointment(owner, { companyId: other.companyId, agentId: other.anaId, customerId: other.customerId, status: "completed", createdAt: "2026-06-08T09:00:00.000Z", slotDay: 22 });
+    const otherOwner = await signUpTestUser("other-owner");
+    const other = await seed(otherOwner, "Sched Other Co");
+    const otherConv = await insertConversation(otherOwner, other.companyId, other.anaId, other.customerId, "2026-06-08T12:00:00.000Z");
+    await insertMessage(otherOwner, other.companyId, otherConv, "2026-06-08T12:01:00.000Z");
+    await insertAppointment(otherOwner, { companyId: other.companyId, agentId: other.anaId, customerId: other.customerId, status: "completed", createdAt: "2026-06-08T09:00:00.000Z", slotDay: 22 });
 
     // Ana's own booking + conversation (with two messages) in the target company.
     const anaConv = await insertConversation(owner, companyId, anaId, customerId, "2026-06-09T12:00:00.000Z");

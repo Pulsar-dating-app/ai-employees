@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { bookAppointmentTool } from "@/lib/agent-engine/tools/book-appointment";
 import { cancelAppointmentTool } from "@/lib/agent-engine/tools/cancel-appointment";
 import { addToWaitlistTool } from "@/lib/agent-engine/tools/add-to-waitlist";
@@ -25,10 +25,11 @@ const BOOKING_DATE = "2027-05-03";
 const BOOKING_DOW = new Date(`${BOOKING_DATE}T12:00:00Z`).getUTCDay();
 
 let owner: TestUser;
-beforeAll(async () => {
-  owner = await signUpTestUser("owner");
-});
+// A fresh owner per test, not per file: one company per account (see
+// decisions.md 2026-09-08), and each test creates its own company via
+// seed(...), so a single file-wide owner would only be able to do that once.
 beforeEach(async () => {
+  owner = await signUpTestUser("owner");
   await clearEmails();
 });
 
@@ -41,12 +42,12 @@ type Seed = {
   ctx: ToolExecutionContext;
 };
 
-async function seed(companyName: string): Promise<Seed> {
-  const created = await api<{ company: { id: string } }>("POST", "/api/companies", owner.cookieHeader, {
+async function seed(companyName: string, forOwner: TestUser = owner): Promise<Seed> {
+  const created = await api<{ company: { id: string } }>("POST", "/api/companies", forOwner.cookieHeader, {
     name: companyName,
   });
   const companyId = created.json.company.id;
-  await api("PATCH", `/api/companies/${companyId}`, owner.cookieHeader, {
+  await api("PATCH", `/api/companies/${companyId}`, forOwner.cookieHeader, {
     timezone: "UTC",
     email: "studio@example.test",
   });
@@ -54,7 +55,7 @@ async function seed(companyName: string): Promise<Seed> {
   const hired = await api<{ companyAgent: { agent_id: string } }>(
     "POST",
     `/api/companies/${companyId}/agents/ana`,
-    owner.cookieHeader,
+    forOwner.cookieHeader,
   );
   const agentId = hired.json.companyAgent.agent_id;
 
@@ -64,7 +65,7 @@ async function seed(companyName: string): Promise<Seed> {
     .insert({ company_id: companyId, name: "Consulta", duration_minutes: 30 })
     .select("id")
     .single();
-  await api("PUT", `/api/companies/${companyId}/business-hours`, owner.cookieHeader, {
+  await api("PUT", `/api/companies/${companyId}/business-hours`, forOwner.cookieHeader, {
     businessHours: [{ day_of_week: BOOKING_DOW, start_time: "09:00", end_time: "17:00" }],
   });
 
@@ -209,8 +210,9 @@ describe("add_to_waitlist", () => {
   });
 
   it("reports service_not_found for another company's service", async () => {
+    const otherOwner = await signUpTestUser("other-owner");
     const s = await seed("Waitlist Tenant A");
-    const other = await seed("Waitlist Tenant B");
+    const other = await seed("Waitlist Tenant B", otherOwner);
     const result = await addToWaitlistTool.execute(
       { serviceId: other.serviceId, from: "2027-05-01", to: "2027-05-07", email: "a@b.co" },
       s.ctx,

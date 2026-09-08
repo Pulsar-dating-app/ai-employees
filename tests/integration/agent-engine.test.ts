@@ -338,8 +338,9 @@ describe("AgentEngine.run", () => {
 
   it("rejects when companyId doesn't match the conversation's own company", async () => {
     const owner = await signUpTestUser("owner");
+    const otherOwner = await signUpTestUser("other-owner");
     const { conversationId } = await seedConversation(owner, "Mismatch Co A");
-    const { companyId: otherCompanyId } = await seedConversation(owner, "Mismatch Co B");
+    const { companyId: otherCompanyId } = await seedConversation(otherOwner, "Mismatch Co B");
 
     await expect(
       AgentEngine.run(

@@ -128,23 +128,27 @@ describe("Products CRUD /api/companies/:id/products", () => {
   });
 
   it("404s updating/deleting a product that doesn't exist or belongs to another company", async () => {
-    const owner = await signUpTestUser("owner");
-    const companyA = await createCompany(owner.cookieHeader, "Company A");
-    const companyB = await createCompany(owner.cookieHeader, "Company B");
-    const productInA = await createProduct(owner.cookieHeader, companyA, { name: "A's Widget" });
+    const ownerA = await signUpTestUser("owner-a");
+    const ownerB = await signUpTestUser("owner-b");
+    const companyA = await createCompany(ownerA.cookieHeader, "Company A");
+    const companyB = await createCompany(ownerB.cookieHeader, "Company B");
+    const productInA = await createProduct(ownerA.cookieHeader, companyA, { name: "A's Widget" });
 
     const patchMissing = await api(
       "PATCH",
       `/api/companies/${companyA}/products/00000000-0000-0000-0000-000000000000`,
-      owner.cookieHeader,
+      ownerA.cookieHeader,
       { name: "X" },
     );
     expect(patchMissing.status).toBe(404);
 
+    // ownerB is a legitimate member of companyB -- this proves the 404 comes
+    // from the product lookup being scoped to companyB, not just from a
+    // membership check rejecting the caller.
     const patchWrongCompany = await api(
       "PATCH",
       `/api/companies/${companyB}/products/${productInA.json.product.id}`,
-      owner.cookieHeader,
+      ownerB.cookieHeader,
       { name: "X" },
     );
     expect(patchWrongCompany.status).toBe(404);
@@ -152,7 +156,7 @@ describe("Products CRUD /api/companies/:id/products", () => {
     const deleteWrongCompany = await api(
       "DELETE",
       `/api/companies/${companyB}/products/${productInA.json.product.id}`,
-      owner.cookieHeader,
+      ownerB.cookieHeader,
     );
     expect(deleteWrongCompany.status).toBe(404);
   });
