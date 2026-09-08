@@ -66,7 +66,7 @@ export async function DELETE(
   const serviceClient = createServiceClient();
   const { data, error } = await serviceClient
     .from("company_shopify_connections")
-    .update({ status: "disconnected", access_token: null })
+    .update({ status: "disconnected", access_token: null, refresh_token: null, token_expires_at: null })
     .eq("company_id", companyId)
     .select(SHOPIFY_CONNECTION_SAFE_COLUMNS)
     .maybeSingle();

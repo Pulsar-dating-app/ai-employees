@@ -100,8 +100,15 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
         .then((r) => (r.ok ? r.json() : null))
         .then((j) => j && setConnection(j.connection ?? null));
     } else {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
       setView("idle");
-      setError(t("syncError"));
+      if (body?.error === "reauth_required") {
+        // The stored refresh token is dead -- surface the reconnect form.
+        setError(t("reauthError"));
+        setConnection(null);
+      } else {
+        setError(t("syncError"));
+      }
     }
   }
 
@@ -129,6 +136,12 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
           }
         >
           {banner.text}
+        </p>
+      ) : null}
+
+      {error ? (
+        <p role="alert" className="text-sm text-error">
+          {error}
         </p>
       ) : null}
 
@@ -205,12 +218,6 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
                 </div>
               ) : null}
             </div>
-          ) : null}
-
-          {error ? (
-            <p role="alert" className="text-sm text-error">
-              {error}
-            </p>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-2">

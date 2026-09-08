@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const supabase = createServiceClient();
     const { error } = await supabase
       .from("company_shopify_connections")
-      .update({ status: "disconnected", access_token: null })
+      .update({ status: "disconnected", access_token: null, refresh_token: null, token_expires_at: null })
       .eq("shop_domain", shopDomain)
       .neq("status", "disconnected");
     if (error) {

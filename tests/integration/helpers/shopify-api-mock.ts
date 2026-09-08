@@ -75,14 +75,39 @@ export function startShopifyApiMock(): Promise<{ url: string; stop: () => Promis
       return res.end();
     }
 
+    // Both the code exchange (expiring=1) and the refresh grant
+    // (grant_type=refresh_token) POST here. Both return an expiring offline
+    // token: access_token + refresh_token + expires_in. Magic values:
+    //  - code "trigger-token-failure"           -> 400
+    //  - refresh_token containing "expired"     -> 401 (terminal)
     if (url.pathname === "/admin/oauth/access_token" && req.method === "POST") {
-      return readJsonBody(req, (body: { code?: string }) => {
-        const code = body.code ?? "";
-        if (code === "trigger-token-failure") {
-          return send(400, { errors: "mock: invalid authorization code" });
-        }
-        send(200, { access_token: `shopify-token-${code}`, scope: "read_products" });
-      });
+      return readJsonBody(
+        req,
+        (body: { code?: string; grant_type?: string; refresh_token?: string }) => {
+          if (body.grant_type === "refresh_token") {
+            const rt = body.refresh_token ?? "";
+            if (rt.includes("expired")) return send(401, { errors: "mock: refresh token terminal" });
+            return send(200, {
+              access_token: `shopify-token-refreshed-${rt}`,
+              refresh_token: `shopify-refresh-rotated-${rt}`,
+              scope: "read_products",
+              expires_in: 3600,
+              refresh_token_expires_in: 7776000,
+            });
+          }
+          const code = body.code ?? "";
+          if (code === "trigger-token-failure") {
+            return send(400, { errors: "mock: invalid authorization code" });
+          }
+          send(200, {
+            access_token: `shopify-token-${code}`,
+            refresh_token: `shopify-refresh-${code}`,
+            scope: "read_products",
+            expires_in: 3600,
+            refresh_token_expires_in: 7776000,
+          });
+        },
+      );
     }
 
     if (/^\/admin\/api\/[^/]+\/graphql\.json$/.test(url.pathname) && req.method === "POST") {

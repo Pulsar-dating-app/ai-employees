@@ -3,7 +3,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { buildProductEmbeddingInput, createProductEmbeddingsBatch } from "@/lib/products/embeddings";
 import { validatePriceCurrency } from "@/lib/products/validation";
-import { fetchAllProducts, fetchShopInfo, numericId, type ShopifyProduct } from "./admin-api";
+import {
+  fetchAllProducts,
+  fetchShopInfo,
+  numericId,
+  refreshOfflineToken,
+  ShopifyReauthRequiredError,
+  type ShopifyProduct,
+} from "./admin-api";
 
 // Pulls a connected store's whole catalogue into the `products` table:
 // upsert by (company_id, external_id), then deactivate anything previously
@@ -29,6 +36,39 @@ export class ShopifyNotConnectedError extends Error {
     super("No connected Shopify store for this company");
     this.name = "ShopifyNotConnectedError";
   }
+}
+
+export { ShopifyReauthRequiredError } from "./admin-api";
+
+// Shopify offline tokens now expire after ~1h. Refresh when the stored one
+// is already past (or within a minute of) expiry, then persist the new
+// access + refresh token (Shopify rotates the refresh token every time).
+const TOKEN_REFRESH_SKEW_MS = 60_000;
+
+async function resolveAccessToken(
+  client: SupabaseClient,
+  companyId: string,
+  connection: { shop_domain: string; access_token: string; refresh_token: string | null; token_expires_at: string | null },
+): Promise<string> {
+  const expiresAt = connection.token_expires_at ? Date.parse(connection.token_expires_at) : null;
+  const stillValid = expiresAt !== null && expiresAt - Date.now() > TOKEN_REFRESH_SKEW_MS;
+  if (stillValid) return connection.access_token;
+
+  // Expired (or a legacy non-expiring token Shopify no longer accepts).
+  // Either way we can only recover with a refresh token.
+  if (!connection.refresh_token) throw new ShopifyReauthRequiredError();
+
+  const refreshed = await refreshOfflineToken(connection.shop_domain, connection.refresh_token);
+  const { error } = await client
+    .from("company_shopify_connections")
+    .update({
+      access_token: refreshed.accessToken,
+      refresh_token: refreshed.refreshToken ?? connection.refresh_token,
+      token_expires_at: refreshed.expiresAt,
+    })
+    .eq("company_id", companyId);
+  if (error) throw error;
+  return refreshed.accessToken;
 }
 
 type MappedRow = {
@@ -124,7 +164,7 @@ export async function syncShopifyCatalog({
 
   const { data: connection, error: connError } = await client
     .from("company_shopify_connections")
-    .select("shop_domain, access_token, status")
+    .select("shop_domain, access_token, refresh_token, token_expires_at, status")
     .eq("company_id", companyId)
     .maybeSingle();
 
@@ -134,7 +174,7 @@ export async function syncShopifyCatalog({
   }
 
   const shop = connection.shop_domain as string;
-  const accessToken = connection.access_token as string;
+  const accessToken = await resolveAccessToken(client, companyId, connection);
 
   const { currency } = await fetchShopInfo(shop, accessToken);
   const { products, truncated } = await fetchAllProducts(shop, accessToken);

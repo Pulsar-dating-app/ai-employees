@@ -16,7 +16,7 @@ describe("company_shopify_connections", () => {
     return { company_id: companyId, shop_domain: shop, status: "connected" as const };
   }
 
-  it("blocks even the company owner from selecting, inserting, or updating access_token directly", async () => {
+  it("blocks even the company owner from selecting, inserting, or updating access_token / refresh_token directly", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Shopify Lock Co");
 
@@ -25,26 +25,29 @@ describe("company_shopify_connections", () => {
       .insert(connectionRow(companyId, "lock-co.myshopify.com"));
     expect(insert.error).toBeNull();
 
-    // Every other column stays readable -- only access_token is locked.
+    // Every other column stays readable -- only the two token columns are
+    // locked; token_expires_at (non-secret) is not.
     const safeSelect = await owner.client
       .from("company_shopify_connections")
-      .select("shop_domain, status, currency")
+      .select("shop_domain, status, currency, token_expires_at")
       .eq("company_id", companyId);
     expect(safeSelect.error).toBeNull();
     expect(safeSelect.data).toHaveLength(1);
 
-    const tokenSelect = await owner.client
-      .from("company_shopify_connections")
-      .select("access_token")
-      .eq("company_id", companyId);
-    expect(tokenSelect.error?.code).toBe("42501");
+    for (const col of ["access_token", "refresh_token"] as const) {
+      const sel = await owner.client
+        .from("company_shopify_connections")
+        .select(col)
+        .eq("company_id", companyId);
+      expect(sel.error?.code).toBe("42501");
 
-    const tokenUpdate = await owner.client
-      .from("company_shopify_connections")
-      .update({ access_token: "hijacked" })
-      .eq("company_id", companyId)
-      .select();
-    expect(tokenUpdate.error?.code).toBe("42501");
+      const upd = await owner.client
+        .from("company_shopify_connections")
+        .update({ [col]: "hijacked" })
+        .eq("company_id", companyId)
+        .select();
+      expect(upd.error?.code).toBe("42501");
+    }
 
     const tokenInsert = await owner.client
       .from("company_shopify_connections")
