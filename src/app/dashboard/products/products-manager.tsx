@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { ProductFilters } from "./product-filters";
 import { ProductList } from "./product-list";
 import { ProductForm } from "./product-form";
-import { ImportPanel } from "./import-panel";
-import { ShopifyConnectCard } from "./shopify-connect-card";
+import { AddProductsCard } from "./add-products-card";
 
 export type Product = {
   id: string;
@@ -69,7 +68,6 @@ export function ProductsManager({
   const [total, setTotal] = useState(initialTotal);
   const [filters, setFilters] = useState<ProductFiltersState>(DEFAULT_FILTERS);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   async function refetch(nextFilters: ProductFiltersState) {
@@ -102,11 +100,6 @@ export function ProductsManager({
     refetch(next);
   }
 
-  function handleCreated() {
-    setIsAddOpen(false);
-    refetch(filters);
-  }
-
   function handleUpdated() {
     setEditingId(null);
     refetch(filters);
@@ -120,52 +113,13 @@ export function ProductsManager({
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("import.title")}</CardTitle>
-          <CardDescription>{t("import.description")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ImportPanel companyId={companyId} canEdit={canEdit} onImported={() => refetch(filters)} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("shopify.title")}</CardTitle>
-          <CardDescription>{t("shopify.description")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ShopifyConnectCard
-            companyId={companyId}
-            canManageConnection={canManageConnection}
-            onSynced={() => refetch(filters)}
-          />
-        </CardContent>
-      </Card>
-
       {canEdit ? (
-        <Card>
-          <CardHeader>
-            <div className="flex flex-row items-center justify-between gap-3">
-              <CardTitle>{t("form.addButton")}</CardTitle>
-              <Button variant="secondary" size="sm" onClick={() => setIsAddOpen((v) => !v)}>
-                {isAddOpen ? t("form.cancelButton") : t("form.addButton")}
-              </Button>
-            </div>
-          </CardHeader>
-          {isAddOpen ? (
-            <CardContent>
-              <ProductForm
-                companyId={companyId}
-                mode="create"
-                companyCurrency={companyCurrency}
-                onSaved={handleCreated}
-                onCancel={() => setIsAddOpen(false)}
-              />
-            </CardContent>
-          ) : null}
-        </Card>
+        <AddProductsCard
+          companyId={companyId}
+          companyCurrency={companyCurrency}
+          canManageConnection={canManageConnection}
+          onCatalogChanged={() => refetch(filters)}
+        />
       ) : null}
 
       <Card>
