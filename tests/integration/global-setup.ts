@@ -9,6 +9,7 @@ import { startEmailMock } from "./helpers/email-mock";
 import { startGoogleOAuthMock } from "./helpers/google-oauth-mock";
 import { startGoogleCalendarMock } from "./helpers/google-calendar-mock";
 import { startStripeApiMock } from "./helpers/stripe-api-mock";
+import { startShopifyApiMock } from "./helpers/shopify-api-mock";
 
 // Boots a real Next.js server, pointed at the already-running local Supabase
 // stack (started/reset by the `test:integration:env:*` npm scripts before
@@ -75,6 +76,8 @@ export default async function setup() {
   const emailMock = await startEmailMock();
   // Same reasoning, for Trello P3's billing checkout route (Stripe SDK).
   const stripeApiMock = await startStripeApiMock();
+  // Same reasoning, for the Shopify catalogue connect + sync flow.
+  const shopifyApiMock = await startShopifyApiMock();
 
   const nextProcess: ChildProcess = spawn(
     "npx",
@@ -136,6 +139,13 @@ export default async function setup() {
         STRIPE_SECRET_KEY: "sk_test_mock",
         STRIPE_API_BASE_URL: stripeApiMock.url,
         STAFFRA_CHECKOUT_BASE_URL: baseUrl,
+        // Shopify catalogue connection. The mock never validates the key;
+        // SHOPIFY_API_SECRET is the literal the connection tests sign their
+        // OAuth-callback `hmac` and webhook bodies with (createHmac).
+        // SHOPIFY_ADMIN_API_BASE_URL points every Shopify call at the mock.
+        SHOPIFY_API_KEY: "test-shopify-api-key",
+        SHOPIFY_API_SECRET: "test-shopify-api-secret",
+        SHOPIFY_ADMIN_API_BASE_URL: shopifyApiMock.url,
         // P4 webhook signature. stripe-webhook.test.ts signs its synthetic
         // events with this exact literal via generateTestHeaderString.
         STRIPE_WEBHOOK_SECRET: "whsec_test_secret",
@@ -168,6 +178,7 @@ export default async function setup() {
     await googleCalendarMock.stop();
     await emailMock.stop();
     await stripeApiMock.stop();
+    await shopifyApiMock.stop();
     throw err;
   }
 
@@ -186,6 +197,7 @@ export default async function setup() {
         serviceRoleKey,
         emailMockUrl: emailMock.url,
         googleCalendarMockUrl: googleCalendarMock.url,
+        shopifyApiMockUrl: shopifyApiMock.url,
       },
       null,
       2,
@@ -201,6 +213,7 @@ export default async function setup() {
     await googleCalendarMock.stop();
     await emailMock.stop();
     await stripeApiMock.stop();
+    await shopifyApiMock.stop();
     try {
       rmSync(STATE_FILE);
     } catch {

@@ -949,6 +949,37 @@
       "skippedTableReasonHeader": "Reason",
       "genericError": "Something went wrong importing the file. Please try again.",
       "fileRequired": "Choose a file first."
+    },
+    "shopify": {
+      "title": "Connect your Shopify store",
+      "description": "Bring your Shopify products into your catalog automatically, then keep them up to date with one click.",
+      "disconnectedHint": "Connect your store and we'll import your products for you — no spreadsheet needed.",
+      "shopLabel": "Your Shopify store address",
+      "shopPlaceholder": "your-store.myshopify.com",
+      "connectButton": "Connect store",
+      "adminOnlyHint": "Ask an owner or admin to connect the store.",
+      "statusConnected": "Connected",
+      "lastSynced": "Last updated {when}",
+      "neverSynced": "Not imported yet — run the first import below.",
+      "syncButton": "Sync now",
+      "syncingButton": "Syncing…",
+      "syncResult": "{synced} products updated, {deactivated} removed, {skipped} skipped",
+      "truncated": "Only the first {max} products were imported — contact support if your catalog is larger.",
+      "skippedProductHeader": "Product",
+      "skippedReasonHeader": "Reason",
+      "syncError": "Something went wrong syncing your store. Please try again.",
+      "disconnectButton": "Disconnect",
+      "confirmDisconnectButton": "Click again to disconnect",
+      "cancelButton": "Cancel",
+      "banner": {
+        "connected": "Your Shopify store is connected. Run a sync to import your products.",
+        "invalid_state": "That connection link expired. Please try again.",
+        "denied": "The store wasn't connected. Please try again.",
+        "invalid_hmac": "We couldn't verify the response from Shopify. Please try again.",
+        "not_admin": "Only an owner or admin can connect the store.",
+        "connected_elsewhere": "This Shopify store is already connected to another account.",
+        "connect_failed": "We couldn't connect your store. Please try again."
+      }
     }
   },
   "Services": {
