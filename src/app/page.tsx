@@ -35,13 +35,7 @@ export default async function Home() {
       {/* Staffra's own chat widget, dogfooded on the landing. `lazyOnload`
           keeps this third-party script off the critical path so it never
           costs LCP/TBT on the most SEO-important page. */}
-      <Script
-        src="https://www.staffra.io/widget.js"
-        strategy="lazyOnload"
-        data-company="staffra"
-        data-agent="ana"
-        data-greeting="Bom dia!"
-      />
+<script src="http://localhost:3000/widget.js" data-company="jorginho-e-cia" data-agent="ana" data-greeting="Procurando por algo especifico???" data-launcher-src="http://localhost:3000/agents/ana-classic-launcher.webm"></script>
     </>
   );
 }

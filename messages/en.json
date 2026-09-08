@@ -751,7 +751,7 @@
       "currentFileHint": "Using a previously uploaded file.",
       "greetingLabel": "Greeting message",
       "greetingPlaceholder": "Hi! 👋 Need help finding what you're looking for?",
-      "greetingHint": "Shown in a speech bubble beside the launcher a few seconds after a visitor arrives.",
+      "greetingHint": "Shown in a speech bubble beside the launcher a few seconds after a visitor arrives. Pre-filled with a default message -- edit it or leave it as is.",
       "previewTitle": "Live preview",
       "saveButton": "Save",
       "savingButton": "Saving…",

@@ -4,7 +4,7 @@ import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 const BASE_URL = "https://app.example.com";
 
 describe("buildEmbedSnippet", () => {
-  it("builds the plain snippet when nothing is customized", () => {
+  it("builds the plain snippet when nothing is customized, baking in the default greeting and classic video", () => {
     const snippet = buildEmbedSnippet(BASE_URL, "acme", "malu", {
       greeting: null,
       launcherType: "default",
@@ -12,8 +12,28 @@ describe("buildEmbedSnippet", () => {
     });
 
     expect(snippet).toBe(
-      `<script src="${BASE_URL}/widget.js" data-company="acme" data-agent="malu"></script>`,
+      `<script src="${BASE_URL}/widget.js" data-company="acme" data-agent="malu" data-greeting="Oi! 👋 Posso ajudar a encontrar o que você procura?" data-launcher-src="${BASE_URL}/widget-launcher.webm"></script>`,
     );
+  });
+
+  it("uses this agent's own predefined default greeting when none is set", () => {
+    const snippet = buildEmbedSnippet(BASE_URL, "acme", "ana", {
+      greeting: null,
+      launcherType: "default",
+      launcherAssetUrl: null,
+    });
+
+    expect(snippet).toContain(`data-greeting="Oi! 😊 Precisa marcar ou reagendar um horário? Posso te ajudar!"`);
+  });
+
+  it("falls back to a generic greeting for an agent with no predefined default", () => {
+    const snippet = buildEmbedSnippet(BASE_URL, "acme", "unknown-agent", {
+      greeting: null,
+      launcherType: "default",
+      launcherAssetUrl: null,
+    });
+
+    expect(snippet).toContain(`data-greeting="Oi! 👋 Posso te ajudar?"`);
   });
 
   it("adds data-greeting when a greeting is set", () => {
@@ -47,9 +67,10 @@ describe("buildEmbedSnippet", () => {
     expect(snippet).toContain(`data-launcher-type="image"`);
   });
 
-  it("omits launcher attributes when the type is custom but no asset was ever saved", () => {
+  it("falls back to the classic default video when the type is custom but no asset was ever saved", () => {
     // Defensive: shouldn't happen given the API route's own validation, but
-    // the snippet builder should never emit a launcher-type with no src.
+    // the snippet builder should never emit a launcher-type with no src --
+    // it falls through to the default branch instead.
     const snippet = buildEmbedSnippet(BASE_URL, "acme", "malu", {
       greeting: null,
       launcherType: "video",
@@ -57,7 +78,7 @@ describe("buildEmbedSnippet", () => {
     });
 
     expect(snippet).not.toContain("data-launcher-type");
-    expect(snippet).not.toContain("data-launcher-src");
+    expect(snippet).toContain(`data-launcher-src="${BASE_URL}/widget-launcher.webm"`);
   });
 
   it("HTML-escapes a greeting containing quotes and angle brackets", () => {
@@ -72,5 +93,25 @@ describe("buildEmbedSnippet", () => {
     // the exact class of bug that broke next-intl's rich-text parser
     // elsewhere in this app when a raw </body> landed in a message string.
     expect(snippet).not.toContain('"there>');
+  });
+
+  it("bakes in the agent's own default classic video, absolute-prefixed with baseUrl", () => {
+    const snippet = buildEmbedSnippet(BASE_URL, "acme", "ana", {
+      greeting: null,
+      launcherType: "default",
+      launcherAssetUrl: null,
+    });
+
+    expect(snippet).toContain(`data-launcher-src="${BASE_URL}/agents/ana-classic-launcher.webm"`);
+  });
+
+  it("falls back to the legacy shared classic video for an agent with no dedicated default", () => {
+    const snippet = buildEmbedSnippet(BASE_URL, "acme", "malu", {
+      greeting: null,
+      launcherType: "default",
+      launcherAssetUrl: null,
+    });
+
+    expect(snippet).toContain(`data-launcher-src="${BASE_URL}/widget-launcher.webm"`);
   });
 });
