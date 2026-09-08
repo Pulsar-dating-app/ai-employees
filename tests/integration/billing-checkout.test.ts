@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
-import { getPlan } from "@/lib/billing/plans";
+import { capturedCheckoutSession } from "./helpers/stripe-checkout-sessions";
+import { getPlan, STARTER_TRIAL_DAYS } from "@/lib/billing/plans";
 import { isBillingActive } from "@/lib/billing/activation";
 
 // Trello P3 -- POST /api/companies/[companyId]/billing/checkout, against the
@@ -299,6 +300,70 @@ describe("Plan checkout (Trello P3)", () => {
       );
       expect(ok.status).toBe(200);
       expect(ok.json.url).toMatch(/^https:\/\/billing\.stripe\.test\/p\/session\//);
+    });
+  });
+
+  describe("Starter free trial (Trello P8)", () => {
+    it("grants a 15-day trial on a first Starter checkout", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Trial First Checkout Co");
+
+      const res = await checkout(owner.cookieHeader, companyId, "starter");
+      expect(res.status).toBe(200);
+      expect(res.json.mode).toBe("checkout");
+
+      const session = await capturedCheckoutSession(res.json.url!);
+      expect(session?.trialPeriodDays).toBe(STARTER_TRIAL_DAYS);
+      expect(session?.metadata.trialUserId).toBe(owner.userId);
+    });
+
+    it("does not grant a second trial once the user's trial_used_at is set", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Trial Already Used Co");
+      const svc = getTestServiceClient();
+      await svc.from("users").update({ trial_used_at: new Date().toISOString() }).eq("id", owner.userId);
+
+      const res = await checkout(owner.cookieHeader, companyId, "starter");
+      expect(res.status).toBe(200);
+      expect(res.json.mode).toBe("checkout");
+
+      const session = await capturedCheckoutSession(res.json.url!);
+      expect(session?.trialPeriodDays).toBeNull();
+      expect(session?.metadata.trialUserId).toBeUndefined();
+    });
+
+    it("never grants a trial on Pro, even for a first-time user", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Trial Not On Pro Co");
+
+      const res = await checkout(owner.cookieHeader, companyId, "pro");
+      expect(res.status).toBe(200);
+      expect(res.json.mode).toBe("checkout");
+
+      const session = await capturedCheckoutSession(res.json.url!);
+      expect(session?.trialPeriodDays).toBeNull();
+      expect(session?.metadata.trialUserId).toBeUndefined();
+    });
+
+    // Two different users, same company: the trial is a property of the
+    // person checking out, not the plan choice or the company.
+    it("a second admin of the same company still gets their own trial", async () => {
+      const owner = await signUpTestUser("owner");
+      const admin = await signUpTestUser("admin");
+      const companyId = await createCompany(owner.cookieHeader, "Trial Per User Co");
+      await api("POST", `/api/companies/${companyId}/members`, owner.cookieHeader, {
+        userId: admin.userId,
+        role: "admin",
+      });
+      const svc = getTestServiceClient();
+      await svc.from("users").update({ trial_used_at: new Date().toISOString() }).eq("id", owner.userId);
+
+      const res = await checkout(admin.cookieHeader, companyId, "starter");
+      expect(res.status).toBe(200);
+
+      const session = await capturedCheckoutSession(res.json.url!);
+      expect(session?.trialPeriodDays).toBe(STARTER_TRIAL_DAYS);
+      expect(session?.metadata.trialUserId).toBe(admin.userId);
     });
   });
 

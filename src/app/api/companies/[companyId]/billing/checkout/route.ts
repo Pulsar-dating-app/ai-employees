@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { getPlan, type PlanKey } from "@/lib/billing/plans";
+import { getPlan, STARTER_TRIAL_DAYS, type PlanKey } from "@/lib/billing/plans";
 import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import {
@@ -31,6 +31,13 @@ import {
 //    ignored on this path.
 //
 // Enterprise is contact-only: 400 pointing at the "fale conosco" CTA.
+//
+// Trello P8 -- Starter trial: on the checkout branch, a plan with a
+// `trialReplyLimit` (only Starter today) grants `STARTER_TRIAL_DAYS` free
+// if this user (not this company) hasn't had one before (`users
+// .trial_used_at`). Stripe still collects a card; P4's webhook seeds the
+// reduced trial quota and stamps `trial_used_at` once the subscription
+// actually starts trialing.
 //
 // Currency: the Checkout Session never sets `currency`. The Prices are
 // BRL-based; Adaptive Pricing (enabled in the Stripe Dashboard, P1) detects
@@ -206,6 +213,19 @@ export async function POST(
 
   const service = createServiceClient();
 
+  // Trello P8 -- the Starter free trial, once per account (not per company;
+  // see decisions.md 2026-09-08). Only offered on a plan that has a
+  // trialReplyLimit, and only to a user who hasn't already had one.
+  let grantTrial = false;
+  if (plan.trialReplyLimit != null) {
+    const { data: userRow } = await service
+      .from("users")
+      .select("trial_used_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    grantTrial = !userRow?.trial_used_at;
+  }
+
   const customerId = await getOrCreateStripeCustomer({
     companyId,
     companyName: company.name as string,
@@ -240,6 +260,7 @@ export async function POST(
     companyId,
     planKey,
     baseUrl: resolveCheckoutBaseUrl(),
+    ...(grantTrial ? { trialPeriodDays: STARTER_TRIAL_DAYS, trialUserId: user.id } : {}),
   });
 
   return NextResponse.json({ ok: true, mode: "checkout", url });

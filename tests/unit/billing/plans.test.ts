@@ -34,6 +34,18 @@ describe("billing plan catalog (Trello P1)", () => {
     // Enterprise terms are negotiated per deal, not fixed in the catalog.
     expect(enterprise.monthlyReplyLimit).toBeNull();
     expect(enterprise.priceBrlCents).toBeNull();
+    expect(enterprise.trialReplyLimit).toBeNull();
+  });
+
+  // Trello P8 -- the free trial is Starter-only; every other plan must stay
+  // opted out (`null`) so the checkout route never grants one by accident.
+  it("only offers a trial on Starter, with a quota below its normal monthly limit", () => {
+    const starter = getPlan("starter");
+    expect(starter.trialReplyLimit).toBeGreaterThan(0);
+    expect(starter.trialReplyLimit!).toBeLessThan(starter.monthlyReplyLimit!);
+
+    expect(getPlan("pro").trialReplyLimit).toBeNull();
+    expect(getPlan("enterprise").trialReplyLimit).toBeNull();
   });
 
   it("keeps lookup keys unique across plans", () => {

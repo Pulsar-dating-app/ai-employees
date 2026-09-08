@@ -134,6 +134,88 @@ describe("Stripe webhook (Trello P4)", () => {
     expect(eventRow?.processed_at).toBeTruthy();
   });
 
+  it("checkout.session.completed for a trialing subscription seeds the reduced trial quota and stamps trial_used_at (Trello P8)", async () => {
+    const owner = await signUpTestUser("owner");
+    const created = await api<{ company: { id: string } }>("POST", "/api/companies", owner.cookieHeader, {
+      name: "P8 Trial Co",
+    });
+    const companyId = created.json.company.id;
+
+    const event = stripeEvent("checkout.session.completed", {
+      id: "cs_trial",
+      object: "checkout.session",
+      metadata: { companyId, planKey: "starter" },
+      customer: "cus_trial",
+      subscription: `sub_mock_starter__co_${companyId}__trial__user_${owner.userId}`,
+    });
+    const res = await postEvent(event);
+    expect(res.status).toBe(200);
+
+    const billing = await readBilling(companyId);
+    expect(billing?.subscription_status).toBe("trialing");
+    expect(billing?.plan_key).toBe("starter");
+
+    const { data: usage } = await svc
+      .from("company_message_usage")
+      .select("replies_used, reply_limit")
+      .eq("company_id", companyId)
+      .single();
+    expect(usage?.replies_used).toBe(0);
+    expect(usage?.reply_limit).toBe(getPlan("starter").trialReplyLimit);
+
+    const { data: userRow } = await svc
+      .from("users")
+      .select("trial_used_at")
+      .eq("id", owner.userId)
+      .single();
+    expect(userRow?.trial_used_at).toBeTruthy();
+  });
+
+  it("converting from trial to a paid period re-seeds the full monthly limit, not a cumulative pool (Trello P8)", async () => {
+    const companyId = await createCompany("P8 Convert Co");
+    const trialStart = new Date("2026-06-01T00:00:00Z");
+    await svc.from("company_billing").insert({
+      company_id: companyId,
+      stripe_customer_id: "cus_convert",
+      stripe_subscription_id: "sub_convert",
+      subscription_status: "trialing",
+      plan_key: "starter",
+      current_period_start: trialStart.toISOString(),
+    });
+    await svc.from("company_message_usage").insert({
+      company_id: companyId,
+      period_start: trialStart.toISOString(),
+      replies_used: 900, // near the trial's reduced cap
+      reply_limit: getPlan("starter").trialReplyLimit,
+    });
+
+    const paidStartSec = Math.floor(new Date("2026-06-16T00:00:00Z").getTime() / 1000);
+    const res = await postEvent(
+      stripeEvent(
+        "customer.subscription.updated",
+        subscriptionObject({
+          id: "sub_convert",
+          companyId,
+          status: "active",
+          lookupKey: "starter2_monthly",
+          periodStartSec: paidStartSec,
+        }),
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect((await readBilling(companyId))?.subscription_status).toBe("active");
+
+    const { data: rows } = await svc
+      .from("company_message_usage")
+      .select("period_start, replies_used, reply_limit")
+      .eq("company_id", companyId)
+      .order("period_start", { ascending: true });
+    expect(rows).toHaveLength(2);
+    expect(rows![0].reply_limit).toBe(getPlan("starter").trialReplyLimit); // trial period left untouched
+    expect(rows![1].replies_used).toBe(0); // fresh period, not carried over
+    expect(rows![1].reply_limit).toBe(getPlan("starter").monthlyReplyLimit); // full quota
+  });
+
   it("is idempotent — a repeat delivery of the same event id is a no-op 200", async () => {
     const companyId = await createCompany("P4 Idempotent Co");
     await svc.from("company_billing").insert({

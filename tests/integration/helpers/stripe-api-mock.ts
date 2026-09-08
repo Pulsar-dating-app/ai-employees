@@ -18,6 +18,13 @@ import { getPlan, type PlanKey } from "@/lib/billing/plans";
 //    (kept for P4; P3 no longer calls it)
 //  - GET /v1/subscriptions/sub_mock_<planKey> reports that plan's real
 //    Price id as the current item (used by P4).
+//  - a sub id containing `__trial`/`__user_<id>` reports `status:
+//    "trialing"` / metadata.trialUserId on GET (Trello P8's free trial).
+//  - every checkout session create's `subscription_data` (trial_period_days
+//    + nested metadata) is captured, keyed by session id, readable via GET
+//    /__checkout_sessions/<id> -- same inspection shape as
+//    google-calendar-mock.ts's /__events, since the route under test runs
+//    in a different process than the one asserting on what it sent.
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve) => {
@@ -31,26 +38,34 @@ function randomId(prefix: string): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 14)}`;
 }
 
-function extractMetadata(params: URLSearchParams): Record<string, string> {
+function extractMetadata(params: URLSearchParams, prefix = "metadata"): Record<string, string> {
   const metadata: Record<string, string> = {};
+  const re = new RegExp(`^${prefix.replace(/[[\]]/g, "\\$&")}\\[(.+)\\]$`);
   for (const [key, value] of params) {
-    const match = key.match(/^metadata\[(.+)\]$/);
+    const match = key.match(re);
     if (match) metadata[match[1]] = value;
   }
   return metadata;
 }
 
-// P4 test sub ids: `sub_mock_<planKey>[__co_<companyId>]`. The plan half
-// drives the returned price/lookup_key; the optional company half is echoed
-// as metadata.companyId, the way a real subscription created through P3's
-// checkout carries it (so the webhook handler resolves the company without
-// the non-unique stripe_subscription_id fallback).
-function parseSubMock(subscriptionId: string): { planKey: PlanKey | null; companyId: string | null } {
+// P4 test sub ids: `sub_mock_<planKey>[__co_<companyId>][__trial][__user_<userId>]`.
+// The plan half drives the returned price/lookup_key; `__co_` is echoed as
+// metadata.companyId (so the webhook resolves the company without the
+// non-unique stripe_subscription_id fallback); `__trial` reports the
+// subscription as `trialing` instead of `active` (Trello P8); `__user_`
+// echoes metadata.trialUserId, the way P3's checkout carries the checking-
+// out user on subscription_data when it grants a trial.
+function parseSubMock(
+  subscriptionId: string,
+): { planKey: PlanKey | null; companyId: string | null; isTrial: boolean; trialUserId: string | null } {
   const planMatch = subscriptionId.match(/^sub_mock_(starter|pro|enterprise)/);
-  const coMatch = subscriptionId.match(/__co_(.+)$/);
+  const coMatch = subscriptionId.match(/__co_([^_]+)/);
+  const userMatch = subscriptionId.match(/__user_(.+)$/);
   return {
     planKey: planMatch ? (planMatch[1] as PlanKey) : null,
     companyId: coMatch ? coMatch[1] : null,
+    isTrial: subscriptionId.includes("__trial"),
+    trialUserId: userMatch ? userMatch[1] : null,
   };
 }
 
@@ -65,14 +80,17 @@ function priceForSubscription(subscriptionId: string): { id: string; lookup_key:
 
 function mockSubscription(subscriptionId: string) {
   const nowSec = Math.floor(Date.now() / 1000);
-  const { companyId } = parseSubMock(subscriptionId);
+  const { companyId, isTrial, trialUserId } = parseSubMock(subscriptionId);
   return {
     id: subscriptionId,
     object: "subscription",
-    status: "active",
+    status: isTrial ? "trialing" : "active",
     cancel_at_period_end: false,
     customer: `cus_mock_of_${subscriptionId}`,
-    metadata: companyId ? { companyId } : {},
+    metadata: {
+      ...(companyId ? { companyId } : {}),
+      ...(trialUserId ? { trialUserId } : {}),
+    },
     items: {
       object: "list",
       data: [
@@ -88,7 +106,15 @@ function mockSubscription(subscriptionId: string) {
   };
 }
 
+export type CapturedCheckoutSession = {
+  id: string;
+  trialPeriodDays: number | null;
+  metadata: Record<string, string>;
+};
+
 export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
+  const capturedCheckoutSessions = new Map<string, CapturedCheckoutSession>();
+
   const server: Server = createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
     const send = (status: number, body: unknown) => {
@@ -97,6 +123,15 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
     };
     const fail = (message: string) =>
       send(400, { error: { type: "invalid_request_error", message: `mock: ${message}` } });
+
+    if (url.pathname === "/__checkout_sessions" && req.method === "GET") {
+      return send(200, [...capturedCheckoutSessions.values()]);
+    }
+    if (url.pathname === "/__checkout_sessions" && req.method === "DELETE") {
+      capturedCheckoutSessions.clear();
+      res.writeHead(204);
+      return res.end();
+    }
 
     const body = req.method === "GET" ? "" : await readBody(req);
     const params = new URLSearchParams(body);
@@ -120,6 +155,12 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
         return fail("currency must not be set on the session (Adaptive Pricing owns presentment)");
       }
       const id = randomId("cs_mock");
+      const trialPeriodDaysRaw = params.get("subscription_data[trial_period_days]");
+      capturedCheckoutSessions.set(id, {
+        id,
+        trialPeriodDays: trialPeriodDaysRaw ? Number(trialPeriodDaysRaw) : null,
+        metadata: extractMetadata(params, "subscription_data[metadata]"),
+      });
       return send(200, {
         id,
         object: "checkout.session",

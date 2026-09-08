@@ -21,6 +21,11 @@
 
 export type PlanKey = "starter" | "pro" | "enterprise";
 
+/** Length of the Starter free trial (Trello P8). Not a per-plan field --
+ * every plan that offers a trial uses the same length; only the reduced
+ * quota differs. */
+export const STARTER_TRIAL_DAYS = 15;
+
 export interface BillingPlan {
   key: PlanKey;
   displayName: string;
@@ -46,6 +51,14 @@ export interface BillingPlan {
    */
   monthlyReplyLimit: number | null;
   /**
+   * PLACEHOLDER. The reduced reply allowance during the 15-day free trial
+   * (`STARTER_TRIAL_DAYS`). `null` means this plan never offers a trial --
+   * the checkout route only grants one when the chosen plan has a non-null
+   * value here. Seeded the same way as `monthlyReplyLimit`, just for the
+   * subscription's trialing period instead of a normal one.
+   */
+  trialReplyLimit: number | null;
+  /**
    * PLACEHOLDER, display only. The real charge amount/currency comes from
    * the Stripe Price plus Adaptive Pricing, not from this field.
    * `null` for contact-us plans -- Enterprise has no fixed price to show.
@@ -62,6 +75,7 @@ export const BILLING_PLANS: readonly BillingPlan[] = [
     stripeLookupKey: "starter2_monthly",
     stripePriceId: "price_1UBclEHAg1kV3YLS1ouL6qsM",
     monthlyReplyLimit: 10_000,
+    trialReplyLimit: 1_000,
     priceBrlCents: 94_000,
     isSelfServe: true,
   },
@@ -71,6 +85,7 @@ export const BILLING_PLANS: readonly BillingPlan[] = [
     stripeLookupKey: "pro_monthly",
     stripePriceId: "price_1UBD3SHAg1kV3YLSO7xCrO1s",
     monthlyReplyLimit: 20_000,
+    trialReplyLimit: null,
     priceBrlCents: 99_900,
     isSelfServe: true,
   },
@@ -80,6 +95,7 @@ export const BILLING_PLANS: readonly BillingPlan[] = [
     stripeLookupKey: null,
     stripePriceId: null,
     monthlyReplyLimit: null,
+    trialReplyLimit: null,
     priceBrlCents: null,
     isSelfServe: false,
   },
