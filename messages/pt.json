@@ -123,6 +123,9 @@
           "name": "WhatsApp"
         },
         {
+          "name": "Shopify"
+        },
+        {
           "name": "OpenAI"
         }
       ]
@@ -931,6 +934,13 @@
       "cancelButton": "Cancelar",
       "reactivateButton": "Reativar"
     },
+    "addTabs": {
+      "cardTitle": "Adicionar produtos",
+      "tablistLabel": "Formas de adicionar produtos",
+      "manual": "Individual",
+      "csv": "Planilha",
+      "shopify": "Shopify"
+    },
     "import": {
       "title": "Importação em massa",
       "description": "Envie um arquivo CSV ou Excel para adicionar vários produtos de uma vez.",
@@ -949,6 +959,41 @@
       "skippedTableReasonHeader": "Motivo",
       "genericError": "Algo deu errado ao importar o arquivo. Tente novamente.",
       "fileRequired": "Escolha um arquivo primeiro."
+    },
+    "shopify": {
+      "title": "Conecte sua loja Shopify",
+      "description": "Traga os produtos da sua loja Shopify para o seu catálogo automaticamente e mantenha tudo atualizado com um clique.",
+      "disconnectedHint": "Conecte sua loja que a gente importa seus produtos pra você — sem planilha.",
+      "shopLabel": "Endereço da sua loja Shopify",
+      "shopPlaceholder": "sua-loja.myshopify.com",
+      "connectButton": "Conectar loja",
+      "adminOnlyHint": "Peça a um proprietário ou administrador para conectar a loja.",
+      "statusConnected": "Conectada",
+      "lastSynced": "Atualizado em {when}",
+      "neverSynced": "Ainda não importado — faça a primeira importação abaixo.",
+      "syncButton": "Sincronizar agora",
+      "syncFullButton": "Ressincronizar tudo",
+      "syncingButton": "Sincronizando…",
+      "syncRunning": "Importação em andamento — para um catálogo grande isso pode levar alguns minutos. Clique em Sincronizar agora de novo para continuar de onde parou.",
+      "syncResult": "{synced} produtos atualizados, {deactivated} removidos, {skipped} ignorados",
+      "syncResultDelta": "{synced} produtos atualizados, {skipped} ignorados",
+      "truncated": "Só os primeiros {max} produtos foram importados — fale com o suporte se seu catálogo for maior.",
+      "skippedProductHeader": "Produto",
+      "skippedReasonHeader": "Motivo",
+      "syncError": "Algo deu errado ao sincronizar sua loja. Tente novamente.",
+      "reauthError": "A conexão com sua loja expirou. Conecte sua loja de novo para manter a sincronização.",
+      "disconnectButton": "Desconectar",
+      "confirmDisconnectButton": "Clique de novo para desconectar",
+      "cancelButton": "Cancelar",
+      "banner": {
+        "connected": "Sua loja Shopify está conectada. Sincronize para importar seus produtos.",
+        "invalid_state": "Esse link de conexão expirou. Tente novamente.",
+        "denied": "A loja não foi conectada. Tente novamente.",
+        "invalid_hmac": "Não conseguimos verificar a resposta da Shopify. Tente novamente.",
+        "not_admin": "Só um proprietário ou administrador pode conectar a loja.",
+        "connected_elsewhere": "Esta loja Shopify já está conectada a outra conta.",
+        "connect_failed": "Não conseguimos conectar sua loja. Tente novamente."
+      }
     }
   },
   "Services": {

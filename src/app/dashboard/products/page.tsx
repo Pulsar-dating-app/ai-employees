@@ -85,6 +85,9 @@ export default async function ProductsPage() {
   // can create/edit/deactivate products. Matching Settings' stricter gate
   // here would invent a restriction the API doesn't enforce.
   const canEdit = membership !== null;
+  // The Shopify connect/disconnect routes ARE admin-gated (like every other
+  // connection table), so the card's connect/disconnect controls need this.
+  const canManageConnection = membership?.role === "owner" || membership?.role === "admin";
 
   return (
     <div className="flex flex-col gap-8">
@@ -100,6 +103,7 @@ export default async function ProductsPage() {
         companyId={company.id}
         companyCurrency={company.currency}
         canEdit={canEdit}
+        canManageConnection={canManageConnection}
         initialProducts={products ?? []}
         initialTotal={count ?? 0}
         pageSize={PAGE_SIZE}
