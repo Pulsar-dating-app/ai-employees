@@ -4,32 +4,61 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { buildProductEmbeddingInput, createProductEmbeddingsBatch } from "@/lib/products/embeddings";
 import { validatePriceCurrency } from "@/lib/products/validation";
 import {
-  fetchAllProducts,
+  downloadBulkProducts,
+  fetchChangedProducts,
   fetchShopInfo,
+  getBulkOperation,
   numericId,
   refreshOfflineToken,
+  startBulkProductsExport,
   ShopifyReauthRequiredError,
   type ShopifyProduct,
 } from "./admin-api";
 
-// Pulls a connected store's whole catalogue into the `products` table:
-// upsert by (company_id, external_id), then deactivate anything previously
-// synced that this run didn't see. Triggered only by the merchant's
-// "Sync now" button (no cron, no product webhooks in v1).
+// Pulls a connected store's catalogue into the `products` table (upsert by
+// (company_id, external_id)). Triggered only by the merchant's "Sync now"
+// button -- no cron, no product webhooks.
+//
+// Two modes:
+//  * FULL -- GraphQL Bulk Operations (async on Shopify's side, JSONL file,
+//    no product-count ceiling). Runs on the first sync ever, on an explicit
+//    "full re-sync", and to resume an in-flight bulk op. Deactivates rows
+//    the export didn't contain (source of truth).
+//  * DELTA -- every sync after the first: a paginated `updated_at:>` query,
+//    small and fast. Upsert only; deletions are reconciled by a full re-sync.
 //
 // Always runs through the service-role client -- `products` writes here
-// aren't in a merchant request context, and it must filter company_id
-// itself (same contract as ProductRepository). A caller may inject its own
-// client so an integration test can point the whole thing at local Supabase.
+// aren't in a merchant request context, and it filters company_id itself
+// (same contract as ProductRepository). A caller may inject its own client
+// so an integration test can point the whole thing at local Supabase.
 
 const EXTERNAL_ID_PREFIX = "shopify:";
 
+// A bulk op can outlast one serverless request. Poll for at most this long,
+// then hand back status:"running" and let a follow-up "Sync now" resume.
+// Overridable so the integration suite can exercise the running path fast.
+const BULK_POLL_BUDGET_MS = Number(process.env.SHOPIFY_BULK_POLL_BUDGET_MS ?? 210_000);
+const BULK_POLL_INTERVAL_MS = Number(process.env.SHOPIFY_BULK_POLL_INTERVAL_MS ?? 2_000);
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
 export type ShopifySyncResult = {
+  mode: "full" | "delta";
+  // "completed" -- the import ran. "running" -- a bulk export is still going
+  // on Shopify's side; click Sync again to pick up the result.
+  status: "completed" | "running";
   synced: number;
   deactivated: number;
   skipped: { title: string; reason: string }[];
   truncated: boolean;
 };
+
+export class ShopifyBulkFailedError extends Error {
+  constructor(detail: string) {
+    super(`Shopify bulk export failed: ${detail}`);
+    this.name = "ShopifyBulkFailedError";
+  }
+}
 
 export class ShopifyNotConnectedError extends Error {
   constructor() {
@@ -152,33 +181,18 @@ function mapProduct(
   };
 }
 
-export async function syncShopifyCatalog({
-  companyId,
-  supabase,
-}: {
-  companyId: string;
-  supabase?: SupabaseClient;
-}): Promise<ShopifySyncResult> {
-  const client = supabase ?? createServiceClient();
-  const runId = randomUUID();
-
-  const { data: connection, error: connError } = await client
-    .from("company_shopify_connections")
-    .select("shop_domain, access_token, refresh_token, token_expires_at, status")
-    .eq("company_id", companyId)
-    .maybeSingle();
-
-  if (connError) throw connError;
-  if (!connection || connection.status !== "connected" || !connection.access_token) {
-    throw new ShopifyNotConnectedError();
-  }
-
-  const shop = connection.shop_domain as string;
-  const accessToken = await resolveAccessToken(client, companyId, connection);
-
-  const { currency } = await fetchShopInfo(shop, accessToken);
-  const { products, truncated } = await fetchAllProducts(shop, accessToken);
-
+// Maps + validates a batch of Shopify products, re-embeds only the rows
+// whose name/category/description changed since last time (same principle
+// as the product PATCH route -- an unchanged re-sync makes zero OpenAI
+// calls), and bulk-upserts. Shared by both sync modes.
+async function applyProducts(
+  client: SupabaseClient,
+  companyId: string,
+  shop: string,
+  currency: string,
+  runId: string,
+  products: ShopifyProduct[],
+): Promise<{ synced: number; skipped: { title: string; reason: string }[] }> {
   const skipped: { title: string; reason: string }[] = [];
   const rows: MappedRow[] = [];
 
@@ -196,11 +210,10 @@ export async function syncShopifyCatalog({
     rows.push(row);
   }
 
-  // Re-embed only rows whose embedding-relevant text (name/category/
-  // description) is new or changed since the last sync -- same principle as
-  // the product PATCH route. A manual re-sync of an unchanged catalogue
-  // then makes zero OpenAI calls. Existing shopify rows are read by prefix
-  // rather than a (possibly huge) `.in(external_id, [...])` list.
+  if (rows.length === 0) return { synced: 0, skipped };
+
+  // Existing shopify rows read by prefix (an indexed (company_id,
+  // external_id) range scan) rather than a possibly-huge .in([...]) list.
   const { data: existingRows, error: existingError } = await client
     .from("products")
     .select("external_id, name, description, category")
@@ -208,9 +221,7 @@ export async function syncShopifyCatalog({
     .like("external_id", `${EXTERNAL_ID_PREFIX}%`);
   if (existingError) throw existingError;
 
-  const existingByExternalId = new Map(
-    (existingRows ?? []).map((r) => [r.external_id as string, r]),
-  );
+  const existingByExternalId = new Map((existingRows ?? []).map((r) => [r.external_id as string, r]));
 
   const changedRowIndexes: number[] = [];
   rows.forEach((row, index) => {
@@ -238,24 +249,105 @@ export async function syncShopifyCatalog({
 
   const payload = rows.map((row, index) => {
     const slot = embeddingSlotByRow.get(index);
-    // Unchanged row: omit `embedding` entirely so the upsert leaves the
-    // stored vector alone.
+    // Unchanged row: omit `embedding` so the upsert leaves the stored vector alone.
     if (slot === undefined) return row;
     return { ...row, embedding: embeddings[slot] ?? null };
   });
 
-  if (payload.length > 0) {
-    const { error: upsertError } = await client
-      .from("products")
-      .upsert(payload, { onConflict: "company_id,external_id" });
-    if (upsertError) throw upsertError;
+  const { error: upsertError } = await client
+    .from("products")
+    .upsert(payload, { onConflict: "company_id,external_id" });
+  if (upsertError) throw upsertError;
+
+  return { synced: payload.length, skipped };
+}
+
+export async function syncShopifyCatalog({
+  companyId,
+  supabase,
+  full = false,
+}: {
+  companyId: string;
+  supabase?: SupabaseClient;
+  // Force a bulk full re-sync even when a delta watermark exists -- how a
+  // merchant reconciles products deleted in Shopify (delta can't see those).
+  full?: boolean;
+}): Promise<ShopifySyncResult> {
+  const client = supabase ?? createServiceClient();
+  const runId = randomUUID();
+
+  const { data: connection, error: connError } = await client
+    .from("company_shopify_connections")
+    .select(
+      "shop_domain, access_token, refresh_token, token_expires_at, status, last_synced_at, bulk_sync_op_id",
+    )
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (connError) throw connError;
+  if (!connection || connection.status !== "connected" || !connection.access_token) {
+    throw new ShopifyNotConnectedError();
   }
 
-  // Deactivate anything previously synced from Shopify that this run didn't
-  // write (its metadata.sync_run is an older value). The stamp is O(1) in
-  // catalogue size -- no NOT IN (huge list). A product Shopify still
-  // returns but that failed mapping (bad price) is treated as absent and
-  // deactivated; it reactivates on the next sync once fixed in Shopify.
+  const shop = connection.shop_domain as string;
+  const accessToken = await resolveAccessToken(client, companyId, connection);
+  const { currency } = await fetchShopInfo(shop, accessToken);
+
+  // Resume an in-flight bulk op regardless of `full`; otherwise a delta once
+  // there's a watermark; otherwise the first full export.
+  const resumeBulk = Boolean(connection.bulk_sync_op_id);
+  const useDelta = !full && !resumeBulk && Boolean(connection.last_synced_at);
+
+  if (useDelta) {
+    const { products, truncated } = await fetchChangedProducts(
+      shop,
+      accessToken,
+      connection.last_synced_at as string,
+    );
+    const { synced, skipped } = await applyProducts(client, companyId, shop, currency, runId, products);
+    await client
+      .from("company_shopify_connections")
+      .update({ last_synced_at: new Date().toISOString() })
+      .eq("company_id", companyId);
+    return { mode: "delta", status: "completed", synced, deactivated: 0, skipped, truncated };
+  }
+
+  // --- full export via Bulk Operations ------------------------------------
+  let opId = connection.bulk_sync_op_id as string | null;
+  if (!opId) {
+    opId = await startBulkProductsExport(shop, accessToken);
+    await client
+      .from("company_shopify_connections")
+      .update({ bulk_sync_op_id: opId })
+      .eq("company_id", companyId);
+  }
+
+  const deadline = Date.now() + BULK_POLL_BUDGET_MS;
+  let op = await getBulkOperation(shop, accessToken, opId);
+  while (op && (op.status === "CREATED" || op.status === "RUNNING") && Date.now() < deadline) {
+    await sleep(BULK_POLL_INTERVAL_MS);
+    op = await getBulkOperation(shop, accessToken, opId);
+  }
+
+  if (!op || op.status === "FAILED" || op.status === "CANCELED" || op.status === "EXPIRED") {
+    await client
+      .from("company_shopify_connections")
+      .update({ bulk_sync_op_id: null })
+      .eq("company_id", companyId);
+    throw new ShopifyBulkFailedError(op?.status ?? "operation not found");
+  }
+
+  if (op.status === "CREATED" || op.status === "RUNNING" || op.status === "CANCELING") {
+    // Still going -- keep bulk_sync_op_id so the next "Sync now" resumes.
+    return { mode: "full", status: "running", synced: 0, deactivated: 0, skipped: [], truncated: false };
+  }
+
+  // COMPLETED. `url` is null when the export matched zero products.
+  const products = op.url ? await downloadBulkProducts(op.url) : [];
+  const { synced, skipped } = await applyProducts(client, companyId, shop, currency, runId, products);
+
+  // Full export is the source of truth: deactivate any shopify row this run
+  // didn't write (its metadata.sync_run is stale). O(1) in catalogue size.
   const { data: deactivatedRows, error: deactivateError } = await client
     .from("products")
     .update({ is_active: false })
@@ -268,13 +360,15 @@ export async function syncShopifyCatalog({
 
   await client
     .from("company_shopify_connections")
-    .update({ last_synced_at: new Date().toISOString() })
+    .update({ bulk_sync_op_id: null, last_synced_at: new Date().toISOString() })
     .eq("company_id", companyId);
 
   return {
-    synced: payload.length,
+    mode: "full",
+    status: "completed",
+    synced,
     deactivated: deactivatedRows?.length ?? 0,
     skipped,
-    truncated,
+    truncated: false,
   };
 }

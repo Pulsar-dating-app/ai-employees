@@ -46,3 +46,15 @@ export async function clearMockCatalogues(): Promise<void> {
   const { shopifyApiMockUrl } = getTestEnv();
   await fetch(`${shopifyApiMockUrl}/__products`, { method: "DELETE" });
 }
+
+// Flips a "bulk-slow" token's bulk export from RUNNING to COMPLETED so the
+// next sync resumes it.
+export async function completeMockBulk(token: string): Promise<void> {
+  const { shopifyApiMockUrl } = getTestEnv();
+  const res = await fetch(`${shopifyApiMockUrl}/__bulk-complete`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!res.ok) throw new Error(`completeMockBulk failed: ${res.status}`);
+}

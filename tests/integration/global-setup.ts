@@ -146,6 +146,10 @@ export default async function setup() {
         SHOPIFY_API_KEY: "test-shopify-api-key",
         SHOPIFY_API_SECRET: "test-shopify-api-secret",
         SHOPIFY_ADMIN_API_BASE_URL: shopifyApiMock.url,
+        // Keep the bulk-export poll loop short so a "bulk-slow" op reaches
+        // the status:"running" branch in well under a test timeout.
+        SHOPIFY_BULK_POLL_BUDGET_MS: "800",
+        SHOPIFY_BULK_POLL_INTERVAL_MS: "40",
         // P4 webhook signature. stripe-webhook.test.ts signs its synthetic
         // events with this exact literal via generateTestHeaderString.
         STRIPE_WEBHOOK_SECRET: "whsec_test_secret",
