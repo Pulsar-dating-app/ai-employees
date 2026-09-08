@@ -1,0 +1,214 @@
+import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
+
+// Shopify Admin API calls for the catalogue connection. A sibling of
+// src/lib/instagram/meta-instagram-api.ts, same shape: config pulled from
+// env at module load, a base-URL override so integration tests can point
+// every call at one local mock instead of the real per-shop hosts.
+//
+// SHOPIFY_API_KEY / SHOPIFY_API_SECRET are the app's OAuth client id +
+// secret (Dev Dashboard > the app > Client credentials); the secret also
+// signs the OAuth callback `hmac` and every webhook (see hmac.ts).
+//
+// The read path is the GraphQL Admin API, not REST: Shopify restricts new
+// public apps' access to the REST product endpoints, and GraphQL is the
+// supported surface going forward.
+
+const API_KEY = process.env.SHOPIFY_API_KEY;
+const API_SECRET = process.env.SHOPIFY_API_SECRET;
+const SCOPES = process.env.SHOPIFY_SCOPES ?? "read_products";
+const API_VERSION = process.env.SHOPIFY_API_VERSION ?? "2026-07";
+
+// Hard ceiling on a single synchronous sync, mirroring the CSV import's
+// MAX_ROWS = 2000 philosophy. A catalogue larger than this is truncated
+// (and the sync result says so) -- a queued/background sync is future work.
+export const SHOPIFY_SYNC_MAX_PRODUCTS = Number(process.env.SHOPIFY_SYNC_MAX_PRODUCTS ?? 5000);
+
+const PAGE_SIZE = 250; // Shopify's per-page maximum for a products connection.
+
+// Real deployments hit `https://<shop>.myshopify.com`; a test points every
+// call at one mock server via SHOPIFY_ADMIN_API_BASE_URL (only the path
+// matters to the mock, same as INSTAGRAM_API_BASE_URL).
+function adminApiBase(shop: string): string {
+  return process.env.SHOPIFY_ADMIN_API_BASE_URL ?? `https://${shop}`;
+}
+
+export type ShopifyProduct = {
+  id: string; // GID, e.g. "gid://shopify/Product/123"
+  handle: string;
+  title: string;
+  descriptionHtml: string | null;
+  productType: string | null;
+  status: "ACTIVE" | "ARCHIVED" | "DRAFT";
+  onlineStoreUrl: string | null;
+  featuredImage: { url: string } | null;
+  variants: { nodes: { price: string | null; sku: string | null }[] };
+};
+
+// "gid://shopify/Product/123" -> "123". Falls back to the raw value if the
+// shape is ever different, so external_id is always populated.
+export function numericId(gid: string): string {
+  const match = /\/(\d+)(?:\?.*)?$/.exec(gid);
+  return match ? match[1] : gid;
+}
+
+// Trim, drop a scheme/path/query if the merchant pasted a full URL,
+// lowercase, and require the canonical `<name>.myshopify.com` shape. Returns
+// null on anything else -- the caller turns that into a 400, never a guess.
+export function normalizeShopDomain(input: string | null | undefined): string | null {
+  if (!input) return null;
+  let value = input.trim().toLowerCase();
+  value = value.replace(/^https?:\/\//, "");
+  value = value.replace(/\/.*$/, "");
+  value = value.replace(/\s+/g, "");
+  return /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(value) ? value : null;
+}
+
+// One shared redirect URI for every company (state carries which one) --
+// so it only has to be registered once in the app config. Reuses
+// resolveCheckoutBaseUrl(), the same "this app's own https origin" resolver
+// the Instagram callback uses.
+export function shopifyCallbackUrl(): string {
+  return `${resolveCheckoutBaseUrl()}/dashboard/shopify-callback`;
+}
+
+// Step 1: the authorize URL the merchant is redirected to. Always the real
+// `https://<shop>` host -- this is a browser redirect to Shopify, not a
+// server call, so the test base-URL override does not apply here.
+// `grant_options[]=` (empty, i.e. not "per-user") asks for an offline token,
+// which does not expire -- why the table has no token_expires_at.
+export function buildAuthorizeUrl(shop: string, state: string): string {
+  const url = new URL(`https://${shop}/admin/oauth/authorize`);
+  url.searchParams.set("client_id", API_KEY!);
+  url.searchParams.set("scope", SCOPES);
+  url.searchParams.set("redirect_uri", shopifyCallbackUrl());
+  url.searchParams.set("state", state);
+  url.searchParams.set("grant_options[]", "");
+  return url.toString();
+}
+
+// Step 2: authorization code -> permanent (offline) access token.
+export async function exchangeCodeForToken(
+  shop: string,
+  code: string,
+): Promise<{ accessToken: string; scope: string }> {
+  const res = await fetch(`${adminApiBase(shop)}/admin/oauth/access_token`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ client_id: API_KEY, client_secret: API_SECRET, code }),
+  });
+  if (!res.ok) throw new Error(`Shopify token exchange failed: ${res.status} ${await res.text()}`);
+  const json = (await res.json()) as { access_token?: string; scope?: string };
+  if (!json.access_token) throw new Error("Shopify token exchange returned no access_token");
+  return { accessToken: json.access_token, scope: json.scope ?? SCOPES };
+}
+
+async function shopifyGraphql<T>(
+  shop: string,
+  accessToken: string,
+  query: string,
+  variables?: Record<string, unknown>,
+): Promise<T> {
+  const res = await fetch(`${adminApiBase(shop)}/admin/api/${API_VERSION}/graphql.json`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json",
+      "X-Shopify-Access-Token": accessToken,
+    },
+    body: JSON.stringify({ query, variables: variables ?? {} }),
+  });
+  if (!res.ok) throw new Error(`Shopify GraphQL ${res.status}: ${await res.text()}`);
+  const json = (await res.json()) as { data?: T; errors?: unknown };
+  if (json.errors || !json.data) {
+    throw new Error(`Shopify GraphQL returned errors: ${JSON.stringify(json.errors ?? "no data")}`);
+  }
+  return json.data;
+}
+
+// The store's display name + currency, read once per sync. Shopify product
+// prices are always in the shop currency and the product payload never
+// repeats it, so this is where synced rows get their `currency`.
+export async function fetchShopInfo(
+  shop: string,
+  accessToken: string,
+): Promise<{ name: string; currency: string }> {
+  const data = await shopifyGraphql<{ shop: { name: string; currencyCode: string } }>(
+    shop,
+    accessToken,
+    `query { shop { name currencyCode } }`,
+  );
+  return { name: data.shop.name, currency: data.shop.currencyCode };
+}
+
+// Registers the app/uninstalled webhook so a merchant removing the app
+// tears down the connection (compliance webhooks -- customers/data_request
+// etc. -- can only be set in the app config, not via API, so they're not
+// here). Best-effort: the caller ignores failures (already-registered, or
+// Shopify rejecting a non-https callback in local dev).
+export async function registerAppUninstalledWebhook(shop: string, accessToken: string): Promise<void> {
+  const mutation = `
+    mutation($topic: WebhookSubscriptionTopic!, $sub: WebhookSubscriptionInput!) {
+      webhookSubscriptionCreate(topic: $topic, webhookSubscription: $sub) {
+        userErrors { message }
+      }
+    }
+  `;
+  await shopifyGraphql(shop, accessToken, mutation, {
+    topic: "APP_UNINSTALLED",
+    sub: { callbackUrl: `${resolveCheckoutBaseUrl()}/api/webhooks/shopify`, format: "JSON" },
+  });
+}
+
+const PRODUCTS_QUERY = `
+  query Products($cursor: String) {
+    products(first: ${PAGE_SIZE}, after: $cursor) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        id
+        handle
+        title
+        descriptionHtml
+        productType
+        status
+        onlineStoreUrl
+        featuredImage { url }
+        variants(first: 1) { nodes { price sku } }
+      }
+    }
+  }
+`;
+
+type ProductsPage = {
+  products: {
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    nodes: ShopifyProduct[];
+  };
+};
+
+// Cursor-paginated full catalogue read, capped at SHOPIFY_SYNC_MAX_PRODUCTS.
+// `truncated` tells the caller the store has more products than were pulled.
+export async function fetchAllProducts(
+  shop: string,
+  accessToken: string,
+): Promise<{ products: ShopifyProduct[]; truncated: boolean }> {
+  const products: ShopifyProduct[] = [];
+  let cursor: string | null = null;
+  let truncated = false;
+
+  for (;;) {
+    const data: ProductsPage = await shopifyGraphql<ProductsPage>(shop, accessToken, PRODUCTS_QUERY, {
+      cursor,
+    });
+    products.push(...data.products.nodes);
+
+    if (products.length >= SHOPIFY_SYNC_MAX_PRODUCTS) {
+      products.length = SHOPIFY_SYNC_MAX_PRODUCTS;
+      truncated = data.products.pageInfo.hasNextPage;
+      break;
+    }
+    if (!data.products.pageInfo.hasNextPage || !data.products.pageInfo.endCursor) break;
+    cursor = data.products.pageInfo.endCursor;
+  }
+
+  return { products, truncated };
+}

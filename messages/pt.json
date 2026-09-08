@@ -949,6 +949,37 @@
       "skippedTableReasonHeader": "Motivo",
       "genericError": "Algo deu errado ao importar o arquivo. Tente novamente.",
       "fileRequired": "Escolha um arquivo primeiro."
+    },
+    "shopify": {
+      "title": "Conecte sua loja Shopify",
+      "description": "Traga os produtos da sua loja Shopify para o seu catálogo automaticamente e mantenha tudo atualizado com um clique.",
+      "disconnectedHint": "Conecte sua loja que a gente importa seus produtos pra você — sem planilha.",
+      "shopLabel": "Endereço da sua loja Shopify",
+      "shopPlaceholder": "sua-loja.myshopify.com",
+      "connectButton": "Conectar loja",
+      "adminOnlyHint": "Peça a um proprietário ou administrador para conectar a loja.",
+      "statusConnected": "Conectada",
+      "lastSynced": "Atualizado em {when}",
+      "neverSynced": "Ainda não importado — faça a primeira importação abaixo.",
+      "syncButton": "Sincronizar agora",
+      "syncingButton": "Sincronizando…",
+      "syncResult": "{synced} produtos atualizados, {deactivated} removidos, {skipped} ignorados",
+      "truncated": "Só os primeiros {max} produtos foram importados — fale com o suporte se seu catálogo for maior.",
+      "skippedProductHeader": "Produto",
+      "skippedReasonHeader": "Motivo",
+      "syncError": "Algo deu errado ao sincronizar sua loja. Tente novamente.",
+      "disconnectButton": "Desconectar",
+      "confirmDisconnectButton": "Clique de novo para desconectar",
+      "cancelButton": "Cancelar",
+      "banner": {
+        "connected": "Sua loja Shopify está conectada. Sincronize para importar seus produtos.",
+        "invalid_state": "Esse link de conexão expirou. Tente novamente.",
+        "denied": "A loja não foi conectada. Tente novamente.",
+        "invalid_hmac": "Não conseguimos verificar a resposta da Shopify. Tente novamente.",
+        "not_admin": "Só um proprietário ou administrador pode conectar a loja.",
+        "connected_elsewhere": "Esta loja Shopify já está conectada a outra conta.",
+        "connect_failed": "Não conseguimos conectar sua loja. Tente novamente."
+      }
     }
   },
   "Services": {

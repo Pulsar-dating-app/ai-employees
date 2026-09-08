@@ -9,6 +9,7 @@ import { ProductFilters } from "./product-filters";
 import { ProductList } from "./product-list";
 import { ProductForm } from "./product-form";
 import { ImportPanel } from "./import-panel";
+import { ShopifyConnectCard } from "./shopify-connect-card";
 
 export type Product = {
   id: string;
@@ -40,6 +41,7 @@ type ProductsManagerProps = {
   companyId: string;
   companyCurrency: string | null;
   canEdit: boolean;
+  canManageConnection: boolean;
   initialProducts: Product[];
   initialTotal: number;
   pageSize: number;
@@ -56,6 +58,7 @@ export function ProductsManager({
   companyId,
   companyCurrency,
   canEdit,
+  canManageConnection,
   initialProducts,
   initialTotal,
   pageSize,
@@ -124,6 +127,20 @@ export function ProductsManager({
         </CardHeader>
         <CardContent>
           <ImportPanel companyId={companyId} canEdit={canEdit} onImported={() => refetch(filters)} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("shopify.title")}</CardTitle>
+          <CardDescription>{t("shopify.description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ShopifyConnectCard
+            companyId={companyId}
+            canManageConnection={canManageConnection}
+            onSynced={() => refetch(filters)}
+          />
         </CardContent>
       </Card>
 

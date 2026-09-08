@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildProductEmbeddingInput, createProductEmbedding } from "@/lib/products/embeddings";
 import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
+import { validatePriceCurrency, validateStock } from "@/lib/products/validation";
+// Re-exported so Trello B4's import route (`from "../route"`) keeps its
+// existing import path; the rules themselves now live in src/lib/products
+// so non-route callers (the Shopify catalogue sync) can share them.
+export { validatePriceCurrency, validateStock };
 
 // Trello ticket B3 — product catalog CRUD, scoped to company_id. RLS
 // (is_company_member) already enforces this at the DB layer; the explicit
@@ -34,36 +39,6 @@ async function requireMember(
   }
 
   return { error: null };
-}
-
-// price and currency travel together: a price with no currency is
-// meaningless money, a currency with no price is noise. Either can be
-// absent, but not one without the other.
-// Exported for reuse by Trello B4's import route — the ticket explicitly
-// wants row validation to reuse this rule, not duplicate it.
-export function validatePriceCurrency(price: unknown, currency: unknown): string | null {
-  if (price === undefined || price === null) return null;
-
-  if (typeof price !== "number" || Number.isNaN(price) || price < 0) {
-    return "price must be a number >= 0";
-  }
-
-  if (!currency) {
-    return "currency is required when price is present";
-  }
-
-  return null;
-}
-
-// stock is nullable and unconstrained at the DB level (Trello B4 migration
-// 20260826135937) — null means "not tracked," 0 means "out of stock." Same
-// app-layer-only validation style as price, not a DB CHECK.
-export function validateStock(stock: unknown): string | null {
-  if (stock === undefined || stock === null) return null;
-  if (typeof stock !== "number" || !Number.isInteger(stock) || stock < 0) {
-    return "stock must be a non-negative integer";
-  }
-  return null;
 }
 
 const DEFAULT_PAGE_SIZE = 20;
