@@ -20,10 +20,14 @@
   }
 
   // Merchant-configurable teaser bubble text (e.g. data-greeting="Need help
-  // finding your size?"). Falls back to a generic default -- deliberately
-  // no mention of "AI"/"chatbot"/"assistant" in either, matching this
-  // product's own customer-facing language rules.
-  var greeting = currentScript.getAttribute("data-greeting") || "Hi! 👋 Need help finding what you're looking for?";
+  // finding your size?"). The server-generated snippet always sets this now
+  // (see embed-snippet.ts's resolveDefaultGreeting) -- the hardcoded string
+  // below only ever fires for a snippet with no data-greeting attribute at
+  // all, i.e. one generated before that existed. Portuguese, matching the
+  // per-agent defaults it stands in for -- deliberately no mention of
+  // "AI"/"chatbot"/"assistant" in either, matching this product's own
+  // customer-facing language rules.
+  var greeting = currentScript.getAttribute("data-greeting") || "Oi! 👋 Posso te ajudar?";
   var TEASER_DISMISSED_KEY = "staffra-widget-teaser-dismissed:" + companySlug + ":" + agentSlug;
 
   // Merchant-uploaded launcher, set via data-launcher-type ("video" or
@@ -127,8 +131,13 @@
     // The launcher button's own white background (above) is what a visitor
     // sees if this video can't play at all -- still a clean, functional
     // button, never a blank/broken box.
+    // launcherSrc is used whenever present, not just for a custom upload --
+    // the server-generated snippet now also bakes in this agent's own
+    // default classic video here (see embed-snippet.ts). The hardcoded
+    // fallback only ever fires for a snippet pasted before either feature
+    // existed, which has no data-launcher-src attribute at all.
     var launcherVideo = document.createElement("video");
-    launcherVideo.src = useCustomLauncher ? launcherSrc : staffraOrigin + "/widget-launcher.webm";
+    launcherVideo.src = launcherSrc || staffraOrigin + "/widget-launcher.webm";
     launcherVideo.autoplay = true;
     launcherVideo.loop = true;
     launcherVideo.muted = true;

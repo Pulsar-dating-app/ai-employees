@@ -748,7 +748,7 @@
       "currentFileHint": "Usando um arquivo enviado anteriormente.",
       "greetingLabel": "Mensagem de saudação",
       "greetingPlaceholder": "Oi! 👋 Posso ajudar a encontrar o que você procura?",
-      "greetingHint": "Aparece numa bolha de fala ao lado do botão alguns segundos depois que um visitante chega.",
+      "greetingHint": "Aparece numa bolha de fala ao lado do botão alguns segundos depois que um visitante chega. Já vem preenchido com uma mensagem padrão -- edite como quiser.",
       "previewTitle": "Prévia ao vivo",
       "saveButton": "Salvar",
       "savingButton": "Salvando…",

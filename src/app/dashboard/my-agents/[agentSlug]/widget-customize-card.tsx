@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { VideoIcon, ImageIcon } from "@/components/ui/icons";
+import { resolveDefaultLauncher, resolveDefaultGreeting } from "@/lib/widget/launcher-defaults";
 
 type LauncherType = "default" | "video" | "image";
 
@@ -42,7 +43,11 @@ export function WidgetCustomizeCard({
 
   const [launcherType, setLauncherType] = useState<LauncherType>(initial.launcherType);
   const [launcherAssetUrl, setLauncherAssetUrl] = useState<string | null>(initial.launcherAssetUrl);
-  const [greeting, setGreeting] = useState(initial.greeting ?? "");
+  // Pre-filled with this agent's predefined default when nothing's been
+  // saved yet -- "enabled by default, editable" means the merchant should
+  // see real text sitting in the field, not an empty box with just a
+  // placeholder hint they could easily miss.
+  const [greeting, setGreeting] = useState(initial.greeting ?? resolveDefaultGreeting(agentSlug));
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
@@ -62,7 +67,7 @@ export function WidgetCustomizeCard({
   }, [localPreviewUrl]);
 
   const previewSrc =
-    launcherType === "default" ? "/widget-launcher.webm" : (localPreviewUrl ?? launcherAssetUrl);
+    launcherType === "default" ? resolveDefaultLauncher(agentSlug).src : (localPreviewUrl ?? launcherAssetUrl);
 
   function chooseLauncher(next: LauncherType) {
     setLauncherType(next);
