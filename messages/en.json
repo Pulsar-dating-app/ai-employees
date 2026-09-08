@@ -123,6 +123,9 @@
           "name": "WhatsApp"
         },
         {
+          "name": "Shopify"
+        },
+        {
           "name": "OpenAI"
         }
       ]
@@ -930,6 +933,13 @@
       "confirmButton": "Click again to deactivate — hides it from customers, keeps its order history",
       "cancelButton": "Cancel",
       "reactivateButton": "Reactivate"
+    },
+    "addTabs": {
+      "cardTitle": "Add products",
+      "tablistLabel": "Ways to add products",
+      "manual": "One by one",
+      "csv": "Spreadsheet",
+      "shopify": "Shopify"
     },
     "import": {
       "title": "Bulk import",
