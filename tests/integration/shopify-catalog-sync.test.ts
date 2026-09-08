@@ -21,21 +21,34 @@ describe("Shopify catalogue sync (POST /shopify/sync)", () => {
   // has to go through the service client). Shop domain + token are unique
   // per call so the suite is rerun-safe (the platform-wide shop_domain
   // index would otherwise collide across runs) and the mock keys its
-  // catalogue off the token. `tokenHint` lets a test force the mock's
-  // failure path (a token containing "graphql-failure").
-  async function seedConnection(companyId: string, tokenHint = "ok") {
+  // catalogue off the token. `tokenHint` lets a test force a mock path
+  // (a token containing "graphql-failure"); `opts` controls token freshness
+  // -- by default the access token is well within its lifetime so the sync
+  // uses it directly without a refresh.
+  async function seedConnection(
+    companyId: string,
+    tokenHint = "ok",
+    opts: { expiresAt?: string | null; refreshToken?: string | null } = {},
+  ) {
     const unique = randomUUID().slice(0, 8);
     const shop = `sync-${unique}.myshopify.com`;
     const token = `${tokenHint}-token-${unique}`;
-    const { error } = await getTestServiceClient().from("company_shopify_connections").insert({
-      company_id: companyId,
-      shop_domain: shop,
-      status: "connected",
-      access_token: token,
-      currency: "BRL",
-    });
+    const { error } = await getTestServiceClient()
+      .from("company_shopify_connections")
+      .insert({
+        company_id: companyId,
+        shop_domain: shop,
+        status: "connected",
+        access_token: token,
+        refresh_token: opts.refreshToken === undefined ? `refresh-${unique}` : opts.refreshToken,
+        token_expires_at:
+          opts.expiresAt === undefined
+            ? new Date(Date.now() + 60 * 60 * 1000).toISOString()
+            : opts.expiresAt,
+        currency: "BRL",
+      });
     if (error) throw error;
-    return { shop, token };
+    return { shop, token, unique };
   }
 
   async function syncedProducts(companyId: string) {
@@ -156,5 +169,63 @@ describe("Shopify catalogue sync (POST /shopify/sync)", () => {
     const rows = await syncedProducts(companyId);
     expect(rows.find((r) => r.external_id === "shopify:10")!.is_active).toBe(true);
     expect(rows.find((r) => r.external_id === "shopify:11")!.is_active).toBe(false);
+  });
+
+  it("refreshes an expired access token before syncing and persists the rotated tokens", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Shopify Sync Refresh Co");
+    // Access token already expired; a usable refresh token is on file.
+    const { token, unique } = await seedConnection(companyId, "ok", {
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+      refreshToken: `refresh-live-${randomUUID().slice(0, 8)}`,
+    });
+    // The mock keys its catalogue off the token the request actually uses --
+    // after a refresh that's `shopify-token-refreshed-<oldRefreshToken>`.
+    // Register the catalogue under BOTH so whichever token is used finds it.
+    const products = [{ id: 1, title: `Item ${unique}`, price: "10.00", status: "ACTIVE" as const }];
+    await setMockCatalogue(token, products);
+
+    const connBefore = await getTestServiceClient()
+      .from("company_shopify_connections")
+      .select("refresh_token")
+      .eq("company_id", companyId)
+      .single();
+    await setMockCatalogue(`shopify-token-refreshed-${connBefore.data?.refresh_token}`, products);
+
+    const result = await api<{ synced: number }>(
+      "POST",
+      `/api/companies/${companyId}/shopify/sync`,
+      owner.cookieHeader,
+    );
+    expect(result.status).toBe(200);
+    expect(result.json.synced).toBe(1);
+
+    // The connection now holds the refreshed access token, the rotated
+    // refresh token, and a fresh future expiry.
+    const conn = await getTestServiceClient()
+      .from("company_shopify_connections")
+      .select("access_token, refresh_token, token_expires_at")
+      .eq("company_id", companyId)
+      .single();
+    expect(conn.data?.access_token).toMatch(/^shopify-token-refreshed-/);
+    expect(conn.data?.refresh_token).toMatch(/^shopify-refresh-rotated-/);
+    expect(Date.parse(conn.data?.token_expires_at as string)).toBeGreaterThan(Date.now());
+  });
+
+  it("returns 409 reauth_required when the refresh token is terminal", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Shopify Sync Reauth Co");
+    await seedConnection(companyId, "ok", {
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+      refreshToken: "refresh-expired-token",
+    });
+
+    const result = await api<{ error: string }>(
+      "POST",
+      `/api/companies/${companyId}/shopify/sync`,
+      owner.cookieHeader,
+    );
+    expect(result.status).toBe(409);
+    expect(result.json.error).toBe("reauth_required");
   });
 });

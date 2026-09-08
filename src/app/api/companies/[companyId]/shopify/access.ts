@@ -46,6 +46,7 @@ export async function requireAdmin(supabase: ServerClient, companyId: string, us
 }
 
 // Every place a Shopify connection row is returned to a client. Never
-// includes access_token (column-privilege-locked to the service role).
+// includes access_token or refresh_token (column-privilege-locked to the
+// service role).
 export const SHOPIFY_CONNECTION_SAFE_COLUMNS =
-  "shop_domain, shop_name, currency, scope, status, connected_at, last_synced_at";
+  "shop_domain, shop_name, currency, scope, status, connected_at, last_synced_at, token_expires_at";

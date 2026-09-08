@@ -968,6 +968,7 @@
       "skippedProductHeader": "Produto",
       "skippedReasonHeader": "Motivo",
       "syncError": "Algo deu errado ao sincronizar sua loja. Tente novamente.",
+      "reauthError": "A conexão com sua loja expirou. Conecte sua loja de novo para manter a sincronização.",
       "disconnectButton": "Desconectar",
       "confirmDisconnectButton": "Clique de novo para desconectar",
       "cancelButton": "Cancelar",

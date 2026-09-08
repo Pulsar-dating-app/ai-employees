@@ -72,8 +72,10 @@ export async function POST(
 
     let accessToken: string;
     let scope: string;
+    let refreshToken: string | null;
+    let expiresAt: string | null;
     try {
-      ({ accessToken, scope } = await exchangeCodeForToken(shop, code));
+      ({ accessToken, scope, refreshToken, expiresAt } = await exchangeCodeForToken(shop, code));
     } catch (err) {
       // Never leak Shopify's raw error text to the merchant-facing UI; log
       // the real cause (bad secret, code already used/expired, redirect_uri
@@ -112,6 +114,8 @@ export async function POST(
           scope,
           status: "connected",
           access_token: accessToken,
+          refresh_token: refreshToken,
+          token_expires_at: expiresAt,
           connected_at: new Date().toISOString(),
         },
         { onConflict: "company_id" },

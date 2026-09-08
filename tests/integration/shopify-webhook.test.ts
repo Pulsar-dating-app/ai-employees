@@ -29,7 +29,7 @@ describe("Shopify webhook (POST /api/webhooks/shopify)", () => {
   async function readConnection(companyId: string) {
     const { data } = await getTestServiceClient()
       .from("company_shopify_connections")
-      .select("status, access_token")
+      .select("status, access_token, refresh_token")
       .eq("company_id", companyId)
       .single();
     return data;
@@ -92,5 +92,6 @@ describe("Shopify webhook (POST /api/webhooks/shopify)", () => {
     const conn = await readConnection(companyId);
     expect(conn?.status).toBe("disconnected");
     expect(conn?.access_token).toBeNull();
+    expect(conn?.refresh_token).toBeNull();
   });
 });

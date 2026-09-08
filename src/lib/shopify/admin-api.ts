@@ -74,8 +74,10 @@ export function shopifyCallbackUrl(): string {
 // Step 1: the authorize URL the merchant is redirected to. Always the real
 // `https://<shop>` host -- this is a browser redirect to Shopify, not a
 // server call, so the test base-URL override does not apply here.
-// `grant_options[]=` (empty, i.e. not "per-user") asks for an offline token,
-// which does not expire -- why the table has no token_expires_at.
+// `grant_options[]=` (empty, i.e. not "per-user") asks for an offline token;
+// `expiring=1` on the code exchange (step 2) then makes it a 1-hour token
+// with a 90-day refresh token -- Shopify stopped accepting non-expiring
+// offline tokens for the Admin API.
 export function buildAuthorizeUrl(shop: string, state: string): string {
   const url = new URL(`https://${shop}/admin/oauth/authorize`);
   url.searchParams.set("client_id", API_KEY!);
@@ -86,20 +88,78 @@ export function buildAuthorizeUrl(shop: string, state: string): string {
   return url.toString();
 }
 
-// Step 2: authorization code -> permanent (offline) access token.
-export async function exchangeCodeForToken(
-  shop: string,
-  code: string,
-): Promise<{ accessToken: string; scope: string }> {
+export type ShopifyOfflineToken = {
+  accessToken: string;
+  scope: string;
+  refreshToken: string | null;
+  // ISO timestamp the access token expires at, or null if Shopify still
+  // issued a non-expiring one (older stores / before enforcement).
+  expiresAt: string | null;
+};
+
+// Thrown when the refresh token itself is terminal (expired, revoked,
+// replayed, or the app was uninstalled) -- the merchant has to reconnect.
+export class ShopifyReauthRequiredError extends Error {
+  constructor(message = "Shopify connection needs to be reconnected") {
+    super(message);
+    this.name = "ShopifyReauthRequiredError";
+  }
+}
+
+function tokenBody(json: {
+  access_token?: string;
+  scope?: string;
+  refresh_token?: string;
+  expires_in?: number;
+}): ShopifyOfflineToken {
+  if (!json.access_token) throw new Error("Shopify token response had no access_token");
+  return {
+    accessToken: json.access_token,
+    scope: json.scope ?? SCOPES,
+    refreshToken: json.refresh_token ?? null,
+    expiresAt: json.expires_in
+      ? new Date(Date.now() + json.expires_in * 1000).toISOString()
+      : null,
+  };
+}
+
+// Step 2: authorization code -> expiring offline token (+ refresh token).
+export async function exchangeCodeForToken(shop: string, code: string): Promise<ShopifyOfflineToken> {
   const res = await fetch(`${adminApiBase(shop)}/admin/oauth/access_token`, {
     method: "POST",
     headers: { "content-type": "application/json", accept: "application/json" },
-    body: JSON.stringify({ client_id: API_KEY, client_secret: API_SECRET, code }),
+    body: JSON.stringify({
+      client_id: API_KEY,
+      client_secret: API_SECRET,
+      code,
+      // Non-expiring offline tokens are no longer accepted by the Admin API.
+      expiring: "1",
+    }),
   });
   if (!res.ok) throw new Error(`Shopify token exchange failed: ${res.status} ${await res.text()}`);
-  const json = (await res.json()) as { access_token?: string; scope?: string };
-  if (!json.access_token) throw new Error("Shopify token exchange returned no access_token");
-  return { accessToken: json.access_token, scope: json.scope ?? SCOPES };
+  return tokenBody((await res.json()) as Parameters<typeof tokenBody>[0]);
+}
+
+// Exchanges a stored refresh token for a fresh access token. Shopify
+// returns a NEW refresh token every time -- the caller must persist both.
+export async function refreshOfflineToken(
+  shop: string,
+  refreshToken: string,
+): Promise<ShopifyOfflineToken> {
+  const res = await fetch(`${adminApiBase(shop)}/admin/oauth/access_token`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      client_id: API_KEY,
+      client_secret: API_SECRET,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+  });
+  // 401 => the refresh token is terminal; anything else non-2xx is transient.
+  if (res.status === 401) throw new ShopifyReauthRequiredError();
+  if (!res.ok) throw new Error(`Shopify token refresh failed: ${res.status} ${await res.text()}`);
+  return tokenBody((await res.json()) as Parameters<typeof tokenBody>[0]);
 }
 
 async function shopifyGraphql<T>(

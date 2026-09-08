@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { syncShopifyCatalog, ShopifyNotConnectedError } from "@/lib/shopify/catalog-sync";
+import {
+  syncShopifyCatalog,
+  ShopifyNotConnectedError,
+  ShopifyReauthRequiredError,
+} from "@/lib/shopify/catalog-sync";
 import { requireMember } from "../access";
 
 // POST: pull the connected store's catalogue into `products`. Member-level
@@ -29,6 +33,10 @@ export async function POST(
   } catch (err) {
     if (err instanceof ShopifyNotConnectedError) {
       return NextResponse.json({ error: "not_connected" }, { status: 409 });
+    }
+    if (err instanceof ShopifyReauthRequiredError) {
+      // The refresh token is terminal -- the merchant must reconnect.
+      return NextResponse.json({ error: "reauth_required" }, { status: 409 });
     }
     // Anything else is a failed round trip to Shopify or a DB write --
     // never leak the raw text, log it server-side.

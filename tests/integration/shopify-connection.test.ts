@@ -133,7 +133,9 @@ describe("Shopify connection (GET/DELETE /shopify, POST /shopify/connect)", () =
         scope: string;
         status: string;
         connected_at: string;
+        token_expires_at: string;
         access_token?: string;
+        refresh_token?: string;
       };
     }>("POST", `/api/companies/${companyId}/shopify/connect`, owner.cookieHeader, connectBody(shop, "good-code"));
 
@@ -142,7 +144,10 @@ describe("Shopify connection (GET/DELETE /shopify, POST /shopify/connect)", () =
     expect(connected.json.connection.shop_domain).toBe(shop);
     expect(connected.json.connection.currency).toBe("BRL");
     expect(connected.json.connection.scope).toBe("read_products");
+    // Expiring offline token: an expiry is recorded; neither token leaks.
+    expect(Date.parse(connected.json.connection.token_expires_at)).toBeGreaterThan(Date.now());
     expect(connected.json.connection.access_token).toBeUndefined();
+    expect(connected.json.connection.refresh_token).toBeUndefined();
 
     const reconnected = await api<{ connection: { status: string } }>(
       "POST",
@@ -152,14 +157,15 @@ describe("Shopify connection (GET/DELETE /shopify, POST /shopify/connect)", () =
     );
     expect(reconnected.status).toBe(200); // upsert on company_id, not a 409/500
 
-    // The token is column-locked -- verify it actually landed via the
-    // service client, and that it's the value the mock minted.
+    // The tokens are column-locked -- verify via the service client that
+    // both the access token and its rotating refresh token landed.
     const row = await getTestServiceClient()
       .from("company_shopify_connections")
-      .select("access_token")
+      .select("access_token, refresh_token")
       .eq("company_id", companyId)
       .single();
     expect(row.data?.access_token).toBe("shopify-token-good-code-2");
+    expect(row.data?.refresh_token).toBe("shopify-refresh-good-code-2");
   });
 
   it("returns 502 (not a raw Shopify error) when the token exchange fails", async () => {
@@ -225,9 +231,11 @@ describe("Shopify connection (GET/DELETE /shopify, POST /shopify/connect)", () =
 
     const row = await getTestServiceClient()
       .from("company_shopify_connections")
-      .select("access_token")
+      .select("access_token, refresh_token, token_expires_at")
       .eq("company_id", companyId)
       .single();
     expect(row.data?.access_token).toBeNull();
+    expect(row.data?.refresh_token).toBeNull();
+    expect(row.data?.token_expires_at).toBeNull();
   });
 });

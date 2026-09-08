@@ -968,6 +968,7 @@
       "skippedProductHeader": "Product",
       "skippedReasonHeader": "Reason",
       "syncError": "Something went wrong syncing your store. Please try again.",
+      "reauthError": "Your store connection expired. Connect your store again to keep it in sync.",
       "disconnectButton": "Disconnect",
       "confirmDisconnectButton": "Click again to disconnect",
       "cancelButton": "Cancel",
