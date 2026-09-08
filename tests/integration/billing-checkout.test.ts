@@ -3,7 +3,7 @@ import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
 import { capturedCheckoutSession } from "./helpers/stripe-checkout-sessions";
-import { getPlan, STARTER_TRIAL_DAYS } from "@/lib/billing/plans";
+import { getPlan, TRIAL_DAYS } from "@/lib/billing/plans";
 import { isBillingActive } from "@/lib/billing/activation";
 
 // Trello P3 -- POST /api/companies/[companyId]/billing/checkout, against the
@@ -303,19 +303,22 @@ describe("Plan checkout (Trello P3)", () => {
     });
   });
 
-  describe("Starter free trial (Trello P8)", () => {
-    it("grants a 15-day trial on a first Starter checkout", async () => {
-      const owner = await signUpTestUser("owner");
-      const companyId = await createCompany(owner.cookieHeader, "Trial First Checkout Co");
+  describe("Free trial -- Starter and Pro (Trello P8)", () => {
+    it.each(["starter", "pro"] as const)(
+      "grants a trial on a first checkout of %s",
+      async (planKey) => {
+        const owner = await signUpTestUser("owner");
+        const companyId = await createCompany(owner.cookieHeader, `Trial First Checkout ${planKey} Co`);
 
-      const res = await checkout(owner.cookieHeader, companyId, "starter");
-      expect(res.status).toBe(200);
-      expect(res.json.mode).toBe("checkout");
+        const res = await checkout(owner.cookieHeader, companyId, planKey);
+        expect(res.status).toBe(200);
+        expect(res.json.mode).toBe("checkout");
 
-      const session = await capturedCheckoutSession(res.json.url!);
-      expect(session?.trialPeriodDays).toBe(STARTER_TRIAL_DAYS);
-      expect(session?.metadata.trialUserId).toBe(owner.userId);
-    });
+        const session = await capturedCheckoutSession(res.json.url!);
+        expect(session?.trialPeriodDays).toBe(TRIAL_DAYS);
+        expect(session?.metadata.trialUserId).toBe(owner.userId);
+      },
+    );
 
     it("does not grant a second trial once the user's trial_used_at is set", async () => {
       const owner = await signUpTestUser("owner");
@@ -332,17 +335,27 @@ describe("Plan checkout (Trello P3)", () => {
       expect(session?.metadata.trialUserId).toBeUndefined();
     });
 
-    it("never grants a trial on Pro, even for a first-time user", async () => {
+    // The trial is one per account, not one per plan -- using it on Starter
+    // must not leave a second one available on Pro.
+    it("a trial used on Starter isn't available again on Pro", async () => {
       const owner = await signUpTestUser("owner");
-      const companyId = await createCompany(owner.cookieHeader, "Trial Not On Pro Co");
+      const companyId = await createCompany(owner.cookieHeader, "Trial Cross Plan Co");
+      const svc = getTestServiceClient();
+      await svc.from("users").update({ trial_used_at: new Date().toISOString() }).eq("id", owner.userId);
 
       const res = await checkout(owner.cookieHeader, companyId, "pro");
       expect(res.status).toBe(200);
-      expect(res.json.mode).toBe("checkout");
 
       const session = await capturedCheckoutSession(res.json.url!);
       expect(session?.trialPeriodDays).toBeNull();
       expect(session?.metadata.trialUserId).toBeUndefined();
+    });
+
+    it("never grants a trial on Enterprise", () => {
+      // No self-serve Checkout exists for Enterprise (400 enterprise_contact_only,
+      // asserted elsewhere) -- this just pins the catalog data the eligibility
+      // check relies on, since there's no checkout call to make here.
+      expect(getPlan("enterprise").trialReplyLimit).toBeNull();
     });
 
     // Two different users, same company: the trial is a property of the
@@ -362,7 +375,7 @@ describe("Plan checkout (Trello P3)", () => {
       expect(res.status).toBe(200);
 
       const session = await capturedCheckoutSession(res.json.url!);
-      expect(session?.trialPeriodDays).toBe(STARTER_TRIAL_DAYS);
+      expect(session?.trialPeriodDays).toBe(TRIAL_DAYS);
       expect(session?.metadata.trialUserId).toBe(admin.userId);
     });
   });
