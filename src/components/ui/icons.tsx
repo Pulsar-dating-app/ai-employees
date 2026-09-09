@@ -343,6 +343,16 @@ export function CodeIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// Filled, not the outline family -- reads clearly at the small size it's
+// used at (a play button overlaid on a video thumbnail).
+export function PlayIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M8 5.6a1 1 0 0 1 1.51-.86l10 5.9a1 1 0 0 1 0 1.72l-10 5.9A1 1 0 0 1 8 17.4z" />
+    </svg>
+  );
+}
+
 export function InfoIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...NAV_ICON_PROPS} {...props}>

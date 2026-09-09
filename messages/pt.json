@@ -624,6 +624,12 @@
     "backToMyAgents": "Voltar para minha equipe",
     "connectionsTitle": "Conexões",
     "connectionsSubtitle": "Escolha em quais plataformas {name} vai falar com os clientes.",
+    "tutorial": {
+      "title": "Novo por aqui? Assista a um resumo de 2 minutos",
+      "description": "Veja tudo o que tem nesta página em ação, desde configurar {name} até compartilhá-la com os clientes.",
+      "watch": "Assistir ao tutorial",
+      "close": "Fechar"
+    },
     "notHired": "Você ainda não contratou este integrante.",
     "viewAgent": "Ver {name}",
     "conversationsToday": "Conversas hoje",

@@ -9,6 +9,11 @@ type DialogProps = {
   title: string;
   closeLabel: string;
   children: React.ReactNode;
+  // Overrides the panel's max-width utility (default "max-w-lg") -- e.g.
+  // "max-w-3xl" for wider content like an embedded video. A separate prop
+  // rather than an appended className: two conflicting max-w-* utilities in
+  // one class list race on source order, not which one is listed last.
+  widthClassName?: string;
 };
 
 // This app's first modal — introduced for Trello F3's product edit flow
@@ -18,7 +23,7 @@ type DialogProps = {
 // click, or the explicit close button — no focus trap (would need a
 // small-object-lifecycle dependency this app doesn't otherwise have),
 // but initial focus moves to the dialog panel itself on open.
-export function Dialog({ open, onClose, title, closeLabel, children }: DialogProps) {
+export function Dialog({ open, onClose, title, closeLabel, children, widthClassName = "max-w-lg" }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,7 +49,7 @@ export function Dialog({ open, onClose, title, closeLabel, children }: DialogPro
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto overflow-x-hidden rounded-xl bg-surface-container-lowest p-6 shadow-level2 outline-none"
+        className={`relative z-10 max-h-[90vh] w-full ${widthClassName} overflow-y-auto overflow-x-hidden rounded-xl bg-surface-container-lowest p-6 shadow-level2 outline-none`}
       >
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2 className="text-lg font-semibold text-on-surface">{title}</h2>
