@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { ChannelTabsCard } from "./channel-tabs-card";
 import { AgentSettingsTabsCard } from "./agent-settings-tabs-card";
+import { TutorialVideoCard } from "./tutorial-video-card";
 import { IdentityEditor } from "./identity-editor";
 import { DevChatTest } from "../../dev-chat-test";
 import { AgentConnectionsTour } from "./agent-connections-tour";
@@ -40,6 +41,10 @@ import { AgentConnectionsTour } from "./agent-connections-tour";
 // behavior controls -- pause/resume, shipping/returns, human handoff --
 // consolidated into `AgentSettingsTabsCard` instead of four more separate
 // cards stacked above the channels card.
+//
+// Follow-up (2026-09-09): an owner-recorded walkthrough video, gated to
+// `agentSlug === "ana"` -- see TutorialVideoCard's own comment for why it's
+// Ana-specific rather than a generic addition to every hire's page.
 export default async function AgentConnectionsPage({
   params,
 }: {
@@ -136,6 +141,7 @@ export default async function AgentConnectionsPage({
       </div>
 
       <div className="flex max-w-4xl flex-col gap-6">
+        {agentSlug === "ana" ? <TutorialVideoCard agentName={name} /> : null}
         <IdentityEditor
           companyId={company.id}
           agentSlug={agentSlug}
