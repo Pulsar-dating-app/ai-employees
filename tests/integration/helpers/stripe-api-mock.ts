@@ -14,8 +14,11 @@ import { getPlan, type PlanKey } from "@/lib/billing/plans";
 //    route never sets one -- Adaptive Pricing owns presentment)
 //  - billing portal session create -> echoes a hosted url (existing
 //    subscribers are sent here for plan changes, not subscriptions.update)
-//  - subscription update WITHOUT proration_behavior=create_prorations -> 400
-//    (kept for P4; P3 no longer calls it)
+//  - subscription update with `trial_end=now` -> 200, flips status to
+//    `active` (Trello P8's endTrialNow); the sub id containing
+//    "trigger-end-trial-failure" -> 400 instead.
+//  - any other subscription update WITHOUT proration_behavior=
+//    create_prorations -> 400 (kept for P4; P3 no longer calls it)
 //  - GET /v1/subscriptions/sub_mock_<planKey> reports that plan's real
 //    Price id as the current item (used by P4).
 //  - a sub id containing `__trial`/`__user_<id>` reports `status:
@@ -212,6 +215,16 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
         return send(200, { ...mockSubscription(subscriptionId), status: "canceled" });
       }
       if (req.method === "POST") {
+        // Trello P8 -- endTrialNow(). Mirrors Stripe's real behavior for
+        // ending a trial early: the subscription becomes `active` with a
+        // fresh period starting now, on whatever plan the sub id already
+        // encodes (no plan change here, just the trial ending).
+        if (params.get("trial_end") === "now") {
+          if (subscriptionId.includes("trigger-end-trial-failure")) {
+            return fail("card declined ending trial early");
+          }
+          return send(200, { ...mockSubscription(subscriptionId), status: "active" });
+        }
         // Not used by P3 (Portal) or P4; kept as a guard in case a swap is
         // ever wired in our code again.
         if (params.get("proration_behavior") !== "create_prorations") {

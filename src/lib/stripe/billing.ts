@@ -108,3 +108,17 @@ export async function createBillingPortalSession(opts: {
   });
   return { url: session.url };
 }
+
+// Trello P8 -- lets a trialing merchant convert to paid immediately instead
+// of waiting out the rest of the trial (typically because they've already
+// hit the reduced trial quota). Unlike a plan *swap* (always the Portal,
+// per the comment above -- we don't own that proration/dunning surface),
+// ending a trial early is a single well-defined Stripe primitive: setting
+// `trial_end` to "now" triggers the exact same mechanics as a trial ending
+// naturally (billing_cycle_anchor resets to now, one full non-prorated
+// invoice charged against the card collected at trial checkout). No Portal
+// redirect needed -- this is a direct API call, not a hosted-page flow.
+export async function endTrialNow(subscriptionId: string): Promise<void> {
+  const stripe = getStripeClient();
+  await stripe.subscriptions.update(subscriptionId, { trial_end: "now" });
+}

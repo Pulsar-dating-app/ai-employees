@@ -378,6 +378,143 @@ describe("Plan checkout (Trello P3)", () => {
       expect(session?.trialPeriodDays).toBe(TRIAL_DAYS);
       expect(session?.metadata.trialUserId).toBe(admin.userId);
     });
+
+    // A trialing subscriber can switch plans same as any other live one --
+    // Stripe's own default Portal behavior ends the trial and charges the
+    // new plan in full immediately (verified against Stripe's docs), so
+    // there's no free-quota loophole here worth blocking. See
+    // stripe-webhook.test.ts for the (defensive-only) webhook-side guard
+    // against a future Portal config where a switch preserves the trial
+    // instead of ending it.
+    it("routes a trialing subscriber's plan switch to the Portal like any other live subscription", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Trial Switch Co");
+      const svc = getTestServiceClient();
+      // `__trial` in the sub id is what the mock needs to keep reporting
+      // "trialing" on the reconcile check the route runs before deciding
+      // checkout-vs-portal -- otherwise it "corrects" the row to the mock's
+      // default `active` status before this test ever gets to assert anything.
+      await svc.from("company_billing").insert({
+        company_id: companyId,
+        stripe_customer_id: "cus_trial_switch",
+        stripe_subscription_id: `sub_mock_starter__co_${companyId}__trial`,
+        subscription_status: "trialing",
+        plan_key: "starter",
+        current_period_start: new Date().toISOString(),
+      });
+
+      const res = await checkout(owner.cookieHeader, companyId, "pro");
+      expect(res.status).toBe(200);
+      expect(res.json.mode).toBe("portal");
+
+      // The swap happens on the Portal; this route never touches
+      // company_billing on this path (P4's webhook is the only writer).
+      const { data: billing } = await svc
+        .from("company_billing")
+        .select("plan_key, subscription_status")
+        .eq("company_id", companyId)
+        .single();
+      expect(billing?.plan_key).toBe("starter");
+      expect(billing?.subscription_status).toBe("trialing");
+    });
+  });
+
+  describe("POST /billing/end-trial (Trello P8 -- convert to paid before the trial ends)", () => {
+    it("requires authentication and admin", async () => {
+      const owner = await signUpTestUser("owner");
+      const member = await signUpTestUser("member");
+      const companyId = await createCompany(owner.cookieHeader, "End Trial Auth Co");
+      await api("POST", `/api/companies/${companyId}/members`, owner.cookieHeader, {
+        userId: member.userId,
+        role: "member",
+      });
+
+      expect(
+        (await api("POST", `/api/companies/${companyId}/billing/end-trial`, undefined, {})).status,
+      ).toBe(401);
+      expect(
+        (await api("POST", `/api/companies/${companyId}/billing/end-trial`, member.cookieHeader, {})).status,
+      ).toBe(403);
+    });
+
+    it("refuses when there's no active trial", async () => {
+      const owner = await signUpTestUser("owner");
+      const svc = getTestServiceClient();
+
+      const noRow = await createCompany(owner.cookieHeader, "End Trial No Row Co");
+      const resNoRow = await api(
+        "POST",
+        `/api/companies/${noRow}/billing/end-trial`,
+        owner.cookieHeader,
+        {},
+      );
+      expect(resNoRow.status).toBe(400);
+      expect((resNoRow.json as { code?: string }).code).toBe("no_active_trial");
+
+      const owner2 = await signUpTestUser("owner2");
+      const activeCo = await createCompany(owner2.cookieHeader, "End Trial Already Active Co");
+      await svc.from("company_billing").insert({
+        company_id: activeCo,
+        stripe_customer_id: "cus_end_trial_active",
+        stripe_subscription_id: "sub_mock_starter",
+        subscription_status: "active",
+        plan_key: "starter",
+      });
+      const resActive = await api(
+        "POST",
+        `/api/companies/${activeCo}/billing/end-trial`,
+        owner2.cookieHeader,
+        {},
+      );
+      expect(resActive.status).toBe(400);
+      expect((resActive.json as { code?: string }).code).toBe("no_active_trial");
+    });
+
+    it("ends the trial early on a valid trialing subscription", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "End Trial Success Co");
+      const svc = getTestServiceClient();
+      await svc.from("company_billing").insert({
+        company_id: companyId,
+        stripe_customer_id: "cus_end_trial_ok",
+        stripe_subscription_id: `sub_mock_starter__co_${companyId}__trial`,
+        subscription_status: "trialing",
+        plan_key: "starter",
+        current_period_start: new Date().toISOString(),
+      });
+
+      const res = await api<{ ok: boolean }>(
+        "POST",
+        `/api/companies/${companyId}/billing/end-trial`,
+        owner.cookieHeader,
+        {},
+      );
+      expect(res.status).toBe(200);
+      expect(res.json.ok).toBe(true);
+    });
+
+    it("returns 502 when Stripe refuses to end the trial (e.g. the card fails)", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "End Trial Failure Co");
+      const svc = getTestServiceClient();
+      await svc.from("company_billing").insert({
+        company_id: companyId,
+        stripe_customer_id: "cus_end_trial_fail",
+        stripe_subscription_id: "sub_mock_starter__trigger-end-trial-failure",
+        subscription_status: "trialing",
+        plan_key: "starter",
+        current_period_start: new Date().toISOString(),
+      });
+
+      const res = await api<{ code?: string }>(
+        "POST",
+        `/api/companies/${companyId}/billing/end-trial`,
+        owner.cookieHeader,
+        {},
+      );
+      expect(res.status).toBe(502);
+      expect(res.json.code).toBe("end_trial_failed");
+    });
   });
 
   describe("isBillingActive stub (wired as a real gate in P6)", () => {

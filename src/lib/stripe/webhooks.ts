@@ -216,11 +216,29 @@ async function syncBillingFromSubscription(
     // the old plan's ceiling for the rest of the cycle. Move reply_limit to
     // the new plan; replies_used is untouched -- usage already spent this
     // period doesn't reset just because the plan changed mid-cycle.
+    //
+    // Trello P8: by Stripe's default Customer Portal behavior, switching
+    // plans on a `trialing` subscription ENDS the trial immediately
+    // (billing_cycle_anchor resets to now, full invoice charged right away)
+    // -- so a genuine plan switch normally reaches this webhook as `active`
+    // with a fresh `current_period_start`, landing in the rollover branch
+    // above instead, which already seeds the full monthlyReplyLimit
+    // correctly because the customer just paid for it. This `knownStatus
+    // === "trialing"` guard is defensive insurance for Stripe's 2025-09
+    // Portal config option to let a trial *continue* through a plan switch
+    // instead of ending it -- if a merchant ever enables that, an in-trial
+    // switch must still never be a free way to unlock a bigger plan's full
+    // quota.
+    const newPlan = getPlan(resolvedPlan.key);
+    const newLimit =
+      knownStatus === "trialing" && newPlan.trialReplyLimit != null
+        ? newPlan.trialReplyLimit
+        // Non-null: resolvedPlan came from a Stripe subscription, so it's
+        // never Enterprise.
+        : newPlan.monthlyReplyLimit!;
     const { error: limitError } = await service
       .from("company_message_usage")
-      // Same reasoning as above: resolvedPlan came from a Stripe subscription,
-      // so it's never Enterprise.
-      .update({ reply_limit: getPlan(resolvedPlan.key).monthlyReplyLimit! })
+      .update({ reply_limit: newLimit })
       .eq("company_id", companyId)
       .eq("period_start", periodStart);
     if (limitError) {
