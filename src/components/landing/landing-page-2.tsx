@@ -7,6 +7,8 @@ import { BrandLogo } from "./brand-logos";
 import { ChannelShowcase, type ChannelItem } from "./channel-showcase";
 import { M } from "./landing-icons";
 import { ShaderBackground } from "@/components/ui/shader-background";
+import { ScrollHeader } from "./scroll-header";
+import { CountUp } from "./count-up";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 import workspaceImg from "../../../public/landing-v2/workspace.jpg";
@@ -86,6 +88,13 @@ const SOURCE_ICONS = [
 
 const IMPACT_ACCENT = ["text-[#e2dfff]", "text-[#10b981]", "text-[#39b8fd]"] as const;
 
+function parseStatValue(raw: string) {
+  const match = raw.match(/^(-?\d+(?:\.(\d+))?)(.*)$/);
+  if (!match) return { value: 0, decimals: 0, suffix: raw };
+  const [, numeric, decimalDigits, suffix] = match;
+  return { value: parseFloat(numeric), decimals: decimalDigits?.length ?? 0, suffix };
+}
+
 export async function LandingPageV2() {
   const t = await getTranslations("LandingV2");
 
@@ -101,10 +110,10 @@ export async function LandingPageV2() {
 
   return (
     <div
-      className={`${landingV2Sans.className} min-h-screen scroll-smooth bg-[#fcf8ff] text-[#1b1b24] antialiased [&_section]:scroll-mt-24`}
+      className={`${landingV2Sans.className} landing-v2-root min-h-screen scroll-smooth bg-[#fcf8ff] text-[#1b1b24] antialiased [&_section]:scroll-mt-24`}
     >
       {/* ── Header ─────────────────────────────────────────────── */}
-      <header className="fixed inset-x-0 top-0 z-50 bg-white/80 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+      <ScrollHeader>
         <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-2 px-4 md:px-10">
           <Link href="/" className="flex items-center gap-2">
             <Image src={logo} alt="Staffra" sizes="88px" className="h-8 w-auto object-contain" priority />
@@ -149,7 +158,7 @@ export async function LandingPageV2() {
             </Link>
           </div>
         </div>
-      </header>
+      </ScrollHeader>
 
       <main className="w-full bg-[#fcf8ff] pt-20">
         {/* ── 1. Hero ─────────────────────────────────────────── */}
@@ -192,14 +201,14 @@ export async function LandingPageV2() {
               <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-2 sm:gap-3">
                 <Link
                   href={HIRE}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#3525cd] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.22)] transition-all hover:scale-[1.01] hover:bg-[#4f46e5]"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#3525cd] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.22)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#4f46e5] hover:shadow-[0_18px_44px_rgba(53,37,205,0.34)]"
                 >
                   <M name="bolt" size={20} />
                   {t("hero.ctaPrimary")}
                 </Link>
                 <a
                   href="#demo"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-[14px] font-semibold text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all hover:bg-[#f5f2ff]"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-[14px] font-semibold text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#f5f2ff] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)]"
                 >
                   <M name="play_circle" size={20} className="text-[#3525cd]" />
                   {t("hero.ctaSecondary")}
@@ -332,11 +341,14 @@ export async function LandingPageV2() {
                         { label: t("hero.metrics.m2Label"), value: "1.4s", delta: "-98%", sub: t("hero.metrics.m2Sub"), color: "text-[#3525cd]" },
                         { label: t("hero.metrics.m3Label"), value: "1.240", delta: "3.8x", sub: t("hero.metrics.m3Sub"), color: "text-[#0f172a]" },
                       ].map((m) => (
-                        <div key={m.label} className="rounded-lg bg-[#f5f2ff] p-3 text-left">
+                        <div
+                          key={m.label}
+                          className="rounded-lg bg-[#f5f2ff] p-3 text-left transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(79,70,229,0.1)]"
+                        >
                           <span className="text-[12px] font-semibold text-[#64748b]">{m.label}</span>
                           <div className="mt-1 flex items-baseline gap-1">
-                            <span className={`text-[24px] font-bold ${m.color}`}>{m.value}</span>
-                            <span className="text-[12px] font-semibold text-[#10b981]">{m.delta}</span>
+                            <span className={`text-[24px] font-bold tabular-nums ${m.color}`}>{m.value}</span>
+                            <span className="text-[12px] font-semibold tabular-nums text-[#10b981]">{m.delta}</span>
                           </div>
                           <span className="text-[11px] text-[#464555]">{m.sub}</span>
                         </div>
@@ -355,9 +367,12 @@ export async function LandingPageV2() {
             <p className="mb-3 text-[12px] font-semibold uppercase tracking-widest text-[#464555]">
               {t("socialProof.title")}
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-8 opacity-90 transition-all hover:opacity-100 md:gap-14">
+            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
               {logos.map((brand) => (
-                <div key={brand.name} className="flex items-center gap-2">
+                <div
+                  key={brand.name}
+                  className="flex items-center gap-2 grayscale transition-[filter,transform] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:grayscale-0"
+                >
                   <BrandLogo name={brand.name} />
                   <span className="text-[18px] font-bold tracking-tight text-[#0f172a]">
                     {brand.name}
@@ -408,7 +423,7 @@ export async function LandingPageV2() {
                 return (
                   <div
                     key={agent.name}
-                    className="flex flex-col justify-between rounded-xl bg-white p-6 shadow-[0_4px_24px_rgba(79,70,229,0.04)]"
+                    className="flex flex-col justify-between rounded-xl bg-white p-6 shadow-[0_4px_24px_rgba(79,70,229,0.04)] transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(79,70,229,0.14)]"
                   >
                     <div>
                       <div className="mb-3 flex items-center gap-4">
@@ -548,10 +563,10 @@ export async function LandingPageV2() {
                 return (
                   <div
                     key={plan.name}
-                    className={`relative flex flex-col justify-between rounded-xl bg-white p-6 ${
+                    className={`relative flex flex-col justify-between rounded-xl bg-white p-6 transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 ${
                       featured
-                        ? "shadow-[0_12px_40px_rgba(53,37,205,0.12)] ring-2 ring-[#3525cd]"
-                        : "shadow-[0_4px_24px_rgba(79,70,229,0.04)]"
+                        ? "shadow-[0_12px_40px_rgba(53,37,205,0.12)] ring-2 ring-[#3525cd] hover:shadow-[0_24px_56px_rgba(53,37,205,0.2)]"
+                        : "shadow-[0_4px_24px_rgba(79,70,229,0.04)] hover:shadow-[0_16px_40px_rgba(79,70,229,0.14)]"
                     }`}
                   >
                     {featured && (
@@ -574,7 +589,7 @@ export async function LandingPageV2() {
                       <div className="my-6">
                         <div className="flex items-baseline gap-1">
                           <span
-                            className={`font-extrabold text-[#0f172a] ${
+                            className={`font-extrabold tabular-nums text-[#0f172a] ${
                               featured ? "text-[48px] leading-[56px] tracking-[-0.02em]" : "text-[24px] leading-[32px]"
                             }`}
                           >
@@ -635,17 +650,21 @@ export async function LandingPageV2() {
         <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="rounded-xl bg-gradient-to-br from-[#0f172a] to-[#302f39] p-6 text-white shadow-xl md:p-12">
             <div className="grid grid-cols-1 gap-6 text-center md:grid-cols-3 md:text-left">
-              {stats.map((stat, i) => (
-                <div key={stat.title} className="flex flex-col gap-2">
-                  <span
-                    className={`text-[48px] font-extrabold leading-none tracking-[-0.02em] ${IMPACT_ACCENT[i]}`}
-                  >
-                    {stat.value}
-                  </span>
-                  <p className="text-[24px] font-bold leading-[32px] text-white">{stat.title}</p>
-                  <p className="text-[14px] leading-[20px] text-[#dad7ff]">{stat.desc}</p>
-                </div>
-              ))}
+              {stats.map((stat, i) => {
+                const parsed = parseStatValue(stat.value);
+                return (
+                  <div key={stat.title} className="flex flex-col gap-2">
+                    <CountUp
+                      value={parsed.value}
+                      decimals={parsed.decimals}
+                      suffix={parsed.suffix}
+                      className={`text-[48px] font-extrabold tabular-nums leading-none tracking-[-0.02em] ${IMPACT_ACCENT[i]}`}
+                    />
+                    <p className="text-[24px] font-bold leading-[32px] text-white">{stat.title}</p>
+                    <p className="text-[14px] leading-[20px] text-[#dad7ff]">{stat.desc}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -683,8 +702,16 @@ export async function LandingPageV2() {
         {/* ── 9. Final CTA ───────────────────────────────────── */}
         <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#3525cd] via-[#4f46e5] to-[#006591] p-6 text-center text-white shadow-[0_20px_50px_rgba(53,37,205,0.25)] md:p-12">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-            <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-[#39b8fd]/20 blur-2xl" />
+            <style>{`
+              @media (prefers-reduced-motion: no-preference) {
+                .lv2-cta-blob-a { animation: lv2-cta-drift-a 14s ease-in-out infinite; }
+                .lv2-cta-blob-b { animation: lv2-cta-drift-b 18s ease-in-out infinite; }
+              }
+              @keyframes lv2-cta-drift-a { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-24px,18px); } }
+              @keyframes lv2-cta-drift-b { 0%,100% { transform: translate(0,0); } 50% { transform: translate(20px,-16px); } }
+            `}</style>
+            <div className="lv2-cta-blob-a pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+            <div className="lv2-cta-blob-b pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-[#39b8fd]/20 blur-2xl" />
             <div className="relative z-10 mx-auto flex max-w-2xl flex-col items-center">
               <span className="mb-1 rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold uppercase tracking-widest text-[#e2dfff] backdrop-blur-md">
                 {t("finalCta.eyebrow")}
@@ -698,7 +725,7 @@ export async function LandingPageV2() {
               <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-3">
                 <Link
                   href={HIRE}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3.5 text-[14px] font-semibold text-[#3525cd] shadow-lg transition-all hover:scale-[1.02] hover:bg-[#f5f2ff]"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3.5 text-[14px] font-semibold text-[#3525cd] shadow-lg transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:bg-[#f5f2ff] hover:shadow-[0_20px_50px_rgba(0,0,0,0.25)]"
                 >
                   <M name="rocket_launch" size={20} />
                   {t("finalCta.ctaPrimary")}

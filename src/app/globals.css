@@ -340,3 +340,25 @@ select:not(:disabled) {
     opacity: 0.5;
   }
 }
+
+/* ============================================================
+   Public landing v2 (src/components/landing/landing-page-2.tsx)
+
+   Self-contained inline-hex world (see that file's own token
+   comment) — browser chrome themed to match rather than left on
+   UA defaults, same convention as .chat-root above.
+   ============================================================ */
+
+.landing-v2-root ::selection {
+  background: #3525cd;
+  color: #ffffff;
+}
+
+.landing-v2-root a:focus-visible,
+.landing-v2-root button:focus-visible,
+.landing-v2-root summary:focus-visible,
+.landing-v2-root input:focus-visible {
+  outline: 2px solid #3525cd;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
