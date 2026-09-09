@@ -93,6 +93,11 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     businessName,
     intent,
     channel: conversation.channel,
+    // Read off the resolved list, not the agent slug, so a deps.tools
+    // override in a test and the human-handoff filter above are both
+    // honoured -- and so Ana, who has no catalogue tools, never gets told
+    // her options are displayed for her.
+    hasProductSearch: tools.some((tool) => tool.name === "search_products"),
     currentDate: formatCurrentDate(companyTimezone),
   });
   const initialInput = buildInitialInput(input.message);

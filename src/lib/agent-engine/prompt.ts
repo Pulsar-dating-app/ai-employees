@@ -1,4 +1,5 @@
 import type { AgentConfig } from "./config";
+import { channelRendersProductCards } from "@/lib/chat/product-cards";
 import { defaultAgentName } from "@/lib/agents/naming";
 
 // Found manually testing the dev-chat-test tool: asked "what was my last
@@ -187,34 +188,42 @@ const FORMATTING_GUARDRAIL =
   "its own short line or run them into a sentence -- never as a marked-up list. Emoji are fine, in " +
   "moderation.";
 
-// Web chat only (2026-09-09). That surface renders each product a search
-// returned as a real card -- photo, name, short description, price -- and
-// the whole card is the tracked link. Without this the model does what it
-// was previously right to do on a text-only channel: writes the same list
-// out in prose, so the customer reads every name and price twice, and then
-// offers to "send the link" for something already sitting under a link.
+// Channels that draw products visually (2026-09-09): the web chat as HTML
+// rows, Instagram as a generic-template carousel, Telegram as a media-group
+// album. Without this the model does what it is still right to do on a
+// text-only channel -- writes the same list out in prose, so the customer
+// reads every name and price twice, and then offers to "send the link" for
+// something already sitting under one.
 //
 // Deliberately NOT in `agents.system_prompt` (a migration) the way the
-// personality guardrails are: this is true of a channel, not of an agent,
-// and Malu on WhatsApp must keep listing names and prices in text because
-// there is nothing else there to carry them. MAX_PRODUCT_CARDS in
+// personality guardrails are: this is true of a channel, not of an agent.
+// On WhatsApp the text is the only thing carrying the product, so the list
+// must stay.
+//
+// Gated on the agent actually having `search_products` as well as on the
+// channel. Ana has no catalogue tools at all (see tool-sets.ts), and
+// telling a scheduling assistant "do not write the options out, they are
+// displayed for you" is worse than useless: she lists services and time
+// slots in text, and nothing displays those. MAX_PRODUCT_CARDS in
 // lib/chat/product-cards.ts is the other half of the "everything you search
 // for is shown" contract below -- the two numbers have to move together.
-const WEB_CHAT_PRODUCT_CARD_GUIDANCE =
-  "This conversation is on the store's website, which shows products visually. Every product a " +
-  "catalog search returns is displayed to the customer automatically, right under your message, " +
-  "as a card with its photo, name, short description and price -- up to 4 of them. So:\n" +
+const PRODUCT_CARD_GUIDANCE =
+  "This conversation is on a surface that shows products visually. Every product a catalog " +
+  "search returns is displayed to the customer automatically, alongside your message, as a card " +
+  "with its photo, name, short description and price -- up to 4 of them. So:\n" +
   "- Do NOT write the products out in your message. No list of names, no prices, no descriptions. " +
   "The customer is already looking at all of that.\n" +
   "- Search for exactly what you want to show, and use the search's `limit` to control how many " +
   "cards appear. What you search for is what they see.\n" +
   "- Do NOT offer to send, share or show a link for a product. Every card is already a tappable " +
   "link to that product's page, so offering one reads as if you hadn't noticed what you just " +
-  "showed them. If a customer asks for a link outright, tell them to tap the product above rather " +
+  "showed them. If a customer asks for a link outright, tell them to tap the product rather " +
   "than creating another one.\n" +
   "- Write only a short lead-in (\"Encontrei algumas opções:\") and, when it helps, one follow-up " +
   "question to narrow things down. Naming a single specific product in conversation is still fine " +
-  "-- it's the list that's redundant.";
+  "-- it's the list that's redundant.\n" +
+  "- This applies to PRODUCTS ONLY. Anything else you would normally list in text -- times, " +
+  "services, policies -- still goes in your message as usual.";
 
 // Step 7 -- pure logic, no I/O, the single best unit-test target in this
 // module. `agents.system_prompt` is NULL for Malu today (C2 hasn't run
@@ -238,15 +247,22 @@ export function buildSystemPrompt({
   businessName,
   intent,
   channel,
+  hasProductSearch = false,
   currentDate,
 }: {
   agentConfig: AgentConfig;
   businessName: string | null;
   intent: string;
-  // conversations.channel. Only 'web_chat' changes anything today (product
-  // cards); every other channel, and a null, composes exactly the prompt
-  // this function built before.
+  // conversations.channel. Only the card-rendering channels change anything
+  // (see channelRendersProductCards); every other channel, and a null,
+  // composes exactly the prompt this function built before.
   channel?: string | null;
+  // Whether this agent's resolved tool set actually includes
+  // `search_products`. Ana's does not, and a scheduling assistant told "the
+  // options are displayed for you, don't list them" would stop listing the
+  // time slots that are her entire job -- nothing renders those. Defaults
+  // to false so a caller that doesn't know composes the old prompt.
+  hasProductSearch?: boolean;
   // A preformatted human string like "Thursday, June 12, 2026
   // (America/Sao_Paulo)" -- real, non-inventable context (the same category
   // as businessName), not a guardrail. Optional so the pure unit tests can
@@ -307,9 +323,9 @@ export function buildSystemPrompt({
     SCOPE_GUARDRAIL,
     FORMATTING_GUARDRAIL,
     // After FORMATTING_GUARDRAIL, which it narrows: that one says "put each
-    // option on its own short line", which is right everywhere except the
-    // one channel that draws the options itself.
-    channel === "web_chat" ? WEB_CHAT_PRODUCT_CARD_GUIDANCE : null,
+    // option on its own short line", which stays right for everything
+    // except the products a card-rendering channel draws itself.
+    channelRendersProductCards(channel) && hasProductSearch ? PRODUCT_CARD_GUIDANCE : null,
     base,
     nameOverrideSection,
     businessNameSection,

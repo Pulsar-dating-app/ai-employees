@@ -11,6 +11,10 @@ import type { AddressInfo } from "node:net";
 //   and the one retry (sendTelegramMessage)
 // - chat_id === "trigger-send-unauthorized" -> 403 (simulates the bot being
 //   blocked by the user, no retry -- only 5xx is retried)
+//
+// Serves /sendMessage, /sendMediaGroup and /sendPhoto from one handler:
+// they share the chat_id triggers above, and a product-card album fails for
+// exactly the same reasons a text reply does.
 export function startTelegramApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
   const server: Server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
@@ -19,7 +23,12 @@ export function startTelegramApiMock(): Promise<{ url: string; stop: () => Promi
       res.end(JSON.stringify(body));
     };
 
-    if (url.pathname.endsWith("/sendMessage") && req.method === "POST") {
+    // Product cards (2026-09-09) go out as an album, or a bare photo when
+    // there's only one. Same trigger chat ids as sendMessage, so a test can
+    // drive a card-delivery failure the same way it drives a text one.
+    const isCardEndpoint = url.pathname.endsWith("/sendMediaGroup") || url.pathname.endsWith("/sendPhoto");
+
+    if ((url.pathname.endsWith("/sendMessage") || isCardEndpoint) && req.method === "POST") {
       let raw = "";
       req.on("data", (chunk) => (raw += chunk));
       req.on("end", () => {

@@ -400,13 +400,13 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("never ask for a year");
   });
 
-  // 2026-09-09 -- the web chat draws each searched product as a card with
-  // its photo, name, description and price, so the model listing them in
-  // prose makes the customer read everything twice and offer a link for
-  // something already under one. Every other channel has nothing but text,
-  // so this must stay strictly channel-scoped.
-  describe("web-chat product cards", () => {
-    const agentConfig: AgentConfig = {
+  // 2026-09-09 -- the card-rendering channels draw each searched product
+  // with its photo, name, description and price, so the model listing them
+  // in prose makes the customer read everything twice and offer a link for
+  // something already under one. Gated on the channel AND on the agent
+  // actually having a catalogue to search.
+  describe("product-card guidance", () => {
+    const malu: AgentConfig = {
       slug: "malu",
       role: "Sales assistant",
       description: "desc",
@@ -416,22 +416,81 @@ describe("buildSystemPrompt", () => {
       displayName: null,
     };
 
-    it("tells the model not to list products or offer links on web chat", () => {
-      const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown", channel: "web_chat" });
+    const ana: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling assistant",
+      description: "desc",
+      personality: null,
+      systemPrompt: "You are Ana.",
+      companyAgentStatus: "active",
+      displayName: null,
+    };
 
-      expect(prompt).toContain("Do NOT write the products out in your message");
-      expect(prompt).toContain("Do NOT offer to send, share or show a link");
-      expect(prompt).toContain("What you search for is what they see");
-    });
+    const marker = "Do NOT write the products out in your message";
 
-    it.each(["whatsapp", "instagram", "telegram", null, undefined])(
-      "leaves the prompt untouched on %s, where text is all the customer gets",
+    it.each(["web_chat", "instagram", "telegram"])(
+      "tells the model not to list products or offer links on %s",
       (channel) => {
-        const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown", channel });
-        expect(prompt).not.toContain("Do NOT write the products out in your message");
-        expect(prompt).toEqual(buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" }));
+        const prompt = buildSystemPrompt({
+          agentConfig: malu,
+          businessName: null,
+          intent: "unknown",
+          channel,
+          hasProductSearch: true,
+        });
+
+        expect(prompt).toContain(marker);
+        expect(prompt).toContain("Do NOT offer to send, share or show a link");
+        expect(prompt).toContain("What you search for is what they see");
       },
     );
+
+    // WhatsApp has no single-message product format we can use (its
+    // Multi-Product Message needs a Meta Commerce catalogue this app does
+    // not sync), so the text list is the only thing carrying the product.
+    it.each(["whatsapp", null, undefined])(
+      "leaves the prompt untouched on %s, where text is all the customer gets",
+      (channel) => {
+        const prompt = buildSystemPrompt({
+          agentConfig: malu,
+          businessName: null,
+          intent: "unknown",
+          channel,
+          hasProductSearch: true,
+        });
+        expect(prompt).not.toContain(marker);
+        expect(prompt).toEqual(buildSystemPrompt({ agentConfig: malu, businessName: null, intent: "unknown" }));
+      },
+    );
+
+    // Ana has no catalogue tools at all. Telling a scheduling assistant
+    // "the options are displayed for you, don't list them" would put her
+    // one step from dropping the time slots that are her entire job --
+    // nothing renders those.
+    it("says nothing about products to an agent with no catalogue to search", () => {
+      const prompt = buildSystemPrompt({
+        agentConfig: ana,
+        businessName: null,
+        intent: "unknown",
+        channel: "web_chat",
+        hasProductSearch: false,
+      });
+
+      expect(prompt).not.toContain(marker);
+      expect(prompt).not.toContain("catalog search");
+      expect(prompt).toEqual(buildSystemPrompt({ agentConfig: ana, businessName: null, intent: "unknown" }));
+    });
+
+    it("still tells a card-rendering channel that non-product lists stay in the message", () => {
+      const prompt = buildSystemPrompt({
+        agentConfig: malu,
+        businessName: null,
+        intent: "unknown",
+        channel: "instagram",
+        hasProductSearch: true,
+      });
+      expect(prompt).toContain("This applies to PRODUCTS ONLY");
+    });
   });
 });
 

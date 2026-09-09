@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { AgentEngine } from "@/lib/agent-engine";
-import { sendTelegramMessage } from "@/lib/telegram/bot-api";
+import { sendTelegramMessage, sendTelegramProductCards } from "@/lib/telegram/bot-api";
+import { buildReplyProductCards } from "@/lib/chat/reply-product-cards";
+import { toDeliverableCards } from "@/lib/chat/product-cards";
 import { resolveTelegramSession } from "@/lib/telegram/session";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
 
@@ -162,9 +164,29 @@ export async function POST(request: Request) {
 
   await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversation.id);
 
+  // Product cards. Best-effort: a reply that can't grow cards is still a
+  // complete reply, and failing the turn over a decoration would cost the
+  // customer the answer they asked for.
+  let metadata = null;
+  try {
+    metadata = await buildReplyProductCards(
+      {
+        supabase,
+        companyId: customer.company_id,
+        agentId: conversation.agent_id,
+        conversationId: conversation.id,
+        customerId: customer.id,
+      },
+      result.toolCalls,
+      result.responseText,
+    );
+  } catch (err) {
+    console.error("Telegram webhook: failed to build product cards", err);
+  }
+
   const { error: replyError } = await supabase
     .from("messages")
-    .insert({ company_id: customer.company_id, conversation_id: conversation.id, role: "agent", content: result.responseText });
+    .insert({ company_id: customer.company_id, conversation_id: conversation.id, role: "agent", content: result.responseText, metadata });
   if (replyError) {
     console.error("Telegram webhook: failed to persist reply", replyError);
     return new NextResponse(null, { status: 200 });
@@ -175,6 +197,19 @@ export async function POST(request: Request) {
   const sendResult = await sendTelegramMessage(chatId, result.responseText);
   if (!sendResult.ok) {
     console.error("Telegram webhook: failed to deliver reply", { companyId: customer.company_id, errorDetail: sendResult.errorDetail });
+  }
+
+  // The album goes after the text so it reads as an illustration of what
+  // she just said. Sent even when the text failed to deliver: they are
+  // independent Telegram calls, and one landing is better than neither.
+  if (metadata) {
+    const cardResult = await sendTelegramProductCards(chatId, toDeliverableCards(metadata.products));
+    if (!cardResult.ok) {
+      console.error("Telegram webhook: failed to deliver product cards", {
+        companyId: customer.company_id,
+        errorDetail: cardResult.errorDetail,
+      });
+    }
   }
 
   // Always 200: Telegram retries an endpoint that keeps failing, and

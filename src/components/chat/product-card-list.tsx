@@ -1,4 +1,4 @@
-import type { ProductCard } from "@/lib/chat/product-cards";
+import { formatProductPrice, type ProductCard } from "@/lib/chat/product-cards";
 
 // The products a reply recommended, rendered under its text.
 //
@@ -13,26 +13,8 @@ import type { ProductCard } from "@/lib/chat/product-cards";
 // where a carousel would crop the third and hide the price behind a swipe
 // most customers never make.
 
-function formatPrice(price: string | null, currency: string | null, locale: string): string | null {
-  if (!price) return null;
-  const amount = Number(price);
-  if (!Number.isFinite(amount)) return null;
-
-  // Currency is merchant data and can be missing or junk on a hand-imported
-  // row; Intl throws on an unknown code rather than degrading, so a bad
-  // value must never take the card down with it.
-  if (currency) {
-    try {
-      return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
-    } catch {
-      // Falls through to the plain number below.
-    }
-  }
-  return new Intl.NumberFormat(locale).format(amount);
-}
-
 function ProductRow({ product, locale }: { product: ProductCard; locale: string }) {
-  const price = formatPrice(product.price, product.currency, locale);
+  const price = formatProductPrice(product.price, product.currency, locale);
 
   const body = (
     <>
