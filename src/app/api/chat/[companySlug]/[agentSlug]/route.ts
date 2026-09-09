@@ -5,6 +5,8 @@ import { resolveWebChatSession } from "@/lib/web-chat/session";
 import { isEmbedOriginAllowed } from "@/lib/web-chat/embed-authorization";
 import { checkAndRecordIpRateLimit, checkConversationRateLimit, getClientIp } from "@/lib/web-chat/rate-limit";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
+import { readMessageMetadata } from "@/lib/chat/product-cards";
+import { buildReplyProductCards } from "@/lib/web-chat/reply-product-cards";
 
 // Trello M3 -- the public, unauthenticated chat API a website visitor (or
 // the embeddable widget, M5) talks to. Public and slug-based, so it lives
@@ -103,14 +105,21 @@ export async function GET(
 
   const { data: messages, error: messagesError } = await supabase
     .from("messages")
-    .select("role, content, created_at, conversations!inner(customer_id, agent_id)")
+    .select("role, content, created_at, metadata, conversations!inner(customer_id, agent_id)")
     .eq("conversations.customer_id", customer.id)
     .eq("conversations.agent_id", agentId)
     .order("created_at", { ascending: true });
   if (messagesError) return NextResponse.json({ error: messagesError.message }, { status: 500 });
 
   return NextResponse.json({
-    messages: (messages ?? []).map((m) => ({ role: m.role, content: m.content, created_at: m.created_at })),
+    messages: (messages ?? []).map((m) => ({
+      role: m.role,
+      content: m.content,
+      created_at: m.created_at,
+      // Persisted at send time (see the POST below) precisely so a refresh
+      // reloads the same cards, not just the text that referred to them.
+      metadata: readMessageMetadata(m.metadata),
+    })),
   });
 }
 
@@ -237,6 +246,32 @@ export async function POST(
     .update({ updated_at: new Date().toISOString() })
     .eq("id", session.conversationId);
 
+  // The products this reply actually names, each with a tracked link, so
+  // the customer sees a picture instead of a line of prose. `search_products`
+  // already returned every field needed (image_url included) and the engine
+  // hands the rows back on `toolCalls` -- before this they were simply
+  // dropped here alongside the rest of the tool results.
+  //
+  // Best-effort: a reply that can't grow cards is still a good reply, and
+  // failing the whole request over a decoration would cost the customer the
+  // answer they asked for.
+  let metadata = null;
+  try {
+    metadata = await buildReplyProductCards(
+      {
+        supabase,
+        companyId,
+        agentId,
+        conversationId: session.conversationId,
+        customerId: session.customerId,
+      },
+      result.toolCalls,
+      result.responseText,
+    );
+  } catch (error) {
+    console.warn("[web-chat] could not build product cards for a reply", { companyId, error });
+  }
+
   const { data: reply, error: replyError } = await supabase
     .from("messages")
     .insert({
@@ -244,8 +279,9 @@ export async function POST(
       conversation_id: session.conversationId,
       role: "agent",
       content: result.responseText,
+      metadata,
     })
-    .select("role, content, created_at")
+    .select("role, content, created_at, metadata")
     .single();
   if (replyError) return NextResponse.json({ error: replyError.message }, { status: 500 });
 
@@ -254,5 +290,7 @@ export async function POST(
   // no-ops when P4 hasn't opened a usage row for the period. Best-effort.
   await recordAiReply(companyId, supabase);
 
-  return NextResponse.json({ reply });
+  return NextResponse.json({
+    reply: { ...reply, metadata: readMessageMetadata(reply.metadata) },
+  });
 }

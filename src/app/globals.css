@@ -264,3 +264,79 @@ select:not(:disabled) {
     animation: none;
   }
 }
+
+/* ============================================================
+   Hosted chat (src/app/talk/[companySlug]/[agentSlug]/)
+
+   The one surface a merchant's own customers ever see, so the
+   browser chrome inside it (selection, scrollbar) is themed too
+   rather than left on UA defaults.
+   ============================================================ */
+
+.chat-root ::selection {
+  background: var(--color-primary-fixed);
+  color: var(--color-on-primary-fixed);
+}
+
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline-variant) transparent;
+}
+.chat-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-outline-variant);
+  border: 3px solid transparent;
+  border-radius: 9999px;
+  background-clip: content-box;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-outline);
+  background-clip: content-box;
+}
+
+/* Only a message that actually just arrived carries this — history
+   renders already settled (see seenCountRef in chat-widget.tsx). */
+@keyframes chat-message-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.chat-message-in {
+  animation: chat-message-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes chat-typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-3px);
+    opacity: 0.9;
+  }
+}
+.chat-typing-dot {
+  animation: chat-typing 1.3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-message-in,
+  .chat-typing-dot {
+    animation: none;
+  }
+  .chat-typing-dot {
+    opacity: 0.5;
+  }
+}

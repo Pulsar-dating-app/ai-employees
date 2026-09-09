@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { resolveAgentPhoto } from "@/lib/agents/media";
+import { readMessageMetadata, type MessageMetadata } from "@/lib/chat/product-cards";
 
 // Trello F5 -- shared between the detail page's own server-side fetch and
 // the GET API route the client re-fetches through (e.g. after sending a
@@ -17,7 +18,15 @@ export type ConversationDetail = {
   agentPhotoSrc: string | null;
 };
 
-export type ConversationMessage = { role: "customer" | "agent" | "merchant"; content: string; created_at: string };
+export type ConversationMessage = {
+  role: "customer" | "agent" | "merchant";
+  content: string;
+  created_at: string;
+  // Product cards the customer was shown alongside this reply (web chat
+  // only today). Surfaced here so the inbox shows the merchant exactly what
+  // their customer saw, not a text-only version of it.
+  metadata: MessageMetadata | null;
+};
 
 export async function getConversationDetail(
   supabase: SupabaseClient,
@@ -37,7 +46,7 @@ export async function getConversationDetail(
 
   const { data: messages, error: messagesError } = await supabase
     .from("messages")
-    .select("role, content, created_at")
+    .select("role, content, created_at, metadata")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
   if (messagesError) return { error: messagesError.message, status: 500 };
@@ -78,6 +87,7 @@ export async function getConversationDetail(
       role: m.role as ConversationMessage["role"],
       content: m.content,
       created_at: m.created_at,
+      metadata: readMessageMetadata(m.metadata),
     })),
   };
 }
