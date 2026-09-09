@@ -33,7 +33,7 @@ function one<T>(v: T | T[] | null): T | null {
 
 export function formatWhen(startsAt: string, timezone: string | null): string {
   const tz = timezone && isValidTimeZone(timezone) ? timezone : "UTC";
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("pt-BR", {
     timeZone: tz,
     weekday: "long",
     day: "numeric",
@@ -55,10 +55,10 @@ function contextFromRow(row: Row): EmailContext | null {
     to,
     data: {
       businessName: company.name,
-      serviceName: service?.name ?? "your appointment",
+      serviceName: service?.name ?? "seu agendamento",
       whenText: formatWhen(row.starts_at, company.timezone),
       businessNote: null,
-      contact: contactBits.length > 0 ? `contact ${company.name} at ${contactBits.join(" / ")}` : null,
+      contact: contactBits.length > 0 ? `${company.name} (${contactBits.join(" / ")})` : null,
     },
   };
 }

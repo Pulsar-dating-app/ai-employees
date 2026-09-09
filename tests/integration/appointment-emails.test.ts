@@ -100,7 +100,7 @@ describe("R3 -- booking confirmation / decline emails", () => {
     expect(booked.booked).toBe(true);
 
     const email = await waitForEmail(to);
-    expect(email.subject).toContain("confirmed");
+    expect(email.subject).toContain("confirmado");
     expect(email.text).toContain("Consulta");
     expect(email.text).toContain("studio@example.test"); // contact line
   });
@@ -131,7 +131,7 @@ describe("R3 -- booking confirmation / decline emails", () => {
     expect(res.status).toBe(200);
 
     const email = await waitForEmail(to);
-    expect(email.subject).toContain("confirmed");
+    expect(email.subject).toContain("confirmado");
   });
 
   it("emails a decline note when the merchant declines a pending request", async () => {
@@ -146,7 +146,7 @@ describe("R3 -- booking confirmation / decline emails", () => {
     });
 
     const email = await waitForEmail(to);
-    expect(email.subject.toLowerCase()).toContain("couldn't be confirmed");
+    expect(email.subject.toLowerCase()).toContain("não pôde ser confirmado");
   });
 
   it("a customer with no email just doesn't get one -- the booking still succeeds", async () => {
@@ -216,7 +216,7 @@ describe("R4 -- appointment reminder cron", () => {
     expect(first.json?.sent).toBeGreaterThanOrEqual(1);
 
     const email = await waitForEmail(to);
-    expect(email.subject.toLowerCase()).toContain("reminder");
+    expect(email.subject.toLowerCase()).toContain("lembrete");
 
     const { data: row } = await svc.from("appointments").select("reminder_sent_at").eq("id", apptId).single();
     expect(row!.reminder_sent_at).not.toBeNull();

@@ -9,9 +9,9 @@ import {
 const data: AppointmentEmailData = {
   businessName: "Studio Aurora",
   serviceName: "Consulta inicial",
-  whenText: "Thursday, 12 June at 2:00 PM",
+  whenText: "quinta-feira, 12 de junho às 14:00",
   businessNote: null,
-  contact: "contact Studio Aurora at hi@aurora.test",
+  contact: "Studio Aurora (hi@aurora.test)",
 };
 
 describe("appointment email templates", () => {
@@ -20,7 +20,7 @@ describe("appointment email templates", () => {
     expect(e.subject).toContain("Studio Aurora");
     for (const body of [e.text, e.html]) {
       expect(body).toContain("Consulta inicial");
-      expect(body).toContain("Thursday, 12 June at 2:00 PM");
+      expect(body).toContain("quinta-feira, 12 de junho às 14:00");
       expect(body).toContain("Studio Aurora");
     }
     expect(e.text).toContain("hi@aurora.test");
@@ -28,13 +28,13 @@ describe("appointment email templates", () => {
 
   it("reminder reads as a reminder, not a fresh confirmation", () => {
     const e = renderReminderEmail(data);
-    expect(e.subject.toLowerCase()).toContain("reminder");
+    expect(e.subject.toLowerCase()).toContain("lembrete");
     expect(e.text).toContain("Consulta inicial");
   });
 
   it("declined explains it couldn't be confirmed", () => {
     const e = renderDeclinedEmail(data);
-    expect(e.subject.toLowerCase()).toContain("couldn't be confirmed");
+    expect(e.subject.toLowerCase()).toContain("não pôde ser confirmado");
     expect(e.text).toContain("Studio Aurora");
     expect(e.text).toContain("Consulta inicial");
   });
@@ -47,6 +47,6 @@ describe("appointment email templates", () => {
 
   it("falls back to a generic 'reply to the chat' line with no contact", () => {
     const e = renderConfirmationEmail({ ...data, contact: null });
-    expect(e.text).toContain("reply to the chat");
+    expect(e.text).toContain("responder na conversa");
   });
 });

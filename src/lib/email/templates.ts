@@ -26,9 +26,9 @@ function shell(headline: string, bodyHtml: string): string {
 
 function detailsHtml(data: AppointmentEmailData): string {
   const rows = [
-    ["Service", data.serviceName],
-    ["When", data.whenText],
-    ["Business", data.businessName],
+    ["Serviço", data.serviceName],
+    ["Quando", data.whenText],
+    ["Empresa", data.businessName],
   ]
     .map(
       ([k, v]) =>
@@ -39,54 +39,54 @@ function detailsHtml(data: AppointmentEmailData): string {
     ? `<p style="font-size:14px;color:#5b5b66;margin:16px 0 0">${escapeHtml(data.businessNote)}</p>`
     : "";
   const contact = data.contact
-    ? `<p style="font-size:14px;color:#5b5b66;margin:8px 0 0">Need to change or cancel it? ${escapeHtml(data.contact)}</p>`
-    : `<p style="font-size:14px;color:#5b5b66;margin:8px 0 0">Need to change or cancel it? Just reply to the chat where you booked.</p>`;
+    ? `<p style="font-size:14px;color:#5b5b66;margin:8px 0 0">Precisa alterar ou cancelar? Fale com ${escapeHtml(data.contact)}.</p>`
+    : `<p style="font-size:14px;color:#5b5b66;margin:8px 0 0">Precisa alterar ou cancelar? Basta responder na conversa onde você agendou.</p>`;
   return `<table style="font-size:14px;border-collapse:collapse">${rows}</table>${note}${contact}`;
 }
 
 function detailsText(data: AppointmentEmailData): string {
   const lines = [
-    `Service: ${data.serviceName}`,
-    `When: ${data.whenText}`,
-    `Business: ${data.businessName}`,
+    `Serviço: ${data.serviceName}`,
+    `Quando: ${data.whenText}`,
+    `Empresa: ${data.businessName}`,
   ];
   if (data.businessNote) lines.push("", data.businessNote);
   lines.push(
     "",
     data.contact
-      ? `Need to change or cancel it? ${data.contact}`
-      : "Need to change or cancel it? Just reply to the chat where you booked.",
+      ? `Precisa alterar ou cancelar? Fale com ${data.contact}.`
+      : "Precisa alterar ou cancelar? Basta responder na conversa onde você agendou.",
   );
   return lines.join("\n");
 }
 
 export function renderConfirmationEmail(data: AppointmentEmailData): RenderedEmail {
   return {
-    subject: `Your appointment with ${data.businessName} is confirmed`,
-    html: shell("You're booked ✓", `<p style="font-size:14px;margin:0 0 16px">Here are the details:</p>${detailsHtml(data)}`),
-    text: `You're booked.\n\n${detailsText(data)}`,
+    subject: `Seu agendamento com ${data.businessName} está confirmado`,
+    html: shell("Agendamento confirmado ✓", `<p style="font-size:14px;margin:0 0 16px">Aqui estão os detalhes:</p>${detailsHtml(data)}`),
+    text: `Agendamento confirmado.\n\n${detailsText(data)}`,
   };
 }
 
 export function renderReminderEmail(data: AppointmentEmailData): RenderedEmail {
   return {
-    subject: `Reminder: your appointment with ${data.businessName} is tomorrow`,
+    subject: `Lembrete: seu agendamento com ${data.businessName} é em breve`,
     html: shell(
-      "See you soon 👋",
-      `<p style="font-size:14px;margin:0 0 16px">A quick reminder about your appointment:</p>${detailsHtml(data)}`,
+      "Até breve 👋",
+      `<p style="font-size:14px;margin:0 0 16px">Um lembrete rápido sobre seu agendamento:</p>${detailsHtml(data)}`,
     ),
-    text: `A quick reminder about your appointment.\n\n${detailsText(data)}`,
+    text: `Um lembrete rápido sobre seu agendamento.\n\n${detailsText(data)}`,
   };
 }
 
 export function renderDeclinedEmail(data: AppointmentEmailData): RenderedEmail {
   return {
-    subject: `Your appointment request with ${data.businessName} couldn't be confirmed`,
+    subject: `Seu pedido de agendamento com ${data.businessName} não pôde ser confirmado`,
     html: shell(
-      "About your booking",
-      `<p style="font-size:14px;margin:0 0 16px">Unfortunately ${escapeHtml(data.businessName)} couldn't confirm the ${escapeHtml(data.serviceName)} you requested for ${escapeHtml(data.whenText)}. Reply to the chat where you booked to find another time.</p>`,
+      "Sobre seu agendamento",
+      `<p style="font-size:14px;margin:0 0 16px">Infelizmente ${escapeHtml(data.businessName)} não conseguiu confirmar o horário de ${escapeHtml(data.serviceName)} solicitado para ${escapeHtml(data.whenText)}. Responda na conversa onde você agendou para encontrar outro horário.</p>`,
     ),
-    text: `Unfortunately ${data.businessName} couldn't confirm the ${data.serviceName} you requested for ${data.whenText}. Reply to the chat where you booked to find another time.`,
+    text: `Infelizmente ${data.businessName} não conseguiu confirmar o horário de ${data.serviceName} solicitado para ${data.whenText}. Responda na conversa onde você agendou para encontrar outro horário.`,
   };
 }
 
@@ -104,15 +104,15 @@ export type WaitlistOpeningEmailData = {
 
 export function renderWaitlistOpeningEmail(data: WaitlistOpeningEmailData): RenderedEmail {
   const how = data.contact
-    ? `Get in touch to grab it: ${data.contact}.`
-    : "Reply to the chat where you asked, and we'll get you booked in.";
+    ? `Entre em contato para garantir: ${data.contact}.`
+    : "Responda na conversa onde você pediu, e a gente te agenda.";
   const line =
-    `Good news -- a ${data.serviceName} slot just opened up at ${data.businessName}, ` +
-    `on ${data.whenText}. It hasn't been held, so it's first come, first served. ${how}`;
+    `Boa notícia -- uma vaga de ${data.serviceName} acabou de abrir em ${data.businessName}, ` +
+    `em ${data.whenText}. Ela não está reservada, então é por ordem de chegada. ${how}`;
   return {
-    subject: `A ${data.serviceName} slot opened up at ${data.businessName}`,
+    subject: `Uma vaga de ${data.serviceName} abriu em ${data.businessName}`,
     html: shell(
-      "A spot just opened up 🎉",
+      "Uma vaga acabou de abrir 🎉",
       `<p style="font-size:14px;margin:0">${escapeHtml(line)}</p>`,
     ),
     text: line,
