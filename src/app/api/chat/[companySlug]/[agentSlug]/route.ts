@@ -6,7 +6,7 @@ import { isEmbedOriginAllowed } from "@/lib/web-chat/embed-authorization";
 import { checkAndRecordIpRateLimit, checkConversationRateLimit, getClientIp } from "@/lib/web-chat/rate-limit";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
 import { readMessageMetadata } from "@/lib/chat/product-cards";
-import { buildReplyProductCards } from "@/lib/web-chat/reply-product-cards";
+import { buildReplyProductCards } from "@/lib/chat/reply-product-cards";
 
 // Trello M3 -- the public, unauthenticated chat API a website visitor (or
 // the embeddable widget, M5) talks to. Public and slug-based, so it lives

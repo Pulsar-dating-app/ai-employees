@@ -40,10 +40,29 @@ export type SearchedProduct = {
 };
 
 // Four is what the agent prompt promises the model (see
-// WEB_CHAT_PRODUCT_CARD_GUIDANCE in agent-engine/prompt.ts) -- the two must
-// stay in step, since the model is told to search for exactly what it wants
-// shown.
+// PRODUCT_CARD_GUIDANCE in agent-engine/prompt.ts) -- the two must stay in
+// step, since the model is told to search for exactly what it wants shown.
+// It is also the tightest ceiling of the three surfaces: Instagram's
+// generic template allows 10 elements and Telegram's media group 10 items,
+// but four is what a phone screen reads as a list rather than a catalogue.
 export const MAX_PRODUCT_CARDS = 4;
+
+// The channels that can draw a product visually, each in its own format:
+// HTML rows on the web chat, a generic-template carousel on Instagram, a
+// media-group album on Telegram.
+//
+// WhatsApp is deliberately absent. Its single-message product format
+// (Multi-Product Message) references products by `product_retailer_id` from
+// a Meta Commerce catalogue, which this app does not sync -- the Shopify
+// importer populates our own `products` table, not Meta's. Sending loose
+// photos instead would mean one reply becoming N messages, so WhatsApp
+// keeps the text-only reply it has always had until that catalogue sync
+// exists. See decisions.md, 2026-09-09.
+const CARD_RENDERING_CHANNELS = new Set(["web_chat", "instagram", "telegram"]);
+
+export function channelRendersProductCards(channel: string | null | undefined): boolean {
+  return typeof channel === "string" && CARD_RENDERING_CHANNELS.has(channel);
+}
 
 // Roughly two lines on a desktop card and three on a phone, where
 // `line-clamp-2` takes over visually. Long enough to say what the product
@@ -186,4 +205,59 @@ export function readMessageMetadata(value: unknown): MessageMetadata | null {
   });
 
   return cards.length > 0 ? { products: cards } : null;
+}
+
+// One price formatter for every surface, so the web card, the Instagram
+// carousel subtitle and the Telegram caption can never disagree about how
+// the same product's price reads.
+//
+// Currency is merchant data and can be missing or junk on a hand-imported
+// row; Intl throws on an unknown code rather than degrading, so a bad value
+// must never take the card down with it.
+export function formatProductPrice(
+  price: string | null,
+  currency: string | null,
+  locale: string,
+): string | null {
+  if (!price) return null;
+  const amount = Number(price);
+  if (!Number.isFinite(amount)) return null;
+
+  if (currency) {
+    try {
+      return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
+    } catch {
+      // Falls through to the plain number below.
+    }
+  }
+  return new Intl.NumberFormat(locale).format(amount);
+}
+
+// The messaging channels have no UI locale to read: Instagram and Telegram
+// replies are composed server-side for a customer whose language is only
+// known from what they typed. Brazil-first, matching the product's own
+// positioning and the language the reply itself is written in -- and note
+// this formats the *currency the product is stored in*, so a USD product
+// still reads as "US$ 749,95", not as reais.
+const MESSAGING_PRICE_LOCALE = "pt-BR";
+
+// What a card looks like once it leaves the database and becomes something
+// Instagram or Telegram can carry: the price already rendered, no currency
+// code to re-interpret downstream.
+export type DeliverableProductCard = {
+  name: string;
+  description: string | null;
+  priceLabel: string | null;
+  imageUrl: string | null;
+  url: string | null;
+};
+
+export function toDeliverableCards(products: readonly ProductCard[]): DeliverableProductCard[] {
+  return products.map((product) => ({
+    name: product.name,
+    description: product.description,
+    priceLabel: formatProductPrice(product.price, product.currency, MESSAGING_PRICE_LOCALE),
+    imageUrl: product.imageUrl,
+    url: product.url,
+  }));
 }

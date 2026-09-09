@@ -249,3 +249,93 @@ export async function sendInstagramMessage(
   if (res.ok) return { ok: true };
   return { ok: false, tokenInvalid: res.status === 401 || res.status === 403 };
 }
+
+// Product cards (2026-09-09). Instagram's generic template is a horizontal
+// carousel of up to 10 elements, each with an image, a title, a subtitle
+// and buttons -- close enough to the web chat's card rows that the same
+// ProductCard shape maps straight onto it, so no second "what do we show"
+// decision exists to drift.
+//
+// One message, not one per product: the whole reason cards were worth doing
+// on this channel rather than sending loose photos.
+//
+// Field limits are Meta's, and it rejects the whole payload rather than
+// truncating -- `title` 80 chars, `subtitle` 80, button `title` 20. The
+// stored card description is already cut to 120 for the web, so it gets cut
+// again here rather than assuming the tighter limit everywhere.
+const IG_TEMPLATE_TITLE_LIMIT = 80;
+const IG_TEMPLATE_SUBTITLE_LIMIT = 80;
+const IG_TEMPLATE_MAX_ELEMENTS = 10;
+
+// Collapses whitespace runs EXCEPT the non-breaking space: `\s` matches
+// U+00A0 in JavaScript, and Intl puts one between a currency symbol and its
+// amount ("US$ 749,95"). Flattening it to a plain space is what lets
+// Instagram wrap the subtitle between "US$" and the number.
+function clamp(text: string, limit: number): string {
+  const collapsed = text.replace(/[^\S\u00a0]+/g, " ").trim();
+  return collapsed.length <= limit ? collapsed : `${collapsed.slice(0, limit - 1).trimEnd()}…`;
+}
+
+export type InstagramProductCard = {
+  name: string;
+  description: string | null;
+  priceLabel: string | null;
+  imageUrl: string | null;
+  url: string | null;
+};
+
+// A carousel element must have an image to be worth sending, and Meta
+// requires a publicly fetchable URL (it fetches server-side). A card with
+// no image is dropped rather than sent as an empty tile.
+export function buildInstagramProductElements(cards: readonly InstagramProductCard[]) {
+  return cards
+    .filter((card) => card.imageUrl)
+    .slice(0, IG_TEMPLATE_MAX_ELEMENTS)
+    .map((card) => ({
+      title: clamp(card.name, IG_TEMPLATE_TITLE_LIMIT),
+      image_url: card.imageUrl as string,
+      // Price first: it's the thing a customer scans for, and the subtitle
+      // is one short line on a phone.
+      ...(card.priceLabel || card.description
+        ? {
+            subtitle: clamp(
+              [card.priceLabel, card.description].filter(Boolean).join(" · "),
+              IG_TEMPLATE_SUBTITLE_LIMIT,
+            ),
+          }
+        : {}),
+      ...(card.url ? { default_action: { type: "web_url", url: card.url } } : {}),
+    }));
+}
+
+export async function sendInstagramProductCards(
+  accessToken: string,
+  instagramUserId: string,
+  recipientId: string,
+  cards: readonly InstagramProductCard[],
+): Promise<SendInstagramMessageResult> {
+  const elements = buildInstagramProductElements(cards);
+  // Nothing renderable: report success rather than failure, since the text
+  // reply that preceded this already went out and is a complete answer.
+  if (elements.length === 0) return { ok: true };
+
+  const body = JSON.stringify({
+    recipient: { id: recipientId },
+    message: { attachment: { type: "template", payload: { template_type: "generic", elements } } },
+  });
+
+  const attempt = () =>
+    fetch(graphUrl(`/${instagramUserId}/messages`), {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+      body,
+    });
+
+  let res = await attempt();
+  if (!res.ok && res.status >= 500) {
+    res = await attempt();
+  }
+
+  if (res.ok) return { ok: true };
+  return { ok: false, tokenInvalid: res.status === 401 || res.status === 403 };
+}

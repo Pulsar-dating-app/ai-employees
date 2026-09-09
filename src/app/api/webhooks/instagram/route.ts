@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { AgentEngine } from "@/lib/agent-engine";
-import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
+import { sendInstagramMessage, sendInstagramProductCards } from "@/lib/instagram/meta-instagram-api";
+import { buildReplyProductCards } from "@/lib/chat/reply-product-cards";
+import { toDeliverableCards } from "@/lib/chat/product-cards";
 import { resolveInstagramSession } from "@/lib/instagram/session";
 import { verifyInstagramSignature } from "@/lib/instagram/webhook-signature";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
@@ -200,9 +202,29 @@ export async function POST(request: Request) {
 
     await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", session.conversationId);
 
+    // Product cards. Best-effort: a reply that can't grow cards is still a
+    // complete reply, and failing the turn over a decoration would cost the
+    // customer the answer they asked for.
+    let metadata = null;
+    try {
+      metadata = await buildReplyProductCards(
+        {
+          supabase,
+          companyId: connection.company_id,
+          agentId: connection.agent_id,
+          conversationId: session.conversationId,
+          customerId: session.customerId,
+        },
+        result.toolCalls,
+        result.responseText,
+      );
+    } catch (err) {
+      console.error("Instagram webhook: failed to build product cards", err);
+    }
+
     const { error: replyError } = await supabase
       .from("messages")
-      .insert({ company_id: connection.company_id, conversation_id: session.conversationId, role: "agent", content: result.responseText });
+      .insert({ company_id: connection.company_id, conversation_id: session.conversationId, role: "agent", content: result.responseText, metadata });
     if (replyError) {
       console.error("Instagram webhook: failed to persist reply", replyError);
       continue;
@@ -230,6 +252,26 @@ export async function POST(request: Request) {
         } catch {
           // Nothing further to do -- already logged above.
         }
+      }
+    }
+
+    // The carousel goes after the text so it reads as an illustration of
+    // what she just said. Skipped when the text itself failed to deliver:
+    // unlike Telegram, a failure here is usually the token or the 24h
+    // window, so the second call would fail identically and only burn
+    // another request against Meta's rate limit.
+    if (metadata && sendResult.ok) {
+      const cardResult = await sendInstagramProductCards(
+        connection.access_token,
+        connection.instagram_user_id,
+        senderId,
+        toDeliverableCards(metadata.products),
+      );
+      if (!cardResult.ok) {
+        console.error("Instagram webhook: failed to deliver product cards", {
+          companyId: connection.company_id,
+          tokenInvalid: cardResult.tokenInvalid,
+        });
       }
     }
   }

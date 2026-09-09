@@ -1,17 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildCheckoutUrl } from "@/lib/checkout/links";
 import { mintRecommendationTrackingId } from "@/lib/checkout/recommendation-events";
-import { selectProductCards, type MessageMetadata, type ProductCard } from "@/lib/chat/product-cards";
+import { selectProductCards, type MessageMetadata, type ProductCard } from "./product-cards";
 
 // Builds the product cards attached to one web-chat reply: picks which of
 // the turn's searched products to show (pure, in chat/product-cards.ts),
 // then gives each a tappable tracked link.
 //
-// Web chat only, by decision (2026-09-09) -- WhatsApp and Instagram render
-// no HTML, so cards there mean real outbound media messages, which is
-// different work on a different budget. Nothing here is imported by those
-// channels, and the agent prompt is untouched, so their replies are byte
-// for byte what they were before.
+// Channel-agnostic: the web chat draws these as HTML rows, Instagram sends
+// them as a generic-template carousel and Telegram as a media-group album,
+// but "which products, with what data, behind which tracked link" is one
+// decision for all three. WhatsApp is the one channel still text-only --
+// its single-message product format needs a Meta Commerce catalogue, which
+// this app does not sync (see decisions.md, 2026-09-09).
 
 type ToolCallLike = { name: string; args: Record<string, unknown>; result: unknown };
 

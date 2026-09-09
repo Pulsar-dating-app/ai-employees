@@ -50,3 +50,96 @@ export async function sendTelegramMessage(chatId: string, text: string): Promise
 
   return { ok: false, errorDetail };
 }
+
+// Product cards (2026-09-09). Telegram has no card primitive, but
+// sendMediaGroup posts an album of up to 10 photos in ONE call, and each
+// item carries its own HTML caption -- so a card becomes a photo captioned
+// with its name, price and a tracked link.
+//
+// Deliberately an album rather than N sendPhoto calls with inline
+// keyboards: the keyboard version renders a nicer per-product button, but
+// costs one message per product, which is the outcome cards existed to
+// avoid. The trade-off is that Telegram surfaces per-item captions only
+// when the customer opens a photo -- the album itself shows a photo grid.
+// Accepted: the picture is the point, and every caption still carries the
+// link.
+const TELEGRAM_MEDIA_GROUP_MAX = 10;
+const TELEGRAM_CAPTION_LIMIT = 1024;
+
+// Telegram parses `parse_mode: "HTML"` over the whole caption, so any
+// literal & < > in merchant data would break the message (or, worse, be
+// read as markup). Escaped rather than stripped: a product genuinely named
+// "Camiseta P&B" must survive.
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+export type TelegramProductCard = {
+  name: string;
+  description: string | null;
+  priceLabel: string | null;
+  imageUrl: string | null;
+  url: string | null;
+};
+
+export function buildTelegramProductCaption(card: TelegramProductCard): string {
+  const headline = card.priceLabel
+    ? `<b>${escapeHtml(card.name)}</b> — ${escapeHtml(card.priceLabel)}`
+    : `<b>${escapeHtml(card.name)}</b>`;
+
+  const lines = [headline];
+  if (card.description) lines.push(escapeHtml(card.description));
+  if (card.url) lines.push(`<a href="${escapeHtml(card.url)}">Ver produto</a>`);
+
+  return lines.join("\n").slice(0, TELEGRAM_CAPTION_LIMIT);
+}
+
+export async function sendTelegramProductCards(
+  chatId: string,
+  cards: readonly TelegramProductCard[],
+): Promise<SendTelegramMessageResult> {
+  const media = cards
+    .filter((card) => card.imageUrl)
+    .slice(0, TELEGRAM_MEDIA_GROUP_MAX)
+    .map((card) => ({
+      type: "photo" as const,
+      media: card.imageUrl as string,
+      caption: buildTelegramProductCaption(card),
+      parse_mode: "HTML" as const,
+    }));
+
+  // Telegram rejects a media group of one, and a single photo reads better
+  // as a plain sendPhoto anyway.
+  if (media.length === 0) return { ok: true };
+  const isAlbum = media.length > 1;
+
+  const body = JSON.stringify(
+    isAlbum
+      ? { chat_id: chatId, media }
+      : { chat_id: chatId, photo: media[0].media, caption: media[0].caption, parse_mode: "HTML" },
+  );
+
+  const attempt = () =>
+    fetch(botApiUrl(isAlbum ? "/sendMediaGroup" : "/sendPhoto"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body,
+    });
+
+  let res = await attempt();
+  if (!res.ok && res.status >= 500) {
+    res = await attempt();
+  }
+
+  if (res.ok) return { ok: true };
+
+  let errorDetail: string | undefined;
+  try {
+    const parsed = (await res.json()) as { description?: string; error_code?: number };
+    errorDetail = parsed.description ? `code ${parsed.error_code}: ${parsed.description}` : `HTTP ${res.status}`;
+  } catch {
+    errorDetail = `HTTP ${res.status}`;
+  }
+
+  return { ok: false, errorDetail };
+}
