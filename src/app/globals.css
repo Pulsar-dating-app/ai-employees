@@ -362,3 +362,137 @@ select:not(:disabled) {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Hero headline's one-time entrance (ShutterReveal, count-up.tsx's sibling)
+   — played only by JS once motion is confirmed safe, so the default (no
+   class) state stays fully visible for no-JS/pre-hydration. The hidden
+   "from" state lives in the keyframe's own 0% (not a separate class) so
+   `animation-fill-mode: both` can hold it until the animation starts. */
+.lv2-shutter-play > :first-child {
+  animation: lv2-shutter-in 1.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes lv2-shutter-in {
+  0% {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+.lv2-shutter-bands {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.lv2-shutter-band {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  height: 34%;
+  opacity: 0;
+  transform: translateX(-60%);
+}
+.lv2-shutter-band-1 {
+  top: 0;
+  background: #3525cd;
+}
+.lv2-shutter-band-2 {
+  top: 33%;
+  background: #4f46e5;
+}
+.lv2-shutter-band-3 {
+  top: 66%;
+  background: #006591;
+}
+.lv2-shutter-play .lv2-shutter-band-1 {
+  animation: lv2-shutter-sweep 1s cubic-bezier(0.16, 1, 0.3, 1) 0s both;
+}
+.lv2-shutter-play .lv2-shutter-band-2 {
+  animation: lv2-shutter-sweep 1s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+}
+.lv2-shutter-play .lv2-shutter-band-3 {
+  animation: lv2-shutter-sweep 1s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both;
+}
+@keyframes lv2-shutter-sweep {
+  0% {
+    transform: translateX(-60%);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(60%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv2-shutter-play > :first-child {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+  .lv2-shutter-play .lv2-shutter-band-1,
+  .lv2-shutter-play .lv2-shutter-band-2,
+  .lv2-shutter-play .lv2-shutter-band-3 {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Hero showcase card halves (SlideReveal) — same page-load moment as the
+   headline's ShutterReveal, same hidden-state-in-the-keyframe safety. */
+.lv2-slide-play {
+  animation: lv2-slide-in 1.6s cubic-bezier(0.16, 1, 0.3, 1) var(--lv2-slide-delay, 0s) both;
+}
+@keyframes lv2-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--lv2-slide-from, 0));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv2-slide-play {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Button-label hover cascade (CascadeText) — every button/link across the
+   landing carries `group` already so this only needs the descendant rule;
+   `currentColor` on both layers rides along with whatever hover text
+   color that button already defines, never a color of its own. */
+.lv2-cascade {
+  height: 1.3em;
+}
+.lv2-cascade-glyph {
+  display: inline-block;
+  line-height: 1;
+  transform: translateY(0);
+  transition: transform 250ms ease-in-out;
+  text-shadow: 0 1.3em currentColor;
+}
+.group:hover .lv2-cascade-glyph {
+  transform: translateY(-1.3em);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv2-cascade-glyph {
+    transition: none;
+  }
+  .group:hover .lv2-cascade-glyph {
+    transform: translateY(0);
+  }
+}

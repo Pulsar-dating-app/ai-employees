@@ -9,6 +9,9 @@ import { M } from "./landing-icons";
 import { ShaderBackground } from "@/components/ui/shader-background";
 import { ScrollHeader } from "./scroll-header";
 import { CountUp } from "./count-up";
+import { ShutterReveal } from "./shutter-reveal";
+import { SlideReveal } from "./slide-reveal";
+import { CascadeText } from "./cascade-text";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 import workspaceImg from "../../../public/landing-v2/workspace.jpg";
@@ -146,15 +149,17 @@ export async function LandingPageV2() {
             <LanguageSwitcher currentLocale={(await getLocale()) as "en" | "pt"} />
             <Link
               href={LOGIN}
-              className="inline-flex h-11 items-center justify-center rounded-lg px-3 text-[14px] font-semibold text-[#1b1b24] transition-colors hover:bg-[#f5f2ff] hover:text-[#3525cd]"
+              aria-label={t("header.login")}
+              className="group inline-flex h-11 items-center justify-center rounded-lg px-3 text-[14px] font-semibold text-[#1b1b24] transition-colors hover:bg-[#f5f2ff] hover:text-[#3525cd]"
             >
-              {t("header.login")}
+              <CascadeText text={t("header.login")} />
             </Link>
             <Link
               href={HIRE}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-[#3525cd] px-6 text-[14px] font-semibold text-white shadow-[0_4px_32px_rgba(79,70,229,0.04)] transition-all hover:bg-[#4f46e5] hover:text-[#dad7ff]"
+              aria-label={t("header.trial")}
+              className="group inline-flex h-11 items-center justify-center rounded-lg bg-[#3525cd] px-6 text-[14px] font-semibold text-white shadow-[0_4px_32px_rgba(79,70,229,0.04)] transition-all hover:bg-[#4f46e5] hover:text-[#dad7ff]"
             >
-              {t("header.trial")}
+              <CascadeText text={t("header.trial")} />
             </Link>
           </div>
         </div>
@@ -188,9 +193,11 @@ export async function LandingPageV2() {
 
               <h1 className="text-balance text-[40px] font-bold leading-none tracking-[-0.02em] text-[#0f172a] md:text-[48px]">
                 {t("hero.headlinePre")}{" "}
-                <span className="bg-gradient-to-r from-[#3525cd] via-[#4f46e5] to-[#006591] bg-clip-text text-transparent">
-                  {t("hero.headlineHighlight")}
-                </span>{" "}
+                <ShutterReveal>
+                  <span className="bg-gradient-to-r from-[#3525cd] via-[#4f46e5] to-[#006591] bg-clip-text text-transparent">
+                    {t("hero.headlineHighlight")}
+                  </span>
+                </ShutterReveal>{" "}
                 {t("hero.headlinePost")}
               </h1>
 
@@ -201,23 +208,26 @@ export async function LandingPageV2() {
               <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-2 sm:gap-3">
                 <Link
                   href={HIRE}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#3525cd] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.22)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#4f46e5] hover:shadow-[0_18px_44px_rgba(53,37,205,0.34)]"
+                  aria-label={t("hero.ctaPrimary")}
+                  className="group inline-flex items-center justify-center gap-2 rounded-lg bg-[#3525cd] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.22)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#4f46e5] hover:shadow-[0_18px_44px_rgba(53,37,205,0.34)]"
                 >
                   <M name="bolt" size={20} />
-                  {t("hero.ctaPrimary")}
+                  <CascadeText text={t("hero.ctaPrimary")} />
                 </Link>
                 <a
                   href="#demo"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-[14px] font-semibold text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#f5f2ff] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)]"
+                  aria-label={t("hero.ctaSecondary")}
+                  className="group inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-[14px] font-semibold text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#f5f2ff] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)]"
                 >
                   <M name="play_circle" size={20} className="text-[#3525cd]" />
-                  {t("hero.ctaSecondary")}
+                  <CascadeText text={t("hero.ctaSecondary")} />
                 </a>
                 <Link
                   href={SALES}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-[14px] font-semibold text-[#464555] transition-colors hover:text-[#3525cd]"
+                  aria-label={t("hero.ctaTertiary")}
+                  className="group inline-flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-[14px] font-semibold text-[#464555] transition-colors hover:text-[#3525cd]"
                 >
-                  {t("hero.ctaTertiary")}
+                  <CascadeText text={t("hero.ctaTertiary")} />
                   <M name="arrow_forward" size={18} />
                 </Link>
               </div>
@@ -237,124 +247,128 @@ export async function LandingPageV2() {
               <div className="relative w-full overflow-hidden rounded-xl bg-white p-3 shadow-[0_20px_50px_rgba(79,70,229,0.08)] sm:p-6">
                 <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
                   {/* Left — live chat with Malu */}
-                  <div className="flex flex-col rounded-lg bg-[#f5f2ff] p-3 lg:col-span-5">
-                    <div className="mb-1 flex items-center justify-between pb-1">
-                      <div className="flex items-center gap-2">
-                        <div className="relative">
-                          <Image
-                            src={maluImg}
-                            alt="Malu"
-                            sizes="48px"
-                            className="h-12 w-12 rounded-full object-cover object-center shadow-sm"
-                          />
-                          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-[#10b981] ring-2 ring-white" />
-                        </div>
-                        <div className="flex flex-col text-left">
-                          <div className="flex items-center gap-1">
-                            <span className="text-[14px] font-semibold text-[#0f172a]">
-                              {t("hero.chat.agentName")}
-                            </span>
-                            <M name="verified" size={15} className="text-[#3525cd]" fill />
+                  <SlideReveal from="left" className="lg:col-span-5">
+                    <div className="flex flex-col rounded-lg bg-[#f5f2ff] p-3">
+                      <div className="mb-1 flex items-center justify-between pb-1">
+                        <div className="flex items-center gap-2">
+                          <div className="relative">
+                            <Image
+                              src={maluImg}
+                              alt="Malu"
+                              sizes="48px"
+                              className="h-12 w-12 rounded-full object-cover object-center shadow-sm"
+                            />
+                            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-[#10b981] ring-2 ring-white" />
                           </div>
-                          <span className="text-[12px] font-semibold text-[#10b981]">
-                            {t("hero.chat.status")}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="rounded-full bg-[#e2dfff] px-2 py-0.5 text-[12px] font-semibold text-[#0f0069]">
-                        {t("hero.chat.badge")}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col gap-2 py-2 text-left text-[13px] leading-relaxed">
-                      <div className="max-w-[85%] self-start rounded-xl rounded-tl-none bg-white p-3 text-[#0f172a] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
-                        <p>{t("hero.chat.msg1")}</p>
-                        <span className="mt-1 block text-right text-[10px] text-[#64748b]">10:42</span>
-                      </div>
-                      <div className="max-w-[85%] self-end rounded-xl rounded-tr-none bg-[#3525cd] p-3 text-white shadow-[0_2px_8px_rgba(53,37,205,0.15)]">
-                        <p>{t("hero.chat.msg2")}</p>
-                        <span className="mt-1 block text-right text-[10px] text-[#e2dfff]">10:43</span>
-                      </div>
-                      <div className="max-w-[90%] self-start rounded-xl rounded-tl-none bg-white p-3 text-[#0f172a] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
-                        <p>{t("hero.chat.msg3a")}</p>
-                        <div className="mt-2 flex items-center justify-between rounded bg-[#f5f2ff] p-2">
-                          <div className="flex items-center gap-2">
-                            <M name="shopping_bag" size={20} className="text-[#3525cd]" />
-                            <span className="truncate text-[12px] font-semibold text-[#0f172a]">
-                              {t("hero.chat.productName")}
+                          <div className="flex flex-col text-left">
+                            <div className="flex items-center gap-1">
+                              <span className="text-[14px] font-semibold text-[#0f172a]">
+                                {t("hero.chat.agentName")}
+                              </span>
+                              <M name="verified" size={15} className="text-[#3525cd]" fill />
+                            </div>
+                            <span className="text-[12px] font-semibold text-[#10b981]">
+                              {t("hero.chat.status")}
                             </span>
                           </div>
-                          <span className="text-[11px] font-semibold text-[#64748b]">
-                            {t("hero.chat.productPrice")}
-                          </span>
                         </div>
-                        <p className="mt-2">{t("hero.chat.msg3b")}</p>
-                        <span className="mt-1 block text-right text-[10px] text-[#64748b]">
-                          {t("hero.chat.msg3meta")}
+                        <span className="rounded-full bg-[#e2dfff] px-2 py-0.5 text-[12px] font-semibold text-[#0f0069]">
+                          {t("hero.chat.badge")}
                         </span>
                       </div>
-                    </div>
 
-                    <div className="mt-2 flex items-center gap-2 rounded-lg bg-white p-2 pt-2">
-                      <M name="attach_file" size={20} className="text-[#64748b]" />
-                      <input
-                        className="w-full bg-transparent text-[13px] text-[#0f172a] outline-none placeholder:text-[#64748b]"
-                        placeholder={t("hero.chat.inputPlaceholder")}
-                        defaultValue={t("hero.chat.inputValue")}
-                        readOnly
-                        type="text"
-                      />
-                      <button
-                        type="button"
-                        aria-label={t("hero.chat.send")}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3525cd] text-white shadow-sm hover:bg-[#4f46e5]"
-                      >
-                        <M name="send" size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Right — workspace + metrics */}
-                  <div className="flex flex-col gap-3 lg:col-span-7">
-                    <div className="relative overflow-hidden rounded-lg shadow-sm">
-                      <Image
-                        src={workspaceImg}
-                        alt={t("hero.workspace.imageAlt")}
-                        sizes="(min-width: 1024px) 780px, 100vw"
-                        className="h-auto w-full rounded-lg object-contain"
-                      />
-                      <div className="absolute inset-0 flex items-end bg-gradient-to-t from-[#0f172a]/60 via-transparent to-transparent p-3">
-                        <div className="text-left text-white">
-                          <p className="text-[12px] font-semibold uppercase tracking-wider text-[#e2dfff]">
-                            {t("hero.workspace.eyebrow")}
-                          </p>
-                          <p className="text-[24px] font-bold leading-[32px]">
-                            {t("hero.workspace.title")}
-                          </p>
+                      <div className="flex flex-col gap-2 py-2 text-left text-[13px] leading-relaxed">
+                        <div className="max-w-[85%] self-start rounded-xl rounded-tl-none bg-white p-3 text-[#0f172a] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
+                          <p>{t("hero.chat.msg1")}</p>
+                          <span className="mt-1 block text-right text-[10px] text-[#64748b]">10:42</span>
+                        </div>
+                        <div className="max-w-[85%] self-end rounded-xl rounded-tr-none bg-[#3525cd] p-3 text-white shadow-[0_2px_8px_rgba(53,37,205,0.15)]">
+                          <p>{t("hero.chat.msg2")}</p>
+                          <span className="mt-1 block text-right text-[10px] text-[#e2dfff]">10:43</span>
+                        </div>
+                        <div className="max-w-[90%] self-start rounded-xl rounded-tl-none bg-white p-3 text-[#0f172a] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
+                          <p>{t("hero.chat.msg3a")}</p>
+                          <div className="mt-2 flex items-center justify-between rounded bg-[#f5f2ff] p-2">
+                            <div className="flex items-center gap-2">
+                              <M name="shopping_bag" size={20} className="text-[#3525cd]" />
+                              <span className="truncate text-[12px] font-semibold text-[#0f172a]">
+                                {t("hero.chat.productName")}
+                              </span>
+                            </div>
+                            <span className="text-[11px] font-semibold text-[#64748b]">
+                              {t("hero.chat.productPrice")}
+                            </span>
+                          </div>
+                          <p className="mt-2">{t("hero.chat.msg3b")}</p>
+                          <span className="mt-1 block text-right text-[10px] text-[#64748b]">
+                            {t("hero.chat.msg3meta")}
+                          </span>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                      {[
-                        { label: t("hero.metrics.m1Label"), value: "89.4%", delta: "+14%", sub: t("hero.metrics.m1Sub"), color: "text-[#0f172a]" },
-                        { label: t("hero.metrics.m2Label"), value: "1.4s", delta: "-98%", sub: t("hero.metrics.m2Sub"), color: "text-[#3525cd]" },
-                        { label: t("hero.metrics.m3Label"), value: "1.240", delta: "3.8x", sub: t("hero.metrics.m3Sub"), color: "text-[#0f172a]" },
-                      ].map((m) => (
-                        <div
-                          key={m.label}
-                          className="rounded-lg bg-[#f5f2ff] p-3 text-left transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(79,70,229,0.1)]"
+                      <div className="mt-2 flex items-center gap-2 rounded-lg bg-white p-2 pt-2">
+                        <M name="attach_file" size={20} className="text-[#64748b]" />
+                        <input
+                          className="w-full bg-transparent text-[13px] text-[#0f172a] outline-none placeholder:text-[#64748b]"
+                          placeholder={t("hero.chat.inputPlaceholder")}
+                          defaultValue={t("hero.chat.inputValue")}
+                          readOnly
+                          type="text"
+                        />
+                        <button
+                          type="button"
+                          aria-label={t("hero.chat.send")}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3525cd] text-white shadow-sm hover:bg-[#4f46e5]"
                         >
-                          <span className="text-[12px] font-semibold text-[#64748b]">{m.label}</span>
-                          <div className="mt-1 flex items-baseline gap-1">
-                            <span className={`text-[24px] font-bold tabular-nums ${m.color}`}>{m.value}</span>
-                            <span className="text-[12px] font-semibold tabular-nums text-[#10b981]">{m.delta}</span>
-                          </div>
-                          <span className="text-[11px] text-[#464555]">{m.sub}</span>
-                        </div>
-                      ))}
+                          <M name="send" size={16} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </SlideReveal>
+
+                  {/* Right — workspace + metrics */}
+                  <SlideReveal from="right" delayMs={200} className="lg:col-span-7">
+                    <div className="flex flex-col gap-3">
+                      <div className="relative overflow-hidden rounded-lg shadow-sm">
+                        <Image
+                          src={workspaceImg}
+                          alt={t("hero.workspace.imageAlt")}
+                          sizes="(min-width: 1024px) 780px, 100vw"
+                          className="h-auto w-full rounded-lg object-contain"
+                        />
+                        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-[#0f172a]/60 via-transparent to-transparent p-3">
+                          <div className="text-left text-white">
+                            <p className="text-[12px] font-semibold uppercase tracking-wider text-[#e2dfff]">
+                              {t("hero.workspace.eyebrow")}
+                            </p>
+                            <p className="text-[24px] font-bold leading-[32px]">
+                              {t("hero.workspace.title")}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                        {[
+                          { label: t("hero.metrics.m1Label"), value: "89.4%", delta: "+14%", sub: t("hero.metrics.m1Sub"), color: "text-[#0f172a]" },
+                          { label: t("hero.metrics.m2Label"), value: "1.4s", delta: "-98%", sub: t("hero.metrics.m2Sub"), color: "text-[#3525cd]" },
+                          { label: t("hero.metrics.m3Label"), value: "1.240", delta: "3.8x", sub: t("hero.metrics.m3Sub"), color: "text-[#0f172a]" },
+                        ].map((m) => (
+                          <div
+                            key={m.label}
+                            className="rounded-lg bg-[#f5f2ff] p-3 text-left transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(79,70,229,0.1)]"
+                          >
+                            <span className="text-[12px] font-semibold text-[#64748b]">{m.label}</span>
+                            <div className="mt-1 flex items-baseline gap-1">
+                              <span className={`text-[24px] font-bold tabular-nums ${m.color}`}>{m.value}</span>
+                              <span className="text-[12px] font-semibold tabular-nums text-[#10b981]">{m.delta}</span>
+                            </div>
+                            <span className="text-[11px] text-[#464555]">{m.sub}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </SlideReveal>
                 </div>
               </div>
             </div>
@@ -451,9 +465,10 @@ export async function LandingPageV2() {
                       </span>
                       <Link
                         href={HIRE}
-                        className={`rounded-lg bg-[#eae6f4] px-3 py-1.5 text-[12px] font-semibold transition-all ${s.btn}`}
+                        aria-label={t("workforce.viewProfile")}
+                        className={`group rounded-lg bg-[#eae6f4] px-3 py-1.5 text-[12px] font-semibold transition-all ${s.btn}`}
                       >
-                        {t("workforce.viewProfile")}
+                        <CascadeText text={t("workforce.viewProfile")} />
                       </Link>
                     </div>
                   </div>
@@ -476,9 +491,10 @@ export async function LandingPageV2() {
                 </div>
                 <Link
                   href={SALES}
-                  className="inline-flex items-center gap-2 text-[14px] font-semibold text-[#3525cd] hover:underline"
+                  aria-label={t("workforce.handoffCta")}
+                  className="group inline-flex items-center gap-2 text-[14px] font-semibold text-[#3525cd] hover:underline"
                 >
-                  {t("workforce.handoffCta")}
+                  <CascadeText text={t("workforce.handoffCta")} />
                   <M name="east" size={18} />
                 </Link>
               </div>
@@ -628,7 +644,8 @@ export async function LandingPageV2() {
                     <div className="mt-12">
                       <Link
                         href={i === 2 ? SALES : HIRE}
-                        className={`inline-flex w-full items-center justify-center rounded-lg py-3 text-[14px] font-semibold transition-all ${
+                        aria-label={plan.cta}
+                        className={`group inline-flex w-full items-center justify-center rounded-lg py-3 text-[14px] font-semibold transition-all ${
                           featured
                             ? "bg-[#3525cd] text-white shadow-[0_8px_24px_rgba(53,37,205,0.25)] hover:bg-[#4f46e5]"
                             : i === 2
@@ -636,7 +653,7 @@ export async function LandingPageV2() {
                               : "bg-[#eae6f4] text-[#0f172a] hover:bg-[#0f172a] hover:text-white"
                         }`}
                       >
-                        {plan.cta}
+                        <CascadeText text={plan.cta} />
                       </Link>
                     </div>
                   </div>
@@ -725,10 +742,11 @@ export async function LandingPageV2() {
               <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-3">
                 <Link
                   href={HIRE}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3.5 text-[14px] font-semibold text-[#3525cd] shadow-lg transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:bg-[#f5f2ff] hover:shadow-[0_20px_50px_rgba(0,0,0,0.25)]"
+                  aria-label={t("finalCta.ctaPrimary")}
+                  className="group inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3.5 text-[14px] font-semibold text-[#3525cd] shadow-lg transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:bg-[#f5f2ff] hover:shadow-[0_20px_50px_rgba(0,0,0,0.25)]"
                 >
                   <M name="rocket_launch" size={20} />
-                  {t("finalCta.ctaPrimary")}
+                  <CascadeText text={t("finalCta.ctaPrimary")} />
                 </Link>
               </div>
               <span className="mt-3 text-[12px] font-semibold text-[#e2dfff]">{t("finalCta.fine")}</span>
