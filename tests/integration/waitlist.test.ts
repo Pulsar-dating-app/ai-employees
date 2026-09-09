@@ -250,7 +250,7 @@ describe("a cancelled appointment notifies the waitlist", () => {
 
     const mail = await waitForEmail(firstEmail);
     expect(mail.subject).toContain("Consulta");
-    expect(mail.text.toLowerCase()).toContain("opened up");
+    expect(mail.text.toLowerCase()).toContain("acabou de abrir");
 
     // The second waiter is untouched.
     await new Promise((r) => setTimeout(r, 300));
@@ -305,6 +305,6 @@ describe("a cancelled appointment notifies the waitlist", () => {
     expect(res.status).toBe(200);
 
     const mail = await waitForEmail(waiter);
-    expect(mail.text.toLowerCase()).toContain("first come, first served");
+    expect(mail.text.toLowerCase()).toContain("ordem de chegada");
   });
 });

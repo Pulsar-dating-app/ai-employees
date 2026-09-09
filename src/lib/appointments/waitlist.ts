@@ -184,14 +184,14 @@ export async function notifyWaitlistForFreedSlot({
     if (!to) return;
 
     const serviceName =
-      one(match.services as { name: string } | { name: string }[] | null)?.name ?? "appointment";
+      one(match.services as { name: string } | { name: string }[] | null)?.name ?? "agendamento";
     const contactBits = [company.email, company.phone].filter(Boolean) as string[];
 
     const rendered = renderWaitlistOpeningEmail({
       businessName: company.name,
       serviceName,
       whenText: formatWhen(startsAt, tz),
-      contact: contactBits.length > 0 ? `${company.name} at ${contactBits.join(" / ")}` : null,
+      contact: contactBits.length > 0 ? `${company.name} (${contactBits.join(" / ")})` : null,
     });
 
     const result = await sendEmail({ to, ...rendered });

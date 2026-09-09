@@ -222,6 +222,14 @@ export async function LandingPageV2() {
                   <M name="play_circle" size={20} className="text-[#3525cd]" />
                   <CascadeText text={t("hero.ctaSecondary")} />
                 </a>
+                <Link
+                  href={SALES}
+                  aria-label={t("hero.ctaTertiary")}
+                  className="group inline-flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-[14px] font-semibold text-[#464555] transition-colors hover:text-[#3525cd]"
+                >
+                  <CascadeText text={t("hero.ctaTertiary")} />
+                  <M name="arrow_forward" size={18} />
+                </Link>
               </div>
 
               <div className="mt-3 flex flex-wrap items-center justify-center gap-6 text-[12px] font-semibold tracking-[0.02em] text-[#464555]">
