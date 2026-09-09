@@ -157,9 +157,9 @@ export async function LandingPageV2() {
           <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[820px] select-none">
             <ShaderBackground
               variant="lines"
-              className="h-full w-full opacity-70 [mask-image:linear-gradient(to_bottom,black_0%,black_45%,transparent_85%)]"
+              className="h-full w-full opacity-60 [mask-image:linear-gradient(to_bottom,black_0%,black_30%,transparent_62%)]"
             />
-            <div className="absolute inset-0 bg-[radial-gradient(65%_50%_at_50%_30%,rgba(252,248,255,0.85)_0%,rgba(252,248,255,0.35)_55%,rgba(252,248,255,0)_80%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(60%_42%_at_50%_16%,rgba(252,248,255,0.85)_0%,rgba(252,248,255,0.45)_50%,rgba(252,248,255,0)_78%)]" />
           </div>
 
           <section
