@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { useTranslations } from "next-intl";
 import { BrandLogo } from "./brand-logos";
+import { CascadeText } from "./cascade-text";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 
@@ -180,9 +181,10 @@ export function ChannelShowcase({ items, hireHref }: { items: ChannelItem[]; hir
 
             <a
               href={hireHref}
-              className="mt-8 inline-flex h-11 items-center justify-center rounded-lg bg-[#3525cd] px-6 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.22)] transition-all hover:bg-[#4f46e5]"
+              aria-label={t("cta")}
+              className="group mt-8 inline-flex h-11 items-center justify-center rounded-lg bg-[#3525cd] px-6 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.22)] transition-all hover:bg-[#4f46e5]"
             >
-              {t("cta")}
+              <CascadeText text={t("cta")} />
             </a>
           </div>
 
