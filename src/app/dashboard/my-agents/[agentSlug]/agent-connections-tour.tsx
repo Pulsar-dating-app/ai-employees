@@ -16,7 +16,11 @@ import { useTour } from "@/components/tour/tour-provider";
 // now tab panels inside one card, and a hidden (non-active) tab panel can't
 // be scrolled-to or spotlighted. TourStep has no "activate this tab first"
 // hook, and adding one for a single onboarding step wasn't worth extending
-// that API.
+// that API. Same reasoning applied again (2026-09-09) when human handoff
+// joined availability/shipping/returns inside `AgentSettingsTabsCard` --
+// `data-tour="human-handoff"` now targets that whole card, not just the
+// toggle, so `humanHandoffDescription` below tells the merchant which tab
+// to open instead of assuming the toggle is already on screen.
 const SEEN_KEY = "staffra:tour-seen:agent-connections";
 
 export function AgentConnectionsTour({ agentName }: { agentName: string }) {

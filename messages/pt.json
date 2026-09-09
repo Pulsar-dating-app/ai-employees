@@ -71,6 +71,7 @@
       "sub": "Crie agentes inteligentes treinados com seus documentos, catálogos e processos. Conecte no WhatsApp Oficial, Instagram, Telegram e em seu site em menos de 15 minutos sem programar.",
       "ctaPrimary": "Testar 15 Dias Grátis",
       "ctaSecondary": "Ver Demonstração Ao Vivo",
+      "ctaTertiary": "Falar com Especialista",
       "trust1": "API WhatsApp Oficial (Meta)",
       "trust2": "Múltiplos agentes",
       "trust3": "RAG seguro sem alucinação",
@@ -659,6 +660,9 @@
       "toggleHelp": "Quando ativado, seus funcionários podem oferecer envolver alguém da empresa, e você pode assumir uma conversa a qualquer momento pela página de Conversas. Quando desativado, eles sempre atendem as conversas sozinhos.",
       "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
     },
+    "settingsTabs": {
+      "tablistLabel": "Configurações deste funcionário"
+    },
     "channels": {
       "title": "WhatsApp",
       "description": "Conecte seu número do WhatsApp Business para que os clientes possam começar a conversar.",
@@ -781,7 +785,7 @@
       "nameTitle": "Deixe com a sua cara",
       "nameDescription": "Renomeie {name} para combinar com sua marca — os clientes veem esse nome em toda conversa.",
       "humanHandoffTitle": "Traga uma pessoa para a conversa",
-      "humanHandoffDescription": "Ative para que você ou sua equipe possam assumir uma conversa sempre que {name} precisar transferir para um humano.",
+      "humanHandoffDescription": "Na aba \"Transferência para humano\", ative para que você ou sua equipe possam assumir uma conversa sempre que {name} precisar transferir para um humano.",
       "channelsTitle": "Alcance clientes em todo lugar",
       "channelsDescription": "Conecte {name} ao WhatsApp ou Instagram, personalize o widget de chat do seu site, ou compartilhe um link direto — alterne entre eles com essas abas."
     },

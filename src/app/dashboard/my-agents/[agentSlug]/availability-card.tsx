@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 // Trello K6 -- the plain on/off switch for a hire. Flips
@@ -65,81 +64,77 @@ export function AvailabilityCard({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description", { name: agentName })}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-2 text-sm font-medium text-on-surface">
-            <span
-              className={`h-2.5 w-2.5 rounded-full ${
-                active ? "bg-tertiary-container" : "bg-on-surface-variant"
-              }`}
-            />
-            {active ? t("activeStatus") : t("pausedStatus")}
-          </span>
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-on-surface-variant">{t("description", { name: agentName })}</p>
 
-          {canEdit && !confirmingPause ? (
-            <Button
-              type="button"
-              variant={active ? "secondary" : "primary"}
-              size="sm"
-              isLoading={saving}
-              onClick={() => (active ? setConfirmingPause(true) : setStatus("active"))}
-            >
-              {active ? t("pauseButton") : t("activateButton")}
-            </Button>
-          ) : null}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-2 text-sm font-medium text-on-surface">
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${
+              active ? "bg-tertiary-container" : "bg-on-surface-variant"
+            }`}
+          />
+          {active ? t("activeStatus") : t("pausedStatus")}
+        </span>
+
+        {canEdit && !confirmingPause ? (
+          <Button
+            type="button"
+            variant={active ? "secondary" : "primary"}
+            size="sm"
+            isLoading={saving}
+            onClick={() => (active ? setConfirmingPause(true) : setStatus("active"))}
+          >
+            {active ? t("pauseButton") : t("activateButton")}
+          </Button>
+        ) : null}
+      </div>
+
+      {confirmingPause ? (
+        <div className="flex flex-wrap items-center gap-3 border-t border-outline-variant pt-4">
+          <p className="text-sm text-on-surface-variant">{t("pauseConfirm", { name: agentName })}</p>
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            isLoading={saving}
+            onClick={() => setStatus("paused")}
+          >
+            {t("pauseConfirmButton")}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={saving}
+            onClick={() => {
+              setConfirmingPause(false);
+              setErrorMessage(null);
+            }}
+          >
+            {t("cancel")}
+          </Button>
         </div>
+      ) : null}
 
-        {confirmingPause ? (
-          <div className="flex flex-wrap items-center gap-3 border-t border-outline-variant pt-4">
-            <p className="text-sm text-on-surface-variant">{t("pauseConfirm", { name: agentName })}</p>
-            <Button
-              type="button"
-              variant="danger"
-              size="sm"
-              isLoading={saving}
-              onClick={() => setStatus("paused")}
-            >
-              {t("pauseConfirmButton")}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={saving}
-              onClick={() => {
-                setConfirmingPause(false);
-                setErrorMessage(null);
-              }}
-            >
-              {t("cancel")}
-            </Button>
-          </div>
-        ) : null}
+      {errorMessage ? (
+        <p role="alert" className="text-sm text-error">
+          {errorMessage}
+        </p>
+      ) : null}
 
-        {errorMessage ? (
-          <p role="alert" className="text-sm text-error">
-            {errorMessage}
+      {needsPlan ? (
+        <div className="flex flex-wrap items-center gap-3 border-t border-outline-variant pt-4">
+          <p role="alert" className="text-sm text-on-surface-variant">
+            {t("planRequired", { name: agentName })}
           </p>
-        ) : null}
-
-        {needsPlan ? (
-          <div className="flex flex-wrap items-center gap-3 border-t border-outline-variant pt-4">
-            <p role="alert" className="text-sm text-on-surface-variant">
-              {t("planRequired", { name: agentName })}
-            </p>
-            <Link href="/dashboard/settings/billing">
-              <Button type="button" size="sm">
-                {t("goToBilling")}
-              </Button>
-            </Link>
-          </div>
-        ) : null}
-      </CardContent>
-    </Card>
+          <Link href="/dashboard/settings/billing">
+            <Button type="button" size="sm">
+              {t("goToBilling")}
+            </Button>
+          </Link>
+        </div>
+      ) : null}
+    </div>
   );
 }

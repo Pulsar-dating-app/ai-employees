@@ -71,6 +71,7 @@
       "sub": "Build intelligent agents trained on your documents, catalogues and processes. Connect to Official WhatsApp, Instagram, Telegram and your website under 15 minutes — no code.",
       "ctaPrimary": "Start 15-Day Free Trial",
       "ctaSecondary": "Watch Live Demo",
+      "ctaTertiary": "Talk to a Specialist",
       "trust1": "Official WhatsApp API (Meta)",
       "trust2": "Multiple agents",
       "trust3": "Safe RAG, no hallucination",
@@ -659,6 +660,9 @@
       "toggleHelp": "When on, your employees can offer to get someone from your business involved, and you can step into a conversation yourself from the Conversations page. When off, they always handle conversations on their own.",
       "saveError": "Something went wrong saving that setting. Please try again."
     },
+    "settingsTabs": {
+      "tablistLabel": "This employee's settings"
+    },
     "channels": {
       "title": "WhatsApp",
       "description": "Connect your WhatsApp Business number so customers can start chatting.",
@@ -781,7 +785,7 @@
       "nameTitle": "Make it yours",
       "nameDescription": "Rename {name} to match your brand — customers see this name everywhere you talk to them.",
       "humanHandoffTitle": "Bring in a person",
-      "humanHandoffDescription": "Turn this on so you or your team can step into a conversation whenever {name} should hand it off to a human.",
+      "humanHandoffDescription": "In the \"Human handoff\" tab, turn this on so you or your team can step into a conversation whenever {name} should hand it off to a human.",
       "channelsTitle": "Reach customers everywhere",
       "channelsDescription": "Connect {name} to WhatsApp or Instagram, customize the chat widget for your site, or share a direct link — switch between them with these tabs."
     },

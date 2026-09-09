@@ -288,6 +288,25 @@ dashboard UI unification).
   (`data-tour="channels"`) — a hidden, non-active tab panel can't be
   scrolled-to or spotlighted, and `TourStep` has no "activate this tab
   first" hook worth adding for a single onboarding step.
+- **Follow-up (2026-09-09)** — the same tabbed treatment for the hire's own
+  behavior controls: `agent-settings-tabs-card.tsx` merges Availability
+  ("Atendimento"), Shipping/Returns (Malu-only), and Human Handoff into one
+  `Card`, same conventions as `ChannelTabsCard` (manual WAI-ARIA
+  tablist/roving tabindex, every panel always-mounted and hidden via the
+  `hidden` attribute, one shared accent since none of these four has a
+  brand color of its own like the channels do). `AvailabilityCard` and
+  `HumanHandoffCard` had their own outer `<Card>`/title stripped (only used
+  on this one page, safe to edit permanently); `PolicySection` — shared
+  with Settings' Payment/Other, which still render it as a standalone card
+  — gained a `bare?: boolean` prop instead, skipping the outer `Card` and
+  title but keeping the description text, defaulting `false` so every
+  other call site is unaffected. The tab label reuses `PolicySection`'s own
+  translated title (`Teach.shipping.title`/`Teach.returns.title`) rather
+  than a duplicate key, so the tab and the (now-stripped) in-panel heading
+  can't drift apart. `data-tour="human-handoff"` moved from wrapping just
+  the toggle to wrapping this whole new card — same reason as `channels`
+  above — and `MyAgents.tour.humanHandoffDescription` now names the tab to
+  open instead of assuming the toggle is already on screen.
 - **D7** (Meta App Review — Advanced Access + Business Verification for
   WhatsApp) is tracked on Trello but is an external process, not code; it
   blocks launching to real merchants, not development or testing against

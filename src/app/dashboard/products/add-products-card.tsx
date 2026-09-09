@@ -19,16 +19,14 @@ import { ShopifyConnectCard } from "./shopify-connect-card";
 //
 // Unlike ChannelTabsCard (text-only tabs), the Shopify tab carries the
 // coloured Shopify brand mark alongside its label -- an explicit ask, and
-// the only third-party surface here.
-
+// the only third-party surface here. The tab's own accent (border/wash) is
+// the same primary indigo as every other tab, not Shopify's brand green --
+// that green is ~2.1:1 against white, well under WCAG AA's 4.5:1 floor for
+// text, and the brand mark already carries the color identity on its own.
 type TabKey = "csv" | "shopify" | "manual";
 const TAB_KEYS: TabKey[] = ["csv", "shopify", "manual"];
 
-const ACCENT: Record<TabKey, string> = {
-  csv: "#3525cd",
-  shopify: "#95BF47",
-  manual: "#3525cd",
-};
+const ACCENT = "#3525cd";
 
 export function AddProductsCard({
   companyId,
@@ -70,12 +68,10 @@ export function AddProductsCard({
     [activeTab, focusTab],
   );
 
-  const accent = ACCENT[activeTab];
-
   return (
     <Card
       className="relative isolate overflow-hidden"
-      style={{ backgroundImage: `linear-gradient(180deg, ${accent}0f, transparent 200px)` }}
+      style={{ backgroundImage: `linear-gradient(180deg, ${ACCENT}0f, transparent 200px)` }}
     >
       <CardHeader>
         <CardTitle>{t("addTabs.cardTitle")}</CardTitle>
@@ -102,7 +98,7 @@ export function AddProductsCard({
               id={`add-products-tab-${key}`}
               aria-controls={`add-products-tabpanel-${key}`}
               onClick={() => setActiveTab(key)}
-              style={selected ? { borderColor: accent, color: key === "shopify" ? undefined : accent } : undefined}
+              style={selected ? { borderColor: ACCENT, color: ACCENT } : undefined}
               className={clsx(
                 "-mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-2.5 text-sm outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40",
                 selected

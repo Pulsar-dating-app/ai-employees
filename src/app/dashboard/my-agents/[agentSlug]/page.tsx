@@ -9,11 +9,9 @@ import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
-import { PolicySection } from "../../settings/policy-section";
 import { ChannelTabsCard } from "./channel-tabs-card";
-import { AvailabilityCard } from "./availability-card";
+import { AgentSettingsTabsCard } from "./agent-settings-tabs-card";
 import { IdentityEditor } from "./identity-editor";
-import { HumanHandoffCard } from "./human-handoff-card";
 import { DevChatTest } from "../../dev-chat-test";
 import { AgentConnectionsTour } from "./agent-connections-tour";
 
@@ -24,7 +22,8 @@ import { AgentConnectionsTour } from "./agent-connections-tour";
 // Deliberate exception: Shipping/Returns render here too, Malu-only. Both
 // are still plain `companies` columns (shipping_policy/return_policy),
 // still edited via `PolicySection` (reused unchanged from Settings, same
-// PATCH /api/companies/[companyId] endpoint, same translations) — nothing
+// PATCH /api/companies/[companyId] endpoint, same translations, just
+// rendered `bare` inside a tab -- see AgentSettingsTabsCard) — nothing
 // moved at the data layer, only where the same component is mounted.
 // User-driven: this content is only ever relevant to Malu's own sales
 // conversations, never Ana's scheduling ones, so surfacing it on a page
@@ -36,6 +35,11 @@ import { AgentConnectionsTour } from "./agent-connections-tour";
 // replacing it) — both connection cards, plus the embeddable widget and the
 // direct chat link, are consolidated into one `ChannelTabsCard` rather than
 // four separate full-width cards on this page.
+//
+// Follow-up (2026-09-09): the same tabbed treatment for the hire's own
+// behavior controls -- pause/resume, shipping/returns, human handoff --
+// consolidated into `AgentSettingsTabsCard` instead of four more separate
+// cards stacked above the channels card.
 export default async function AgentConnectionsPage({
   params,
 }: {
@@ -147,37 +151,16 @@ export default async function AgentConnectionsPage({
             photoAssetUrl: companyAgent.photo_asset_url,
           }}
         />
-        <AvailabilityCard
-          companyId={company.id}
-          agentSlug={agentSlug}
-          agentName={name}
-          initialActive={companyAgent.status === "active"}
-          canEdit={canEdit}
-        />
-        {agentSlug === "malu" ? (
-          <>
-            <PolicySection
-              companyId={company.id}
-              fieldName="shipping_policy"
-              sectionKey="shipping"
-              initialValue={company.shipping_policy}
-              canEdit={canEdit}
-            />
-            <PolicySection
-              companyId={company.id}
-              fieldName="return_policy"
-              sectionKey="returns"
-              initialValue={company.return_policy}
-              canEdit={canEdit}
-            />
-          </>
-        ) : null}
         <div data-tour="human-handoff">
-          <HumanHandoffCard
+          <AgentSettingsTabsCard
             companyId={company.id}
+            agentSlug={agentSlug}
             agentName={name}
+            initialActive={companyAgent.status === "active"}
+            allowHumanHandoff={company.allow_human_handoff}
+            shippingPolicy={company.shipping_policy}
+            returnPolicy={company.return_policy}
             canEdit={canEdit}
-            initialAllowHumanHandoff={company.allow_human_handoff}
           />
         </div>
         <div data-tour="channels">

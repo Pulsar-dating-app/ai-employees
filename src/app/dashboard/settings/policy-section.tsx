@@ -15,6 +15,10 @@ type PolicySectionProps = {
   sectionKey: SectionKey;
   initialValue: string | null;
   canEdit: boolean;
+  // Drops the outer Card/title/description -- for when a parent already
+  // supplies the visual boundary and the section's own title (e.g. a tab
+  // label). See AgentSettingsTabsCard.
+  bare?: boolean;
 };
 
 // Reused for the single-free-text-column sections (Shipping / Returns /
@@ -26,6 +30,7 @@ export function PolicySection({
   sectionKey,
   initialValue,
   canEdit,
+  bare = false,
 }: PolicySectionProps) {
   const t = useTranslations(`Teach.${sectionKey}`);
   const { status, save } = useCompanyAutosave(companyId);
@@ -39,24 +44,37 @@ export function PolicySection({
     if (await save({ [fieldName]: normalized })) setSaved(normalized ?? "");
   }
 
+  const field = (
+    <>
+      <Textarea
+        label={t("label")}
+        placeholder={t("placeholder")}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={commit}
+        disabled={!canEdit}
+        maxLength={5000}
+      />
+      {canEdit ? <SaveStatusLine status={status} /> : null}
+    </>
+  );
+
+  if (bare) {
+    return (
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-on-surface-variant">{t("description")}</p>
+        {field}
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t("title")}</CardTitle>
         <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <Textarea
-          label={t("label")}
-          placeholder={t("placeholder")}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onBlur={commit}
-          disabled={!canEdit}
-          maxLength={5000}
-        />
-        {canEdit ? <SaveStatusLine status={status} /> : null}
-      </CardContent>
+      <CardContent>{field}</CardContent>
     </Card>
   );
 }
