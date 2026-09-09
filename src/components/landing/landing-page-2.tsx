@@ -6,6 +6,7 @@ import { landingV2Sans } from "./fonts";
 import { BrandLogo } from "./brand-logos";
 import { ChannelShowcase, type ChannelItem } from "./channel-showcase";
 import { M } from "./landing-icons";
+import { ShaderBackground } from "@/components/ui/shader-background";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 import workspaceImg from "../../../public/landing-v2/workspace.jpg";
@@ -153,11 +154,17 @@ export async function LandingPageV2() {
       <main className="w-full bg-[#fcf8ff] pt-20">
         {/* ── 1. Hero ─────────────────────────────────────────── */}
         <div className="relative w-full overflow-hidden">
-          <div className="pointer-events-none absolute -top-40 left-1/2 -z-0 h-[550px] w-[1000px] -translate-x-1/2 bg-gradient-to-b from-[#3525cd]/10 via-[#39b8fd]/10 to-transparent blur-3xl" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[820px] select-none">
+            <ShaderBackground
+              variant="lines"
+              className="h-full w-full opacity-70 [mask-image:linear-gradient(to_bottom,black_0%,black_45%,transparent_85%)]"
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(65%_50%_at_50%_30%,rgba(252,248,255,0.85)_0%,rgba(252,248,255,0.35)_55%,rgba(252,248,255,0)_80%)]" />
+          </div>
 
           <section
             id="demo"
-            className="mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-10 md:pt-12"
+            className="relative z-10 mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-10 md:pt-12"
           >
             <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-[0_4px_24px_rgba(79,70,229,0.08)]">
