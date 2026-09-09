@@ -162,20 +162,53 @@ async function syncBillingFromSubscription(
   // Period rollover (or first provision): a new period_start => open the
   // next usage row, snapshotting the current plan's limit. Idempotent via
   // the unique(company_id, period_start) constraint.
+  //
+  // Trello P8: a `trialing` period gets the plan's reduced `trialReplyLimit`
+  // instead of `monthlyReplyLimit`, when the plan offers one. Trial -> paid
+  // conversion moves `current_period_start` (Stripe opens a genuinely new
+  // billing period at trial end), so that transition lands back in this
+  // same branch and re-seeds the full `monthlyReplyLimit` for free -- no
+  // separate "convert" handling needed, and deliberately not a cumulative
+  // pool carried over from the trial (see decisions.md).
   if (periodStart && !sameSecond(periodStart, existing?.current_period_start ?? null) && effectivePlanKey) {
+    const plan = getPlan(effectivePlanKey);
+    const replyLimit =
+      knownStatus === "trialing" && plan.trialReplyLimit != null
+        ? plan.trialReplyLimit
+        // Non-null: this branch only ever resolves a plan Stripe itself sent
+        // back on a subscription (effectivePlanKey came from a lookup key),
+        // and Enterprise has no Stripe Price to ever produce one here.
+        : plan.monthlyReplyLimit!;
     const { error: usageError } = await service.from("company_message_usage").upsert(
       {
         company_id: companyId,
         period_start: periodStart,
         replies_used: 0,
-        // Non-null: this branch only ever resolves a plan Stripe itself sent
-        // back on a subscription (effectivePlanKey came from a lookup key),
-        // and Enterprise has no Stripe Price to ever produce one here.
-        reply_limit: getPlan(effectivePlanKey).monthlyReplyLimit!,
+        reply_limit: replyLimit,
       },
       { onConflict: "company_id,period_start", ignoreDuplicates: true },
     );
     if (usageError) throw new Error(`company_message_usage insert failed: ${usageError.message}`);
+
+    // The user who checked out gets their one trial marked used only once
+    // the trial genuinely starts (this branch), not when the Checkout
+    // Session was merely created -- an abandoned checkout keeps their
+    // eligibility. `.is("trial_used_at", null)` makes a redelivered event a
+    // no-op rather than re-stamping the timestamp.
+    const trialUserId = (subscription.metadata as Record<string, string> | null | undefined)?.trialUserId ?? null;
+    if (knownStatus === "trialing" && trialUserId) {
+      const { error: trialStampError } = await service
+        .from("users")
+        .update({ trial_used_at: new Date().toISOString() })
+        .eq("id", trialUserId)
+        .is("trial_used_at", null);
+      if (trialStampError) {
+        console.error(
+          `stripe webhook: failed to stamp trial_used_at for user ${trialUserId}`,
+          trialStampError,
+        );
+      }
+    }
   } else if (periodStart && resolvedPlan && existing?.plan_key && resolvedPlan.key !== existing.plan_key) {
     // Same period, but the plan changed under it -- an immediate Portal
     // upgrade/downgrade (proration, no new billing cycle), so the rollover
@@ -183,11 +216,29 @@ async function syncBillingFromSubscription(
     // the old plan's ceiling for the rest of the cycle. Move reply_limit to
     // the new plan; replies_used is untouched -- usage already spent this
     // period doesn't reset just because the plan changed mid-cycle.
+    //
+    // Trello P8: by Stripe's default Customer Portal behavior, switching
+    // plans on a `trialing` subscription ENDS the trial immediately
+    // (billing_cycle_anchor resets to now, full invoice charged right away)
+    // -- so a genuine plan switch normally reaches this webhook as `active`
+    // with a fresh `current_period_start`, landing in the rollover branch
+    // above instead, which already seeds the full monthlyReplyLimit
+    // correctly because the customer just paid for it. This `knownStatus
+    // === "trialing"` guard is defensive insurance for Stripe's 2025-09
+    // Portal config option to let a trial *continue* through a plan switch
+    // instead of ending it -- if a merchant ever enables that, an in-trial
+    // switch must still never be a free way to unlock a bigger plan's full
+    // quota.
+    const newPlan = getPlan(resolvedPlan.key);
+    const newLimit =
+      knownStatus === "trialing" && newPlan.trialReplyLimit != null
+        ? newPlan.trialReplyLimit
+        // Non-null: resolvedPlan came from a Stripe subscription, so it's
+        // never Enterprise.
+        : newPlan.monthlyReplyLimit!;
     const { error: limitError } = await service
       .from("company_message_usage")
-      // Same reasoning as above: resolvedPlan came from a Stripe subscription,
-      // so it's never Enterprise.
-      .update({ reply_limit: getPlan(resolvedPlan.key).monthlyReplyLimit! })
+      .update({ reply_limit: newLimit })
       .eq("company_id", companyId)
       .eq("period_start", periodStart);
     if (limitError) {

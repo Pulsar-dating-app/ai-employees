@@ -134,6 +134,243 @@ describe("Stripe webhook (Trello P4)", () => {
     expect(eventRow?.processed_at).toBeTruthy();
   });
 
+  it("checkout.session.completed for a trialing subscription seeds the reduced trial quota and stamps trial_used_at (Trello P8)", async () => {
+    const owner = await signUpTestUser("owner");
+    const created = await api<{ company: { id: string } }>("POST", "/api/companies", owner.cookieHeader, {
+      name: "P8 Trial Co",
+    });
+    const companyId = created.json.company.id;
+
+    const event = stripeEvent("checkout.session.completed", {
+      id: "cs_trial",
+      object: "checkout.session",
+      metadata: { companyId, planKey: "starter" },
+      customer: "cus_trial",
+      subscription: `sub_mock_starter__co_${companyId}__trial__user_${owner.userId}`,
+    });
+    const res = await postEvent(event);
+    expect(res.status).toBe(200);
+
+    const billing = await readBilling(companyId);
+    expect(billing?.subscription_status).toBe("trialing");
+    expect(billing?.plan_key).toBe("starter");
+
+    const { data: usage } = await svc
+      .from("company_message_usage")
+      .select("replies_used, reply_limit")
+      .eq("company_id", companyId)
+      .single();
+    expect(usage?.replies_used).toBe(0);
+    expect(usage?.reply_limit).toBe(getPlan("starter").trialReplyLimit);
+
+    const { data: userRow } = await svc
+      .from("users")
+      .select("trial_used_at")
+      .eq("id", owner.userId)
+      .single();
+    expect(userRow?.trial_used_at).toBeTruthy();
+  });
+
+  // Reproduces a live report: a fresh account starting a trial directly on
+  // Pro (never touching Starter first) got the full 20,000 quota instead of
+  // the reduced 1,000. This is the exact same scenario as the Starter test
+  // above, just plan=pro -- pinned separately since that combination had no
+  // dedicated coverage.
+  it("checkout.session.completed for a Pro trial (first-ever checkout, no prior Starter) seeds Pro's trial quota, not its full quota (Trello P8)", async () => {
+    const owner = await signUpTestUser("owner");
+    const created = await api<{ company: { id: string } }>("POST", "/api/companies", owner.cookieHeader, {
+      name: "P8 Pro Direct Trial Co",
+    });
+    const companyId = created.json.company.id;
+
+    const event = stripeEvent("checkout.session.completed", {
+      id: "cs_trial_pro",
+      object: "checkout.session",
+      metadata: { companyId, planKey: "pro" },
+      customer: "cus_trial_pro",
+      subscription: `sub_mock_pro__co_${companyId}__trial__user_${owner.userId}`,
+    });
+    const res = await postEvent(event);
+    expect(res.status).toBe(200);
+
+    const billing = await readBilling(companyId);
+    expect(billing?.subscription_status).toBe("trialing");
+    expect(billing?.plan_key).toBe("pro");
+
+    const { data: usage } = await svc
+      .from("company_message_usage")
+      .select("replies_used, reply_limit")
+      .eq("company_id", companyId)
+      .single();
+    expect(usage?.replies_used).toBe(0);
+    expect(usage?.reply_limit).toBe(getPlan("pro").trialReplyLimit);
+    expect(usage?.reply_limit).not.toBe(getPlan("pro").monthlyReplyLimit);
+  });
+
+  // Reproduces a second live report, this time on Starter, through the real
+  // checkout route (not a hand-seeded row) -- and Stripe genuinely delivers
+  // several events for one checkout in a tight burst (invoice.paid,
+  // checkout.session.completed, customer.subscription.created, etc.), not
+  // one at a time. Fires the two events our dispatcher actually acts on
+  // concurrently (Promise.all, real HTTP requests against the spawned
+  // server + real Postgres) to catch a race the earlier sequential
+  // single-event tests structurally could not.
+  it("concurrent invoice.paid + checkout.session.completed for the same first-ever trial both land on the trial quota, not the full plan (Trello P8)", async () => {
+    const owner = await signUpTestUser("owner");
+    const created = await api<{ company: { id: string } }>("POST", "/api/companies", owner.cookieHeader, {
+      name: "P8 Concurrent Trial Co",
+    });
+    const companyId = created.json.company.id;
+
+    // Real checkout route -- this is what actually creates the pre-webhook
+    // stub row (plan_key set, subscription_status 'incomplete', no
+    // current_period_start) that every real checkout leaves behind before
+    // Stripe redirects. The sequential single-event tests above never went
+    // through this, so `existing` in syncBillingFromSubscription was always
+    // NULL there instead of this stub -- a materially different starting
+    // state.
+    const checkoutRes = await api(
+      "POST",
+      `/api/companies/${companyId}/billing/checkout`,
+      owner.cookieHeader,
+      { planKey: "starter" },
+    );
+    expect(checkoutRes.status).toBe(200);
+
+    const subscriptionId = `sub_mock_starter__co_${companyId}__trial__user_${owner.userId}`;
+    const invoicePaid = stripeEvent("invoice.paid", {
+      id: "in_concurrent",
+      object: "invoice",
+      parent: { type: "subscription_details", subscription_details: { subscription: subscriptionId } },
+    });
+    const checkoutCompleted = stripeEvent("checkout.session.completed", {
+      id: "cs_concurrent",
+      object: "checkout.session",
+      metadata: { companyId, planKey: "starter" },
+      customer: "cus_concurrent",
+      subscription: subscriptionId,
+    });
+
+    const [resA, resB] = await Promise.all([postEvent(invoicePaid), postEvent(checkoutCompleted)]);
+    expect(resA.status).toBe(200);
+    expect(resB.status).toBe(200);
+
+    const billing = await readBilling(companyId);
+    expect(billing?.subscription_status).toBe("trialing");
+    expect(billing?.plan_key).toBe("starter");
+
+    const { data: usage } = await svc
+      .from("company_message_usage")
+      .select("replies_used, reply_limit")
+      .eq("company_id", companyId)
+      .single();
+    expect(usage?.reply_limit).toBe(getPlan("starter").trialReplyLimit);
+    expect(usage?.reply_limit).not.toBe(getPlan("starter").monthlyReplyLimit);
+  });
+
+  it("converting from trial to a paid period re-seeds the full monthly limit, not a cumulative pool (Trello P8)", async () => {
+    const companyId = await createCompany("P8 Convert Co");
+    const trialStart = new Date("2026-06-01T00:00:00Z");
+    await svc.from("company_billing").insert({
+      company_id: companyId,
+      stripe_customer_id: "cus_convert",
+      stripe_subscription_id: "sub_convert",
+      subscription_status: "trialing",
+      plan_key: "starter",
+      current_period_start: trialStart.toISOString(),
+    });
+    await svc.from("company_message_usage").insert({
+      company_id: companyId,
+      period_start: trialStart.toISOString(),
+      replies_used: 900, // near the trial's reduced cap
+      reply_limit: getPlan("starter").trialReplyLimit,
+    });
+
+    const paidStartSec = Math.floor(new Date("2026-06-16T00:00:00Z").getTime() / 1000);
+    const res = await postEvent(
+      stripeEvent(
+        "customer.subscription.updated",
+        subscriptionObject({
+          id: "sub_convert",
+          companyId,
+          status: "active",
+          lookupKey: "starter2_monthly",
+          periodStartSec: paidStartSec,
+        }),
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect((await readBilling(companyId))?.subscription_status).toBe("active");
+
+    const { data: rows } = await svc
+      .from("company_message_usage")
+      .select("period_start, replies_used, reply_limit")
+      .eq("company_id", companyId)
+      .order("period_start", { ascending: true });
+    expect(rows).toHaveLength(2);
+    expect(rows![0].reply_limit).toBe(getPlan("starter").trialReplyLimit); // trial period left untouched
+    expect(rows![1].replies_used).toBe(0); // fresh period, not carried over
+    expect(rows![1].reply_limit).toBe(getPlan("starter").monthlyReplyLimit); // full quota
+  });
+
+  // By Stripe's default Portal behavior, switching plans while trialing ends
+  // the trial and charges the new plan in full immediately -- so a plan
+  // change normally reaches this webhook already `active`, with a fresh
+  // period, not `trialing` (see billing-checkout.test.ts and the checkout
+  // route's own comment for the verified mechanics; this scenario is a
+  // non-issue in practice). This test is defensive insurance for Stripe's
+  // 2025-09 Portal config option to let a trial *continue* through a plan
+  // switch instead of ending it -- if a merchant ever turns that on, the
+  // quota must still stay capped at the trial allowance, never jump to the
+  // new plan's full monthly amount for free.
+  it("if a plan switch ever reaches the webhook while still trialing, the quota stays capped at the trial quota, not the full plan (Trello P8)", async () => {
+    const companyId = await createCompany("P8 Mid-Trial Switch Co");
+    const trialStart = new Date("2026-06-01T00:00:00Z");
+    await svc.from("company_billing").insert({
+      company_id: companyId,
+      stripe_customer_id: "cus_mid_trial_switch",
+      stripe_subscription_id: "sub_mid_trial_switch",
+      subscription_status: "trialing",
+      plan_key: "starter",
+      current_period_start: trialStart.toISOString(),
+    });
+    await svc.from("company_message_usage").insert({
+      company_id: companyId,
+      period_start: trialStart.toISOString(),
+      replies_used: 200,
+      reply_limit: getPlan("starter").trialReplyLimit,
+    });
+
+    // Same period_start (still trialing), different plan -- the "immediate
+    // Portal upgrade" branch, not the period-rollover one.
+    const res = await postEvent(
+      stripeEvent(
+        "customer.subscription.updated",
+        subscriptionObject({
+          id: "sub_mid_trial_switch",
+          companyId,
+          status: "trialing",
+          lookupKey: "pro_monthly",
+          periodStartSec: Math.floor(trialStart.getTime() / 1000),
+        }),
+      ),
+    );
+    expect(res.status).toBe(200);
+
+    const billing = await readBilling(companyId);
+    expect(billing?.subscription_status).toBe("trialing");
+    expect(billing?.plan_key).toBe("pro");
+
+    const { data: rows } = await svc
+      .from("company_message_usage")
+      .select("period_start, replies_used, reply_limit")
+      .eq("company_id", companyId);
+    expect(rows).toHaveLength(1); // no rollover -- same period
+    expect(rows![0].replies_used).toBe(200); // untouched
+    expect(rows![0].reply_limit).toBe(getPlan("pro").trialReplyLimit); // capped at Pro's trial quota...
+    expect(rows![0].reply_limit).not.toBe(getPlan("pro").monthlyReplyLimit); // ...never Pro's full 20k
+  });
+
   it("is idempotent — a repeat delivery of the same event id is a no-op 200", async () => {
     const companyId = await createCompany("P4 Idempotent Co");
     await svc.from("company_billing").insert({

@@ -129,6 +129,59 @@ export function CheckoutButton({
   );
 }
 
+// Trello P8 -- ends a free trial early (trial_end -> "now" on the Stripe
+// side), charging the card on file immediately for the full plan instead of
+// waiting out the rest of the 15 days. No Stripe redirect: on success we
+// just reload so the Server Component re-reads company_billing (its own
+// reconcile-from-Stripe backstop picks up the fresh status right away, even
+// before P4's webhook lands).
+export function EndTrialButton({
+  companyId,
+  label,
+  variant = "primary",
+  fullWidth,
+}: {
+  companyId: string;
+  label: string;
+  variant?: Variant;
+  fullWidth?: boolean;
+}) {
+  const t = useTranslations("Billing");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onClick() {
+    setPending(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/companies/${companyId}/billing/end-trial`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+      });
+      const json = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) {
+        setError(json?.error ?? t("actionError"));
+        setPending(false);
+        return;
+      }
+      window.location.reload();
+      // leave `pending` true through the reload
+    } catch {
+      setError(t("actionError"));
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className={clsx("flex flex-col gap-1", fullWidth && "w-full")}>
+      <ActionButton variant={variant} pending={pending} fullWidth={fullWidth} onClick={onClick}>
+        {label}
+      </ActionButton>
+      {error ? <p className="text-label-sm text-error">{error}</p> : null}
+    </div>
+  );
+}
+
 // Open the Stripe Billing Portal home (card, invoices, cancellation).
 export function ManageBillingButton({
   companyId,

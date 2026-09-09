@@ -29,9 +29,15 @@ describe("Appointments CRUD /api/companies/:id/appointments", () => {
   // user's own RLS-scoped client, same escape hatch other integration
   // tests in this repo use for tables with no HTTP surface yet.
   async function createCustomer(owner: TestUser, companyId: string, name: string) {
+    // A random phone per call, not a shared literal -- (company_id, phone) is
+    // unique for whatsapp customers (migration 20260905090200), and several
+    // tests below create two customers (Alice + Bob) in the same company.
+    const phone = `+1555${Math.floor(Math.random() * 1e7)
+      .toString()
+      .padStart(7, "0")}`;
     const { data, error } = await owner.client
       .from("customers")
-      .insert({ company_id: companyId, name, phone: "+15550000000", channel: "whatsapp" })
+      .insert({ company_id: companyId, name, phone, channel: "whatsapp" })
       .select("id")
       .single();
     if (error) throw error;
@@ -82,14 +88,15 @@ describe("Appointments CRUD /api/companies/:id/appointments", () => {
   });
 
   it("rejects a service_id or customer_id that doesn't belong to the company", async () => {
-    const owner = await signUpTestUser("owner");
-    const companyA = await createCompany(owner.cookieHeader, "Company A");
-    const companyB = await createCompany(owner.cookieHeader, "Company B");
-    const serviceInA = await createService(owner.cookieHeader, companyA, { name: "A Service", duration_minutes: 30 });
-    const customerInB = await createCustomer(owner, companyB, "Bob");
+    const ownerA = await signUpTestUser("owner-a");
+    const ownerB = await signUpTestUser("owner-b");
+    const companyA = await createCompany(ownerA.cookieHeader, "Company A");
+    const companyB = await createCompany(ownerB.cookieHeader, "Company B");
+    const serviceInA = await createService(ownerA.cookieHeader, companyA, { name: "A Service", duration_minutes: 30 });
+    const customerInB = await createCustomer(ownerB, companyB, "Bob");
 
     // Cross-company service_id, booked against company B.
-    const badService = await createAppointment(owner.cookieHeader, companyB, {
+    const badService = await createAppointment(ownerB.cookieHeader, companyB, {
       service_id: serviceInA,
       customer_id: customerInB,
       starts_at: "2027-01-01T10:00:00Z",
@@ -97,7 +104,7 @@ describe("Appointments CRUD /api/companies/:id/appointments", () => {
     expect(badService.status).toBe(400);
 
     // Cross-company customer_id, booked against company A.
-    const badCustomer = await createAppointment(owner.cookieHeader, companyA, {
+    const badCustomer = await createAppointment(ownerA.cookieHeader, companyA, {
       service_id: serviceInA,
       customer_id: customerInB,
       starts_at: "2027-01-01T10:00:00Z",
@@ -377,23 +384,24 @@ describe("Appointments CRUD /api/companies/:id/appointments", () => {
   });
 
   it("404s on a cross-company appointment id", async () => {
-    const owner = await signUpTestUser("owner");
-    const companyA = await createCompany(owner.cookieHeader, "Company A");
-    const companyB = await createCompany(owner.cookieHeader, "Company B");
-    const serviceInA = await createService(owner.cookieHeader, companyA, { name: "A Service", duration_minutes: 30 });
-    const customerInA = await createCustomer(owner, companyA, "Alice");
-    const created = await createAppointment(owner.cookieHeader, companyA, {
+    const ownerA = await signUpTestUser("owner-a");
+    const ownerB = await signUpTestUser("owner-b");
+    const companyA = await createCompany(ownerA.cookieHeader, "Company A");
+    const companyB = await createCompany(ownerB.cookieHeader, "Company B");
+    const serviceInA = await createService(ownerA.cookieHeader, companyA, { name: "A Service", duration_minutes: 30 });
+    const customerInA = await createCustomer(ownerA, companyA, "Alice");
+    const created = await createAppointment(ownerA.cookieHeader, companyA, {
       service_id: serviceInA,
       customer_id: customerInA,
       starts_at: "2027-01-07T10:00:00.000Z",
     });
 
     expect(
-      (await api("PATCH", `/api/companies/${companyB}/appointments/${created.json.appointment.id}`, owner.cookieHeader, { notes: "x" }))
+      (await api("PATCH", `/api/companies/${companyB}/appointments/${created.json.appointment.id}`, ownerB.cookieHeader, { notes: "x" }))
         .status,
     ).toBe(404);
     expect(
-      (await api("DELETE", `/api/companies/${companyB}/appointments/${created.json.appointment.id}`, owner.cookieHeader)).status,
+      (await api("DELETE", `/api/companies/${companyB}/appointments/${created.json.appointment.id}`, ownerB.cookieHeader)).status,
     ).toBe(404);
   });
 
@@ -466,9 +474,11 @@ describe("Appointments CRUD /api/companies/:id/appointments", () => {
     // to-one embeds come back as objects, not arrays — the view indexes
     // straight into `.name`, so an array here would silently render nothing.
     expect(list.json.appointments[0].services).toEqual({ name: "Deep Clean" });
+    // phone is a random per-call value now (createCustomer), not a fixed
+    // literal -- only its shape matters here, not one specific number.
     expect(list.json.appointments[0].customers).toEqual({
       name: "Alice Embed",
-      phone: "+15550000000",
+      phone: expect.stringMatching(/^\+1555\d{7}$/),
     });
   });
 

@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AgentEngine } from "@/lib/agent-engine";
 import { listServicesTool } from "@/lib/agent-engine/tools/list-services";
 import { findAvailableSlotsTool } from "@/lib/agent-engine/tools/find-available-slots";
@@ -95,9 +95,15 @@ async function seedConversation(owner: TestUser, companyName: string): Promise<S
 // No customers CRUD API exists yet -- insert via the signed-up user's own
 // RLS-scoped client, the same escape hatch appointments.test.ts uses.
 async function createCustomer(owner: TestUser, companyId: string, name: string): Promise<string> {
+  // A random phone per call, not a shared literal -- (company_id, phone) is
+  // unique for whatsapp customers (migration 20260905090200), and several
+  // tests below create more than one customer in the same company.
+  const phone = `+1555${Math.floor(Math.random() * 1e7)
+    .toString()
+    .padStart(7, "0")}`;
   const { data, error } = await owner.client
     .from("customers")
-    .insert({ company_id: companyId, name, phone: "+15550000000", channel: "whatsapp" })
+    .insert({ company_id: companyId, name, phone, channel: "whatsapp" })
     .select("id")
     .single();
   if (error) throw error;
@@ -151,7 +157,11 @@ function book(args: Record<string, unknown>, ctx: ToolExecutionContext) {
 
 let owner: TestUser;
 
-beforeAll(async () => {
+// A fresh owner per test, not per file: one company per account (see
+// decisions.md 2026-09-08), and each test below creates its own company via
+// seedConversation(owner, ...), so a single file-wide owner would only be
+// able to do that once.
+beforeEach(async () => {
   owner = await signUpTestUser("owner");
 });
 
@@ -295,9 +305,10 @@ describe("find_available_slots", () => {
   });
 
   it("reports service_not_found for a service from another company", async () => {
+    const otherOwner = await signUpTestUser("other-owner");
     const seed = await seedConversation(owner, "Slots Tenant A");
-    const other = await seedConversation(owner, "Slots Tenant B");
-    const otherServiceId = await createService(owner, other.companyId, {
+    const other = await seedConversation(otherOwner, "Slots Tenant B");
+    const otherServiceId = await createService(otherOwner, other.companyId, {
       name: "Other",
       duration_minutes: 30,
     });
@@ -380,9 +391,10 @@ describe("find_next_available", () => {
   });
 
   it("reports service_not_found for a service from another company", async () => {
+    const otherOwner = await signUpTestUser("other-owner");
     const seed = await seedConversation(owner, "Next Slot Tenant A");
-    const other = await seedConversation(owner, "Next Slot Tenant B");
-    const otherServiceId = await createService(owner, other.companyId, {
+    const other = await seedConversation(otherOwner, "Next Slot Tenant B");
+    const otherServiceId = await createService(otherOwner, other.companyId, {
       name: "Other",
       duration_minutes: 30,
     });
@@ -517,9 +529,10 @@ describe("book_appointment", () => {
   });
 
   it("cannot book a service belonging to another company", async () => {
+    const otherOwner = await signUpTestUser("other-owner");
     const seed = await seedConversation(owner, "Book Tenant A");
-    const other = await seedConversation(owner, "Book Tenant B");
-    const otherServiceId = await createService(owner, other.companyId, {
+    const other = await seedConversation(otherOwner, "Book Tenant B");
+    const otherServiceId = await createService(otherOwner, other.companyId, {
       name: "Other Service",
       duration_minutes: 30,
     });
@@ -835,8 +848,11 @@ describe("list_my_appointments", () => {
       { serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` },
       ctx,
     )) as { appointmentId: string };
+    // A different day -- the daily booking cap (max 2/customer/day) would
+    // otherwise refuse a third same-day booking for this customer. Cancelled
+    // either way, so which day it's on doesn't matter to the assertion below.
     const cancelled = (await book(
-      { serviceId, startsAt: `${BOOKING_DATE}T12:00:00Z` },
+      { serviceId, startsAt: `${BOOKING_DATE_NEXT_WEEK}T12:00:00Z` },
       ctx,
     )) as { appointmentId: string };
     await cancelAppointmentTool.execute({ appointmentId: cancelled.appointmentId }, ctx);

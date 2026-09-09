@@ -46,6 +46,17 @@ export async function createCheckoutSession(opts: {
   companyId: string;
   planKey: string;
   baseUrl: string;
+  /**
+   * Trello P8 -- set together, only when the caller (the checkout route)
+   * has already confirmed this plan offers a trial AND this user hasn't
+   * used one before. `trialUserId` rides on the *subscription's* metadata
+   * (not the session's) because the webhook syncs from the subscription --
+   * it's what stamps `users.trial_used_at` once the trial actually starts,
+   * not merely once a Checkout link is generated (so an abandoned checkout
+   * never burns the user's one trial).
+   */
+  trialPeriodDays?: number;
+  trialUserId?: string;
 }): Promise<{ url: string | null }> {
   const stripe = getStripeClient();
   const session = await stripe.checkout.sessions.create({
@@ -54,7 +65,12 @@ export async function createCheckoutSession(opts: {
     line_items: [{ price: opts.priceId, quantity: 1 }],
     metadata: { companyId: opts.companyId, planKey: opts.planKey },
     subscription_data: {
-      metadata: { companyId: opts.companyId, planKey: opts.planKey },
+      metadata: {
+        companyId: opts.companyId,
+        planKey: opts.planKey,
+        ...(opts.trialUserId ? { trialUserId: opts.trialUserId } : {}),
+      },
+      ...(opts.trialPeriodDays ? { trial_period_days: opts.trialPeriodDays } : {}),
     },
     success_url: `${opts.baseUrl}/dashboard/settings/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${opts.baseUrl}/dashboard/settings/billing?checkout=cancel`,
@@ -91,4 +107,18 @@ export async function createBillingPortalSession(opts: {
       : {}),
   });
   return { url: session.url };
+}
+
+// Trello P8 -- lets a trialing merchant convert to paid immediately instead
+// of waiting out the rest of the trial (typically because they've already
+// hit the reduced trial quota). Unlike a plan *swap* (always the Portal,
+// per the comment above -- we don't own that proration/dunning surface),
+// ending a trial early is a single well-defined Stripe primitive: setting
+// `trial_end` to "now" triggers the exact same mechanics as a trial ending
+// naturally (billing_cycle_anchor resets to now, one full non-prorated
+// invoice charged against the card collected at trial checkout). No Portal
+// redirect needed -- this is a direct API call, not a hosted-page flow.
+export async function endTrialNow(subscriptionId: string): Promise<void> {
+  const stripe = getStripeClient();
+  await stripe.subscriptions.update(subscriptionId, { trial_end: "now" });
 }

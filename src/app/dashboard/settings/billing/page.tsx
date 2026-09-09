@@ -7,7 +7,7 @@ import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { BILLING_PLANS, getPlan, type PlanKey } from "@/lib/billing/plans";
 import { CartIcon, CalendarIcon, InfoIcon, WarningIcon } from "@/components/ui/icons";
 import { PageHeader } from "../../page-header";
-import { CheckoutButton, ManageBillingButton } from "./billing-actions";
+import { CheckoutButton, EndTrialButton, ManageBillingButton } from "./billing-actions";
 
 // Trello P5 -- /dashboard/settings/billing. The merchant's view of the plan
 // (P1), the usage counter (P2), and the doors into Stripe Checkout (P3) /
@@ -100,7 +100,7 @@ export default async function BillingPage() {
   const company = companies?.[0] ?? null;
   if (!company) redirect("/onboarding");
 
-  const [{ data: membership }, { data: billingRow }] = await Promise.all([
+  const [{ data: membership }, { data: billingRow }, { data: userRow }] = await Promise.all([
     supabase
       .from("company_users")
       .select("role")
@@ -114,7 +114,12 @@ export default async function BillingPage() {
       )
       .eq("company_id", company.id)
       .maybeSingle(),
+    // Trello P8 -- whether *this* user still has a free trial available, so
+    // the "activate" plan cards below can advertise it honestly instead of
+    // silently degrading to a plain paid checkout with no explanation.
+    supabase.from("users").select("trial_used_at").eq("id", user!.id).maybeSingle(),
   ]);
+  const trialAvailable = !userRow?.trial_used_at;
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
   let billing = billingRow as Billing | null;
 
@@ -213,11 +218,23 @@ export default async function BillingPage() {
           {isActive && overLimit ? (
             <Banner
               tone="error"
-              title={t("banner.overLimit.title")}
-              body={nextSelfServePlan ? t("banner.overLimit.body") : t("banner.overLimit.bodyMaxPlan")}
+              title={status === "trialing" ? t("banner.trialOverLimit.title") : t("banner.overLimit.title")}
+              body={
+                status === "trialing"
+                  ? t("banner.trialOverLimit.body")
+                  : nextSelfServePlan
+                    ? t("banner.overLimit.body")
+                    : t("banner.overLimit.bodyMaxPlan")
+              }
               action={
                 canEdit ? (
-                  nextSelfServePlan ? (
+                  status === "trialing" ? (
+                    <EndTrialButton
+                      companyId={company.id}
+                      label={t("banner.trialOverLimit.action")}
+                      variant="danger"
+                    />
+                  ) : nextSelfServePlan ? (
                     <CheckoutButton
                       companyId={company.id}
                       planKey={nextSelfServePlan.key as "starter" | "pro"}
@@ -241,7 +258,12 @@ export default async function BillingPage() {
               body={t("banner.nearLimit.body", { left: Math.max(0, limit - used) })}
               action={
                 canEdit ? (
-                  nextSelfServePlan ? (
+                  status === "trialing" ? (
+                    <EndTrialButton
+                      companyId={company.id}
+                      label={t("banner.trialOverLimit.action")}
+                    />
+                  ) : nextSelfServePlan ? (
                     <CheckoutButton
                       companyId={company.id}
                       planKey={nextSelfServePlan.key as "starter" | "pro"}
@@ -288,6 +310,13 @@ export default async function BillingPage() {
                   </p>
                   {canEdit ? (
                     <div className="flex flex-wrap items-center gap-4">
+                      {status === "trialing" ? (
+                        <EndTrialButton
+                          companyId={company.id}
+                          label={t("endTrialNow")}
+                          variant="secondary"
+                        />
+                      ) : null}
                       {plan!.key === "starter" ? (
                         <CheckoutButton
                           companyId={company.id}
@@ -363,35 +392,54 @@ export default async function BillingPage() {
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {selfServePlans.map((p) => (
-                  <div
-                    key={p.key}
-                    className="flex flex-col rounded-lg border border-outline-variant/60 bg-surface-container-low p-5"
-                  >
-                    <h3 className="text-label-md font-bold text-on-surface">{p.displayName}</h3>
-                    <div className="mt-2 flex items-baseline gap-1.5">
-                      <span className="text-headline-lg font-semibold text-on-surface">
-                        {/* Non-null: this loop is over selfServePlans only. */}
-                        {BRL.format(p.priceBrlCents! / 100)}
-                      </span>
-                      <span className="text-sm text-on-surface-variant">{t("perMonth")}</span>
-                    </div>
-                    <p className="mt-3 text-sm text-on-surface-variant">
-                      {t("plan.replies", { limit: p.monthlyReplyLimit! })}
-                    </p>
-                    <p className="mt-1 text-sm text-on-surface-variant">{t("plan.teammates")}</p>
-                    <div className="mt-5">
-                      {canEdit ? (
-                        <CheckoutButton
-                          companyId={company.id}
-                          planKey={p.key as "starter" | "pro"}
-                          label={t("choosePlan", { plan: p.displayName })}
-                          fullWidth
-                        />
+                {selfServePlans.map((p) => {
+                  const offersTrial = p.trialReplyLimit != null && trialAvailable;
+                  return (
+                    <div
+                      key={p.key}
+                      className="flex flex-col rounded-lg border border-outline-variant/60 bg-surface-container-low p-5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-label-md font-bold text-on-surface">{p.displayName}</h3>
+                        {offersTrial ? (
+                          <span className="inline-flex items-center rounded-full bg-tertiary/15 px-2.5 py-1 text-xs font-semibold text-tertiary">
+                            {t("plan.trialBadge")}
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mt-2 flex items-baseline gap-1.5">
+                        <span className="text-headline-lg font-semibold text-on-surface">
+                          {/* Non-null: this loop is over selfServePlans only. */}
+                          {BRL.format(p.priceBrlCents! / 100)}
+                        </span>
+                        <span className="text-sm text-on-surface-variant">{t("perMonth")}</span>
+                      </div>
+                      <p className="mt-3 text-sm text-on-surface-variant">
+                        {t("plan.replies", { limit: p.monthlyReplyLimit! })}
+                      </p>
+                      {offersTrial ? (
+                        <p className="mt-1 text-sm font-medium text-tertiary">
+                          {t("plan.trialNote", { limit: p.trialReplyLimit! })}
+                        </p>
                       ) : null}
+                      <p className="mt-1 text-sm text-on-surface-variant">{t("plan.teammates")}</p>
+                      <div className="mt-5">
+                        {canEdit ? (
+                          <CheckoutButton
+                            companyId={company.id}
+                            planKey={p.key as "starter" | "pro"}
+                            label={
+                              offersTrial
+                                ? t("startTrial", { plan: p.displayName })
+                                : t("choosePlan", { plan: p.displayName })
+                            }
+                            fullWidth
+                          />
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

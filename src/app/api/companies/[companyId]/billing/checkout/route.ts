@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { getPlan, type PlanKey } from "@/lib/billing/plans";
+import { getPlan, TRIAL_DAYS, type PlanKey } from "@/lib/billing/plans";
 import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import {
@@ -31,6 +31,16 @@ import {
 //    ignored on this path.
 //
 // Enterprise is contact-only: 400 pointing at the "fale conosco" CTA.
+//
+// Trello P8 -- free trial: on the checkout branch, any plan with a
+// `trialReplyLimit` (Starter and Pro today, not Enterprise) grants
+// `TRIAL_DAYS` free if this user (not this company) hasn't had one before
+// (`users.trial_used_at`). Stripe still collects a card; P4's webhook seeds
+// the reduced trial quota and stamps `trial_used_at` once the subscription
+// actually starts trialing. A trialing subscriber CAN switch plans through
+// the Portal branch below -- Stripe's default behavior ends the trial and
+// charges the new plan in full immediately, so there's no free-quota
+// loophole (see that branch's comment for the verified mechanics).
 //
 // Currency: the Checkout Session never sets `currency`. The Prices are
 // BRL-based; Adaptive Pricing (enabled in the Stripe Dashboard, P1) detects
@@ -140,6 +150,21 @@ export async function POST(
         { status: 500 },
       );
     }
+    // Trello P8 -- a plan switch while trialing is allowed to reach the
+    // Portal same as any other live subscription. By Stripe's default
+    // Customer Portal behavior, switching plans on a `trialing` subscription
+    // ENDS the trial immediately: billing_cycle_anchor resets to now, a full
+    // (non-prorated) invoice is charged for the new plan right away, and the
+    // resulting `customer.subscription.updated` reports the new plan as
+    // `active` with a fresh `current_period_start` -- so it lands in
+    // syncBillingFromSubscription's ordinary period-rollover branch, which
+    // already seeds the *full* monthlyReplyLimit correctly, because the
+    // customer genuinely just paid for it. Verified against Stripe's own
+    // docs and confirmed by testing: no free-quota loophole here. (Stripe
+    // added a Portal config toggle in 2025-09 to let a trial *continue*
+    // through a plan switch instead of ending -- if that's ever turned on,
+    // the still-trialing case is what the webhook's same-period branch
+    // guards against; see syncBillingFromSubscription.)
     // Deep-link into the Portal's plan-switch flow. That flow needs the
     // "subscription update" feature enabled (with an allowed product list)
     // in the Stripe Customer Portal configuration; if it isn't, Stripe
@@ -206,6 +231,19 @@ export async function POST(
 
   const service = createServiceClient();
 
+  // Trello P8 -- the free trial (Starter and Pro), once per account (not
+  // per company; see decisions.md 2026-09-08). Only offered on a plan that
+  // has a trialReplyLimit, and only to a user who hasn't already had one.
+  let grantTrial = false;
+  if (plan.trialReplyLimit != null) {
+    const { data: userRow } = await service
+      .from("users")
+      .select("trial_used_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    grantTrial = !userRow?.trial_used_at;
+  }
+
   const customerId = await getOrCreateStripeCustomer({
     companyId,
     companyName: company.name as string,
@@ -240,6 +278,7 @@ export async function POST(
     companyId,
     planKey,
     baseUrl: resolveCheckoutBaseUrl(),
+    ...(grantTrial ? { trialPeriodDays: TRIAL_DAYS, trialUserId: user.id } : {}),
   });
 
   return NextResponse.json({ ok: true, mode: "checkout", url });

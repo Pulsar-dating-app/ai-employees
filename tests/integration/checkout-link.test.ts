@@ -172,9 +172,10 @@ describe("create_checkout_link", () => {
 
   it("cannot link a product belonging to another company", async () => {
     const owner = await signUpTestUser("owner");
+    const otherOwner = await signUpTestUser("other-owner");
     const seed = await seedConversation(owner, "Tenant A Co");
-    const other = await seedConversation(owner, "Tenant B Co");
-    const otherProductId = await createProduct(owner, other.companyId, {
+    const other = await seedConversation(otherOwner, "Tenant B Co");
+    const otherProductId = await createProduct(otherOwner, other.companyId, {
       name: "Other Tenant Product",
       product_url: "https://loja.example.com/other",
     });

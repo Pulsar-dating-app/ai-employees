@@ -145,9 +145,10 @@ describe("flag_buying_intent", () => {
 
   it("drops a product_id belonging to another company but still records the intent", async () => {
     const owner = await signUpTestUser("owner");
+    const otherOwner = await signUpTestUser("other-owner");
     const seed = await seedConversation(owner, "Tenant A Co");
-    const other = await seedConversation(owner, "Tenant B Co");
-    const otherProductId = await createProduct(owner, other.companyId, { name: "Other Tenant Product" });
+    const other = await seedConversation(otherOwner, "Tenant B Co");
+    const otherProductId = await createProduct(otherOwner, other.companyId, { name: "Other Tenant Product" });
 
     const result = await flagBuyingIntentTool.execute({ productId: otherProductId }, toolCtxFor(seed));
     expect(result).toEqual({ recorded: true });

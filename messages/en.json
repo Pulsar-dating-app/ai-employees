@@ -282,7 +282,7 @@
       "featuredBadge": "Most Chosen by Companies",
       "plans": [
         {
-          "tier": "Mini",
+          "tier": "Starter",
           "name": "Individual Automation",
           "desc": "Ideal for freelancers and small shops that need fast customer service.",
           "price": "R$ 399",
@@ -299,7 +299,7 @@
           "cta": "Start 15-Day Free Trial"
         },
         {
-          "tier": "Starter Multi-Agent",
+          "tier": "Pro",
           "name": "Complete Commercial Operation",
           "desc": "For growing companies that require lead qualification and scheduling.",
           "price": "R$ 990",
@@ -314,7 +314,7 @@
             "Conversion & Buying Intent dashboard",
             "Priority support with an Account Manager"
           ],
-          "cta": "Start Trial with 3 Agents"
+          "cta": "Start 15-Day Free Trial"
         },
         {
           "tier": "Enterprise",
@@ -1606,6 +1606,8 @@
     "switchToStarter": "Switch to Starter",
     "manageBilling": "Manage billing",
     "choosePlan": "Choose {plan}",
+    "startTrial": "Try {plan} free",
+    "endTrialNow": "Pay now and unlock everything",
     "actionError": "Something went wrong. Please try again.",
     "status": {
       "active": "Active",
@@ -1629,6 +1631,11 @@
         "bodyMaxPlan": "Your team keeps answering for a short grace window. You're already on our highest plan — talk to us for more capacity.",
         "action": "Upgrade plan",
         "actionContact": "Contact us"
+      },
+      "trialOverLimit": {
+        "title": "You've used all your free trial replies",
+        "body": "Pay now to unlock the plan's full limit — no need to wait out the rest of your 15 days.",
+        "action": "Pay now"
       },
       "nearLimit": {
         "title": "You're almost out of replies",
@@ -1658,7 +1665,9 @@
     "plan": {
       "replies": "{limit, number} replies per month",
       "teammates": "Unlimited teammates on your account",
-      "custom": "Custom pricing"
+      "custom": "Custom pricing",
+      "trialBadge": "15 days free",
+      "trialNote": "First 15 days: up to {limit, number} replies, no charge"
     },
     "enterprise": {
       "title": "Need higher volume or custom terms?",

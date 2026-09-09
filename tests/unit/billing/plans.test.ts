@@ -34,6 +34,23 @@ describe("billing plan catalog (Trello P1)", () => {
     // Enterprise terms are negotiated per deal, not fixed in the catalog.
     expect(enterprise.monthlyReplyLimit).toBeNull();
     expect(enterprise.priceBrlCents).toBeNull();
+    expect(enterprise.trialReplyLimit).toBeNull();
+  });
+
+  // Trello P8 -- the free trial is self-serve-only (Starter + Pro); Enterprise
+  // must stay opted out (`null`) so the checkout route never grants one by
+  // accident (it also has no self-serve Checkout to trial through at all).
+  it("offers a trial on every self-serve plan, with a quota below its normal monthly limit", () => {
+    for (const plan of getSelfServePlans()) {
+      expect(plan.trialReplyLimit, plan.key).toBeGreaterThan(0);
+      expect(plan.trialReplyLimit!, plan.key).toBeLessThan(plan.monthlyReplyLimit!);
+    }
+
+    expect(getPlan("enterprise").trialReplyLimit).toBeNull();
+  });
+
+  it("gives Starter and Pro the exact same trial quota", () => {
+    expect(getPlan("starter").trialReplyLimit).toBe(getPlan("pro").trialReplyLimit);
   });
 
   it("keeps lookup keys unique across plans", () => {

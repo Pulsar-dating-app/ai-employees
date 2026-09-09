@@ -282,7 +282,7 @@
       "featuredBadge": "Mais Escolhido por Empresas",
       "plans": [
         {
-          "tier": "Mini",
+          "tier": "Starter",
           "name": "Automação Individual",
           "desc": "Ideal para autônomos e pequenos comércios que precisam de atendimento ágil.",
           "price": "R$ 399",
@@ -299,7 +299,7 @@
           "cta": "Testar 15 Dias Grátis"
         },
         {
-          "tier": "Starter Multi-Agente",
+          "tier": "Pro",
           "name": "Operação Comercial Completa",
           "desc": "Para empresas em expansão que exigem qualificação de leads e agendamento.",
           "price": "R$ 990",
@@ -314,7 +314,7 @@
             "Dashboard de Conversão & Buying Intent",
             "Suporte Prioritário com Gerente de Contas"
           ],
-          "cta": "Começar Teste com 3 Agentes"
+          "cta": "Testar 15 Dias Grátis"
         },
         {
           "tier": "Enterprise",
@@ -1606,6 +1606,8 @@
     "switchToStarter": "Mudar para o Starter",
     "manageBilling": "Gerenciar cobrança",
     "choosePlan": "Escolher {plan}",
+    "startTrial": "Testar {plan} grátis",
+    "endTrialNow": "Pagar agora e ativar tudo",
     "actionError": "Algo deu errado. Tente de novo.",
     "status": {
       "active": "Ativo",
@@ -1629,6 +1631,11 @@
         "bodyMaxPlan": "Sua equipe continua respondendo por um curto período de tolerância. Você já está no nosso maior plano — fale com a gente para mais capacidade.",
         "action": "Mudar de plano",
         "actionContact": "Fale conosco"
+      },
+      "trialOverLimit": {
+        "title": "Você usou todas as respostas do seu teste grátis",
+        "body": "Pague agora para desbloquear o limite completo do plano — sem esperar o fim dos 15 dias.",
+        "action": "Pagar agora"
       },
       "nearLimit": {
         "title": "Suas respostas estão acabando",
@@ -1658,7 +1665,9 @@
     "plan": {
       "replies": "{limit, number} respostas por mês",
       "teammates": "Membros ilimitados na sua conta",
-      "custom": "Preço personalizado"
+      "custom": "Preço personalizado",
+      "trialBadge": "15 dias grátis",
+      "trialNote": "Nos primeiros 15 dias: até {limit, number} respostas, sem cobrança"
     },
     "enterprise": {
       "title": "Precisa de mais volume ou condições sob medida?",

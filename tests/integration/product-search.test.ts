@@ -45,13 +45,14 @@ describe("Product search /api/companies/:id/products/search", () => {
 
   it("only returns the requesting company's products, excluding soft-deleted ones", async () => {
     const owner = await signUpTestUser("owner");
+    const ownerB = await signUpTestUser("owner-b");
     const companyA = await createCompany(owner.cookieHeader, "Company A");
-    const companyB = await createCompany(owner.cookieHeader, "Company B");
+    const companyB = await createCompany(ownerB.cookieHeader, "Company B");
 
     const activeInA = await createProduct(owner.cookieHeader, companyA, { name: "Blue Widget" });
     const inactiveInA = await createProduct(owner.cookieHeader, companyA, { name: "Retired Widget" });
     await api("DELETE", `/api/companies/${companyA}/products/${inactiveInA}`, owner.cookieHeader);
-    await createProduct(owner.cookieHeader, companyB, { name: "Blue Widget" });
+    await createProduct(ownerB.cookieHeader, companyB, { name: "Blue Widget" });
 
     const res = await search(owner.cookieHeader, companyA, "");
     expect(res.status).toBe(200);
@@ -202,15 +203,16 @@ describe("Product search /api/companies/:id/products/search", () => {
 
   it("?productId= looks up a single product directly, scoped to the company", async () => {
     const owner = await signUpTestUser("owner");
+    const ownerB = await signUpTestUser("owner-b");
     const companyA = await createCompany(owner.cookieHeader, "Company A2");
-    const companyB = await createCompany(owner.cookieHeader, "Company B2");
+    const companyB = await createCompany(ownerB.cookieHeader, "Company B2");
     const productId = await createProduct(owner.cookieHeader, companyA, { name: "Direct Lookup Widget" });
 
     const found = await search(owner.cookieHeader, companyA, `?productId=${productId}`);
     expect(found.status).toBe(200);
     expect(found.json.products.map((p) => p.id)).toEqual([productId]);
 
-    const wrongCompany = await search(owner.cookieHeader, companyB, `?productId=${productId}`);
+    const wrongCompany = await search(ownerB.cookieHeader, companyB, `?productId=${productId}`);
     expect(wrongCompany.status).toBe(200);
     expect(wrongCompany.json.products).toEqual([]);
   });

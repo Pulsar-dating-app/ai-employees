@@ -202,6 +202,7 @@ export default async function setup() {
         emailMockUrl: emailMock.url,
         googleCalendarMockUrl: googleCalendarMock.url,
         shopifyApiMockUrl: shopifyApiMock.url,
+        stripeApiMockUrl: stripeApiMock.url,
       },
       null,
       2,
