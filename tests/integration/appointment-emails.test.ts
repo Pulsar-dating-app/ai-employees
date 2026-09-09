@@ -13,12 +13,12 @@ import { seedActivePlan } from "./helpers/billing";
 // server), so sendEmail() here needs the mock URL + creds in *this*
 // process's env too. The H3 PATCH path goes through the spawned server,
 // which global-setup already configured.
-process.env.RESEND_API_BASE_URL = getTestEnv().emailMockUrl;
-process.env.RESEND_API_KEY ??= "test-resend-key";
+process.env.BREVO_API_BASE_URL = getTestEnv().emailMockUrl;
+process.env.BREVO_API_KEY ??= "test-brevo-key";
 process.env.EMAIL_FROM ??= "Staffra <test@staffra.test>";
 
 // Trello R3 (confirmation / decline emails) + R4 (reminder cron). The mock
-// Resend server is started by global-setup.ts; sends are best-effort so the
+// Brevo server is started by global-setup.ts; sends are best-effort so the
 // assertions poll via waitForEmail.
 
 const BOOKING_DATE = "2027-04-05";

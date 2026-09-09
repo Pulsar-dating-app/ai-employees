@@ -1,7 +1,7 @@
 import { getTestEnv } from "./env";
 import type { CapturedEmail } from "./email-mock";
 
-// Reads / clears the emails captured by the mock Resend server that
+// Reads / clears the emails captured by the mock Brevo server that
 // global-setup.ts started (its URL is in .test-env.json). The spawned
 // next-dev process posts to the mock; tests read back through here.
 

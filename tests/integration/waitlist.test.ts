@@ -12,11 +12,11 @@ import { seedActivePlan } from "./helpers/billing";
 import { sentEmails, clearEmails, waitForEmail } from "./helpers/email";
 
 // Trello R5 -- the waitlist. add_to_waitlist runs in-process in this worker,
-// so sendEmail() here needs the mock Resend URL + creds in this process too
+// so sendEmail() here needs the mock Brevo URL + creds in this process too
 // (same note as appointment-emails.test.ts). The H3 DELETE path goes through
 // the spawned server, already configured by global-setup.
-process.env.RESEND_API_BASE_URL = getTestEnv().emailMockUrl;
-process.env.RESEND_API_KEY ??= "test-resend-key";
+process.env.BREVO_API_BASE_URL = getTestEnv().emailMockUrl;
+process.env.BREVO_API_KEY ??= "test-brevo-key";
 process.env.EMAIL_FROM ??= "Staffra <test@staffra.test>";
 
 // A far-future weekday so a booking never trips the past-slot filter; DOW

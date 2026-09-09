@@ -72,7 +72,7 @@ export default async function setup() {
   const googleOAuthMock = await startGoogleOAuthMock();
   // Same reasoning, for Trello I2's freeBusy.query call.
   const googleCalendarMock = await startGoogleCalendarMock();
-  // Trello R1 -- stands in for the Resend API.
+  // Trello R1 -- stands in for the Brevo API.
   const emailMock = await startEmailMock();
   // Same reasoning, for Trello P3's billing checkout route (Stripe SDK).
   const stripeApiMock = await startStripeApiMock();
@@ -126,9 +126,9 @@ export default async function setup() {
         // production-only concern (guarded on Vault secrets that don't
         // exist locally -- see the migration).
         CRON_SECRET: "test-cron-secret",
-        RESEND_API_KEY: "test-resend-key",
+        BREVO_API_KEY: "test-brevo-key",
         EMAIL_FROM: "Staffra <test@staffra.test>",
-        RESEND_API_BASE_URL: emailMock.url,
+        BREVO_API_BASE_URL: emailMock.url,
         GOOGLE_CLIENT_ID: "test-google-client-id",
         GOOGLE_CLIENT_SECRET: "test-google-client-secret",
         GOOGLE_OAUTH_TOKEN_URL: googleOAuthMock.url,
