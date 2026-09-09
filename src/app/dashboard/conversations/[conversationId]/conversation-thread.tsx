@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { LinkifiedText } from "@/components/chat/linkified-text";
+import { ProductCardList } from "@/components/chat/product-card-list";
 import type { ConversationDetail, ConversationMessage } from "@/lib/conversations/detail";
 
 const POLL_INTERVAL_MS = 5000;
@@ -47,6 +48,7 @@ export function ConversationThread({
   initialMessages: ConversationMessage[];
 }) {
   const t = useTranslations("Conversations.detail");
+  const locale = useLocale();
 
   const [conversation, setConversation] = useState(initialConversation);
   const [messages, setMessages] = useState(initialMessages);
@@ -173,7 +175,7 @@ export function ConversationThread({
           ) : (
             messages.map((m, i) => (
               <div key={i} className={m.role === "customer" ? "flex justify-end" : "flex justify-start"}>
-                <div className="flex max-w-[75%] flex-col gap-1">
+                <div className={clsx("flex flex-col gap-1", m.metadata ? "w-[75%]" : "max-w-[75%]")}>
                   {m.role !== "customer" ? (
                     <span className="ml-1 text-xs font-medium text-on-surface-variant">
                       {m.role === "merchant" ? t("teamLabel") : t("aiLabel")}
@@ -188,6 +190,7 @@ export function ConversationThread({
                     )}
                   >
                     <LinkifiedText text={m.content} className="whitespace-pre-wrap" />
+                    {m.metadata ? <ProductCardList products={m.metadata.products} locale={locale} /> : null}
                   </div>
                 </div>
               </div>

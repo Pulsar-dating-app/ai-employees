@@ -187,6 +187,35 @@ const FORMATTING_GUARDRAIL =
   "its own short line or run them into a sentence -- never as a marked-up list. Emoji are fine, in " +
   "moderation.";
 
+// Web chat only (2026-09-09). That surface renders each product a search
+// returned as a real card -- photo, name, short description, price -- and
+// the whole card is the tracked link. Without this the model does what it
+// was previously right to do on a text-only channel: writes the same list
+// out in prose, so the customer reads every name and price twice, and then
+// offers to "send the link" for something already sitting under a link.
+//
+// Deliberately NOT in `agents.system_prompt` (a migration) the way the
+// personality guardrails are: this is true of a channel, not of an agent,
+// and Malu on WhatsApp must keep listing names and prices in text because
+// there is nothing else there to carry them. MAX_PRODUCT_CARDS in
+// lib/chat/product-cards.ts is the other half of the "everything you search
+// for is shown" contract below -- the two numbers have to move together.
+const WEB_CHAT_PRODUCT_CARD_GUIDANCE =
+  "This conversation is on the store's website, which shows products visually. Every product a " +
+  "catalog search returns is displayed to the customer automatically, right under your message, " +
+  "as a card with its photo, name, short description and price -- up to 4 of them. So:\n" +
+  "- Do NOT write the products out in your message. No list of names, no prices, no descriptions. " +
+  "The customer is already looking at all of that.\n" +
+  "- Search for exactly what you want to show, and use the search's `limit` to control how many " +
+  "cards appear. What you search for is what they see.\n" +
+  "- Do NOT offer to send, share or show a link for a product. Every card is already a tappable " +
+  "link to that product's page, so offering one reads as if you hadn't noticed what you just " +
+  "showed them. If a customer asks for a link outright, tell them to tap the product above rather " +
+  "than creating another one.\n" +
+  "- Write only a short lead-in (\"Encontrei algumas opções:\") and, when it helps, one follow-up " +
+  "question to narrow things down. Naming a single specific product in conversation is still fine " +
+  "-- it's the list that's redundant.";
+
 // Step 7 -- pure logic, no I/O, the single best unit-test target in this
 // module. `agents.system_prompt` is NULL for Malu today (C2 hasn't run
 // yet), so this must fall back to composing something usable from
@@ -208,11 +237,16 @@ export function buildSystemPrompt({
   agentConfig,
   businessName,
   intent,
+  channel,
   currentDate,
 }: {
   agentConfig: AgentConfig;
   businessName: string | null;
   intent: string;
+  // conversations.channel. Only 'web_chat' changes anything today (product
+  // cards); every other channel, and a null, composes exactly the prompt
+  // this function built before.
+  channel?: string | null;
   // A preformatted human string like "Thursday, June 12, 2026
   // (America/Sao_Paulo)" -- real, non-inventable context (the same category
   // as businessName), not a guardrail. Optional so the pure unit tests can
@@ -272,6 +306,10 @@ export function buildSystemPrompt({
     // first rule rather than overriding it (see its own comment).
     SCOPE_GUARDRAIL,
     FORMATTING_GUARDRAIL,
+    // After FORMATTING_GUARDRAIL, which it narrows: that one says "put each
+    // option on its own short line", which is right everywhere except the
+    // one channel that draws the options itself.
+    channel === "web_chat" ? WEB_CHAT_PRODUCT_CARD_GUIDANCE : null,
     base,
     nameOverrideSection,
     businessNameSection,

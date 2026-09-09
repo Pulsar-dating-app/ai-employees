@@ -399,6 +399,40 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("work out the actual calendar date yourself from this");
     expect(prompt).toContain("never ask for a year");
   });
+
+  // 2026-09-09 -- the web chat draws each searched product as a card with
+  // its photo, name, description and price, so the model listing them in
+  // prose makes the customer read everything twice and offer a link for
+  // something already under one. Every other channel has nothing but text,
+  // so this must stay strictly channel-scoped.
+  describe("web-chat product cards", () => {
+    const agentConfig: AgentConfig = {
+      slug: "malu",
+      role: "Sales assistant",
+      description: "desc",
+      personality: null,
+      systemPrompt: "You are Malu.",
+      companyAgentStatus: "active",
+      displayName: null,
+    };
+
+    it("tells the model not to list products or offer links on web chat", () => {
+      const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown", channel: "web_chat" });
+
+      expect(prompt).toContain("Do NOT write the products out in your message");
+      expect(prompt).toContain("Do NOT offer to send, share or show a link");
+      expect(prompt).toContain("What you search for is what they see");
+    });
+
+    it.each(["whatsapp", "instagram", "telegram", null, undefined])(
+      "leaves the prompt untouched on %s, where text is all the customer gets",
+      (channel) => {
+        const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown", channel });
+        expect(prompt).not.toContain("Do NOT write the products out in your message");
+        expect(prompt).toEqual(buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" }));
+      },
+    );
+  });
 });
 
 describe("buildInitialInput", () => {

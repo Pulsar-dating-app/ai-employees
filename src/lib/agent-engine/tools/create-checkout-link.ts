@@ -1,7 +1,7 @@
-import type { PostgrestError } from "@supabase/supabase-js";
 import { ProductRepository } from "@/lib/products/repository";
-import { buildCheckoutUrl, generateTrackingId } from "@/lib/checkout/links";
-import type { AgentTool, ToolExecutionContext } from "./types";
+import { buildCheckoutUrl } from "@/lib/checkout/links";
+import { mintRecommendationTrackingId } from "@/lib/checkout/recommendation-events";
+import type { AgentTool } from "./types";
 
 type CreateCheckoutLinkArgs = {
   productId: string;
@@ -19,11 +19,6 @@ export type CreateCheckoutLinkResult =
       available: false;
       reason: "product_not_found" | "product_has_no_url";
     };
-
-// Postgres unique_violation -- the partial unique index on
-// events.tracking_id (`where tracking_id is not null`).
-const UNIQUE_VIOLATION = "23505";
-const MAX_TRACKING_ID_ATTEMPTS = 3;
 
 // Trello ticket C4 -- spec §14. Mints the trackable URL Malu sends a customer
 // once they're ready to buy. The customer taps it in WhatsApp; E1 (not built
@@ -70,7 +65,17 @@ export const createCheckoutLinkTool: AgentTool = {
     // pretend certainty when the information isn't on file).
     if (!destinationUrl) return { available: false, reason: "product_has_no_url" };
 
-    const trackingId = await insertRecommendationEvent(ctx, product.id, destinationUrl);
+    const trackingId = await mintRecommendationTrackingId(
+      {
+        supabase: ctx.supabase,
+        companyId: ctx.companyId,
+        agentId: ctx.agentId,
+        conversationId: ctx.conversationId,
+        customerId: ctx.customerId,
+      },
+      product.id,
+      destinationUrl,
+    );
 
     return {
       available: true,
@@ -81,33 +86,3 @@ export const createCheckoutLinkTool: AgentTool = {
     };
   },
 };
-
-// Retries on the (vanishingly unlikely, 64-bit) tracking-id collision rather
-// than surfacing a raw Postgres error mid-conversation.
-async function insertRecommendationEvent(
-  ctx: ToolExecutionContext,
-  productId: string,
-  destinationUrl: string,
-): Promise<string> {
-  let lastError: PostgrestError | null = null;
-
-  for (let attempt = 0; attempt < MAX_TRACKING_ID_ATTEMPTS; attempt++) {
-    const trackingId = generateTrackingId();
-    const { error } = await ctx.supabase.from("events").insert({
-      company_id: ctx.companyId,
-      agent_id: ctx.agentId,
-      conversation_id: ctx.conversationId,
-      customer_id: ctx.customerId,
-      product_id: productId,
-      type: "product_recommendation",
-      tracking_id: trackingId,
-      metadata: { destination_url: destinationUrl },
-    });
-
-    if (!error) return trackingId;
-    if (error.code !== UNIQUE_VIOLATION) throw error;
-    lastError = error;
-  }
-
-  throw lastError;
-}

@@ -92,6 +92,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     agentConfig,
     businessName,
     intent,
+    channel: conversation.channel,
     currentDate: formatCurrentDate(companyTimezone),
   });
   const initialInput = buildInitialInput(input.message);
