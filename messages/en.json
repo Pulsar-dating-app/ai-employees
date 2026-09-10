@@ -433,6 +433,57 @@
         }
       ]
     },
+    "salesContact": {
+      "title": "Talk to a specialist",
+      "subtitle": "Takes 1 minute. Our team reaches out right after.",
+      "steps": {
+        "you": "About you",
+        "interests": "What you need",
+        "company": "Your company"
+      },
+      "next": "Continue",
+      "back": "Back",
+      "submit": "Send",
+      "submitting": "Sending…",
+      "close": "Close",
+      "errorRequired": "Please fill in the required fields.",
+      "errorSubmit": "Something went wrong. Please try again.",
+      "successTitle": "Thanks — we got it!",
+      "successBody": "Our team will contact you shortly on the email or WhatsApp you gave us.",
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "Your full name",
+        "email": "Work email",
+        "emailPlaceholder": "you@yourstore.com",
+        "whatsapp": "WhatsApp",
+        "whatsappPlaceholder": "+55 (11) 90000-0000",
+        "companyName": "Company name",
+        "companyNamePlaceholder": "Your company's name",
+        "message": "Message",
+        "messagePlaceholder": "Tell us what you're looking for.",
+        "referralSource": "How did you hear about Staffra?",
+        "referralSourcePlaceholder": "Select… (optional)"
+      },
+      "interestsHint": "What are you interested in? You can pick both.",
+      "interests": {
+        "sales": {
+          "label": "Sales agent",
+          "desc": "Answers and sells across your channels, day and night."
+        },
+        "scheduling": {
+          "label": "Scheduling agent",
+          "desc": "Books, reschedules and reminds customers automatically."
+        }
+      },
+      "referrals": {
+        "google": "Google search",
+        "referral": "A referral",
+        "social": "Social media",
+        "agency": "An agency",
+        "influencer": "An influencer",
+        "other": "Other"
+      }
+    },
     "impact": {
       "stats": [
         {
