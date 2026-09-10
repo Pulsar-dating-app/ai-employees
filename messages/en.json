@@ -595,7 +595,6 @@
     "workspaceLabel": "Workspace",
     "billingPastDueAlert": "Payment failed — team paused",
     "tabs": {
-      "marketplace": "Marketplace",
       "myAgents": "My team",
       "products": "Products",
       "scheduling": "Scheduling",
@@ -687,25 +686,6 @@
     "browseMarketplace": "Browse the marketplace",
     "agentSelectLabel": "Team member"
   },
-  "Marketplace": {
-    "pageTitle": "Meet your team",
-    "pageSubtitle": "Choose who joins your business and get them ready to sell for you.",
-    "hiredBadge": "Hired",
-    "availableBadge": "Available",
-    "viewDetails": "View details",
-    "searchPlaceholder": "Search by name or role…",
-    "noResults": "No team members match “{query}”.",
-    "includedInPlan": "Included in your plan",
-    "needsPlan": "Needs a plan",
-    "backToMarketplace": "Back to marketplace",
-    "traits": {
-      "warm": "Warm",
-      "attentive": "Attentive",
-      "persuasive": "Persuasive, never pushy",
-      "knowledgeable": "Knowledgeable",
-      "proactive": "Proactive"
-    }
-  },
   "AgentDetail": {
     "shouldTitle": "What {name} does",
     "neverTitle": "What {name} will never do",
@@ -744,7 +724,7 @@
   },
   "MyAgents": {
     "pageTitle": "My team",
-    "pageSubtitle": "The team members you've hired.",
+    "pageSubtitle": "Everyone who can join your business — hired or not.",
     "pastDueBanner": {
       "title": "Payment failed",
       "body": "Your whole team is paused and not replying to any customer, on any channel, until this is fixed.",
@@ -760,10 +740,26 @@
       "body": "{left, plural, one {# reply left} other {# replies left}} this period.",
       "action": "View plan"
     },
-    "emptyState": "You haven't hired anyone yet.",
-    "browseMarketplace": "Browse the marketplace",
     "configure": "Configure",
     "backToMyAgents": "Back to my team",
+    "availableBadge": "Available",
+    "viewDetails": "View details",
+    "searchPlaceholder": "Search by name or role…",
+    "noResults": "No team members match “{query}”.",
+    "noFilterResults": "No team members in this view.",
+    "includedInPlan": "Included in your plan",
+    "needsPlan": "Needs a plan",
+    "filterAll": "All",
+    "filterActive": "Active",
+    "filterPaused": "Paused",
+    "filterAvailable": "Available",
+    "traits": {
+      "warm": "Warm",
+      "attentive": "Attentive",
+      "persuasive": "Persuasive, never pushy",
+      "knowledgeable": "Knowledgeable",
+      "proactive": "Proactive"
+    },
     "connectionsTitle": "Connections",
     "connectionsSubtitle": "Choose which platforms {name} talks to customers on.",
     "tutorial": {

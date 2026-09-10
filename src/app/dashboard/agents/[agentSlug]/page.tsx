@@ -16,7 +16,7 @@ export default async function AgentDetailPage({
 }) {
   const { agentSlug } = await params;
   const supabase = await createClient();
-  const t = await getTranslations("Marketplace");
+  const t = await getTranslations("MyAgents");
 
   // Any active `agents` row gets a real detail page — not gated on having
   // a curated catalog entry. agent lookup and the company list don't
@@ -51,7 +51,7 @@ export default async function AgentDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <BackLink href="/dashboard">{t("backToMarketplace")}</BackLink>
+      <BackLink href="/dashboard">{t("backToMyAgents")}</BackLink>
 
       <AgentHireFlow
         agentSlug={agent.slug}

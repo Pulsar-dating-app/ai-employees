@@ -50,7 +50,7 @@ export function AgentHireFlow({
   showDevChatTest: boolean;
 }) {
   const t = useTranslations("AgentDetail");
-  const tTraits = useTranslations("Marketplace.traits");
+  const tTraits = useTranslations("MyAgents.traits");
   const tShould = useTranslations("AgentDetail.should");
   const tNever = useTranslations("AgentDetail.never");
   const router = useRouter();

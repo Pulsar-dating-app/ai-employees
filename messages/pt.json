@@ -595,7 +595,6 @@
     "workspaceLabel": "Espaço de trabalho",
     "billingPastDueAlert": "Pagamento falhou — equipe pausada",
     "tabs": {
-      "marketplace": "Marketplace",
       "myAgents": "Minha equipe",
       "products": "Produtos",
       "scheduling": "Agendamentos",
@@ -687,25 +686,6 @@
     "browseMarketplace": "Explorar o marketplace",
     "agentSelectLabel": "Integrante"
   },
-  "Marketplace": {
-    "pageTitle": "Conheça sua equipe",
-    "pageSubtitle": "Escolha quem vai entrar no seu negócio e prepare-o para vender por você.",
-    "hiredBadge": "Contratado(a)",
-    "availableBadge": "Disponível",
-    "viewDetails": "Ver detalhes",
-    "searchPlaceholder": "Buscar por nome ou cargo…",
-    "noResults": "Nenhum integrante corresponde a “{query}”.",
-    "includedInPlan": "Incluído no seu plano",
-    "needsPlan": "Precisa de um plano",
-    "backToMarketplace": "Voltar para o marketplace",
-    "traits": {
-      "warm": "Caloroso(a)",
-      "attentive": "Atencioso(a)",
-      "persuasive": "Persuasivo(a), sem ser insistente",
-      "knowledgeable": "Conhece bem os produtos",
-      "proactive": "Proativo(a)"
-    }
-  },
   "AgentDetail": {
     "shouldTitle": "O que {name} faz",
     "neverTitle": "O que {name} nunca faz",
@@ -744,7 +724,7 @@
   },
   "MyAgents": {
     "pageTitle": "Minha equipe",
-    "pageSubtitle": "Os integrantes que você já contratou.",
+    "pageSubtitle": "Todos que podem entrar no seu negócio — contratados ou não.",
     "pastDueBanner": {
       "title": "Pagamento falhou",
       "body": "Sua equipe inteira está pausada e não responde nenhum cliente, em nenhum canal, até isso ser resolvido.",
@@ -760,10 +740,26 @@
       "body": "{left, plural, one {# resposta restante} other {# respostas restantes}} neste período.",
       "action": "Ver plano"
     },
-    "emptyState": "Você ainda não contratou ninguém.",
-    "browseMarketplace": "Ver marketplace",
     "configure": "Configurar",
     "backToMyAgents": "Voltar para minha equipe",
+    "availableBadge": "Disponível",
+    "viewDetails": "Ver detalhes",
+    "searchPlaceholder": "Buscar por nome ou cargo…",
+    "noResults": "Nenhum integrante corresponde a “{query}”.",
+    "noFilterResults": "Nenhum integrante nesta visualização.",
+    "includedInPlan": "Incluído no seu plano",
+    "needsPlan": "Precisa de um plano",
+    "filterAll": "Todos",
+    "filterActive": "Ativos",
+    "filterPaused": "Pausados",
+    "filterAvailable": "Disponíveis",
+    "traits": {
+      "warm": "Caloroso(a)",
+      "attentive": "Atencioso(a)",
+      "persuasive": "Persuasivo(a), sem ser insistente",
+      "knowledgeable": "Conhece bem os produtos",
+      "proactive": "Proativo(a)"
+    },
     "connectionsTitle": "Conexões",
     "connectionsSubtitle": "Escolha em quais plataformas {name} vai falar com os clientes.",
     "tutorial": {

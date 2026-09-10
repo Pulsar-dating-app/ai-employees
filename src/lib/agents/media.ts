@@ -11,11 +11,11 @@ const AGENT_DEFAULT_PHOTOS: Record<string, readonly [string, string]> = {
 
 export type AgentPhotoType = "default_1" | "default_2" | "custom";
 
-// The generic catalog view (marketplace, the hire page) always shows the
-// first default -- there's no per-company selection to read yet at that
-// point, and even for an already-hired agent those pages deliberately show
-// the generic listing, not this company's customized one (same reasoning
-// as their own use of defaultAgentName() over the customized name).
+// The generic catalog view -- a not-yet-hired agent's card on the unified
+// My Team page, and the hire page itself -- always shows the first default,
+// since there's no per-company selection to read yet for those. An
+// already-hired agent's card on My Team instead uses resolveAgentPhoto()
+// below, with the merchant's own custom name/photo.
 export function agentPhoto(slug: string): string | null {
   return AGENT_DEFAULT_PHOTOS[slug]?.[0] ?? null;
 }
