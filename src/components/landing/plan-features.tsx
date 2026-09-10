@@ -48,7 +48,7 @@ export function PlanFeatures({
             className={`flex items-center gap-2 ${featured && fi === 0 ? "font-semibold text-[#0f172a]" : ""}`}
           >
             <M
-              name={featured && fi === 0 ? "verified" : "check_circle"}
+              name="check_circle"
               size={18}
               className={featured && fi === 0 ? "text-[#3525cd]" : "text-[#10b981]"}
             />

@@ -82,7 +82,7 @@ const AGENT_STYLES = [
 const SOURCE_ICONS = [
   { icon: "shopping_bag", color: "text-[#3525cd]" },
   { icon: "link", color: "text-[#10b981]" },
-  { icon: "verified", color: "text-[#006591]" },
+  { icon: "mail", color: "text-[#006591]" },
   { icon: "picture_as_pdf", color: "text-[#7e3000]" },
   { icon: "chat_bubble", color: "text-[#4f46e5]" },
   { icon: "check_circle", color: "text-[#0f172a]" },
