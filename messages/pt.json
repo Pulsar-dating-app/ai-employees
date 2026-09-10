@@ -551,7 +551,8 @@
       "conversations": "Conversas",
       "metrics": "Desempenho",
       "settings": "Configurações",
-      "locked": "bloqueado"
+      "locked": "bloqueado",
+      "more": "Mais"
     },
     "locked": {
       "title": "{name} ainda não faz parte da sua equipe",
@@ -685,15 +686,6 @@
     "completeness": "{filled} de {total} seções preenchidas",
     "completenessHint": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
     "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
-    "embedDomains": {
-      "title": "Sites autorizados a incorporar o chat",
-      "description": "Adicione os domínios onde o widget de chat pode aparecer. Até você adicionar um, o widget incorporado não funcionará em lugar nenhum — seu link de chat autônomo continua funcionando normalmente.",
-      "domainLabel": "Domínio",
-      "domainPlaceholder": "exemplo.com",
-      "addButton": "Adicionar domínio",
-      "removeButton": "Remover",
-      "emptyStateWarning": "Nenhum domínio adicionado ainda — o widget incorporado fica bloqueado em todos os sites até você adicionar pelo menos um."
-    },
     "billingLink": {
       "title": "Plano e cobrança",
       "hint": "Sua assinatura, uso e forma de pagamento."
@@ -857,6 +849,11 @@
       "chooseFileButton": "Escolher arquivo",
       "noFileChosen": "Nenhum arquivo escolhido",
       "currentFileHint": "Usando um arquivo enviado anteriormente.",
+      "positionSectionTitle": "Posição da bolha",
+      "positionBottomRight": "Inferior direito",
+      "positionBottomLeft": "Inferior esquerdo",
+      "offsetLabel": "Distância da borda inferior",
+      "offsetHint": "Suba a bolha se ela estiver cobrindo algo no seu site, como um menu de navegação inferior.",
       "greetingLabel": "Mensagem de saudação",
       "greetingPlaceholder": "Oi! 👋 Posso ajudar a encontrar o que você procura?",
       "greetingHint": "Aparece numa bolha de fala ao lado do botão alguns segundos depois que um visitante chega. Já vem preenchido com uma mensagem padrão -- edite como quiser.",
@@ -885,6 +882,16 @@
       "copyScriptButton": "Copiar script",
       "embedInfoText": "Cole este código no seu site, logo antes da tag de fechamento do body, para começar a compartilhar o chat de {name}. A bolha aparece automaticamente no canto inferior direito.",
       "openLink": "Abrir link"
+    },
+    "embedDomains": {
+      "title": "Sites autorizados a incorporar o chat",
+      "description": "Adicione os domínios onde o widget de chat pode aparecer. Até você adicionar um, o widget incorporado não funcionará em lugar nenhum — seu link de chat autônomo continua funcionando normalmente.",
+      "sharedScopeNote": "Isso vale para o widget incorporado de todos os integrantes contratados, não só de {name} — há uma única lista para todo o seu site.",
+      "domainLabel": "Domínio",
+      "domainPlaceholder": "exemplo.com",
+      "addButton": "Adicionar domínio",
+      "removeButton": "Remover",
+      "emptyStateWarning": "Nenhum domínio adicionado ainda — o widget incorporado fica bloqueado em todos os sites até você adicionar pelo menos um."
     },
     "tour": {
       "nameTitle": "Deixe com a sua cara",

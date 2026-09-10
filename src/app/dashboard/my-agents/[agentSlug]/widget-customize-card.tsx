@@ -4,23 +4,31 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { VideoIcon, ImageIcon } from "@/components/ui/icons";
+import { VideoIcon, ImageIcon, PositionBottomRightIcon, PositionBottomLeftIcon } from "@/components/ui/icons";
 import { resolveDefaultLauncher, resolveDefaultGreeting } from "@/lib/widget/launcher-defaults";
 
 type LauncherType = "default" | "video" | "image";
+type Position = "bottom-right" | "bottom-left";
 
 const VIDEO_ACCEPT = "video/webm,video/mp4";
 const IMAGE_ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
 const MAX_VIDEO_BYTES = 4 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+// Mirrors widget.js's own MAX_OFFSET_BOTTOM headroom, but the slider only
+// goes up to what a real bottom nav bar ever needs to clear -- a merchant
+// who somehow needs more than this can still reach it via the API directly,
+// but exposing 200px of slider range here would just make normal values
+// harder to land on.
+const MAX_OFFSET_SLIDER = 120;
 
 // Customize screen (Stitch "Customize Embedded Agent - Admin Workspace") --
 // replaces the old static "here's your embed code" half of the agent's
 // Connections page with an actual editor: pick the launcher bubble's look
-// (the shared default animation, or a merchant's own video/image), set the
-// greeting, see both live before saving. WebChatChannelCard (sibling, same
-// page) keeps rendering the actual copyable snippet from the *saved* state --
-// this card is the editor, not the source of truth for what gets pasted.
+// (the shared default animation, or a merchant's own video/image), its
+// corner and bottom clearance, and set the greeting, seeing all of it live
+// before saving. WebChatChannelCard (sibling, same page) keeps rendering
+// the actual copyable snippet from the *saved* state -- this card is the
+// editor, not the source of truth for what gets pasted.
 export function WidgetCustomizeCard({
   companyId,
   agentSlug,
@@ -36,6 +44,8 @@ export function WidgetCustomizeCard({
     greeting: string | null;
     launcherType: LauncherType;
     launcherAssetUrl: string | null;
+    position: Position;
+    offsetBottom: number;
   };
 }) {
   const t = useTranslations("MyAgents.widgetCustomize");
@@ -43,6 +53,8 @@ export function WidgetCustomizeCard({
 
   const [launcherType, setLauncherType] = useState<LauncherType>(initial.launcherType);
   const [launcherAssetUrl, setLauncherAssetUrl] = useState<string | null>(initial.launcherAssetUrl);
+  const [position, setPosition] = useState<Position>(initial.position);
+  const [offsetBottom, setOffsetBottom] = useState(initial.offsetBottom);
   // Pre-filled with this agent's predefined default when nothing's been
   // saved yet -- "enabled by default, editable" means the merchant should
   // see real text sitting in the field, not an empty box with just a
@@ -109,6 +121,8 @@ export function WidgetCustomizeCard({
     const formData = new FormData();
     formData.set("launcherType", launcherType);
     formData.set("greeting", greeting);
+    formData.set("position", position);
+    formData.set("offsetBottom", String(offsetBottom));
     if (selectedFile) formData.set("file", selectedFile);
 
     try {
@@ -140,6 +154,17 @@ export function WidgetCustomizeCard({
     { value: "video", icon: VideoIcon, label: t("launcherVideo"), hint: t("launcherVideoHint") },
     { value: "image", icon: ImageIcon, label: t("launcherImage"), hint: t("launcherImageHint") },
   ];
+
+  const positionOptions: { value: Position; icon: typeof PositionBottomRightIcon; label: string }[] = [
+    { value: "bottom-right", icon: PositionBottomRightIcon, label: t("positionBottomRight") },
+    { value: "bottom-left", icon: PositionBottomLeftIcon, label: t("positionBottomLeft") },
+  ];
+
+  const previewSide = position === "bottom-left" ? "left" : "right";
+  // Unscaled -- the preview box is tall enough that the real pixel offset
+  // fits without needing a conversion the merchant would have to mentally
+  // undo, so what moves in the preview is exactly what moves on their site.
+  const previewBottom = 16 + offsetBottom;
 
   return (
     <div className="flex flex-col gap-4">
@@ -212,6 +237,64 @@ export function WidgetCustomizeCard({
             </div>
 
             <div>
+              <p className="mb-3 text-sm font-semibold text-on-surface">{t("positionSectionTitle")}</p>
+              <div className="grid grid-cols-2 gap-3">
+                {positionOptions.map((option) => {
+                  const Icon = option.icon;
+                  const selected = position === option.value;
+                  return (
+                    <label
+                      key={option.value}
+                      className={`flex cursor-pointer items-center gap-2 rounded-lg border p-3 transition-colors ${
+                        selected
+                          ? "border-primary bg-primary-fixed/30"
+                          : "border-outline-variant hover:bg-surface-container-low"
+                      } ${!canEdit ? "cursor-not-allowed opacity-60" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="widgetPosition"
+                        className="sr-only"
+                        checked={selected}
+                        disabled={!canEdit}
+                        onChange={() => {
+                          setPosition(option.value);
+                          setSavedOk(false);
+                        }}
+                      />
+                      <Icon className={`h-5 w-5 shrink-0 ${selected ? "text-primary" : "text-on-surface-variant"}`} />
+                      <span className="text-sm font-medium text-on-surface">{option.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4">
+                <div className="mb-1.5 flex items-baseline justify-between">
+                  <label className="text-sm font-medium text-on-surface" htmlFor="widget-offset">
+                    {t("offsetLabel")}
+                  </label>
+                  <span className="text-xs tabular-nums text-on-surface-variant">{offsetBottom}px</span>
+                </div>
+                <input
+                  id="widget-offset"
+                  type="range"
+                  min={0}
+                  max={MAX_OFFSET_SLIDER}
+                  step={10}
+                  value={offsetBottom}
+                  disabled={!canEdit || saving}
+                  onChange={(e) => {
+                    setOffsetBottom(Number(e.target.value));
+                    setSavedOk(false);
+                  }}
+                  className="w-full accent-primary disabled:cursor-not-allowed disabled:opacity-60"
+                />
+                <p className="mt-1.5 text-xs text-on-surface-variant">{t("offsetHint")}</p>
+              </div>
+            </div>
+
+            <div>
               <label className="mb-2 block text-sm font-semibold text-on-surface" htmlFor="widget-greeting">
                 {t("greetingLabel")}
               </label>
@@ -254,9 +337,20 @@ export function WidgetCustomizeCard({
               className="relative h-64 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low"
               style={{ backgroundImage: "radial-gradient(#d9dadb 1px, transparent 1px)", backgroundSize: "14px 14px" }}
             >
-              <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2">
+              <div
+                className="absolute flex flex-col gap-2"
+                style={{
+                  bottom: previewBottom,
+                  [previewSide]: 16,
+                  alignItems: previewSide === "left" ? "flex-start" : "flex-end",
+                }}
+              >
                 {greeting ? (
-                  <div className="max-w-[180px] rounded-2xl rounded-br-sm border border-outline-variant bg-surface-container-lowest px-3 py-2 text-xs text-on-surface shadow-level1">
+                  <div
+                    className={`max-w-[180px] rounded-2xl border border-outline-variant bg-surface-container-lowest px-3 py-2 text-xs text-on-surface shadow-level1 ${
+                      previewSide === "left" ? "rounded-bl-sm" : "rounded-br-sm"
+                    }`}
+                  >
                     {greeting}
                   </div>
                 ) : null}

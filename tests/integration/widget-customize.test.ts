@@ -14,6 +14,8 @@ interface CompanyAgentResult {
     widget_greeting: string | null;
     widget_launcher_type: string;
     widget_launcher_asset_url: string | null;
+    widget_position: string;
+    widget_offset_bottom: number;
   };
   error?: string;
 }
@@ -31,12 +33,14 @@ async function hireMalu(ownerCookie: string, companyId: string) {
 async function saveWidget(
   cookie: string | undefined,
   companyId: string,
-  fields: { launcherType: string; greeting?: string; file?: File },
+  fields: { launcherType: string; greeting?: string; file?: File; position?: string; offsetBottom?: string },
 ): Promise<{ status: number; json: CompanyAgentResult }> {
   const { baseUrl } = getTestEnv();
   const formData = new FormData();
   formData.set("launcherType", fields.launcherType);
   formData.set("greeting", fields.greeting ?? "");
+  if (fields.position !== undefined) formData.set("position", fields.position);
+  if (fields.offsetBottom !== undefined) formData.set("offsetBottom", fields.offsetBottom);
   if (fields.file) formData.set("file", fields.file);
 
   const res = await fetch(`${baseUrl}/api/companies/${companyId}/agents/malu/widget`, {
@@ -193,5 +197,54 @@ describe("Widget customization POST /api/companies/:id/agents/malu/widget", () =
     expect(resaved.status).toBe(200);
     expect(resaved.json.companyAgent?.widget_launcher_asset_url).toBe(assetUrl);
     expect(resaved.json.companyAgent?.widget_greeting).toBe("Updated greeting only");
+  });
+
+  it("defaults position/offsetBottom to bottom-right/0 when omitted", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Widget Position Default Co");
+    await hireMalu(owner.cookieHeader, companyId);
+
+    const result = await saveWidget(owner.cookieHeader, companyId, { launcherType: "default" });
+    expect(result.status).toBe(200);
+    expect(result.json.companyAgent?.widget_position).toBe("bottom-right");
+    expect(result.json.companyAgent?.widget_offset_bottom).toBe(0);
+  });
+
+  it("saves an explicit position and offsetBottom", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Widget Position Save Co");
+    await hireMalu(owner.cookieHeader, companyId);
+
+    const result = await saveWidget(owner.cookieHeader, companyId, {
+      launcherType: "default",
+      position: "bottom-left",
+      offsetBottom: "80",
+    });
+    expect(result.status).toBe(200);
+    expect(result.json.companyAgent?.widget_position).toBe("bottom-left");
+    expect(result.json.companyAgent?.widget_offset_bottom).toBe(80);
+  });
+
+  it("rejects an invalid position", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Widget Bad Position Co");
+    await hireMalu(owner.cookieHeader, companyId);
+
+    const result = await saveWidget(owner.cookieHeader, companyId, {
+      launcherType: "default",
+      position: "top-center",
+    });
+    expect(result.status).toBe(400);
+  });
+
+  it("rejects an out-of-range or non-integer offsetBottom", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Widget Bad Offset Co");
+    await hireMalu(owner.cookieHeader, companyId);
+
+    for (const bad of ["-10", "500", "12.5", "not-a-number"]) {
+      const result = await saveWidget(owner.cookieHeader, companyId, { launcherType: "default", offsetBottom: bad });
+      expect(result.status).toBe(400);
+    }
   });
 });

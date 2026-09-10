@@ -40,6 +40,17 @@
   var launcherSrc = currentScript.getAttribute("data-launcher-src");
   var useCustomLauncher = (launcherType === "video" || launcherType === "image") && !!launcherSrc;
 
+  // Merchant-adjustable position, set via data-position/data-offset-bottom
+  // on the script tag (Customize screen) -- for a site where the default
+  // bottom-right corner covers something else (a mobile bottom nav bar was
+  // the reported case). Missing/invalid values fall back to the original
+  // fixed position exactly, so a snippet pasted before this existed keeps
+  // rendering unmodified.
+  var isLeft = currentScript.getAttribute("data-position") === "bottom-left";
+  var sideProp = isLeft ? "left" : "right";
+  var offsetBottomRaw = parseInt(currentScript.getAttribute("data-offset-bottom"), 10);
+  var offsetBottom = isNaN(offsetBottomRaw) || offsetBottomRaw < 0 ? 0 : offsetBottomRaw;
+
   // The Staffra origin is derived from the script's own src, never
   // hardcoded -- the same file works unmodified in local dev and
   // production, whatever domain it's actually served from.
@@ -50,10 +61,18 @@
   var PANEL_ID = "staffra-widget-panel";
   var TEASER_ID = "staffra-widget-teaser";
 
+  // Every "bottom" value below is the original fixed pixel plus the
+  // merchant's offset, so raising `offsetBottom` lifts the whole cluster
+  // (launcher, panel, teaser) together, not just the launcher on its own.
+  var launcherBottom = 20 + offsetBottom;
+  var panelBottom = 92 + offsetBottom;
+  var teaserBottom = 34 + offsetBottom;
+  var teaserMobileBottom = 100 + offsetBottom;
+
   var style = document.createElement("style");
   style.textContent = [
     "#" + LAUNCHER_ID + " {",
-    "  position: fixed; bottom: 20px; right: 20px; z-index: 2147483000;",
+    "  position: fixed; bottom: " + launcherBottom + "px; " + sideProp + ": 20px; z-index: 2147483000;",
     "  width: 72px; height: 72px; border-radius: 9999px; overflow: hidden;",
     // White, not indigo -- the character video's own tones are close
     // enough to indigo that the two blended together. White also stays
@@ -68,7 +87,7 @@
     "#" + LAUNCHER_ID + ":hover { transform: scale(1.06); }",
     "#" + LAUNCHER_ID + " video, #" + LAUNCHER_ID + " img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }",
     "#" + PANEL_ID + " {",
-    "  position: fixed; bottom: 92px; right: 20px; z-index: 2147483000;",
+    "  position: fixed; bottom: " + panelBottom + "px; " + sideProp + ": 20px; z-index: 2147483000;",
     "  width: 380px; height: min(600px, 80vh); max-width: calc(100vw - 40px);",
     "  border-radius: 16px; overflow: hidden;",
     "  box-shadow: 0 20px 50px rgba(0,0,0,0.25);",
@@ -77,7 +96,10 @@
     "#" + PANEL_ID + ".staffra-widget-open { display: block; }",
     "#" + PANEL_ID + " iframe { width: 100%; height: 100%; border: none; display: block; }",
     "#" + TEASER_ID + " {",
-    "  position: fixed; bottom: 34px; right: 100px; z-index: 2147482999;",
+    // Same side property as the launcher (not the opposite one) -- a bigger
+    // offset (100 vs. the launcher's 20) is what opens the gap between
+    // them, both still measured from the same edge.
+    "  position: fixed; bottom: " + teaserBottom + "px; " + sideProp + ": 100px; z-index: 2147482999;",
     "  max-width: 220px; background: #ffffff; color: #191c1d;",
     "  border-radius: 16px; padding: 12px 36px 12px 16px;",
     "  box-shadow: 0 10px 30px rgba(0,0,0,0.15);",
@@ -87,9 +109,9 @@
     "}",
     "#" + TEASER_ID + ".staffra-widget-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }",
     "#" + TEASER_ID + "::after {",
-    "  content: ''; position: absolute; right: -6px; bottom: 24px;",
+    "  content: ''; position: absolute; " + sideProp + ": -6px; bottom: 24px;",
     "  width: 12px; height: 12px; background: #ffffff; transform: rotate(45deg);",
-    "  box-shadow: 2px -2px 2px rgba(0,0,0,0.03);",
+    "  box-shadow: " + (isLeft ? "-2px -2px 2px rgba(0,0,0,0.03);" : "2px -2px 2px rgba(0,0,0,0.03);"),
     "}",
     "#" + TEASER_ID + "-close {",
     "  position: absolute; top: 6px; right: 6px; width: 22px; height: 22px;",
@@ -105,8 +127,9 @@
     "  }",
     // Beside the launcher has no room on a narrow viewport -- stack above
     // it instead, matching the mobile-fullscreen panel's own "reflow, don't
-    // just shrink" approach.
-    "  #" + TEASER_ID + " { bottom: 100px; right: 20px; left: 20px; max-width: none; }",
+    // just shrink" approach. Spans both edges regardless of corner, so no
+    // side-mirroring needed here, just the same bottom offset.
+    "  #" + TEASER_ID + " { bottom: " + teaserMobileBottom + "px; right: 20px; left: 20px; max-width: none; }",
     "}",
   ].join("\n");
   document.head.appendChild(style);

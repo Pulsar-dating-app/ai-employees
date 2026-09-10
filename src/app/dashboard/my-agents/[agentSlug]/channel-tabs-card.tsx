@@ -8,6 +8,7 @@ import { ChannelsSection } from "./channels-section";
 import { InstagramConnectCard } from "./instagram-connect-card";
 import { WidgetCustomizeCard } from "./widget-customize-card";
 import { EmbedSnippetSection } from "./embed-snippet-section";
+import { EmbedDomainsSection } from "./embed-domains-section";
 import { DirectLinkSection } from "./direct-link-section";
 import { TelegramLinkSection } from "./telegram-link-section";
 
@@ -45,6 +46,11 @@ const CHANNEL_ACCENT: Record<TabKey, string> = {
 // noise. Full-bleed and horizontally scrollable so five labels never wrap
 // or clip in the narrow config column; roving tabindex + arrow keys follow
 // the WAI-ARIA tabs pattern.
+//
+// Follow-up (2026-09-10): the Embed tab gained a third panel,
+// EmbedDomainsSection -- moved here from Settings (see page.tsx's own
+// comment), rendered unconditionally like the other two, not tab-switched
+// away from them.
 export function ChannelTabsCard({
   companyId,
   agentSlug,
@@ -57,6 +63,7 @@ export function ChannelTabsCard({
   embedSnippet,
   telegramLink,
   widgetInitial,
+  allowedEmbedDomains,
 }: {
   companyId: string;
   agentSlug: string;
@@ -72,7 +79,13 @@ export function ChannelTabsCard({
     greeting: string | null;
     launcherType: "default" | "video" | "image";
     launcherAssetUrl: string | null;
+    position: "bottom-right" | "bottom-left";
+    offsetBottom: number;
   };
+  // Company-wide (companies.allowed_embed_domains), not agent-specific --
+  // see EmbedDomainsSection's own comment for why it renders unchanged on
+  // every hire's Embed tab rather than being gated to one agent.
+  allowedEmbedDomains: string[];
 }) {
   const t = useTranslations("MyAgents.channelTabs");
   const [activeTab, setActiveTab] = useState<TabKey>("whatsapp");
@@ -180,6 +193,13 @@ export function ChannelTabsCard({
         <WidgetCustomizeCard companyId={companyId} agentSlug={agentSlug} agentName={agentName} canEdit={canEdit} initial={widgetInitial} />
         <div className="h-px w-full bg-outline-variant/60" />
         <EmbedSnippetSection agentName={agentName} embedSnippet={embedSnippet} />
+        <div className="h-px w-full bg-outline-variant/60" />
+        <EmbedDomainsSection
+          companyId={companyId}
+          agentName={agentName}
+          canEdit={canEdit}
+          initialDomains={allowedEmbedDomains}
+        />
       </div>
 
       <div

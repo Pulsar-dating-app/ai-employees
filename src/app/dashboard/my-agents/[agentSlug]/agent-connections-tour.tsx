@@ -38,7 +38,11 @@ export function AgentConnectionsTour({ agentName }: { agentName: string }) {
     }
     if (seen) return;
 
-    start([
+    // `start` itself no-ops (returns false) on a phone-width viewport -- the
+    // "seen it" flag is only set when the tour actually played, so a
+    // merchant who first opens this page on their phone still gets it once
+    // they're on a tablet or desktop, instead of it being silently burned.
+    const started = start([
       {
         target: '[data-tour="agent-name"]',
         title: t("nameTitle"),
@@ -55,6 +59,7 @@ export function AgentConnectionsTour({ agentName }: { agentName: string }) {
         description: t("channelsDescription", { name: agentName }),
       },
     ]);
+    if (!started) return;
 
     try {
       localStorage.setItem(SEEN_KEY, "1");

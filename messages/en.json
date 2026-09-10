@@ -551,7 +551,8 @@
       "conversations": "Conversations",
       "metrics": "Performance",
       "settings": "Settings",
-      "locked": "locked"
+      "locked": "locked",
+      "more": "More"
     },
     "locked": {
       "title": "{name} isn't on your team yet",
@@ -685,15 +686,6 @@
     "completeness": "{filled} of {total} sections filled in",
     "completenessHint": "The more detail you add here, the better your team can help your customers — just like onboarding a new employee in person.",
     "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
-    "embedDomains": {
-      "title": "Websites allowed to embed chat",
-      "description": "Add the domains where your chat widget is allowed to appear. Until you add one, the embedded widget won't work anywhere — your standalone chat link works regardless.",
-      "domainLabel": "Domain",
-      "domainPlaceholder": "example.com",
-      "addButton": "Add domain",
-      "removeButton": "Remove",
-      "emptyStateWarning": "No domains added yet — the embedded widget is blocked everywhere until you add at least one."
-    },
     "billingLink": {
       "title": "Plan & billing",
       "hint": "Your subscription, usage, and payment method."
@@ -857,6 +849,11 @@
       "chooseFileButton": "Choose file",
       "noFileChosen": "No file chosen",
       "currentFileHint": "Using a previously uploaded file.",
+      "positionSectionTitle": "Bubble position",
+      "positionBottomRight": "Bottom right",
+      "positionBottomLeft": "Bottom left",
+      "offsetLabel": "Distance from the bottom edge",
+      "offsetHint": "Raise the bubble if it's covering something on your site, like a bottom navigation bar.",
       "greetingLabel": "Greeting message",
       "greetingPlaceholder": "Hi! 👋 Need help finding what you're looking for?",
       "greetingHint": "Shown in a speech bubble beside the launcher a few seconds after a visitor arrives. Pre-filled with a default message -- edit it or leave it as is.",
@@ -885,6 +882,16 @@
       "copyScriptButton": "Copy Script",
       "embedInfoText": "Paste this code into your website, right before the closing body tag, to start sharing {name}'s chat. The bubble will appear automatically in the bottom-right corner.",
       "openLink": "Open link"
+    },
+    "embedDomains": {
+      "title": "Websites allowed to embed chat",
+      "description": "Add the domains where your chat widget is allowed to appear. Until you add one, the embedded widget won't work anywhere — your standalone chat link works regardless.",
+      "sharedScopeNote": "This applies to every hired team member's embed widget, not just {name}'s — there's one shared list for your whole site.",
+      "domainLabel": "Domain",
+      "domainPlaceholder": "example.com",
+      "addButton": "Add domain",
+      "removeButton": "Remove",
+      "emptyStateWarning": "No domains added yet — the embedded widget is blocked everywhere until you add at least one."
     },
     "tour": {
       "nameTitle": "Make it yours",

@@ -1,9 +1,16 @@
 import { resolveDefaultLauncher, resolveDefaultGreeting } from "./launcher-defaults";
 
+export type WidgetPosition = "bottom-right" | "bottom-left";
+
 export type WidgetCustomization = {
   greeting: string | null;
   launcherType: "default" | "video" | "image";
   launcherAssetUrl: string | null;
+  // Which bottom corner, and how far to lift it off the bottom edge -- for
+  // a merchant whose own site has something (a mobile bottom nav bar, a
+  // cookie banner) sitting where the launcher would otherwise land.
+  position: WidgetPosition;
+  offsetBottom: number;
 };
 
 // HTML-attribute escaping -- greeting and (in principle) a filename-derived
@@ -55,6 +62,17 @@ export function buildEmbedSnippet(
     // domain, not Staffra's.
     const asset = resolveDefaultLauncher(agentSlug);
     attrs.push(`data-launcher-src="${escapeAttr(baseUrl + asset.src)}"`);
+  }
+
+  // Omitted at their defaults -- most merchants never touch this, so most
+  // snippets stay exactly as short as before. widget.js's own fallback
+  // (bottom-right, 0) is identical to these defaults, so a pre-existing
+  // snippet with neither attribute renders unchanged.
+  if (customization.position === "bottom-left") {
+    attrs.push(`data-position="bottom-left"`);
+  }
+  if (customization.offsetBottom > 0) {
+    attrs.push(`data-offset-bottom="${customization.offsetBottom}"`);
   }
 
   return `<script ${attrs.join(" ")}></script>`;
