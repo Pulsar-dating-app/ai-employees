@@ -104,17 +104,21 @@ describe("hybrid product search (pgvector)", () => {
     expect(results).toEqual([]);
   });
 
-  // Precision check, the mirror image of the recall test above -- but note
-  // what this actually asserts. The vector leg has no similarity/distance
-  // *threshold* (see vector_top in the migration): it's a plain top-50
-  // nearest-neighbour pool, so with only two products in this company, the
-  // "unrelated" one still gets a (lower) RRF score and appears in the
-  // results -- it just ranks behind the real match, never ahead of or
-  // instead of it. A hard cutoff was deliberately left out rather than
-  // guessed at: real embedding models don't have a universal "unrelated"
-  // distance, and an untuned threshold risks silently re-introducing the
-  // exact recall gap this feature exists to close. See decisions.md.
-  it("ranks a semantically related product above an unrelated one, even with only two candidates", async () => {
+  // Precision check, the mirror image of the recall test above. The vector
+  // leg now has a cosine-distance floor (`p_max_vector_distance`, default
+  // MAX_VECTOR_DISTANCE, migration 20260910183000): a product farther than
+  // that from the query embedding is kept OUT of the fused result entirely,
+  // not merely ranked lower. Here the query vector is "sports" and the
+  // unrelated product's vector is "kitchenware" -- orthogonal fakes, cosine
+  // distance 1.0, well beyond the floor -- so it must be absent, and it has
+  // no lexical hook either ("time" doesn't match "Panela de Pressão").
+  //
+  // This reverses the earlier "no cutoff, assert ranking not absence" stance
+  // (2026-08-29's known-limitation note) after hand-testing turned up the
+  // exact failure it said to wait for: "óculos para neve" recommending a
+  // handbag and running shoes purely via unbounded nearest-neighbour. See
+  // decisions.md.
+  it("excludes an unrelated product beyond the vector-distance floor, not just ranks it lower", async () => {
     const owner = await signUpTestUser("owner");
     const supabase = getTestServiceClient();
 
@@ -142,11 +146,45 @@ describe("hybrid product search (pgvector)", () => {
     );
 
     const ids = results.map((p) => p.id);
-    expect(ids.indexOf(sports.productId)).toBeGreaterThanOrEqual(0);
-    const kitchenIndex = ids.indexOf(kitchen.json.product.id);
-    if (kitchenIndex !== -1) {
-      expect(ids.indexOf(sports.productId)).toBeLessThan(kitchenIndex);
-    }
+    expect(ids).toContain(sports.productId);
+    expect(ids).not.toContain(kitchen.json.product.id);
+  });
+
+  // The floor is tunable, not absolute: the exact setup the precision test
+  // above excludes `kitchen` from must return it once the caller passes
+  // `maxVectorDistance: null` (disable) -- proving the parameter is really
+  // plumbed end to end and the pre-floor top-50 behaviour is still one
+  // argument away.
+  it("honours a per-search override that disables the floor", async () => {
+    const owner = await signUpTestUser("owner");
+    const supabase = getTestServiceClient();
+
+    const sports = await seedCompanyWithProduct(owner.cookieHeader, "Floor Override Co", {
+      name: "Camisa Corinthians",
+      category: "Esporte",
+    });
+    const kitchen = await api<{ product: { id: string } }>(
+      "POST",
+      `/api/companies/${sports.companyId}/products`,
+      owner.cookieHeader,
+      { name: "Panela de Pressão", category: "Casa" },
+    );
+
+    await supabase.from("products").update({ embedding: fakeVector("sports") }).eq("id", sports.productId);
+    await supabase
+      .from("products")
+      .update({ embedding: fakeVector("kitchenware") })
+      .eq("id", kitchen.json.product.id);
+
+    const results = await ProductRepository.search(
+      { companyId: sports.companyId, keywords: ["time"], maxVectorDistance: null },
+      supabase,
+      fakeOpenAiReturning(fakeVector("sports")),
+    );
+
+    expect(results.map((p) => p.id)).toEqual(
+      expect.arrayContaining([sports.productId, kitchen.json.product.id]),
+    );
   });
 
   // A product that already matches lexically must still win -- hybrid

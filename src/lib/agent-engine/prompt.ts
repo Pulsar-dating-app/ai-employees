@@ -188,6 +188,19 @@ const FORMATTING_GUARDRAIL =
   "its own short line or run them into a sentence -- never as a marked-up list. Emoji are fine, in " +
   "moderation.";
 
+// Always injected (2026-09-10). Every turn's answer is a JSON object, not
+// free text, so the model's choice of which products to card is explicit
+// data rather than something downstream code infers from the prose (see
+// reply-format.ts / decisions.md). `product_ids` defaults to empty; the
+// card guidance below, when present, is the only thing that fills it.
+const REPLY_CONTRACT_GUARDRAIL =
+  "Your reply is always a JSON object with exactly two keys and nothing else: \"message\" (a " +
+  "string -- the words the customer reads, written to follow every rule above: plain text, no " +
+  "markdown, the customer's language) and \"product_ids\" (an array of strings). The JSON is an " +
+  "envelope the customer never sees; do not mention it, and never put JSON, code, or key names " +
+  "into \"message\". Unless an instruction below tells you what \"product_ids\" is for, always set " +
+  "it to an empty array [].";
+
 // Channels that draw products visually (2026-09-09): the web chat as HTML
 // rows, Instagram as a generic-template carousel, Telegram as a media-group
 // album. Without this the model does what it is still right to do on a
@@ -204,26 +217,34 @@ const FORMATTING_GUARDRAIL =
 // channel. Ana has no catalogue tools at all (see tool-sets.ts), and
 // telling a scheduling assistant "do not write the options out, they are
 // displayed for you" is worse than useless: she lists services and time
-// slots in text, and nothing displays those. MAX_PRODUCT_CARDS in
-// lib/chat/product-cards.ts is the other half of the "everything you search
-// for is shown" contract below -- the two numbers have to move together.
+// slots in text, and nothing displays those.
+//
+// 2026-09-10 -- the card choice is now explicit data: the model puts the
+// ids it wants shown in `product_ids` on its structured reply, and
+// `selectProductCards` (lib/chat/product-cards.ts) honours that list
+// verbatim. This replaced first "every searched product is shown" (a
+// decline still got a contradicting card row) and then "card whatever the
+// prose names" (naming a product to rule it out still carded it). An id
+// list is the only version the model can drive precisely for every case.
+// See decisions.md.
 const PRODUCT_CARD_GUIDANCE =
-  "This conversation is on a surface that shows products visually. Every product a catalog " +
-  "search returns is displayed to the customer automatically, alongside your message, as a card " +
-  "with its photo, name, short description and price -- up to 4 of them. So:\n" +
-  "- Do NOT write the products out in your message. No list of names, no prices, no descriptions. " +
-  "The customer is already looking at all of that.\n" +
-  "- Search for exactly what you want to show, and use the search's `limit` to control how many " +
-  "cards appear. What you search for is what they see.\n" +
+  "This conversation is on a surface that shows products visually. `product_ids` is how you " +
+  "choose what the customer sees: put in it the `id` of each product (from your `search_products` " +
+  "results) you want shown as a card -- photo, name, short description and price -- right under " +
+  "your message, in the order you want them displayed. Rules:\n" +
+  "- Only a product whose id is in `product_ids` gets a card. Put 0 to 4 ids there.\n" +
+  "- If nothing your search returned actually fits what the customer asked for, use [] and say so " +
+  "plainly in `message`. An empty list is the correct answer to \"do you have X?\" when you don't.\n" +
+  "- A product you refer to in `message` only to rule it out or contrast it (\"the blue one isn't " +
+  "what you want\") must NOT have its id in `product_ids`.\n" +
+  "- Do NOT restate a carded product's name, price, description or specs in `message` -- the " +
+  "customer is already looking at all of that. A short lead-in, optionally one narrowing " +
+  "question, is the whole `message`.\n" +
   "- Do NOT offer to send, share or show a link for a product. Every card is already a tappable " +
-  "link to that product's page, so offering one reads as if you hadn't noticed what you just " +
-  "showed them. If a customer asks for a link outright, tell them to tap the product rather " +
-  "than creating another one.\n" +
-  "- Write only a short lead-in (\"Encontrei algumas opções:\") and, when it helps, one follow-up " +
-  "question to narrow things down. Naming a single specific product in conversation is still fine " +
-  "-- it's the list that's redundant.\n" +
+  "link to that product's page. If a customer asks for a link outright, tell them to tap the card " +
+  "rather than creating another one.\n" +
   "- This applies to PRODUCTS ONLY. Anything else you would normally list in text -- times, " +
-  "services, policies -- still goes in your message as usual.";
+  "services, policies -- still goes in `message` as usual.";
 
 // Step 7 -- pure logic, no I/O, the single best unit-test target in this
 // module. `agents.system_prompt` is NULL for Malu today (C2 hasn't run
@@ -322,6 +343,10 @@ export function buildSystemPrompt({
     // first rule rather than overriding it (see its own comment).
     SCOPE_GUARDRAIL,
     FORMATTING_GUARDRAIL,
+    // Output-envelope contract, always on. After FORMATTING_GUARDRAIL
+    // because it wraps what that produces; before the card guidance, which
+    // is the only thing that gives `product_ids` a non-empty meaning.
+    REPLY_CONTRACT_GUARDRAIL,
     // After FORMATTING_GUARDRAIL, which it narrows: that one says "put each
     // option on its own short line", which stays right for everything
     // except the products a card-rendering channel draws itself.

@@ -234,10 +234,12 @@ export async function POST(
   let result;
   try {
     result = await AgentEngine.run({ companyId, conversationId: session.conversationId, message });
-  } catch {
-    // Never leak internal error detail to a public customer-facing API --
+  } catch (err) {
+    // Never leak internal error detail to the customer-facing response --
     // unlike dev-chat-test (a merchant debug tool), this is real production
-    // traffic.
+    // traffic -- but do log it server-side, same as the Instagram/Telegram
+    // webhooks, so a 502 isn't a black box.
+    console.error("[web-chat] AgentEngine.run failed", { companyId, error: err });
     return NextResponse.json({ error: "Failed to get a reply" }, { status: 502 });
   }
 
@@ -267,6 +269,7 @@ export async function POST(
       },
       result.toolCalls,
       result.responseText,
+      result.displayProductIds,
     );
   } catch (error) {
     console.warn("[web-chat] could not build product cards for a reply", { companyId, error });

@@ -179,6 +179,7 @@ export async function POST(request: Request) {
       },
       result.toolCalls,
       result.responseText,
+      result.displayProductIds,
     );
   } catch (err) {
     console.error("Telegram webhook: failed to build product cards", err);
