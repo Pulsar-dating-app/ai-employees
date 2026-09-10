@@ -7,6 +7,7 @@ import { BrandLogo } from "./brand-logos";
 import { ChannelShowcase, type ChannelItem } from "./channel-showcase";
 import { M } from "./landing-icons";
 import { PlanFeatures, PlanFeaturesProvider } from "./plan-features";
+import { SalesContactDialog } from "./sales-contact-dialog";
 import { ShaderBackground } from "@/components/ui/shader-background";
 import { ScrollHeader } from "./scroll-header";
 import { CountUp } from "./count-up";
@@ -41,7 +42,6 @@ import logo from "../../../public/logo.png";
 
 const HIRE = "/?auth=signup";
 const LOGIN = "/?auth=login";
-const SALES = "/talk";
 
 // Icons (`<M name=… />`) are inline SVGs from ./landing-icons — the Stitch
 // export used the Material Symbols icon *font*, loaded as a render-blocking
@@ -221,14 +221,13 @@ export async function LandingPageV2() {
                   <M name="play_circle" size={20} className="text-[#3525cd]" />
                   <CascadeText text={t("hero.ctaSecondary")} />
                 </a>
-                <Link
-                  href={SALES}
-                  aria-label={t("hero.ctaTertiary")}
-                  className="group inline-flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-[14px] font-semibold text-[#464555] transition-colors hover:text-[#3525cd]"
+                <SalesContactDialog
+                  triggerLabel={t("hero.ctaTertiary")}
+                  triggerClassName="group inline-flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-[14px] font-semibold text-[#464555] transition-colors hover:text-[#3525cd]"
                 >
                   <CascadeText text={t("hero.ctaTertiary")} />
                   <M name="arrow_forward" size={18} />
-                </Link>
+                </SalesContactDialog>
               </div>
 
               <div className="mt-3 flex flex-wrap items-center justify-center gap-6 text-[12px] font-semibold tracking-[0.02em] text-[#464555]">
@@ -484,14 +483,13 @@ export async function LandingPageV2() {
                     </p>
                   </div>
                 </div>
-                <Link
-                  href={SALES}
-                  aria-label={t("workforce.handoffCta")}
-                  className="group inline-flex items-center gap-2 text-[14px] font-semibold text-[#3525cd] hover:underline"
+                <SalesContactDialog
+                  triggerLabel={t("workforce.handoffCta")}
+                  triggerClassName="group inline-flex items-center gap-2 text-[14px] font-semibold text-[#3525cd] hover:underline"
                 >
                   <CascadeText text={t("workforce.handoffCta")} />
                   <M name="east" size={18} />
-                </Link>
+                </SalesContactDialog>
               </div>
             </div>
           </div>
@@ -627,19 +625,26 @@ export async function LandingPageV2() {
                       />
                     </div>
                     <div className="mt-12">
-                      <Link
-                        href={i === 2 ? SALES : HIRE}
-                        aria-label={plan.cta}
-                        className={`group inline-flex w-full items-center justify-center rounded-lg py-3 text-[14px] font-semibold transition-all ${
-                          featured
-                            ? "bg-[#3525cd] text-white shadow-[0_8px_24px_rgba(53,37,205,0.25)] hover:bg-[#4f46e5]"
-                            : i === 2
-                              ? "bg-[#0f172a] text-white hover:bg-[#3525cd]"
+                      {i === 2 ? (
+                        <SalesContactDialog
+                          triggerLabel={plan.cta}
+                          triggerClassName="group inline-flex w-full items-center justify-center rounded-lg bg-[#0f172a] py-3 text-[14px] font-semibold text-white transition-all hover:bg-[#3525cd]"
+                        >
+                          <CascadeText text={plan.cta} />
+                        </SalesContactDialog>
+                      ) : (
+                        <Link
+                          href={HIRE}
+                          aria-label={plan.cta}
+                          className={`group inline-flex w-full items-center justify-center rounded-lg py-3 text-[14px] font-semibold transition-all ${
+                            featured
+                              ? "bg-[#3525cd] text-white shadow-[0_8px_24px_rgba(53,37,205,0.25)] hover:bg-[#4f46e5]"
                               : "bg-[#eae6f4] text-[#0f172a] hover:bg-[#0f172a] hover:text-white"
-                        }`}
-                      >
-                        <CascadeText text={plan.cta} />
-                      </Link>
+                          }`}
+                        >
+                          <CascadeText text={plan.cta} />
+                        </Link>
+                      )}
                     </div>
                   </div>
                 );

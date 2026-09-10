@@ -433,6 +433,57 @@
         }
       ]
     },
+    "salesContact": {
+      "title": "Falar com especialista",
+      "subtitle": "Leva 1 minuto. Logo depois nosso time entra em contato.",
+      "steps": {
+        "you": "Sobre você",
+        "interests": "O que você precisa",
+        "company": "Sua empresa"
+      },
+      "next": "Continuar",
+      "back": "Voltar",
+      "submit": "Enviar",
+      "submitting": "Enviando…",
+      "close": "Fechar",
+      "errorRequired": "Preencha os campos obrigatórios.",
+      "errorSubmit": "Algo deu errado. Tente novamente.",
+      "successTitle": "Prontinho — recebemos!",
+      "successBody": "Nosso time vai entrar em contato em breve pelo e-mail ou WhatsApp que você informou.",
+      "fields": {
+        "name": "Nome",
+        "namePlaceholder": "Seu nome completo",
+        "email": "E-mail profissional",
+        "emailPlaceholder": "voce@sualoja.com.br",
+        "whatsapp": "WhatsApp",
+        "whatsappPlaceholder": "+55 (11) 90000-0000",
+        "companyName": "Nome da empresa",
+        "companyNamePlaceholder": "O nome da sua empresa",
+        "message": "Mensagem",
+        "messagePlaceholder": "Conte o que você procura.",
+        "referralSource": "Como conheceu a Staffra?",
+        "referralSourcePlaceholder": "Selecione… (opcional)"
+      },
+      "interestsHint": "No que você tem interesse? Pode escolher os dois.",
+      "interests": {
+        "sales": {
+          "label": "Agente de vendas",
+          "desc": "Atende e vende nos seus canais, dia e noite."
+        },
+        "scheduling": {
+          "label": "Agente de agendamentos",
+          "desc": "Agenda, remarca e lembra os clientes automaticamente."
+        }
+      },
+      "referrals": {
+        "google": "Busca no Google",
+        "referral": "Indicação",
+        "social": "Redes sociais",
+        "agency": "Agência",
+        "influencer": "Influenciador",
+        "other": "Outro"
+      }
+    },
     "impact": {
       "stats": [
         {
