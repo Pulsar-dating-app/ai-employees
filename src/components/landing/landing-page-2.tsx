@@ -35,6 +35,18 @@ import logo from "../../../public/logo.png";
 //   tertiary #7e3000 · tertiary-fixed #ffdbcc · neutral-900 #0f172a
 //   neutral-500 #64748b · status-success #10b981 · error #ba1a1a
 //
+// Type roles (Inter, --font-landing-v2 — the only family on this page):
+//   display  40→48 / 1.05 / 700 / -0.02em  — hero h1
+//   h2       32 / 40 / 600 / -0.01em        — section headings
+//   stat     48 / 1  / 800 / -0.02em        — count-up figures, featured price
+//   h3       24 / 32 / 600                   — card / plan names
+//   title    15 / 20 / 600                   — card & step sub-headings
+//   body-lg  18 / 28 / 400                   — hero subhead
+//   body     16 / 24 / 400                   — section subs, prose
+//   label    12 / 700 / uppercase / 0.14em   — kickers, eyebrows (pills 11 / 0.12em)
+//   meta     12 / 16 / 500–600               — captions, helper text
+//   fine     11 / 500                         — timestamps, legal, sub-captions
+//
 // NOTE: this page deliberately keeps the mockup's product wording verbatim
 // ("agentes de IA", "AI Workforce", "RAG", model names, …). That runs against
 // the product-language rules in CLAUDE.md, and was an explicit call by the
@@ -190,7 +202,7 @@ export async function LandingPageV2() {
                 </span>
               </div>
 
-              <h1 className="text-balance text-[40px] font-bold leading-none tracking-[-0.02em] text-[#0f172a] md:text-[48px]">
+              <h1 className="text-balance text-[40px] font-bold leading-[1.05] tracking-[-0.02em] text-[#0f172a] md:text-[48px]">
                 {t("hero.headlinePre")}{" "}
                 <ShutterReveal>
                   <span className="bg-gradient-to-r from-[#3525cd] via-[#4f46e5] to-[#006591] bg-clip-text text-transparent">
@@ -278,11 +290,11 @@ export async function LandingPageV2() {
                       <div className="flex flex-col gap-2 py-2 text-left text-[13px] leading-relaxed">
                         <div className="max-w-[85%] self-start rounded-xl rounded-tl-none bg-white p-3 text-[#0f172a] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
                           <p>{t("hero.chat.msg1")}</p>
-                          <span className="mt-1 block text-right text-[10px] text-[#64748b]">10:42</span>
+                          <span className="mt-1 block text-right text-[11px] tabular-nums text-[#64748b]">10:42</span>
                         </div>
                         <div className="max-w-[85%] self-end rounded-xl rounded-tr-none bg-[#3525cd] p-3 text-white shadow-[0_2px_8px_rgba(53,37,205,0.15)]">
                           <p>{t("hero.chat.msg2")}</p>
-                          <span className="mt-1 block text-right text-[10px] text-[#e2dfff]">10:43</span>
+                          <span className="mt-1 block text-right text-[11px] tabular-nums text-[#e2dfff]">10:43</span>
                         </div>
                         <div className="max-w-[90%] self-start rounded-xl rounded-tl-none bg-white p-3 text-[#0f172a] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
                           <p>{t("hero.chat.msg3a")}</p>
@@ -298,7 +310,7 @@ export async function LandingPageV2() {
                             </span>
                           </div>
                           <p className="mt-2">{t("hero.chat.msg3b")}</p>
-                          <span className="mt-1 block text-right text-[10px] text-[#64748b]">
+                          <span className="mt-1 block text-right text-[11px] tabular-nums text-[#64748b]">
                             {t("hero.chat.msg3meta")}
                           </span>
                         </div>
@@ -336,10 +348,10 @@ export async function LandingPageV2() {
                         />
                         <div className="absolute inset-0 flex items-end bg-gradient-to-t from-[#0f172a]/60 via-transparent to-transparent p-3">
                           <div className="text-left text-white">
-                            <p className="text-[12px] font-semibold uppercase tracking-wider text-[#e2dfff]">
+                            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#e2dfff]">
                               {t("hero.workspace.eyebrow")}
                             </p>
-                            <p className="text-[24px] font-bold leading-[32px]">
+                            <p className="mt-0.5 text-[24px] font-bold leading-[32px] tracking-[-0.01em]">
                               {t("hero.workspace.title")}
                             </p>
                           </div>
@@ -376,7 +388,7 @@ export async function LandingPageV2() {
         {/* ── 2. Social proof strip ───────────────────────────── */}
         <section className="w-full bg-[#f5f2ff] py-6">
           <div className="mx-auto max-w-[1440px] px-4 text-center md:px-10">
-            <p className="mb-3 text-[12px] font-semibold uppercase tracking-widest text-[#464555]">
+            <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[#464555]">
               {t("socialProof.title")}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
@@ -403,7 +415,7 @@ export async function LandingPageV2() {
                 <BrandLogo name="Meta" className="h-7 w-7" />
                 <span className="text-[22px] font-bold tracking-tight text-[#0f172a]">Meta</span>
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#64748b]">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#64748b]">
                 {t("channels.partnerLabel")}
               </span>
             </div>
@@ -419,11 +431,11 @@ export async function LandingPageV2() {
         {/* ── 4. AI Workforce / multi-agent ───────────────────── */}
         <section id="workforce" className="w-full bg-[#f5f2ff] py-12">
           <div className="mx-auto max-w-[1440px] px-4 md:px-10">
-            <div className="mx-auto mb-6 max-w-3xl text-center">
-              <span className="rounded-full bg-[#e2dfff] px-3 py-1 text-[12px] font-bold uppercase tracking-wider text-[#0f0069]">
+            <div className="mx-auto mb-6 max-w-2xl text-center">
+              <span className="rounded-full bg-[#e2dfff] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[#0f0069]">
                 {t("workforce.badge")}
               </span>
-              <h2 className="mt-1 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
+              <h2 className="mt-3 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
                 {t("workforce.heading")}
               </h2>
               <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("workforce.sub")}</p>
@@ -447,7 +459,7 @@ export async function LandingPageV2() {
                         />
                         <div className="text-left">
                           <div className="flex items-center gap-1">
-                            <h4 className="text-[24px] font-semibold text-[#0f172a]">{agent.name}</h4>
+                            <h4 className="text-[24px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a]">{agent.name}</h4>
                             <span className="h-2.5 w-2.5 rounded-full bg-[#10b981]" />
                           </div>
                           <p className={`text-[14px] font-semibold ${s.role}`}>{agent.role}</p>
@@ -477,8 +489,8 @@ export async function LandingPageV2() {
                     <M name="account_tree" size={24} />
                   </div>
                   <div>
-                    <p className="text-[14px] font-bold text-[#0f172a]">{t("workforce.handoffTitle")}</p>
-                    <p className="text-[16px] leading-[24px] text-[#464555]">
+                    <p className="text-[15px] font-semibold text-[#0f172a]">{t("workforce.handoffTitle")}</p>
+                    <p className="mt-0.5 text-[14px] leading-[20px] text-[#464555]">
                       {t("workforce.handoffDesc")}
                     </p>
                   </div>
@@ -499,13 +511,13 @@ export async function LandingPageV2() {
         <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
             <div className="flex flex-col text-left lg:col-span-6">
-              <span className="text-[12px] font-bold uppercase tracking-widest text-[#3525cd]">
+              <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
                 {t("rag.eyebrow")}
               </span>
-              <h2 className="mt-1 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
+              <h2 className="mt-3 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
                 {t("rag.heading")}
               </h2>
-              <p className="mt-1 text-[16px] leading-[24px] text-[#464555]">{t("rag.sub")}</p>
+              <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("rag.sub")}</p>
 
               <div className="mt-6 flex flex-col gap-3">
                 {steps.map((step, i) => (
@@ -514,8 +526,8 @@ export async function LandingPageV2() {
                       {i + 1}
                     </div>
                     <div>
-                      <h4 className="text-[14px] font-bold text-[#0f172a]">{step.title}</h4>
-                      <p className="text-[16px] leading-[24px] text-[#464555]">{step.desc}</p>
+                      <h4 className="text-[15px] font-semibold text-[#0f172a]">{step.title}</h4>
+                      <p className="mt-0.5 text-[14px] leading-[20px] text-[#464555]">{step.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -524,7 +536,7 @@ export async function LandingPageV2() {
 
             <div className="rounded-xl bg-white p-6 shadow-[0_12px_40px_rgba(79,70,229,0.06)] lg:col-span-6">
               <div className="mb-3 flex items-center justify-between pb-3">
-                <span className="text-[14px] font-semibold text-[#0f172a]">{t("rag.cardTitle")}</span>
+                <span className="text-[15px] font-semibold text-[#0f172a]">{t("rag.cardTitle")}</span>
                 <span className="rounded bg-[#10b981]/10 px-2 py-0.5 text-[12px] font-semibold text-[#10b981]">
                   {t("rag.cardBadge")}
                 </span>
@@ -537,7 +549,7 @@ export async function LandingPageV2() {
                   >
                     <M name={SOURCE_ICONS[i].icon} size={28} className={SOURCE_ICONS[i].color} />
                     <span className="mt-1 text-[12px] font-bold text-[#0f172a]">{src.title}</span>
-                    <span className="text-[10px] text-[#64748b]">{src.sub}</span>
+                    <span className="text-[11px] text-[#64748b]">{src.sub}</span>
                   </div>
                 ))}
               </div>
@@ -556,11 +568,11 @@ export async function LandingPageV2() {
         {/* ── 6. Pricing ──────────────────────────────────────── */}
         <section id="planos" className="w-full bg-[#f5f2ff] py-12">
           <div className="mx-auto max-w-[1440px] px-4 md:px-10">
-            <div className="mx-auto mb-12 max-w-3xl text-center">
-              <span className="text-[12px] font-bold uppercase tracking-widest text-[#3525cd]">
+            <div className="mx-auto mb-12 max-w-2xl text-center">
+              <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
                 {t("pricing.eyebrow")}
               </span>
-              <h2 className="mt-1 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
+              <h2 className="mt-3 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
                 {t("pricing.heading")}
               </h2>
               <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("pricing.sub")}</p>
@@ -580,13 +592,13 @@ export async function LandingPageV2() {
                     }`}
                   >
                     {featured && (
-                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#3525cd] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
+                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#3525cd] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
                         {t("pricing.featuredBadge")}
                       </div>
                     )}
                     <div>
                       <span
-                        className={`text-[12px] font-bold uppercase tracking-wider ${
+                        className={`text-[12px] font-bold uppercase tracking-[0.14em] ${
                           featured ? "text-[#3525cd]" : "text-[#64748b]"
                         }`}
                       >
@@ -668,8 +680,8 @@ export async function LandingPageV2() {
                       suffix={parsed.suffix}
                       className={`text-[48px] font-extrabold tabular-nums leading-none tracking-[-0.02em] ${IMPACT_ACCENT[i]}`}
                     />
-                    <p className="text-[24px] font-bold leading-[32px] text-white">{stat.title}</p>
-                    <p className="text-[14px] leading-[20px] text-[#dad7ff]">{stat.desc}</p>
+                    <p className="text-[24px] font-bold leading-[32px] tracking-[-0.01em] text-white">{stat.title}</p>
+                    <p className="text-[14px] leading-[22px] tracking-[0.01em] text-[#dad7ff]">{stat.desc}</p>
                   </div>
                 );
               })}
@@ -680,10 +692,10 @@ export async function LandingPageV2() {
         {/* ── 8. FAQ ─────────────────────────────────────────── */}
         <section id="faq" className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="mx-auto mb-6 max-w-3xl text-center">
-            <span className="text-[12px] font-bold uppercase tracking-widest text-[#3525cd]">
+            <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
               {t("faq.eyebrow")}
             </span>
-            <h2 className="mt-1 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
+            <h2 className="mt-3 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
               {t("faq.heading")}
             </h2>
           </div>
@@ -694,14 +706,14 @@ export async function LandingPageV2() {
                 name="landing-faq"
                 className="group cursor-pointer rounded-lg bg-white p-3 shadow-sm"
               >
-                <summary className="flex list-none items-center justify-between text-[17px] font-semibold text-[#0f172a]">
+                <summary className="flex list-none items-center justify-between gap-3 text-[16px] font-semibold text-[#0f172a]">
                   <span>{item.q}</span>
                   <M
                     name="expand_more"
                     className="text-[#3525cd] transition-transform group-open:rotate-180"
                   />
                 </summary>
-                <p className="mt-1 text-left text-[16px] leading-relaxed text-[#464555]">{item.a}</p>
+                <p className="mt-2 max-w-[64ch] text-left text-[16px] leading-relaxed text-[#464555]">{item.a}</p>
               </details>
             ))}
           </div>
@@ -721,13 +733,13 @@ export async function LandingPageV2() {
             <div className="lv2-cta-blob-a pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
             <div className="lv2-cta-blob-b pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-[#39b8fd]/20 blur-2xl" />
             <div className="relative z-10 mx-auto flex max-w-2xl flex-col items-center">
-              <span className="mb-1 rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold uppercase tracking-widest text-[#e2dfff] backdrop-blur-md">
+              <span className="mb-3 rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[#e2dfff] backdrop-blur-md">
                 {t("finalCta.eyebrow")}
               </span>
               <h2 className="text-[32px] font-bold leading-[40px] tracking-[-0.01em] text-white">
                 {t("finalCta.heading")}
               </h2>
-              <p className="mt-2 max-w-xl text-[16px] leading-[24px] text-[#dad7ff]">
+              <p className="mt-2 max-w-xl text-[16px] leading-[26px] tracking-[0.01em] text-[#dad7ff]">
                 {t("finalCta.sub")}
               </p>
               <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-3">
@@ -765,15 +777,15 @@ export async function LandingPageV2() {
               </div>
             </div>
             {footerCols.map((col) => (
-              <div key={col.title} className="flex flex-col gap-1">
-                <span className="mb-2 text-[14px] font-semibold uppercase tracking-wider text-[#1b1b24]">
+              <div key={col.title} className="flex flex-col gap-1.5">
+                <span className="mb-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#1b1b24]">
                   {col.title}
                 </span>
                 {col.links.map((link) => (
                   <a
                     key={link.label}
                     href={link.href}
-                    className="text-[16px] leading-[24px] text-[#464555] transition-colors hover:text-[#1b1b24]"
+                    className="text-[14px] leading-[24px] text-[#464555] transition-colors hover:text-[#1b1b24]"
                   >
                     {link.label}
                   </a>

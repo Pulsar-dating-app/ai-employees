@@ -6,6 +6,6 @@ import { Inter } from "next/font/google";
 // Geist bundle stays untouched.
 export const landingV2Sans = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-landing-v2",
 });
