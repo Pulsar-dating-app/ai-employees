@@ -217,6 +217,7 @@ export async function POST(request: Request) {
         },
         result.toolCalls,
         result.responseText,
+        result.displayProductIds,
       );
     } catch (err) {
       console.error("Instagram webhook: failed to build product cards", err);

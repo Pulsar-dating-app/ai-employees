@@ -8,9 +8,8 @@ import {
 } from "@/lib/chat/product-cards";
 
 // Which products end up as cards under a reply, and what each card carries.
-// The web-chat prompt tells the model that a search's results *are* what the
-// customer sees, so the default is "show what was searched"; a reply that
-// names a subset narrows it.
+// Since 2026-09-10 the prose decides: a product is carded only if the reply
+// names it by its catalog name, and a reply that names none shows none.
 
 function product(overrides: Record<string, unknown> & { id: string; name: string }) {
   return {
@@ -89,32 +88,90 @@ describe("collectSearchedProducts", () => {
   });
 });
 
-describe("selectProductCards", () => {
-  const rows = [
-    product({ id: "hidden", name: "The Hidden Snowboard" }),
-    product({ id: "videographer", name: "The Videographer Snowboard" }),
-    product({ id: "fulfilled", name: "The 3p Fulfilled Snowboard" }),
-    product({ id: "complete", name: "The Complete Snowboard" }),
-    product({ id: "multi", name: "The Multi-location Snowboard" }),
-  ];
+const rows = [
+  product({ id: "hidden", name: "The Hidden Snowboard" }),
+  product({ id: "videographer", name: "The Videographer Snowboard" }),
+  product({ id: "fulfilled", name: "The 3p Fulfilled Snowboard" }),
+  product({ id: "complete", name: "The Complete Snowboard" }),
+  product({ id: "multi", name: "The Multi-location Snowboard" }),
+];
 
-  // The default path now that the prompt stops the model listing products in
-  // prose: the reply is a bare lead-in, and the search result is the answer.
-  it("shows what the turn searched for when the reply names nothing", () => {
-    const selected = selectProductCards([searchCall(rows)], "Olá! 😊 Temos sim. Algumas opções de snowboard:");
-    expect(ids(selected)).toEqual(["hidden", "videographer", "fulfilled", "complete"]);
+// The primary path since 2026-09-10: the model's structured reply carries
+// `product_ids`, and `selectProductCards` shows exactly those, in that
+// order. `[]` means no cards. An id the turn never searched is ignored.
+describe("selectProductCards with the model's explicit product_ids", () => {
+  it("shows exactly the ids the model chose, in its order", () => {
+    const selected = selectProductCards([searchCall(rows)], "Temos essas opções:", ["complete", "hidden"]);
+    expect(ids(selected)).toEqual(["complete", "hidden"]);
+  });
+
+  it("shows nothing for an empty list, whatever the prose says", () => {
+    const reply = "A The Complete Snowboard é uma opção, mas não recomendo para iniciantes.";
+    expect(selectProductCards([searchCall(rows)], reply, [])).toEqual([]);
+  });
+
+  it("does not card a product the reply names but the model left out of product_ids", () => {
+    // The exclude-by-contrast case: "not the blue one" mentions Liquid, but
+    // its id isn't in the list, so it gets no card.
+    const withLiquid = [
+      product({ id: "complete", name: "The Complete Snowboard" }),
+      product({ id: "liquid", name: "The Collection Snowboard: Liquid" }),
+    ];
+    const reply = "Recomendo a The Complete Snowboard. A The Collection Snowboard: Liquid é a azul, então não seria essa.";
+    expect(ids(selectProductCards([searchCall(withLiquid)], reply, ["complete"]))).toEqual(["complete"]);
+  });
+
+  it("ignores an id that was never in this turn's search results", () => {
+    const selected = selectProductCards([searchCall(rows)], "Temos:", ["complete", "not-a-real-id"]);
+    expect(ids(selected)).toEqual(["complete"]);
+  });
+
+  it("de-duplicates a repeated id", () => {
+    const selected = selectProductCards([searchCall(rows)], "Temos:", ["hidden", "hidden", "complete"]);
+    expect(ids(selected)).toEqual(["hidden", "complete"]);
   });
 
   it("caps at MAX_PRODUCT_CARDS", () => {
-    expect(selectProductCards([searchCall(rows)], "Temos algumas opções:")).toHaveLength(MAX_PRODUCT_CARDS);
+    const selected = selectProductCards(
+      [searchCall(rows)],
+      "Temos:",
+      ["hidden", "videographer", "fulfilled", "complete", "multi"],
+    );
+    expect(selected).toHaveLength(MAX_PRODUCT_CARDS);
+    expect(ids(selected)).toEqual(["hidden", "videographer", "fulfilled", "complete"]);
   });
 
-  it("narrows to the products a reply explicitly names, in the order it names them", () => {
+  it("returns [] when none of the chosen products has an image", () => {
+    const imageless = [product({ id: "a", name: "Prancha Alpina", image_url: null })];
+    expect(selectProductCards([searchCall(imageless)], "Temos a Prancha Alpina.", ["a"])).toEqual([]);
+  });
+});
+
+// The legacy fallback, used only when `displayProductIds` is null/undefined
+// (an older model, an error, an in-process fake): card the searched
+// products the reply names by catalog name.
+describe("selectProductCards fallback (no explicit product_ids)", () => {
+  it("shows nothing when the reply names none of the searched products", () => {
+    const selected = selectProductCards([searchCall(rows)], "Olá! 😊 Temos sim. Algumas opções de snowboard:");
+    expect(selected).toEqual([]);
+  });
+
+  it("shows a card for each product the reply names, in the order it names them", () => {
     const selected = selectProductCards(
       [searchCall(rows)],
       "A The Videographer Snowboard está disponível, e a The Hidden Snowboard também.",
     );
     expect(ids(selected)).toEqual(["videographer", "hidden"]);
+  });
+
+  it("caps at MAX_PRODUCT_CARDS even when the reply names more", () => {
+    const selected = selectProductCards(
+      [searchCall(rows)],
+      "Temos a The Hidden Snowboard, a The Videographer Snowboard, a The 3p Fulfilled Snowboard, " +
+        "a The Complete Snowboard e a The Multi-location Snowboard.",
+    );
+    expect(selected).toHaveLength(MAX_PRODUCT_CARDS);
+    expect(ids(selected)).toEqual(["hidden", "videographer", "fulfilled", "complete"]);
   });
 
   it("matches a named product across accents and casing", () => {
@@ -133,26 +190,35 @@ describe("selectProductCards", () => {
     expect(selectProductCards([searchCall([])], "Não encontrei nada com esse nome.")).toEqual([]);
   });
 
-  // The picture is the entire reason cards exist; without one they would
-  // just restate the text.
-  it("attaches nothing when no chosen product has an image", () => {
-    const imageless = [product({ id: "a", name: "Prancha Alpina", image_url: null })];
-    expect(selectProductCards([searchCall(imageless)], "Temos uma opção:")).toEqual([]);
+  it("attaches nothing when the reply declines, even though the search found something", () => {
+    const found = [product({ id: "a", name: "Óculos de Sol Retrô" })];
+    const reply = "Não encontrei óculos próprios para neve 😕 Só temos um óculos de sol com proteção UV.";
+    expect(selectProductCards([searchCall(found)], reply)).toEqual([]);
   });
 
-  it("still attaches a product with no image when a sibling has one", () => {
+  // The picture is the entire reason cards exist; without one they would
+  // just restate the text.
+  it("attaches nothing when the one named product has no image", () => {
+    const imageless = [product({ id: "a", name: "Prancha Alpina", image_url: null })];
+    expect(selectProductCards([searchCall(imageless)], "Temos a Prancha Alpina disponível.")).toEqual([]);
+  });
+
+  it("still attaches a named product with no image when a named sibling has one", () => {
     const mixed = [
       product({ id: "a", name: "Prancha Alpina", image_url: null }),
       product({ id: "b", name: "Prancha Nevada" }),
     ];
-    expect(ids(selectProductCards([searchCall(mixed)], "Temos duas opções:"))).toEqual(["a", "b"]);
+    const reply = "Temos a Prancha Alpina e a Prancha Nevada.";
+    expect(ids(selectProductCards([searchCall(mixed)], reply))).toEqual(["a", "b"]);
   });
 
-  it("does not let a two-character product name narrow the list", () => {
+  it("does not card a product whose name is too short to match reliably", () => {
     const searched = [product({ id: "a", name: "XS" }), product({ id: "b", name: "Camiseta Larga" })];
-    // "XS" is too short to be a reliable mention, so nothing narrows and
-    // both searched products show.
-    expect(ids(selectProductCards([searchCall(searched)], "temos em tamanho XS e M"))).toEqual(["a", "b"]);
+    // "XS" is below the mention threshold, so even though it appears in the
+    // reply it earns no card; only the explicitly named Camiseta Larga does.
+    expect(ids(selectProductCards([searchCall(searched)], "temos a Camiseta Larga, também em tamanho XS"))).toEqual([
+      "b",
+    ]);
   });
 });
 

@@ -41,7 +41,7 @@ export type SearchedProduct = {
 
 // Four is what the agent prompt promises the model (see
 // PRODUCT_CARD_GUIDANCE in agent-engine/prompt.ts) -- the two must stay in
-// step, since the model is told to search for exactly what it wants shown.
+// step, since the model is told to name at most four products it wants shown.
 // It is also the tightest ceiling of the three surfaces: Instagram's
 // generic template allows 10 elements and Telegram's media group 10 items,
 // but four is what a phone screen reads as a list rather than a catalogue.
@@ -144,16 +144,20 @@ export function collectSearchedProducts(toolCalls: readonly ToolCallLike[]): Sea
 
 // Which products get a card.
 //
-// The default is everything the turn searched for, capped -- the web-chat
-// prompt tells the model that a search's results *are* what gets displayed
-// and to search for exactly what it wants shown, so search result and card
-// list are one decision rather than two that can disagree.
+// The model decides, explicitly (2026-09-10). Its structured reply carries
+// `product_ids` -- the ids, from this turn's `search_products` results, it
+// chose to show, in display order. `displayProductIds` is that list:
+//   - a non-null array (incl. `[]`) is authoritative: show exactly those,
+//     in that order, and nothing else. `[]` means "no cards", full stop.
+//   - `null` means no parseable structured reply was produced (an older
+//     model, an error, an in-process fake) -- only then does this fall back
+//     to the legacy heuristic of carding the products the prose names.
 //
-// The exception is a reply that explicitly names a subset of them ("a
-// Hidden está disponível"), which narrows to those and orders them the way
-// the sentence does. That layer exists because the contract above is a
-// prompt instruction, not a guarantee: when the model searches broadly and
-// then narrows in prose, the prose wins.
+// This replaced, in turn, "every searched product is shown" (a decline
+// still got a contradicting card row) and "card whatever the prose names"
+// (a product named only to rule it out still got carded). An id list is
+// the only version the model can drive precisely for every case. See
+// decisions.md.
 //
 // Returns [] when no chosen product has an image. A row of name-and-price
 // cards duplicating the text the customer just read adds nothing -- the
@@ -161,21 +165,51 @@ export function collectSearchedProducts(toolCalls: readonly ToolCallLike[]): Sea
 export function selectProductCards(
   toolCalls: readonly ToolCallLike[],
   responseText: string,
+  displayProductIds?: readonly string[] | null,
 ): SearchedProduct[] {
   const searched = collectSearchedProducts(toolCalls);
   if (searched.length === 0) return [];
 
-  const haystack = normalize(responseText);
-  const named = haystack ? searched.filter((product) => mentions(haystack, product.name)) : [];
-
   const chosen =
-    named.length > 0
-      ? [...named].sort((a, b) => haystack.indexOf(normalize(a.name)) - haystack.indexOf(normalize(b.name)))
-      : searched;
+    displayProductIds != null
+      ? pickByExplicitIds(searched, displayProductIds)
+      : pickByNameMention(searched, responseText);
 
   const capped = chosen.slice(0, MAX_PRODUCT_CARDS);
   if (!capped.some((product) => product.image_url)) return [];
   return capped;
+}
+
+// The model's own ordered id list -> the matching searched products, in
+// that order. An id that isn't in this turn's search results is dropped
+// (the model can only card what it actually looked up -- same guard as the
+// grounding rule), and duplicates collapse.
+function pickByExplicitIds(
+  searched: readonly SearchedProduct[],
+  ids: readonly string[],
+): SearchedProduct[] {
+  const byId = new Map(searched.map((product) => [product.id, product]));
+  const out: SearchedProduct[] = [];
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const product = byId.get(id);
+    if (product) out.push(product);
+  }
+  return out;
+}
+
+// Legacy fallback only (see selectProductCards): card the searched products
+// whose catalog name appears in the reply, ordered as the sentence names
+// them.
+function pickByNameMention(searched: readonly SearchedProduct[], responseText: string): SearchedProduct[] {
+  const haystack = normalize(responseText);
+  if (!haystack) return [];
+  const named = searched.filter((product) => mentions(haystack, product.name));
+  return [...named].sort(
+    (a, b) => haystack.indexOf(normalize(a.name)) - haystack.indexOf(normalize(b.name)),
+  );
 }
 
 // Narrows whatever came back from `messages.metadata` (jsonb, so `unknown`

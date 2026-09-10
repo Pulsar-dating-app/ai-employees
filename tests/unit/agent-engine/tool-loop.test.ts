@@ -24,6 +24,13 @@ function textResponse(text: string, messageId = "msg_1") {
   return { output: [{ type: "message", id: messageId }], output_text: text };
 }
 
+function jsonReplyResponse(message: string, productIds: string[], messageId = "msg_1") {
+  return {
+    output: [{ type: "message", id: messageId }],
+    output_text: JSON.stringify({ message, product_ids: productIds }),
+  };
+}
+
 function functionCallResponse(callId: string, name: string, args: Record<string, unknown>) {
   return {
     output: [{ type: "function_call", call_id: callId, name, arguments: JSON.stringify(args) }],
@@ -32,7 +39,29 @@ function functionCallResponse(callId: string, name: string, args: Record<string,
 }
 
 describe("runToolLoop", () => {
-  it("returns output_text immediately when the model makes no tool calls", async () => {
+  it("parses a structured JSON reply into responseText and displayProductIds", async () => {
+    const create = vi.fn().mockResolvedValueOnce(jsonReplyResponse("Temos essas:", ["p1", "p2"]));
+    const openai = { responses: { create } } as never;
+
+    const result = await runToolLoop({
+      openai,
+      model: "test-model",
+      openAiConversationId: "conv_abc",
+      instructions: "be helpful",
+      initialInput: [{ role: "user", content: "hi" }],
+      tools: [],
+      maxToolIterations: 4,
+      toolCtx: fakeToolCtx(),
+    });
+
+    expect(result.responseText).toBe("Temos essas:");
+    expect(result.displayProductIds).toEqual(["p1", "p2"]);
+    expect(result.messageItemIds).toEqual(["msg_1"]);
+    // The model is always asked for the { message, product_ids } shape.
+    expect(create.mock.calls[0][0].text).toEqual({ format: expect.objectContaining({ name: "agent_reply" }) });
+  });
+
+  it("falls back to raw output_text with null displayProductIds when the reply isn't structured JSON", async () => {
     const create = vi.fn().mockResolvedValueOnce(textResponse("Hello there!"));
     const openai = { responses: { create } } as never;
 
@@ -48,6 +77,8 @@ describe("runToolLoop", () => {
     });
 
     expect(result.responseText).toBe("Hello there!");
+    // null (not []) tells card selection to fall back to name-matching.
+    expect(result.displayProductIds).toBeNull();
     expect(result.toolResults).toEqual([]);
     // C7 needs these ids to be able to delete an ungrounded draft from the
     // conversation.
@@ -109,6 +140,59 @@ describe("runToolLoop", () => {
         toolCtx: fakeToolCtx(),
       }),
     ).rejects.toBeInstanceOf(UnknownToolCallError);
+  });
+
+  it("retries without text.format when the model rejects it, and parses the fallback text", async () => {
+    // Fresh module so the process-lifetime `structuredRepliesSupported` flag
+    // starts true and isn't carried in from another test.
+    vi.resetModules();
+    const { runToolLoop: freshRunToolLoop } = await import("@/lib/agent-engine/tool-loop");
+
+    const create = vi
+      .fn()
+      .mockRejectedValueOnce({ status: 400, message: "Unknown parameter: 'text.format'." })
+      .mockResolvedValueOnce(textResponse("Oi! Como ajudo?"));
+    const openai = { responses: { create } } as never;
+
+    const result = await freshRunToolLoop({
+      openai,
+      model: "test-model",
+      openAiConversationId: "conv_abc",
+      instructions: "be helpful",
+      initialInput: [{ role: "user", content: "hi" }],
+      tools: [],
+      maxToolIterations: 4,
+      toolCtx: fakeToolCtx(),
+    });
+
+    expect(result.responseText).toBe("Oi! Como ajudo?");
+    expect(result.displayProductIds).toBeNull();
+    // First attempt carried the format; the retry did not.
+    expect(create.mock.calls[0][0].text).toEqual({ format: expect.objectContaining({ name: "agent_reply" }) });
+    expect(create.mock.calls[1][0].text).toBeUndefined();
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not swallow an unrelated model error as a format rejection", async () => {
+    vi.resetModules();
+    const { runToolLoop: freshRunToolLoop } = await import("@/lib/agent-engine/tool-loop");
+
+    const create = vi.fn().mockRejectedValueOnce({ status: 500, message: "internal error" });
+    const openai = { responses: { create } } as never;
+
+    await expect(
+      freshRunToolLoop({
+        openai,
+        model: "test-model",
+        openAiConversationId: "conv_abc",
+        instructions: "be helpful",
+        initialInput: [{ role: "user", content: "hi" }],
+        tools: [],
+        maxToolIterations: 4,
+        toolCtx: fakeToolCtx(),
+      }),
+    ).rejects.toMatchObject({ status: 500 });
+    expect(create).toHaveBeenCalledTimes(1);
   });
 
   it("throws ToolLoopLimitExceededError after exactly maxToolIterations calls that never resolve", async () => {

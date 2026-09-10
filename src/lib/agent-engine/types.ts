@@ -34,6 +34,14 @@ export type GroundingOutcome = {
 
 export type AgentEngineResult = {
   responseText: string;
+  // The products the model explicitly chose to show as cards this turn, by
+  // id, in display order (from its structured reply's `product_ids`). The
+  // card-rendering routes pass this straight to `buildReplyProductCards`.
+  // `null` means no parseable structured reply was produced (older model, a
+  // fake in a test) and card selection falls back to name-matching the
+  // prose; `[]` means the model chose to show nothing. Always `[]` on the
+  // grounding-blocked fallback path -- the canned line recommends nothing.
+  displayProductIds: string[] | null;
   conversationId: string;
   openAiConversationId: string;
   grounding: GroundingOutcome;

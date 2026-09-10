@@ -140,6 +140,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     // Step 11
     return {
       responseText: draft.responseText,
+      displayProductIds: draft.displayProductIds,
       conversationId: conversation.id,
       openAiConversationId,
       grounding: { status: "grounded", violations: [] },
@@ -170,6 +171,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   if (secondCheck.grounded) {
     return {
       responseText: retry.responseText,
+      displayProductIds: retry.displayProductIds,
       conversationId: conversation.id,
       openAiConversationId,
       grounding: { status: "regenerated", violations: firstCheck.violations },
@@ -181,6 +183,8 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
 
   return {
     responseText: deps.ungroundedFallbackText ?? UNGROUNDED_FALLBACK_TEXT,
+    // The canned line names no product, so nothing should card alongside it.
+    displayProductIds: [],
     conversationId: conversation.id,
     openAiConversationId,
     grounding: { status: "blocked", violations: firstCheck.violations },

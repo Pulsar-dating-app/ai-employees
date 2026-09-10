@@ -70,6 +70,12 @@ export type ProductSearchParams = {
   priceMin?: number;
   priceMax?: number;
   limit?: number;
+  // Cosine-distance floor for the semantic leg (see MAX_VECTOR_DISTANCE and
+  // migration 20260910183000). A caller can override per search while the
+  // default is tuned against more real query->document data; pass null to
+  // disable the floor entirely (plain top-50 nearest, the pre-floor
+  // behaviour).
+  maxVectorDistance?: number | null;
 };
 
 const DEFAULT_LIMIT = 5;
@@ -85,6 +91,18 @@ const DEFAULT_LIMIT = 5;
 // this gap) since even 20 items in one reply is more than a real
 // salesperson would recite at once.
 const MAX_LIMIT = 10;
+// Semantic leg distance floor: a product whose embedding is farther than
+// this (pgvector cosine distance, 0 = identical, 1 = orthogonal) from the
+// query embedding never joins the fused result, so it can't ride in on a
+// low RRF score the way it could when vector_top was an unbounded top-50
+// pool. Picked from the real "Jorginho e CIA" catalog's text-embedding-3-
+// small distribution: cross-domain product pairs (the false positives that
+// motivated this -- "óculos para neve" pulling running shoes / a handbag)
+// sit at ~0.60-0.70, a genuinely tight pair at ~0.33. 0.55 is below the
+// noise band and above the tight pair. Deliberately a plain constant, not
+// env-configurable: retuning it is a one-line change plus a decisions.md
+// note, and it must move in lockstep with what real hand-testing shows.
+const MAX_VECTOR_DISTANCE = 0.55;
 
 // Ranking, full-text matching, and trigram tie-breaking all happen in
 // Postgres now (see migration 20260827180000_add_product_search_ranking and
@@ -117,6 +135,8 @@ async function runSearchRpc(
     p_price_min: params.priceMin ?? null,
     p_price_max: params.priceMax ?? null,
     p_query_embedding: queryEmbedding ? toPgVectorLiteral(queryEmbedding) : null,
+    p_max_vector_distance:
+      params.maxVectorDistance === undefined ? MAX_VECTOR_DISTANCE : params.maxVectorDistance,
     p_limit: limit,
   });
 

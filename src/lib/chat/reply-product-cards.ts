@@ -48,8 +48,12 @@ export async function buildReplyProductCards(
   ctx: BuildContext,
   toolCalls: readonly ToolCallLike[],
   responseText: string,
+  // The model's explicit `product_ids` from its structured reply
+  // (`AgentEngineResult.displayProductIds`). `null` falls back to matching
+  // catalog names in `responseText` -- see `selectProductCards`.
+  displayProductIds?: readonly string[] | null,
 ): Promise<MessageMetadata | null> {
-  const selected = selectProductCards(toolCalls, responseText);
+  const selected = selectProductCards(toolCalls, responseText, displayProductIds);
   if (selected.length === 0) return null;
 
   const existing = reuseExistingTrackingIds(toolCalls);
