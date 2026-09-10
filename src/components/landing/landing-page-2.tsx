@@ -128,9 +128,9 @@ export async function LandingPageV2() {
     >
       {/* ── Header ─────────────────────────────────────────────── */}
       <ScrollHeader>
-        <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-2 px-4 md:px-10">
+        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-2 px-4 sm:h-20 md:px-10">
           <Link href="/" className="flex items-center gap-2">
-            <Image src={logo} alt="Staffra" sizes="88px" className="h-8 w-auto object-contain" priority />
+            <Image src={logo} alt="Staffra" sizes="88px" className="h-7 w-auto object-contain sm:h-8" priority />
           </Link>
 
           <nav className="hidden items-center gap-2 lg:flex">
@@ -156,19 +156,19 @@ export async function LandingPageV2() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <LanguageSwitcher currentLocale={(await getLocale()) as "en" | "pt"} />
             <Link
               href={LOGIN}
               aria-label={t("header.login")}
-              className="group inline-flex h-11 items-center justify-center rounded-lg px-3 text-[14px] font-semibold text-[#1b1b24] transition-colors hover:bg-[#f5f2ff] hover:text-[#3525cd]"
+              className="group inline-flex h-9 items-center justify-center rounded-lg px-2 text-[14px] font-semibold text-[#1b1b24] transition-colors hover:bg-[#f5f2ff] hover:text-[#3525cd] sm:h-11 sm:px-3"
             >
               <CascadeText text={t("header.login")} />
             </Link>
             <Link
               href={HIRE}
               aria-label={t("header.trial")}
-              className="group inline-flex h-11 items-center justify-center rounded-lg bg-[#3525cd] px-6 text-[14px] font-semibold text-white shadow-[0_4px_32px_rgba(79,70,229,0.04)] transition-all hover:bg-[#4f46e5] hover:text-[#dad7ff]"
+              className="group inline-flex h-9 items-center justify-center rounded-lg bg-[#3525cd] px-3.5 text-[14px] font-semibold text-white shadow-[0_4px_32px_rgba(79,70,229,0.04)] transition-all hover:bg-[#4f46e5] hover:text-[#dad7ff] sm:h-11 sm:px-6"
             >
               <CascadeText text={t("header.trial")} />
             </Link>
@@ -176,7 +176,7 @@ export async function LandingPageV2() {
         </div>
       </ScrollHeader>
 
-      <main className="w-full bg-[#fcf8ff] pt-20">
+      <main className="w-full bg-[#fcf8ff] pt-16 sm:pt-20">
         {/* ── 1. Hero ─────────────────────────────────────────── */}
         <div className="relative w-full overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[820px] select-none">
@@ -192,7 +192,7 @@ export async function LandingPageV2() {
             className="relative z-10 mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-10 md:pt-12"
           >
             <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-[0_4px_24px_rgba(79,70,229,0.08)]">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-[0_4px_24px_rgba(79,70,229,0.08)] sm:mb-6">
                 <span className="flex h-2 w-2 animate-pulse rounded-full bg-[#10b981]" />
                 <span className="text-[12px] font-semibold tracking-[0.02em] text-[#3525cd]">
                   {t("hero.badgeMain")}
@@ -202,7 +202,7 @@ export async function LandingPageV2() {
                 </span>
               </div>
 
-              <h1 className="text-balance text-[40px] font-bold leading-[1.05] tracking-[-0.02em] text-[#0f172a] md:text-[48px]">
+              <h1 className="text-wrap text-[30px] font-bold leading-[1.1] tracking-[-0.02em] text-[#0f172a] sm:text-balance sm:text-[40px] sm:leading-[1.05] md:text-[48px]">
                 {t("hero.headlinePre")}{" "}
                 <ShutterReveal>
                   <span className="bg-gradient-to-r from-[#3525cd] via-[#4f46e5] to-[#006591] bg-clip-text text-transparent">
@@ -212,15 +212,15 @@ export async function LandingPageV2() {
                 {t("hero.headlinePost")}
               </h1>
 
-              <p className="mt-3 max-w-2xl text-balance text-[18px] leading-[28px] text-[#464555]">
+              <p className="mt-3 max-w-2xl text-balance text-[16px] leading-[24px] text-[#464555] sm:text-[18px] sm:leading-[28px]">
                 {t("hero.sub")}
               </p>
 
-              <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-2 sm:gap-3">
+              <div className="mt-6 flex w-full flex-col items-center justify-center gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
                 <Link
                   href={HIRE}
                   aria-label={t("hero.ctaPrimary")}
-                  className="group inline-flex items-center justify-center gap-2 rounded-lg bg-[#3525cd] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.22)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#4f46e5] hover:shadow-[0_18px_44px_rgba(53,37,205,0.34)]"
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#3525cd] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.22)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#4f46e5] hover:shadow-[0_18px_44px_rgba(53,37,205,0.34)] sm:w-auto"
                 >
                   <M name="bolt" size={20} />
                   <CascadeText text={t("hero.ctaPrimary")} />
@@ -228,7 +228,7 @@ export async function LandingPageV2() {
                 <a
                   href="#demo"
                   aria-label={t("hero.ctaSecondary")}
-                  className="group inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-[14px] font-semibold text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#f5f2ff] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)]"
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-[14px] font-semibold text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#f5f2ff] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)] sm:w-auto"
                 >
                   <M name="play_circle" size={20} className="text-[#3525cd]" />
                   <CascadeText text={t("hero.ctaSecondary")} />
@@ -242,7 +242,7 @@ export async function LandingPageV2() {
                 </SalesContactDialog>
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-6 text-[12px] font-semibold tracking-[0.02em] text-[#464555]">
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] font-semibold tracking-[0.02em] text-[#464555] sm:mt-3 sm:gap-6 sm:text-[12px]">
                 {[t("hero.trust1"), t("hero.trust2"), t("hero.trust3")].map((trust) => (
                   <span key={trust} className="flex items-center gap-1.5">
                     <M name="verified" size={16} className="text-[#10b981]" />
@@ -253,7 +253,7 @@ export async function LandingPageV2() {
             </div>
 
             {/* Hero showcase — dual platform card */}
-            <div className="relative mt-12 w-full">
+            <div className="relative mt-8 w-full sm:mt-12">
               <div className="relative w-full overflow-hidden rounded-xl bg-white p-3 shadow-[0_20px_50px_rgba(79,70,229,0.08)] sm:p-6">
                 <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
                   {/* Left — live chat with Malu */}
@@ -346,19 +346,19 @@ export async function LandingPageV2() {
                           sizes="(min-width: 1024px) 780px, 100vw"
                           className="h-auto w-full rounded-lg object-contain"
                         />
-                        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-[#0f172a]/60 via-transparent to-transparent p-3">
+                        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-[#0f172a]/80 via-[#0f172a]/20 to-transparent p-3 sm:from-[#0f172a]/60 sm:via-transparent">
                           <div className="text-left text-white">
-                            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#e2dfff]">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#e2dfff] sm:text-[12px]">
                               {t("hero.workspace.eyebrow")}
                             </p>
-                            <p className="mt-0.5 text-[24px] font-bold leading-[32px] tracking-[-0.01em]">
+                            <p className="mt-0.5 text-[18px] font-bold leading-[24px] tracking-[-0.01em] sm:text-[24px] sm:leading-[32px]">
                               {t("hero.workspace.title")}
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
                         {[
                           { label: t("hero.metrics.m1Label"), value: "89.4%", delta: "+14%", sub: t("hero.metrics.m1Sub"), color: "text-[#0f172a]" },
                           { label: t("hero.metrics.m2Label"), value: "1.4s", delta: "-98%", sub: t("hero.metrics.m2Sub"), color: "text-[#3525cd]" },
@@ -366,14 +366,17 @@ export async function LandingPageV2() {
                         ].map((m) => (
                           <div
                             key={m.label}
-                            className="rounded-lg bg-[#f5f2ff] p-3 text-left transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(79,70,229,0.1)]"
+                            className="flex items-center justify-between gap-3 rounded-lg bg-[#f5f2ff] p-3 text-left transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(79,70,229,0.1)] sm:block"
                           >
-                            <span className="text-[12px] font-semibold text-[#64748b]">{m.label}</span>
-                            <div className="mt-1 flex items-baseline gap-1">
-                              <span className={`text-[24px] font-bold tabular-nums ${m.color}`}>{m.value}</span>
+                            <span className="min-w-0 sm:contents">
+                              <span className="block text-[12px] font-semibold text-[#64748b] sm:inline">{m.label}</span>
+                              <span className="mt-0.5 block text-[11px] text-[#464555] sm:hidden">{m.sub}</span>
+                            </span>
+                            <div className="flex shrink-0 items-baseline gap-1 sm:mt-1">
+                              <span className={`text-[22px] font-bold tabular-nums sm:text-[24px] ${m.color}`}>{m.value}</span>
                               <span className="text-[12px] font-semibold tabular-nums text-[#10b981]">{m.delta}</span>
                             </div>
-                            <span className="text-[11px] text-[#464555]">{m.sub}</span>
+                            <span className="hidden text-[11px] text-[#464555] sm:inline">{m.sub}</span>
                           </div>
                         ))}
                       </div>
@@ -419,7 +422,7 @@ export async function LandingPageV2() {
                 {t("channels.partnerLabel")}
               </span>
             </div>
-            <h2 className="text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
+            <h2 className="text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
               {t("channels.heading")}
             </h2>
             <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("channels.sub")}</p>
@@ -435,7 +438,7 @@ export async function LandingPageV2() {
               <span className="rounded-full bg-[#e2dfff] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[#0f0069]">
                 {t("workforce.badge")}
               </span>
-              <h2 className="mt-3 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
+              <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
                 {t("workforce.heading")}
               </h2>
               <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("workforce.sub")}</p>
@@ -514,7 +517,7 @@ export async function LandingPageV2() {
               <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
                 {t("rag.eyebrow")}
               </span>
-              <h2 className="mt-3 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
+              <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
                 {t("rag.heading")}
               </h2>
               <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("rag.sub")}</p>
@@ -572,7 +575,7 @@ export async function LandingPageV2() {
               <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
                 {t("pricing.eyebrow")}
               </span>
-              <h2 className="mt-3 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
+              <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
                 {t("pricing.heading")}
               </h2>
               <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("pricing.sub")}</p>
@@ -636,7 +639,7 @@ export async function LandingPageV2() {
                         lessLabel={t("pricing.showLess")}
                       />
                     </div>
-                    <div className="mt-12">
+                    <div className="mt-8 sm:mt-12">
                       {i === 2 ? (
                         <SalesContactDialog
                           triggerLabel={plan.cta}
@@ -678,7 +681,7 @@ export async function LandingPageV2() {
                       value={parsed.value}
                       decimals={parsed.decimals}
                       suffix={parsed.suffix}
-                      className={`text-[48px] font-extrabold tabular-nums leading-none tracking-[-0.02em] ${IMPACT_ACCENT[i]}`}
+                      className={`text-[40px] font-extrabold tabular-nums leading-none tracking-[-0.02em] sm:text-[48px] ${IMPACT_ACCENT[i]}`}
                     />
                     <p className="text-[24px] font-bold leading-[32px] tracking-[-0.01em] text-white">{stat.title}</p>
                     <p className="text-[14px] leading-[22px] tracking-[0.01em] text-[#dad7ff]">{stat.desc}</p>
@@ -695,7 +698,7 @@ export async function LandingPageV2() {
             <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
               {t("faq.eyebrow")}
             </span>
-            <h2 className="mt-3 text-[32px] font-semibold leading-[40px] tracking-[-0.01em] text-[#0f172a]">
+            <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
               {t("faq.heading")}
             </h2>
           </div>
@@ -736,7 +739,7 @@ export async function LandingPageV2() {
               <span className="mb-3 rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[#e2dfff] backdrop-blur-md">
                 {t("finalCta.eyebrow")}
               </span>
-              <h2 className="text-[32px] font-bold leading-[40px] tracking-[-0.01em] text-white">
+              <h2 className="text-[26px] font-bold leading-[32px] tracking-[-0.01em] text-white sm:text-[32px] sm:leading-[40px]">
                 {t("finalCta.heading")}
               </h2>
               <p className="mt-2 max-w-xl text-[16px] leading-[26px] tracking-[0.01em] text-[#dad7ff]">
@@ -752,7 +755,7 @@ export async function LandingPageV2() {
                   <CascadeText text={t("finalCta.ctaPrimary")} />
                 </Link>
               </div>
-              <span className="mt-3 text-[12px] font-semibold text-[#e2dfff]">{t("finalCta.fine")}</span>
+              <span className="mt-3 text-[11px] font-semibold text-[#e2dfff] sm:text-[12px]">{t("finalCta.fine")}</span>
             </div>
           </div>
         </section>
