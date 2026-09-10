@@ -223,15 +223,40 @@ export function ShaderBackground({
     };
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    // Software-rendered WebGL (SwiftShader et al -- common on budget mobile
+    // GPUs and in headless/CI environments like Lighthouse, which run
+    // without real GPU access) pays a far higher per-frame cost for this
+    // shader than real hardware: confirmed via a live PageSpeed Insights
+    // report attributing ~30s of main-thread time to this exact component.
+    // Detecting the renderer isn't foolproof (browsers increasingly mask
+    // WEBGL_debug_renderer_info for fingerprinting reasons, and this extension
+    // can simply be unavailable) but it's a reliable, honest signal wherever
+    // it *is* exposed -- same treatment as prefers-reduced-motion.
+    const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+    const rendererString = debugInfo
+      ? String(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL))
+      : "";
+    const isSoftwareRendered = /swiftshader|software|llvmpipe|softpipe|basic render/i.test(rendererString);
+
     let frame = 0;
     const startTime = performance.now();
 
-    const render = () => {
-      draw((performance.now() - startTime) / 1000);
+    // A slow ambient background doesn't need 60fps -- throttling to ~24fps
+    // cuts the ongoing main-thread/GPU cost by more than half on every
+    // device, not just the software-rendered ones caught above.
+    const FRAME_INTERVAL_MS = 1000 / 24;
+    let lastFrameTime = 0;
+
+    const render = (now: number) => {
+      if (now - lastFrameTime >= FRAME_INTERVAL_MS) {
+        lastFrameTime = now;
+        draw((now - startTime) / 1000);
+      }
       frame = requestAnimationFrame(render);
     };
 
-    if (reduceMotion.matches) {
+    if (reduceMotion.matches || isSoftwareRendered) {
       draw(0);
     } else {
       frame = requestAnimationFrame(render);
