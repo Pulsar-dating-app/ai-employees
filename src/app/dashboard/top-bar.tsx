@@ -6,8 +6,11 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { BillingPastDueAlert } from "./billing-alert";
 
 const SECTIONS = [
-  { key: "marketplace" as const, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
-  { key: "myAgents" as const, match: (p: string) => p.startsWith("/dashboard/my-agents") },
+  {
+    key: "myAgents" as const,
+    match: (p: string) =>
+      p === "/dashboard" || p.startsWith("/dashboard/agents") || p.startsWith("/dashboard/my-agents"),
+  },
   { key: "products" as const, match: (p: string) => p.startsWith("/dashboard/products") },
   { key: "metrics" as const, match: (p: string) => p.startsWith("/dashboard/metrics") },
   { key: "settings" as const, match: (p: string) => p.startsWith("/dashboard/settings") },
@@ -25,7 +28,7 @@ export function TopBar({
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
-  const section = SECTIONS.find((s) => s.match(pathname))?.key ?? "marketplace";
+  const section = SECTIONS.find((s) => s.match(pathname))?.key ?? "myAgents";
 
   return (
     <header className="sticky top-0 z-30 hidden h-16 items-center justify-between border-b border-outline-variant bg-surface/80 px-10 backdrop-blur-md sm:flex">

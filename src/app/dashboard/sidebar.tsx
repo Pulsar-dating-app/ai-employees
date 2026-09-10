@@ -9,7 +9,6 @@ import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { logout } from "@/lib/auth/actions";
 import {
-  SearchIcon,
   UsersIcon,
   PackageIcon,
   CalendarIcon,
@@ -28,18 +27,27 @@ import { BillingPastDueAlert } from "./billing-alert";
 // → any hire: while that team member isn't hired the tab is **muted + gets a
 // lock icon** (via `isLocked`), and clicking it lands on the page's own
 // `LockedPage` ("hire X to unlock"). The page check is the real gate — this
-// is presentation only. Settings / Marketplace / My Team / Conversations are
-// never gated (company-wide, useful with zero agents).
+// is presentation only. Settings / My Team / Conversations are never gated
+// (company-wide, useful with zero agents).
 //
-// `mobilePrimary` is mobile-only (the desktop rail always shows all 7): the
-// bottom tab bar picks its 4 busiest/most-orienting destinations for direct
+// One "My Team" destination, not two (2026-09-10): this used to be a
+// separate "Marketplace" (browse/hire) tab plus "My Team" (manage hires) --
+// merged into one unified list once per-agent pricing went away (Trello P6)
+// and there was no reason left to browse agents separately from managing
+// them. `/dashboard` now shows every catalog agent regardless of hire
+// status; its own `match` covers `/dashboard/agents/*` (the per-agent
+// hire-flow detail page) and `/dashboard/my-agents/*` (the per-agent
+// Connections/settings page, unchanged) too, so the nav item stays
+// highlighted across the whole flow. See the 2026-09-10 decisions.md entry.
+//
+// `mobilePrimary` is mobile-only (the desktop rail always shows all 6): the
+// bottom tab bar picks its busiest/most-orienting destinations for direct
 // one-tap access, and folds the rest into a "More" sheet rather than
-// cramming all 7 into one row — see the 2026-09-10 decisions.md entry for
-// why (a 7-item bottom bar is unreadable at phone width; iOS/Material both
-// cap direct tabs around 4-5).
+// cramming everything into one row — see the 2026-09-10 decisions.md entry
+// for why (a crowded bottom bar is unreadable at phone width; iOS/Material
+// both cap direct tabs around 4-5).
 const NAV_ITEMS = [
-  { href: "/dashboard", key: "marketplace" as const, icon: SearchIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents"), mobilePrimary: true },
-  { href: "/dashboard/my-agents", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p.startsWith("/dashboard/my-agents"), mobilePrimary: true },
+  { href: "/dashboard", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") || p.startsWith("/dashboard/my-agents"), mobilePrimary: true },
   { href: "/dashboard/conversations", key: "conversations" as const, icon: ChatIcon, match: (p: string) => p.startsWith("/dashboard/conversations"), mobilePrimary: true },
   { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, match: (p: string) => p.startsWith("/dashboard/products"), isLocked: (s: string[]) => !s.includes("malu") },
   { href: "/dashboard/scheduling", key: "scheduling" as const, icon: CalendarIcon, match: (p: string) => p.startsWith("/dashboard/scheduling"), isLocked: (s: string[]) => !s.includes("ana") },

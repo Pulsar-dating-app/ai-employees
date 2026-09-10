@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function MarketplaceLoading() {
+export default function MyTeamLoading() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
