@@ -9,6 +9,8 @@ describe("buildEmbedSnippet", () => {
       greeting: null,
       launcherType: "default",
       launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).toBe(
@@ -21,6 +23,8 @@ describe("buildEmbedSnippet", () => {
       greeting: null,
       launcherType: "default",
       launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).toContain(`data-greeting="Oi! 😊 Precisa marcar ou reagendar um horário? Posso te ajudar!"`);
@@ -31,6 +35,8 @@ describe("buildEmbedSnippet", () => {
       greeting: null,
       launcherType: "default",
       launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).toContain(`data-greeting="Oi! 👋 Posso te ajudar?"`);
@@ -41,6 +47,8 @@ describe("buildEmbedSnippet", () => {
       greeting: "Need help finding a gift?",
       launcherType: "default",
       launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).toContain(`data-greeting="Need help finding a gift?"`);
@@ -51,6 +59,8 @@ describe("buildEmbedSnippet", () => {
       greeting: null,
       launcherType: "video",
       launcherAssetUrl: "https://cdn.example.com/launcher.webm",
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).toContain(`data-launcher-type="video"`);
@@ -62,6 +72,8 @@ describe("buildEmbedSnippet", () => {
       greeting: null,
       launcherType: "image",
       launcherAssetUrl: "https://cdn.example.com/launcher.png",
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).toContain(`data-launcher-type="image"`);
@@ -75,6 +87,8 @@ describe("buildEmbedSnippet", () => {
       greeting: null,
       launcherType: "video",
       launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).not.toContain("data-launcher-type");
@@ -86,6 +100,8 @@ describe("buildEmbedSnippet", () => {
       greeting: `Say "hi" <there> & smile`,
       launcherType: "default",
       launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).toContain(`data-greeting="Say &quot;hi&quot; &lt;there&gt; &amp; smile"`);
@@ -100,6 +116,8 @@ describe("buildEmbedSnippet", () => {
       greeting: null,
       launcherType: "default",
       launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).toContain(`data-launcher-src="${BASE_URL}/agents/ana-classic-launcher.webm"`);
@@ -110,8 +128,47 @@ describe("buildEmbedSnippet", () => {
       greeting: null,
       launcherType: "default",
       launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 0,
     });
 
     expect(snippet).toContain(`data-launcher-src="${BASE_URL}/widget-launcher.webm"`);
+  });
+
+  it("omits data-position and data-offset-bottom at their defaults", () => {
+    const snippet = buildEmbedSnippet(BASE_URL, "acme", "malu", {
+      greeting: null,
+      launcherType: "default",
+      launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 0,
+    });
+
+    expect(snippet).not.toContain("data-position");
+    expect(snippet).not.toContain("data-offset-bottom");
+  });
+
+  it("adds data-position when set to bottom-left", () => {
+    const snippet = buildEmbedSnippet(BASE_URL, "acme", "malu", {
+      greeting: null,
+      launcherType: "default",
+      launcherAssetUrl: null,
+      position: "bottom-left",
+      offsetBottom: 0,
+    });
+
+    expect(snippet).toContain(`data-position="bottom-left"`);
+  });
+
+  it("adds data-offset-bottom when greater than zero", () => {
+    const snippet = buildEmbedSnippet(BASE_URL, "acme", "malu", {
+      greeting: null,
+      launcherType: "default",
+      launcherAssetUrl: null,
+      position: "bottom-right",
+      offsetBottom: 80,
+    });
+
+    expect(snippet).toContain(`data-offset-bottom="80"`);
   });
 });

@@ -173,6 +173,31 @@ select:not(:disabled) {
   }
 }
 
+/* Mobile bottom-nav "More" sheet (src/app/dashboard/sidebar.tsx) — the
+   overflow tabs that don't fit the 5-slot bar, in a panel that rises from
+   the bar itself rather than a centered dialog. Reduced motion drops the
+   movement. */
+@keyframes nav-sheet-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.nav-sheet-backdrop-in {
+  animation: nav-sheet-backdrop-in 0.2s ease-out both;
+}
+@keyframes nav-sheet-panel-in {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nav-sheet-panel-in {
+  animation: nav-sheet-panel-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-sheet-backdrop-in,
+  .nav-sheet-panel-in {
+    animation: none;
+  }
+}
+
 /* The one authored motion moment: a staggered rise-and-fade for grid/list
    items on the marketplace and my-team surfaces (animation-delay set per
    item from JS), not scattered per-element hover effects. */

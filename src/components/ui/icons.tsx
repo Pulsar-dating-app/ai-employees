@@ -353,6 +353,39 @@ export function PlayIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// Filled, not the outline family -- the mobile bottom nav's "More" tab
+// (three dots reads clearly at that size; an outline hamburger doesn't).
+export function MoreIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <circle cx="5" cy="12" r="1.9" />
+      <circle cx="12" cy="12" r="1.9" />
+      <circle cx="19" cy="12" r="1.9" />
+    </svg>
+  );
+}
+
+// A tiny "screen with a dot in the corner" diagram -- the Customize
+// screen's position picker, so the choice reads at a glance instead of
+// relying on the "bottom right"/"bottom left" label text alone.
+export function PositionBottomRightIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <circle cx="16.5" cy="16.5" r="2.25" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function PositionBottomLeftIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <circle cx="7.5" cy="16.5" r="2.25" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function InfoIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...NAV_ICON_PROPS} {...props}>

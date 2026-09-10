@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -16,6 +18,7 @@ import {
   LogoutIcon,
   LockIcon,
   ChatIcon,
+  MoreIcon,
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import type { UsageSummary } from "@/lib/billing/usage-summary";
@@ -27,14 +30,21 @@ import { BillingPastDueAlert } from "./billing-alert";
 // `LockedPage` ("hire X to unlock"). The page check is the real gate — this
 // is presentation only. Settings / Marketplace / My Team / Conversations are
 // never gated (company-wide, useful with zero agents).
+//
+// `mobilePrimary` is mobile-only (the desktop rail always shows all 7): the
+// bottom tab bar picks its 4 busiest/most-orienting destinations for direct
+// one-tap access, and folds the rest into a "More" sheet rather than
+// cramming all 7 into one row — see the 2026-09-10 decisions.md entry for
+// why (a 7-item bottom bar is unreadable at phone width; iOS/Material both
+// cap direct tabs around 4-5).
 const NAV_ITEMS = [
-  { href: "/dashboard", key: "marketplace" as const, icon: SearchIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") },
-  { href: "/dashboard/my-agents", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p.startsWith("/dashboard/my-agents") },
-  { href: "/dashboard/conversations", key: "conversations" as const, icon: ChatIcon, match: (p: string) => p.startsWith("/dashboard/conversations") },
+  { href: "/dashboard", key: "marketplace" as const, icon: SearchIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents"), mobilePrimary: true },
+  { href: "/dashboard/my-agents", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p.startsWith("/dashboard/my-agents"), mobilePrimary: true },
+  { href: "/dashboard/conversations", key: "conversations" as const, icon: ChatIcon, match: (p: string) => p.startsWith("/dashboard/conversations"), mobilePrimary: true },
   { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, match: (p: string) => p.startsWith("/dashboard/products"), isLocked: (s: string[]) => !s.includes("malu") },
   { href: "/dashboard/scheduling", key: "scheduling" as const, icon: CalendarIcon, match: (p: string) => p.startsWith("/dashboard/scheduling"), isLocked: (s: string[]) => !s.includes("ana") },
   { href: "/dashboard/metrics", key: "metrics" as const, icon: BarChartIcon, match: (p: string) => p.startsWith("/dashboard/metrics"), isLocked: (s: string[]) => s.length === 0 },
-  { href: "/dashboard/settings", key: "settings" as const, icon: SettingsIcon, match: (p: string) => p.startsWith("/dashboard/settings") },
+  { href: "/dashboard/settings", key: "settings" as const, icon: SettingsIcon, match: (p: string) => p.startsWith("/dashboard/settings"), mobilePrimary: true },
 ];
 
 // Sidebar top (Stitch "Performance Analytics" screen): the brand, then an
@@ -102,6 +112,83 @@ function UsageTracker({ usage }: { usage: UsageSummary | null }) {
   );
 }
 
+type OverflowItem = (typeof NAV_ITEMS)[number] & { locked: boolean };
+
+// The bottom bar's overflow -- a sheet rising from the bar itself (not a
+// centered `Dialog`, which would read as unrelated to the tab that opened
+// it). Portaled to document.body like `dialog.tsx`, same Escape/backdrop
+// dismissal; a route change (tapping a row, or the browser back button)
+// closes it via the effect in `Sidebar` rather than anything in here, so
+// there's no stale-open sheet sitting over the new page.
+function MobileMoreSheet({
+  items,
+  pathname,
+  onClose,
+}: {
+  items: OverflowItem[];
+  pathname: string;
+  onClose: () => void;
+}) {
+  const t = useTranslations("Dashboard.tabs");
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return createPortal(
+    <div className="fixed inset-0 z-30 sm:hidden">
+      <div
+        className="nav-sheet-backdrop-in absolute inset-0 bg-on-surface/40"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("more")}
+        className="nav-sheet-panel-in absolute inset-x-0 bottom-0 rounded-t-2xl bg-surface-container-lowest pb-[env(safe-area-inset-bottom)] shadow-level2"
+      >
+        <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-outline-variant" aria-hidden="true" />
+        <nav className="flex flex-col gap-1 p-3">
+          {items.map((item) => {
+            const isActive = item.match(pathname);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                onClick={onClose}
+                className={clsx(
+                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors duration-150",
+                  isActive
+                    ? "bg-secondary-container font-bold text-on-secondary-container"
+                    : "font-medium text-on-surface-variant hover:bg-surface-container",
+                  item.locked && !isActive && "opacity-55",
+                )}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                <span className="truncate">{t(item.key)}</span>
+                {item.locked ? (
+                  <>
+                    <LockIcon className="ml-auto h-3.5 w-3.5 shrink-0" />
+                    <span className="sr-only">{t("locked")}</span>
+                  </>
+                ) : null}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 // Staffra "Human-Centric AI" admin shell (Stitch): a light persistent rail on
 // desktop, a slim top bar + thumb-reachable bottom tab bar on mobile. All
 // three read the same NAV_ITEMS so active state never drifts.
@@ -130,6 +217,22 @@ export function Sidebar({
     ...item,
     locked: item.isLocked?.(hiredAgentSlugs) ?? false,
   }));
+  const mobilePrimaryItems = navItems.filter((item) => item.mobilePrimary);
+  const mobileOverflowItems = navItems.filter((item) => !item.mobilePrimary);
+  const overflowActive = mobileOverflowItems.some((item) => item.match(pathname));
+
+  const [moreOpen, setMoreOpen] = useState(false);
+  // A route change -- a row tapped inside the sheet, or the browser's own
+  // back/forward -- always closes it. Adjusted during render (React's own
+  // recommended pattern for "reset state when a prop changes"), not an
+  // effect: an effect-based reset paints one extra frame with the sheet
+  // still open before closing it, and lint (react-hooks/set-state-in-effect)
+  // flags the cascading re-render this causes.
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setMoreOpen(false);
+  }
 
   return (
     <>
@@ -199,9 +302,10 @@ export function Sidebar({
         </div>
       </header>
 
-      {/* Mobile bottom tab bar */}
+      {/* Mobile bottom tab bar -- 4 direct tabs + "More" for the rest, not
+          all 7 crammed into one row (see NAV_ITEMS's own comment). */}
       <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-outline-variant bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden">
-        {navItems.map((item) => {
+        {mobilePrimaryItems.map((item) => {
           const isActive = item.match(pathname);
           const Icon = item.icon;
           return (
@@ -236,7 +340,33 @@ export function Sidebar({
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={() => setMoreOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={moreOpen}
+          className="flex flex-1 flex-col items-center gap-1 py-2.5"
+        >
+          <MoreIcon
+            className={clsx(
+              "h-5 w-5 transition-colors duration-150",
+              overflowActive ? "text-primary" : "text-on-surface-variant",
+            )}
+          />
+          <span
+            className={clsx(
+              "text-[11px] font-medium transition-colors duration-150",
+              overflowActive ? "text-primary" : "text-on-surface-variant",
+            )}
+          >
+            {t("more")}
+          </span>
+        </button>
       </nav>
+
+      {moreOpen ? (
+        <MobileMoreSheet items={mobileOverflowItems} pathname={pathname} onClose={() => setMoreOpen(false)} />
+      ) : null}
     </>
   );
 }

@@ -29,6 +29,10 @@ const IMAGE_MIME_EXT: Record<string, string> = {
 const VALID_LAUNCHER_TYPES = ["default", "video", "image"] as const;
 type LauncherType = (typeof VALID_LAUNCHER_TYPES)[number];
 
+const VALID_POSITIONS = ["bottom-right", "bottom-left"] as const;
+type Position = (typeof VALID_POSITIONS)[number];
+const MAX_OFFSET_BOTTOM = 200;
+
 const BUCKET = "widget-assets";
 
 async function requireMember(
@@ -116,6 +120,28 @@ export async function POST(
   const greetingRaw = formData.get("greeting");
   const greeting = typeof greetingRaw === "string" && greetingRaw.trim() ? greetingRaw.trim() : null;
 
+  // Both default when omitted (older callers/tests that predate this pair),
+  // same "validate an explicit value, default a missing one" shape as
+  // launcherType used to have before it became required.
+  const positionRaw = formData.get("position");
+  let position: Position = "bottom-right";
+  if (positionRaw !== null) {
+    if (typeof positionRaw !== "string" || !VALID_POSITIONS.includes(positionRaw as Position)) {
+      return NextResponse.json({ error: `position must be one of: ${VALID_POSITIONS.join(", ")}` }, { status: 400 });
+    }
+    position = positionRaw as Position;
+  }
+
+  const offsetBottomRaw = formData.get("offsetBottom");
+  let offsetBottom = 0;
+  if (offsetBottomRaw !== null) {
+    const parsed = typeof offsetBottomRaw === "string" ? Number(offsetBottomRaw) : NaN;
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > MAX_OFFSET_BOTTOM) {
+      return NextResponse.json({ error: `offsetBottom must be an integer between 0 and ${MAX_OFFSET_BOTTOM}` }, { status: 400 });
+    }
+    offsetBottom = parsed;
+  }
+
   const file = formData.get("file");
 
   const { data: existing, error: existingError } = await supabase
@@ -176,6 +202,8 @@ export async function POST(
       widget_greeting: greeting,
       widget_launcher_type: launcherType,
       widget_launcher_asset_url: newAssetUrl,
+      widget_position: position,
+      widget_offset_bottom: offsetBottom,
     })
     .eq("company_id", companyId)
     .eq("agent_id", agentId)

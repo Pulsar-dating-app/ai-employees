@@ -45,6 +45,16 @@ import { AgentConnectionsTour } from "./agent-connections-tour";
 // Follow-up (2026-09-09): an owner-recorded walkthrough video, gated to
 // `agentSlug === "ana"` -- see TutorialVideoCard's own comment for why it's
 // Ana-specific rather than a generic addition to every hire's page.
+//
+// Follow-up (2026-09-10): the embed domain allowlist moved here from
+// Settings -- same `companies.allowed_embed_domains` column, same PATCH
+// /api/companies/[companyId] endpoint, just mounted in the Embed tab next
+// to the widget it actually gates, since that's where a merchant configuring
+// the embed widget was already looking. Unlike Shipping/Returns above, this
+// is **not** agent-gated -- it renders in every hire's Embed tab, because
+// the allowlist is genuinely company-wide (one list gates every agent's
+// embed widget, not just whichever one's page you're on) -- see
+// EmbedDomainsSection's own comment for the copy that makes that explicit.
 export default async function AgentConnectionsPage({
   params,
 }: {
@@ -61,7 +71,9 @@ export default async function AgentConnectionsPage({
       .eq("slug", agentSlug)
       .eq("is_active", true)
       .maybeSingle(),
-    supabase.from("companies").select("id, slug, allow_human_handoff, shipping_policy, return_policy"),
+    supabase
+      .from("companies")
+      .select("id, slug, allow_human_handoff, shipping_policy, return_policy, allowed_embed_domains"),
     supabase.auth.getUser(),
   ]);
   if (!agent) notFound();
@@ -85,7 +97,7 @@ export default async function AgentConnectionsPage({
     supabase
       .from("company_agents")
       .select(
-        "id, name, status, widget_greeting, widget_launcher_type, widget_launcher_asset_url, photo_type, photo_asset_url",
+        "id, name, status, widget_greeting, widget_launcher_type, widget_launcher_asset_url, widget_position, widget_offset_bottom, photo_type, photo_asset_url",
       )
       .eq("company_id", company.id)
       .eq("agent_id", agent.id)
@@ -121,6 +133,8 @@ export default async function AgentConnectionsPage({
     greeting: companyAgent.widget_greeting,
     launcherType: companyAgent.widget_launcher_type,
     launcherAssetUrl: companyAgent.widget_launcher_asset_url,
+    position: companyAgent.widget_position,
+    offsetBottom: companyAgent.widget_offset_bottom,
   });
   // Trello O1 -- the deep link IS the connection (no connect flow); the
   // payload is company_agents.id itself, resolved directly by the webhook.
@@ -186,7 +200,10 @@ export default async function AgentConnectionsPage({
                 greeting: companyAgent.widget_greeting,
                 launcherType: companyAgent.widget_launcher_type,
                 launcherAssetUrl: companyAgent.widget_launcher_asset_url,
+                position: companyAgent.widget_position,
+                offsetBottom: companyAgent.widget_offset_bottom,
               }}
+              allowedEmbedDomains={company.allowed_embed_domains ?? []}
             />
           </Suspense>
         </div>

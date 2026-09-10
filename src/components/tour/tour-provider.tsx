@@ -5,12 +5,25 @@ import { TourOverlay } from "./tour-overlay";
 import type { TourStep } from "./types";
 
 type TourContextValue = {
-  /** Starts a new tour, replacing any tour already running. No-op on an
-   * empty step list — there'd be nothing to show. */
-  start: (steps: TourStep[]) => void;
+  /** Starts a new tour, replacing any tour already running. No-op (returns
+   * false) on an empty step list, or on a phone-width viewport — see the
+   * module comment. Returns true if it actually started, so a caller that
+   * persists "seen it" to localStorage only does so when the tour was
+   * genuinely shown, not skipped. */
+  start: (steps: TourStep[]) => boolean;
   /** Ends the active tour, if any. Safe to call with none running. */
   end: () => void;
 };
+
+// Below this, the tour doesn't start at all -- matches this app's own
+// `sm:` breakpoint (the mobile bottom-nav/top-bar swap uses the same 640px
+// line), not a tour-specific number. The balloon is a fixed 320px wide
+// (`tour-overlay.tsx`'s BALLOON_WIDTH) and the spotlight+backdrop pattern
+// assumes room to point at an element without covering the whole screen --
+// both break down on a phone, where the panel/page it'd be spotlighting is
+// usually already full-width/full-height itself. Tablets and up keep it
+// unchanged.
+const TABLET_AND_UP_QUERY = "(min-width: 640px)";
 
 const TourContext = createContext<TourContextValue | null>(null);
 
@@ -31,9 +44,11 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const [index, setIndex] = useState(0);
 
   const start = useCallback((nextSteps: TourStep[]) => {
-    if (nextSteps.length === 0) return;
+    if (nextSteps.length === 0) return false;
+    if (!window.matchMedia(TABLET_AND_UP_QUERY).matches) return false;
     setSteps(nextSteps);
     setIndex(0);
+    return true;
   }, []);
 
   const end = useCallback(() => {

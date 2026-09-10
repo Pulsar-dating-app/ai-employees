@@ -2,25 +2,34 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { LockIcon, InfoIcon } from "@/components/ui/icons";
+import { ChannelPanelHeader } from "./channel-panel-header";
 
 type EmbedDomainsSectionProps = {
   companyId: string;
+  agentName: string;
   canEdit: boolean;
   initialDomains: string[];
 };
 
-// Trello M7 -- the domain allowlist behind M5's embeddable widget
-// (companies.allowed_embed_domains, from M1). Whole-array-replace on save,
-// same shape/semantics as FaqSection's list editor. Empty entries are
-// dropped client-side before saving, same as FaqSection does for blank
-// question/answer pairs -- the server (B2's PATCH) still re-validates and
-// normalizes every entry regardless, this is just to avoid sending obvious
-// noise.
-export function EmbedDomainsSection({ companyId, canEdit, initialDomains }: EmbedDomainsSectionProps) {
-  const t = useTranslations("Settings.embedDomains");
+// Trello M7's domain allowlist (companies.allowed_embed_domains, from M1) --
+// moved here (2026-09-10) from its original home on the Settings page, next
+// to the widget it actually gates, since that's where a merchant configuring
+// the embed widget was already looking rather than a separate page. Same
+// column, same PATCH /api/companies/[companyId] endpoint, same
+// whole-array-replace save shape as FaqSection's list editor -- nothing
+// moved at the data layer, only where this is mounted (see page.tsx's own
+// comment on this same follow-up).
+//
+// Rendered in every hire's Embed tab, not gated to one agent -- the
+// `sharedScopeNote` callout below says so explicitly, since this is the one
+// panel in that tab that ISN'T scoped to just the agent whose page you're
+// on: saving here changes what's allowed for every hired team member's
+// embed widget at once.
+export function EmbedDomainsSection({ companyId, agentName, canEdit, initialDomains }: EmbedDomainsSectionProps) {
+  const t = useTranslations("MyAgents.embedDomains");
   const tCommon = useTranslations("Teach");
 
   const [domains, setDomains] = useState<string[]>(initialDomains.length > 0 ? initialDomains : [""]);
@@ -67,12 +76,20 @@ export function EmbedDomainsSection({ companyId, canEdit, initialDomains }: Embe
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="flex flex-col gap-6">
+      <ChannelPanelHeader
+        icon={<LockIcon className="h-5 w-5" />}
+        tileClassName="bg-primary-fixed text-primary"
+        title={t("title")}
+        description={t("description")}
+      />
+
+      <div className="flex items-start gap-3 rounded-lg bg-tertiary-container/10 p-4">
+        <InfoIcon className="mt-0.5 h-5 w-5 shrink-0 text-tertiary-container" />
+        <p className="text-sm leading-relaxed text-on-surface-variant">{t("sharedScopeNote", { name: agentName })}</p>
+      </div>
+
+      <div className="flex flex-col gap-3">
         <p className="text-sm text-on-surface-variant">
           {domains.every((d) => !d.trim()) ? t("emptyStateWarning") : null}
         </p>
@@ -121,7 +138,7 @@ export function EmbedDomainsSection({ companyId, canEdit, initialDomains }: Embe
             ) : null}
           </div>
         ) : null}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

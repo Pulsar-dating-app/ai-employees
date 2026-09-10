@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
-import { EmbedDomainsSection } from "./embed-domains-section";
 import { CartIcon, ChevronRightIcon, SettingsIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 
@@ -35,6 +34,13 @@ function countFilledSections(company: {
 // moved at the data layer. Payment/Other stayed here — genuinely
 // company-wide, not tied to one agent's own conversations the way
 // shipping/returns are.
+//
+// Second exception (2026-09-10): the embed domain allowlist (M7,
+// `allowed_embed_domains`) also moved to every hire's Connections page —
+// user-driven again, since it was hard to find here while the widget it
+// actually gates is configured entirely on that page's Embed tab. Same
+// column, same PATCH endpoint, just mounted next to `EmbedSnippetSection`
+// now instead of down here.
 export default async function SettingsPage() {
   const supabase = await createClient();
   const t = await getTranslations("Settings");
@@ -140,12 +146,6 @@ export default async function SettingsPage() {
         </div>
 
         <FaqSection companyId={company.id} canEdit={canEdit} initialFaq={company.faq} />
-
-        <EmbedDomainsSection
-          companyId={company.id}
-          canEdit={canEdit}
-          initialDomains={company.allowed_embed_domains ?? []}
-        />
       </div>
     </div>
   );
