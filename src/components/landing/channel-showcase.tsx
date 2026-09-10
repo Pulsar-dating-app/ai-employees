@@ -148,17 +148,17 @@ export function ChannelShowcase({ items, hireHref }: { items: ChannelItem[]; hir
                 <BrandLogo name={current.brand} className="h-6 w-6" />
               </span>
               <span
-                className="text-[13px] font-bold uppercase tracking-wider"
+                className="text-[12px] font-bold uppercase tracking-[0.14em]"
                 style={{ color: accent }}
               >
                 {current.name}
               </span>
             </div>
 
-            <h3 className="max-w-lg text-[26px] font-bold leading-[1.15] tracking-[-0.01em] text-[#0f172a] sm:text-[32px]">
+            <h3 className="max-w-lg text-[26px] font-semibold leading-[1.2] tracking-[-0.01em] text-[#0f172a] sm:text-[32px]">
               {current.headline}
             </h3>
-            <p className="mt-3 max-w-md text-[15px] leading-[24px] text-[#464555]">
+            <p className="mt-3 max-w-md text-[16px] leading-[24px] text-[#464555]">
               {current.caption}
             </p>
 

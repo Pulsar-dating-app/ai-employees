@@ -61,7 +61,7 @@ export function PlanFeatures({
           type="button"
           onClick={toggle}
           aria-expanded={expanded}
-          className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#3525cd] transition-colors hover:text-[#4f46e5]"
+          className="mt-3 inline-flex items-center gap-1 text-[14px] font-semibold text-[#3525cd] transition-colors hover:text-[#4f46e5]"
         >
           {expanded ? lessLabel : moreLabel}
           <M name="expand_more" size={16} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
