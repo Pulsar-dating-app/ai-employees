@@ -14,7 +14,7 @@ describe("buildEmbedSnippet", () => {
     });
 
     expect(snippet).toBe(
-      `<script src="${BASE_URL}/widget.js" data-company="acme" data-agent="malu" data-greeting="Oi! 👋 Posso ajudar a encontrar o que você procura?" data-launcher-src="${BASE_URL}/widget-launcher.webm"></script>`,
+      `<script src="${BASE_URL}/widget.js" defer data-company="acme" data-agent="malu" data-greeting="Oi! 👋 Posso ajudar a encontrar o que você procura?" data-launcher-src="${BASE_URL}/widget-launcher.webm"></script>`,
     );
   });
 

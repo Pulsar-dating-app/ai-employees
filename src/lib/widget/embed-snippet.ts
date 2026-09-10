@@ -33,6 +33,16 @@ export function buildEmbedSnippet(
 ): string {
   const attrs = [
     `src="${baseUrl}/widget.js"`,
+    // Keeps this third-party script out of the merchant's critical
+    // rendering path, the same reason Staffra's own landing page loads it
+    // via next/script's `lazyOnload` -- but `defer`, not `async`: widget.js
+    // unconditionally does `document.body.appendChild(...)` with no
+    // readiness check, so it needs the guarantee `defer` gives (runs only
+    // after the document is fully parsed, so <body> definitely exists) even
+    // when a merchant pastes this snippet in <head>. `async` can't promise
+    // that -- it may run as soon as the file is fetched, which could be
+    // before <body> exists.
+    "defer",
     `data-company="${escapeAttr(companySlug)}"`,
     `data-agent="${escapeAttr(agentSlug)}"`,
   ];
