@@ -68,7 +68,7 @@
       "headlinePre": "Contrate",
       "headlineHighlight": "funcionários de IA",
       "headlinePost": "que vendem, atendem e agendam 24/7",
-      "sub": "Crie agentes inteligentes treinados com seus documentos, catálogos e processos. Conecte no WhatsApp Oficial, Instagram, Telegram e em seu site em menos de 15 minutos sem programar.",
+      "sub": "Contrate agentes inteligentes treinados com seus documentos, catálogos e processos. Conecte no WhatsApp Oficial, Instagram, Telegram e em seu site em menos de 15 minutos sem programar.",
       "ctaPrimary": "Testar 15 Dias Grátis",
       "ctaSecondary": "Ver Demonstração Ao Vivo",
       "ctaTertiary": "Falar com Especialista",
@@ -99,7 +99,7 @@
         "m1Label": "Taxa de Resolução",
         "m1Sub": "Sem transbordo humano",
         "m2Label": "Tempo de Resposta",
-        "m2Sub": "Instantâneo no Zap",
+        "m2Sub": "Práticamente instantâneo",
         "m3Label": "Reuniões Marcadas",
         "m3Sub": "Google Calendar Sync"
       }
@@ -186,6 +186,18 @@
           ]
         },
         {
+          "key": "shopify",
+          "brand": "Shopify",
+          "name": "Shopify",
+          "headline": "Conecte à sua loja Shopify",
+          "caption": "Conecte a loja uma vez e seu funcionário vende com o catálogo ao vivo — sem exportar nada, sem planilhas.",
+          "points": [
+            "Catálogo sincronizado automaticamente — preços, estoque e novos produtos",
+            "Responde com o seu catálogo real e leva ao checkout da sua Shopify",
+            "Adicione o widget de chat à sua loja com uma linha de código"
+          ]
+        },
+        {
           "key": "hosted",
           "brand": "Chat",
           "name": "Link de chat",
@@ -210,17 +222,13 @@
           "name": "Malu",
           "role": "Vendas no WhatsApp & Web",
           "sub": "Inbound WhatsApp & Web",
-          "desc": "Entende o que o cliente procura, recomenda os produtos certos do seu catálogo e responde preço, estoque e políticas com base no que você cadastrou — sem inventar. Conduz quem está pronto para comprar até o checkout, sem ser insistente.",
-          "statLabel": "Taxa de conversão:",
-          "statValue": "28.4%"
+          "desc": "Entende o que o cliente procura, recomenda os produtos certos do seu catálogo e responde preço, estoque e políticas com base no que você cadastrou — sem inventar. Conduz quem está pronto para comprar até o checkout, sem ser insistente."
         },
         {
           "name": "Ana",
           "role": "Agente de Agendamento",
           "sub": "Sincronização de Calendário",
-          "desc": "Confere a disponibilidade real (horário de funcionamento, agenda existente e calendário conectado) e oferece aos clientes só os horários de fato livres. Resolve remarcações e cancelamentos na hora, e coloca na lista de espera quando você está lotado.",
-          "statLabel": "No-show reduzido:",
-          "statValue": "-42%"
+          "desc": "Confere a disponibilidade real (horário de funcionamento, agenda existente e calendário conectado) e oferece aos clientes só os horários de fato livres. Resolve remarcações e cancelamentos na hora, e coloca na lista de espera quando você está lotado."
         }
       ],
       "handoffTitle": "Transbordo para Humano Sem Fricção",
@@ -229,48 +237,48 @@
     },
     "rag": {
       "eyebrow": "Treinamento sem Código",
-      "heading": "Treine sua IA em minutos com o conteúdo real da sua empresa",
-      "sub": "Sem criar linhas de código ou configurar servidores vetoriais complexos. Arraste seus arquivos para o dashboard da Staffra e nosso motor RAG corporativo cuida de indexar, vetorizar e proteger suas regras de negócio.",
+      "heading": "Treine sua IA em minutos com os dados reais da sua empresa",
+      "sub": "Sem programar e sem configuração complexa. Cadastre sua empresa, importe seu catálogo e defina as regras — a Staffra mantém cada resposta baseada no que você cadastrou, sem sua IA inventar nada.",
       "steps": [
         {
-          "title": "Envie seus Documentos & URLs",
-          "desc": "PDFs de propostas, catálogos em planilha, links do seu site ou manuais técnicos em PDF."
+          "title": "Cadastre sua empresa & catálogo",
+          "desc": "Importe produtos de uma planilha ou do Shopify e preencha perfil, horários, políticas e FAQ."
         },
         {
           "title": "Defina o Tom de Voz & Guardrails",
-          "desc": "Estabeleça limites rígidos, respostas proibidas, tom formal ou descontraído e regras de desconto."
+          "desc": "Defina a persona do agente, limites rígidos, respostas proibidas e quando passar para um humano."
         },
         {
-          "title": "Conecte no WhatsApp Oficial",
-          "desc": "Em menos de 15 minutos sua equipe de IA já está interagindo com clientes reais 24 horas por dia."
+          "title": "Conecte seus canais",
+          "desc": "Publique o agente no seu site, Instagram ou Telegram em poucos cliques e comece a falar com clientes reais."
         }
       ],
-      "cardTitle": "Fontes de Conhecimento Suportadas",
-      "cardBadge": "Auto-Sync Ativo",
+      "cardTitle": "De onde seu agente responde",
+      "cardBadge": "Sempre ancorado",
       "sources": [
         {
-          "title": "PDFs & Manuais",
-          "sub": "Até 500 páginas"
+          "title": "Catálogo de produtos",
+          "sub": "Planilha ou cadastro manual"
         },
         {
-          "title": "Planilhas & ERP",
-          "sub": "Tabelas de Preço"
+          "title": "Shopify",
+          "sub": "Sincronização automática"
         },
         {
-          "title": "Website Crawling",
-          "sub": "Varredura de URLs"
+          "title": "Perfil da empresa",
+          "sub": "Nome, setor, contato"
         },
         {
-          "title": "Histórico de SAC",
-          "sub": "Zendesk / WhatsApp"
+          "title": "Políticas da loja",
+          "sub": "Entrega, trocas, pagamento"
         },
         {
-          "title": "Áudios & Vídeos",
-          "sub": "Transcrição Whisper"
+          "title": "FAQ",
+          "sub": "Suas perguntas frequentes"
         },
         {
-          "title": "APIs Customizadas",
-          "sub": "Webhooks Rest"
+          "title": "Guardrails",
+          "sub": "Limites e temas proibidos"
         }
       ],
       "imageAlt": "Dashboard de analytics da Staffra"
@@ -280,6 +288,8 @@
       "heading": "Escolha o tamanho ideal da sua equipe de inteligência",
       "sub": "Comece agora mesmo com 15 dias de garantia incondicional. Sem taxa oculta de setup ou fidelidade obrigatória.",
       "featuredBadge": "Mais Escolhido por Empresas",
+      "showMore": "Ver mais",
+      "showLess": "Ver menos",
       "plans": [
         {
           "tier": "Starter",
@@ -289,12 +299,42 @@
           "priceSuffix": "/ mês",
           "priceNote": "Cobrança mensal recorrente",
           "features": [
-            "1 Agente de IA Personalizado",
-            "Conexão com WhatsApp Oficial (Meta)",
-            "1 Widget Web Embed no site",
-            "Base de conhecimento até 50MB",
-            "Painel de conversas e transbordo",
-            "Modelos GPT-4o Mini & Gemini"
+            "Malu para vendas e Ana para agendamentos",
+            "Nome e foto personalizados por funcionário",
+            "Um funcionário em todos os canais, memória única",
+            "WhatsApp Business Oficial (Meta Cloud API)",
+            "Suporte a Instagram Direct",
+            "Suporte a Telegram",
+            "Widget de chat no site em uma linha de código",
+            "Página de chat hospedada e link para compartilhar",
+            "Controle de domínios autorizados do widget",
+            "Saudação e launcher do widget personalizados (animação, imagem ou vídeo)",
+            "Perfil da empresa, contatos e fuso horário sem código",
+            "Políticas de entrega, troca e pagamento",
+            "FAQ personalizado",
+            "Catálogo de produtos com importação de planilha (CSV / XLSX)",
+            "Sincronização automática do catálogo Shopify",
+            "Busca de produtos por significado",
+            "Respostas ancoradas em preço, estoque e políticas",
+            "Recomendações de produtos para cada cliente",
+            "Links de checkout rastreados para a sua loja",
+            "Rastreamento de intenção de compra e cliques no checkout",
+            "Sincronização em duas vias com o Google Calendar",
+            "Disponibilidade a partir dos seus horários, agenda e calendário",
+            "Agendar, remarcar e cancelar na conversa",
+            "Lista de espera automática com agenda cheia",
+            "Aprovação opcional antes de confirmar",
+            "Catálogo de serviços com curinga para pedidos não listados",
+            "Painel de agendamentos: concluídos, cancelados, faltas",
+            "Transbordo para humano e assumir a conversa ao vivo",
+            "Pausar ou reativar cada funcionário quando quiser",
+            "Caixa de conversas com filtros e busca",
+            "Painel de desempenho com status de saúde do time",
+            "Relatórios de 7, 30 e 90 dias",
+            "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
+            "Interface em português e inglês",
+            "Uso por resposta exibido no painel",
+            "15 dias de teste grátis"
           ],
           "cta": "Testar 15 Dias Grátis"
         },
@@ -306,13 +346,42 @@
           "priceSuffix": "/ mês",
           "priceNote": "Economize 20% no faturamento anual",
           "features": [
-            "Até 3 Agentes de IA Colaborativos",
-            "Multi-canal: WhatsApp + Instagram DM + Web",
-            "Integração Nativa com Google Calendar",
-            "RAG Avançado: PDFs, Planilhas e URLs",
-            "Transcrição e Resposta com Áudio de Voz",
-            "Dashboard de Conversão & Buying Intent",
-            "Suporte Prioritário com Gerente de Contas"
+            "Malu para vendas e Ana para agendamentos",
+            "Nome e foto personalizados por funcionário",
+            "Um funcionário em todos os canais, memória única",
+            "WhatsApp Business Oficial (Meta Cloud API)",
+            "Suporte a Instagram Direct",
+            "Suporte a Telegram",
+            "Widget de chat no site em uma linha de código",
+            "Página de chat hospedada e link para compartilhar",
+            "Controle de domínios autorizados do widget",
+            "Saudação e launcher do widget personalizados (animação, imagem ou vídeo)",
+            "Perfil da empresa, contatos e fuso horário sem código",
+            "Políticas de entrega, troca e pagamento",
+            "FAQ personalizado",
+            "Catálogo de produtos com importação de planilha (CSV / XLSX)",
+            "Sincronização automática do catálogo Shopify",
+            "Busca de produtos por significado",
+            "Respostas ancoradas em preço, estoque e políticas",
+            "Recomendações de produtos para cada cliente",
+            "Links de checkout rastreados para a sua loja",
+            "Rastreamento de intenção de compra e cliques no checkout",
+            "Sincronização em duas vias com o Google Calendar",
+            "Disponibilidade a partir dos seus horários, agenda e calendário",
+            "Agendar, remarcar e cancelar na conversa",
+            "Lista de espera automática com agenda cheia",
+            "Aprovação opcional antes de confirmar",
+            "Catálogo de serviços com curinga para pedidos não listados",
+            "Painel de agendamentos: concluídos, cancelados, faltas",
+            "Transbordo para humano e assumir a conversa ao vivo",
+            "Pausar ou reativar cada funcionário quando quiser",
+            "Caixa de conversas com filtros e busca",
+            "Painel de desempenho com status de saúde do time",
+            "Relatórios de 7, 30 e 90 dias",
+            "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
+            "Interface em português e inglês",
+            "Uso por resposta exibido no painel",
+            "15 dias de teste grátis"
           ],
           "cta": "Testar 15 Dias Grátis"
         },
@@ -323,12 +392,42 @@
           "price": "Customizado",
           "priceNote": "Projetos a partir de R$ 3.900/mês",
           "features": [
-            "Agentes de IA Ilimitados",
-            "Integração direta via API / ERP SAP / Salesforce",
-            "Fine-tuning com modelos dedicados",
-            "SLA de Atendimento 99.9% garantido em contrato",
-            "Onboarding com Engenheiro de IA Dedicado",
-            "Whitelabel completo com domínio próprio"
+            "Malu para vendas e Ana para agendamentos",
+            "Nome e foto personalizados por funcionário",
+            "Um funcionário em todos os canais, memória única",
+            "WhatsApp Business Oficial (Meta Cloud API)",
+            "Suporte a Instagram Direct",
+            "Suporte a Telegram",
+            "Widget de chat no site em uma linha de código",
+            "Página de chat hospedada e link para compartilhar",
+            "Controle de domínios autorizados do widget",
+            "Saudação e launcher do widget personalizados (animação, imagem ou vídeo)",
+            "Perfil da empresa, contatos e fuso horário sem código",
+            "Políticas de entrega, troca e pagamento",
+            "FAQ personalizado",
+            "Catálogo de produtos com importação de planilha (CSV / XLSX)",
+            "Sincronização automática do catálogo Shopify",
+            "Busca de produtos por significado",
+            "Respostas ancoradas em preço, estoque e políticas",
+            "Recomendações de produtos para cada cliente",
+            "Links de checkout rastreados para a sua loja",
+            "Rastreamento de intenção de compra e cliques no checkout",
+            "Sincronização em duas vias com o Google Calendar",
+            "Disponibilidade a partir dos seus horários, agenda e calendário",
+            "Agendar, remarcar e cancelar na conversa",
+            "Lista de espera automática com agenda cheia",
+            "Aprovação opcional antes de confirmar",
+            "Catálogo de serviços com curinga para pedidos não listados",
+            "Painel de agendamentos: concluídos, cancelados, faltas",
+            "Transbordo para humano e assumir a conversa ao vivo",
+            "Pausar ou reativar cada funcionário quando quiser",
+            "Caixa de conversas com filtros e busca",
+            "Painel de desempenho com status de saúde do time",
+            "Relatórios de 7, 30 e 90 dias",
+            "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
+            "Interface em português e inglês",
+            "Uso por resposta exibido no painel",
+            "15 dias de teste grátis"
           ],
           "cta": "Falar com Engenheiro de Contas"
         }

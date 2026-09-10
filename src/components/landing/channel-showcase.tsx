@@ -24,6 +24,7 @@ const ACCENT: Record<string, string> = {
   WhatsApp: "#1FA855",
   Instagram: "#C13584",
   Telegram: "#1D8FC7",
+  Shopify: "#5E8E3E",
   Site: "#3525cd",
   Chat: "#3525cd",
 };
@@ -44,6 +45,8 @@ const HAZE: Record<string, string> = {
     "radial-gradient(58% 78% at 98% 0%, rgba(247,119,55,0.58), transparent 62%), radial-gradient(58% 78% at 2% 100%, rgba(193,53,132,0.48), transparent 62%), radial-gradient(66% 70% at 55% 120%, rgba(120,52,175,0.4), transparent 68%)",
   Telegram:
     "radial-gradient(65% 85% at 95% -5%, rgba(41,169,235,0.55), transparent 66%), radial-gradient(60% 75% at -5% 105%, rgba(41,169,235,0.3), transparent 66%)",
+  Shopify:
+    "radial-gradient(65% 85% at 95% -5%, rgba(149,191,72,0.55), transparent 66%), radial-gradient(60% 75% at -5% 105%, rgba(95,142,62,0.3), transparent 66%)",
   Site:
     "radial-gradient(65% 85% at 95% -5%, rgba(79,70,229,0.5), transparent 66%), radial-gradient(60% 75% at -5% 105%, rgba(53,37,205,0.3), transparent 66%)",
   Chat:

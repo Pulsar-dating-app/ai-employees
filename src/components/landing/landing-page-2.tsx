@@ -6,6 +6,7 @@ import { landingV2Sans } from "./fonts";
 import { BrandLogo } from "./brand-logos";
 import { ChannelShowcase, type ChannelItem } from "./channel-showcase";
 import { M } from "./landing-icons";
+import { PlanFeatures, PlanFeaturesProvider } from "./plan-features";
 import { ShaderBackground } from "@/components/ui/shader-background";
 import { ScrollHeader } from "./scroll-header";
 import { CountUp } from "./count-up";
@@ -53,8 +54,6 @@ type Agent = {
   role: string;
   sub: string;
   desc: string;
-  statLabel: string;
-  statValue: string;
 };
 type Step = { title: string; desc: string };
 type Source = { title: string; sub: string };
@@ -81,12 +80,12 @@ const AGENT_STYLES = [
 ] as const;
 
 const SOURCE_ICONS = [
-  { icon: "picture_as_pdf", color: "text-[#3525cd]" },
-  { icon: "table_chart", color: "text-[#10b981]" },
-  { icon: "link", color: "text-[#006591]" },
-  { icon: "chat_bubble", color: "text-[#7e3000]" },
-  { icon: "mic", color: "text-[#4f46e5]" },
-  { icon: "database", color: "text-[#0f172a]" },
+  { icon: "shopping_bag", color: "text-[#3525cd]" },
+  { icon: "link", color: "text-[#10b981]" },
+  { icon: "verified", color: "text-[#006591]" },
+  { icon: "picture_as_pdf", color: "text-[#7e3000]" },
+  { icon: "chat_bubble", color: "text-[#4f46e5]" },
+  { icon: "check_circle", color: "text-[#0f172a]" },
 ] as const;
 
 const IMPACT_ACCENT = ["text-[#e2dfff]", "text-[#10b981]", "text-[#39b8fd]"] as const;
@@ -459,10 +458,6 @@ export async function LandingPageV2() {
                       <p className="text-left text-[16px] leading-[24px] text-[#464555]">{agent.desc}</p>
                     </div>
                     <div className="mt-3 flex items-center justify-between pt-3">
-                      <span className="text-[12px] font-semibold text-[#464555]">
-                        {agent.statLabel}{" "}
-                        <strong className="text-[#0f172a]">{agent.statValue}</strong>
-                      </span>
                       <Link
                         href={HIRE}
                         aria-label={t("workforce.viewProfile")}
@@ -573,6 +568,7 @@ export async function LandingPageV2() {
               <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("pricing.sub")}</p>
             </div>
 
+            <PlanFeaturesProvider>
             <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3">
               {plans.map((plan, i) => {
                 const featured = i === 1;
@@ -623,23 +619,12 @@ export async function LandingPageV2() {
                           {plan.priceNote}
                         </span>
                       </div>
-                      <ul className="flex flex-col gap-2.5 text-left text-[14px] text-[#464555]">
-                        {plan.features.map((f, fi) => (
-                          <li
-                            key={f}
-                            className={`flex items-center gap-2 ${
-                              featured && fi === 0 ? "font-semibold text-[#0f172a]" : ""
-                            }`}
-                          >
-                            <M
-                              name={featured && fi === 0 ? "verified" : "check_circle"}
-                              size={18}
-                              className={featured && fi === 0 ? "text-[#3525cd]" : "text-[#10b981]"}
-                            />
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
+                      <PlanFeatures
+                        features={plan.features}
+                        featured={featured}
+                        moreLabel={t("pricing.showMore")}
+                        lessLabel={t("pricing.showLess")}
+                      />
                     </div>
                     <div className="mt-12">
                       <Link
@@ -660,6 +645,7 @@ export async function LandingPageV2() {
                 );
               })}
             </div>
+            </PlanFeaturesProvider>
           </div>
         </section>
 

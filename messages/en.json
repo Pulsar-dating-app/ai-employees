@@ -68,7 +68,7 @@
       "headlinePre": "Hire",
       "headlineHighlight": "AI employees",
       "headlinePost": "that sell, support and book 24/7",
-      "sub": "Build intelligent agents trained on your documents, catalogues and processes. Connect to Official WhatsApp, Instagram, Telegram and your website under 15 minutes — no code.",
+      "sub": "Hire intelligent agents trained on your documents, catalogues and processes. Connect to Official WhatsApp, Instagram, Telegram and your website under 15 minutes — no code.",
       "ctaPrimary": "Start 15-Day Free Trial",
       "ctaSecondary": "Watch Live Demo",
       "ctaTertiary": "Talk to a Specialist",
@@ -99,7 +99,7 @@
         "m1Label": "Resolution Rate",
         "m1Sub": "No human handoff",
         "m2Label": "Response Time",
-        "m2Sub": "Instant on WhatsApp",
+        "m2Sub": "Instant",
         "m3Label": "Meetings Booked",
         "m3Sub": "Google Calendar Sync"
       }
@@ -186,6 +186,18 @@
           ]
         },
         {
+          "key": "shopify",
+          "brand": "Shopify",
+          "name": "Shopify",
+          "headline": "Plug into your Shopify store",
+          "caption": "Connect your store once and your employee sells from your live catalog — no exports, no spreadsheets.",
+          "points": [
+            "Catalog syncs automatically — prices, stock and new products",
+            "Answers from your real catalog and links to your Shopify checkout",
+            "Add the chat widget to your storefront with one line of code"
+          ]
+        },
+        {
           "key": "hosted",
           "brand": "Chat",
           "name": "Chat link",
@@ -210,17 +222,13 @@
           "name": "Malu",
           "role": "Sales on WhatsApp & Web",
           "sub": "Inbound WhatsApp & Web",
-          "desc": "Understands what the shopper is after, recommends the right products from your catalogue, and answers price, stock and policy questions straight from what you have registered — never guessing. Guides ready buyers to checkout without being pushy.",
-          "statLabel": "Conversion rate:",
-          "statValue": "28.4%"
+          "desc": "Understands what the shopper is after, recommends the right products from your catalogue, and answers price, stock and policy questions straight from what you have registered — never guessing. Guides ready buyers to checkout without being pushy."
         },
         {
           "name": "Ana",
           "role": "Scheduling Agent",
           "sub": "Calendar Sync",
-          "desc": "Checks real availability (opening hours, existing bookings and your connected calendar) and offers customers only the slots that are genuinely free. Handles reschedules and cancellations on the spot, and adds people to the waitlist when you are fully booked.",
-          "statLabel": "No-show reduced:",
-          "statValue": "-42%"
+          "desc": "Checks real availability (opening hours, existing bookings and your connected calendar) and offers customers only the slots that are genuinely free. Handles reschedules and cancellations on the spot, and adds people to the waitlist when you are fully booked."
         }
       ],
       "handoffTitle": "Frictionless Human Handoff",
@@ -229,48 +237,48 @@
     },
     "rag": {
       "eyebrow": "No-Code Training",
-      "heading": "Train your AI in minutes with your company's real content",
-      "sub": "No writing code or configuring complex vector servers. Drag your files into the Staffra dashboard and our corporate RAG engine takes care of indexing, vectorizing and protecting your business rules.",
+      "heading": "Train your AI in minutes on your real business data",
+      "sub": "No code and no complex setup. Register your business, import your catalogue and set the rules — Staffra keeps every answer grounded in what you registered, so your agent never guesses.",
       "steps": [
         {
-          "title": "Upload your Documents & URLs",
-          "desc": "Proposal PDFs, spreadsheet catalogues, links from your site, or technical manuals in PDF."
+          "title": "Register your business & catalogue",
+          "desc": "Import products from a spreadsheet or Shopify and fill in your profile, hours, policies and FAQ."
         },
         {
           "title": "Set the Tone of Voice & Guardrails",
-          "desc": "Establish hard limits, forbidden answers, a formal or casual tone, and discount rules."
+          "desc": "Define the agent's persona, hard limits, forbidden answers and when to hand off to a human."
         },
         {
-          "title": "Connect to Official WhatsApp",
-          "desc": "In under 15 minutes your AI team is already interacting with real customers 24 hours a day."
+          "title": "Connect your channels",
+          "desc": "Publish the agent to your website, Instagram or Telegram in a few clicks and start talking to real customers."
         }
       ],
-      "cardTitle": "Supported Knowledge Sources",
-      "cardBadge": "Auto-Sync Active",
+      "cardTitle": "What your agent answers from",
+      "cardBadge": "Always grounded",
       "sources": [
         {
-          "title": "PDFs & Manuals",
-          "sub": "Up to 500 pages"
+          "title": "Product catalogue",
+          "sub": "Spreadsheet or manual entry"
         },
         {
-          "title": "Spreadsheets & ERP",
-          "sub": "Price Tables"
+          "title": "Shopify",
+          "sub": "Automatic catalogue sync"
         },
         {
-          "title": "Website Crawling",
-          "sub": "URL sweeping"
+          "title": "Business profile",
+          "sub": "Name, industry, contact"
         },
         {
-          "title": "Support History",
-          "sub": "Zendesk / WhatsApp"
+          "title": "Store policies",
+          "sub": "Shipping, returns, payments"
         },
         {
-          "title": "Audio & Video",
-          "sub": "Whisper transcription"
+          "title": "FAQ",
+          "sub": "Your common questions"
         },
         {
-          "title": "Custom APIs",
-          "sub": "REST Webhooks"
+          "title": "Guardrails",
+          "sub": "Limits & forbidden topics"
         }
       ],
       "imageAlt": "Staffra analytics dashboard"
@@ -280,6 +288,8 @@
       "heading": "Choose the right size for your intelligence team",
       "sub": "Start right now with a 15-day unconditional guarantee. No hidden setup fee or mandatory lock-in.",
       "featuredBadge": "Most Chosen by Companies",
+      "showMore": "See more",
+      "showLess": "See less",
       "plans": [
         {
           "tier": "Starter",
@@ -289,12 +299,42 @@
           "priceSuffix": "/ month",
           "priceNote": "Recurring monthly billing",
           "features": [
-            "1 Personalized AI Agent",
-            "Official WhatsApp connection (Meta)",
-            "1 Web Embed Widget on your site",
-            "Knowledge base up to 50MB",
-            "Conversation and handoff panel",
-            "GPT-4o Mini & Gemini models"
+            "Malu for sales and Ana for scheduling",
+            "Custom name and photo per employee",
+            "One employee across every channel, one shared memory",
+            "Official WhatsApp Business (Meta Cloud API)",
+            "Instagram Direct support",
+            "Telegram support",
+            "Website chat widget in one line of code",
+            "Staffra-hosted chat page and shareable link",
+            "Allowed-domains control for the widget",
+            "Custom widget greeting and launcher (animation, image or video)",
+            "No-code business profile, contacts and time zone",
+            "Shipping, return and payment policies",
+            "Custom FAQ",
+            "Product catalog with spreadsheet import (CSV / XLSX)",
+            "Automatic Shopify catalog sync",
+            "Meaning-based product search",
+            "Grounded answers on price, stock and policies",
+            "Product recommendations for each shopper",
+            "Tracked checkout links to your own store",
+            "Buying-intent and checkout-click tracking",
+            "Google Calendar two-way sync",
+            "Availability from your hours, bookings and calendar",
+            "In-chat booking, rescheduling and cancellation",
+            "Automatic waitlist when fully booked",
+            "Optional approval before confirming a booking",
+            "Service catalog with a catch-all for unlisted requests",
+            "Appointments dashboard: completed, cancelled, no-show",
+            "Human handoff and live conversation takeover",
+            "Pause or resume each employee anytime",
+            "Conversations inbox with filters and search",
+            "Performance dashboard with team-health status",
+            "7-, 30- and 90-day reporting",
+            "Unlimited teammates (owner, admin, member roles)",
+            "English and Portuguese interface",
+            "Per-reply usage shown in your dashboard",
+            "15-day free trial"
           ],
           "cta": "Start 15-Day Free Trial"
         },
@@ -306,13 +346,42 @@
           "priceSuffix": "/ month",
           "priceNote": "Save 20% on annual billing",
           "features": [
-            "Up to 3 Collaborative AI Agents",
-            "Multi-channel: WhatsApp + Instagram DM + Web",
-            "Native Google Calendar integration",
-            "Advanced RAG: PDFs, Spreadsheets and URLs",
-            "Voice-audio transcription and replies",
-            "Conversion & Buying Intent dashboard",
-            "Priority support with an Account Manager"
+            "Malu for sales and Ana for scheduling",
+            "Custom name and photo per employee",
+            "One employee across every channel, one shared memory",
+            "Official WhatsApp Business (Meta Cloud API)",
+            "Instagram Direct support",
+            "Telegram support",
+            "Website chat widget in one line of code",
+            "Staffra-hosted chat page and shareable link",
+            "Allowed-domains control for the widget",
+            "Custom widget greeting and launcher (animation, image or video)",
+            "No-code business profile, contacts and time zone",
+            "Shipping, return and payment policies",
+            "Custom FAQ",
+            "Product catalog with spreadsheet import (CSV / XLSX)",
+            "Automatic Shopify catalog sync",
+            "Meaning-based product search",
+            "Grounded answers on price, stock and policies",
+            "Product recommendations for each shopper",
+            "Tracked checkout links to your own store",
+            "Buying-intent and checkout-click tracking",
+            "Google Calendar two-way sync",
+            "Availability from your hours, bookings and calendar",
+            "In-chat booking, rescheduling and cancellation",
+            "Automatic waitlist when fully booked",
+            "Optional approval before confirming a booking",
+            "Service catalog with a catch-all for unlisted requests",
+            "Appointments dashboard: completed, cancelled, no-show",
+            "Human handoff and live conversation takeover",
+            "Pause or resume each employee anytime",
+            "Conversations inbox with filters and search",
+            "Performance dashboard with team-health status",
+            "7-, 30- and 90-day reporting",
+            "Unlimited teammates (owner, admin, member roles)",
+            "English and Portuguese interface",
+            "Per-reply usage shown in your dashboard",
+            "15-day free trial"
           ],
           "cta": "Start 15-Day Free Trial"
         },
@@ -323,12 +392,42 @@
           "price": "Custom",
           "priceNote": "Projects from R$ 3,900/month",
           "features": [
-            "Unlimited AI Agents",
-            "Direct integration via API / SAP ERP / Salesforce",
-            "Fine-tuning with dedicated models",
-            "99.9% service SLA guaranteed in contract",
-            "Onboarding with a Dedicated AI Engineer",
-            "Full white-label with your own domain"
+            "Malu for sales and Ana for scheduling",
+            "Custom name and photo per employee",
+            "One employee across every channel, one shared memory",
+            "Official WhatsApp Business (Meta Cloud API)",
+            "Instagram Direct support",
+            "Telegram support",
+            "Website chat widget in one line of code",
+            "Staffra-hosted chat page and shareable link",
+            "Allowed-domains control for the widget",
+            "Custom widget greeting and launcher (animation, image or video)",
+            "No-code business profile, contacts and time zone",
+            "Shipping, return and payment policies",
+            "Custom FAQ",
+            "Product catalog with spreadsheet import (CSV / XLSX)",
+            "Automatic Shopify catalog sync",
+            "Meaning-based product search",
+            "Grounded answers on price, stock and policies",
+            "Product recommendations for each shopper",
+            "Tracked checkout links to your own store",
+            "Buying-intent and checkout-click tracking",
+            "Google Calendar two-way sync",
+            "Availability from your hours, bookings and calendar",
+            "In-chat booking, rescheduling and cancellation",
+            "Automatic waitlist when fully booked",
+            "Optional approval before confirming a booking",
+            "Service catalog with a catch-all for unlisted requests",
+            "Appointments dashboard: completed, cancelled, no-show",
+            "Human handoff and live conversation takeover",
+            "Pause or resume each employee anytime",
+            "Conversations inbox with filters and search",
+            "Performance dashboard with team-health status",
+            "7-, 30- and 90-day reporting",
+            "Unlimited teammates (owner, admin, member roles)",
+            "English and Portuguese interface",
+            "Per-reply usage shown in your dashboard",
+            "15-day free trial"
           ],
           "cta": "Talk to an Account Engineer"
         }
