@@ -155,23 +155,31 @@ const ICONS: Record<string, Draw> = {
       </>
     ),
   },
+  // The hand-authored 20-vertex scallop this replaced wasn't actually
+  // symmetric (radii ranged ~6.2–10 with no consistent alternation), which
+  // read as a squashed, lopsided blob at small sizes rather than a clean
+  // seal — especially once filled solid. This is the standard Material
+  // Icons "verified" glyph instead: a true rotationally-symmetric badge
+  // outline with the checkmark cut as a hole in the same path
+  // (`fillRule="evenodd"`), so one path serves both the outline and filled
+  // variants with no separate white checkmark overlay needed.
   verified: {
     ...S,
     body: (
-      <>
-        <path d="m12 2 2.4 1.8 3-.2 1 2.8 2.6 1.5-.9 2.9.9 2.9-2.6 1.5-1 2.8-3-.2L12 22l-2.4-1.9-3 .2-1-2.8L3 16.2l.9-2.9L3 10.4l2.6-1.5 1-2.8 3 .2z" />
-        <path d="m8.5 12 2.5 2.5 5-5.5" />
-      </>
+      <path
+        fillRule="evenodd"
+        d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-13 5l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"
+      />
     ),
   },
   verified_fill: {
     fill: "currentColor",
     stroke: "none",
     body: (
-      <>
-        <path d="m12 2 2.4 1.8 3-.2 1 2.8 2.6 1.5-.9 2.9.9 2.9-2.6 1.5-1 2.8-3-.2L12 22l-2.4-1.9-3 .2-1-2.8L3 16.2l.9-2.9L3 10.4l2.6-1.5 1-2.8 3 .2z" />
-        <path d="m8 11.6 2.6 2.6 5.4-6 1.5 1.3-6.9 7.6L6.5 13z" fill="#fff" />
-      </>
+      <path
+        fillRule="evenodd"
+        d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-13 5l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"
+      />
     ),
   },
 };

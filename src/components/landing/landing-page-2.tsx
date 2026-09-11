@@ -14,6 +14,7 @@ import { CountUp } from "./count-up";
 import { ShutterReveal } from "./shutter-reveal";
 import { SlideReveal } from "./slide-reveal";
 import { CascadeText } from "./cascade-text";
+import { InteractiveDemo, type DemoAgent } from "./interactive-demo";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 import workspaceImg from "../../../public/landing-v2/workspace.jpg";
@@ -115,6 +116,7 @@ export async function LandingPageV2() {
   const logos = t.raw("socialProof.logos") as LogoItem[];
   const channels = t.raw("channels.items") as ChannelItem[];
   const agents = t.raw("workforce.agents") as Agent[];
+  const demoAgents: DemoAgent[] = agents.map((a, i) => ({ ...a, slug: i === 0 ? "malu" : "ana" }));
   const steps = t.raw("rag.steps") as Step[];
   const sources = t.raw("rag.sources") as Source[];
   const plans = t.raw("pricing.plans") as Plan[];
@@ -188,7 +190,7 @@ export async function LandingPageV2() {
           </div>
 
           <section
-            id="demo"
+            id="hero"
             className="relative z-10 mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-10 md:pt-12"
           >
             <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
@@ -245,7 +247,7 @@ export async function LandingPageV2() {
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] font-semibold tracking-[0.02em] text-[#464555] sm:mt-3 sm:gap-6 sm:text-[12px]">
                 {[t("hero.trust1"), t("hero.trust2"), t("hero.trust3")].map((trust) => (
                   <span key={trust} className="flex items-center gap-1.5">
-                    <M name="verified" size={16} className="text-[#10b981]" />
+                    <M name="verified" size={16} className="text-[#10b981]" fill />
                     {trust}
                   </span>
                 ))}
@@ -510,7 +512,22 @@ export async function LandingPageV2() {
           </div>
         </section>
 
-        {/* ── 5. No-code RAG training ─────────────────────────── */}
+        {/* ── 5. Interactive demo ─────────────────────────────── */}
+        <section id="demo" className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <span className="rounded-full bg-[#e2dfff] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[#0f0069]">
+              {t("interactiveDemo.badge")}
+            </span>
+            <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
+              {t("interactiveDemo.heading")}
+            </h2>
+            <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("interactiveDemo.sub")}</p>
+          </div>
+
+          <InteractiveDemo agents={demoAgents} />
+        </section>
+
+        {/* ── 6. No-code RAG training ─────────────────────────── */}
         <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
             <div className="flex flex-col text-left lg:col-span-6">
@@ -568,7 +585,7 @@ export async function LandingPageV2() {
           </div>
         </section>
 
-        {/* ── 6. Pricing ──────────────────────────────────────── */}
+        {/* ── 7. Pricing ──────────────────────────────────────── */}
         <section id="planos" className="w-full bg-[#f5f2ff] py-12">
           <div className="mx-auto max-w-[1440px] px-4 md:px-10">
             <div className="mx-auto mb-12 max-w-2xl text-center">
@@ -669,7 +686,7 @@ export async function LandingPageV2() {
           </div>
         </section>
 
-        {/* ── 7. Proven impact stats ─────────────────────────── */}
+        {/* ── 8. Proven impact stats ─────────────────────────── */}
         <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="rounded-xl bg-gradient-to-br from-[#0f172a] to-[#302f39] p-6 text-white shadow-xl md:p-12">
             <div className="grid grid-cols-1 gap-6 text-center md:grid-cols-3 md:text-left">
@@ -692,7 +709,7 @@ export async function LandingPageV2() {
           </div>
         </section>
 
-        {/* ── 8. FAQ ─────────────────────────────────────────── */}
+        {/* ── 9. FAQ ─────────────────────────────────────────── */}
         <section id="faq" className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="mx-auto mb-6 max-w-3xl text-center">
             <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
@@ -722,7 +739,7 @@ export async function LandingPageV2() {
           </div>
         </section>
 
-        {/* ── 9. Final CTA ───────────────────────────────────── */}
+        {/* ── 10. Final CTA ───────────────────────────────────── */}
         <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#3525cd] via-[#4f46e5] to-[#006591] p-6 text-center text-white shadow-[0_20px_50px_rgba(53,37,205,0.25)] md:p-12">
             <style>{`

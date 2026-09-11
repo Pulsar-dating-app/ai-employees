@@ -235,6 +235,62 @@
       "handoffDesc": "Quando a conversa sai do script ou o cliente pede, o funcionário passa o atendimento para uma pessoa do seu time — com todo o histórico e o resumo da conversa à mão.",
       "handoffCta": "Conheça os funcionários disponíveis"
     },
+    "interactiveDemo": {
+      "badge": "Veja Funcionando",
+      "heading": "Esse é o seu dashboard de verdade",
+      "sub": "Escolha uma funcionária e siga exatamente as telas que um lojista vê — time, configurações, setup e uma conversa ao vivo.",
+      "back": "Etapa anterior",
+      "next": "Próxima etapa",
+      "goToStep": "Ir para a etapa {step}",
+      "watchAgain": "Assistir novamente",
+      "openSettingsHotspot": "Abrir configurações de {name}",
+      "screens": {
+        "team": "Clique na Malu ou na Ana pra abrir as configurações dela — essa é a lista exata que você vê ao entrar.",
+        "availability": "Ligue ou pause a {name} em todos os canais de uma vez, num único botão.",
+        "shipping": "Defina custo e prazo de entrega — a {name} informa automaticamente, sem inventar.",
+        "returns": "Seu prazo e processo de devolução, explicado exatamente do jeito que você escreve aqui.",
+        "handoff": "Decida se a {name} pode chamar uma pessoa quando o cliente precisar.",
+        "products": "Cadastre produtos um a um, ou importe o catálogo inteiro pelo Shopify ou uma planilha — sem digitar nada na mão.",
+        "schedulingAppointments": "Todo agendamento que a {name} confirmou, ou que está esperando sua aprovação.",
+        "schedulingServices": "O que os clientes podem agendar com a {name} — duração e preço de cada um.",
+        "schedulingSettings": "Horário de funcionamento, folgas, Google Calendar — a {name} só oferece horários realmente livres.",
+        "live": "A {name} já está respondendo clientes de verdade com exatamente o que você acabou de configurar."
+      },
+      "nav": {
+        "goToProducts": "Ir para Produtos",
+        "goToScheduling": "Ir para Agendamentos",
+        "goToConversations": "Ir para Conversas"
+      },
+      "live": {
+        "badge": "Ativa agora",
+        "maluCustomerMsg": "Tem esse modelo em azul, tamanho M?",
+        "maluAgentMsg": "Tenho sim! Ainda tenho 3 em azul, tamanho M — quer que eu separe um pra você?",
+        "anaCustomerMsg": "Vocês têm horário amanhã à tarde?",
+        "anaAgentMsg": "Tenho sim — 14h ou 16h30 amanhã, ambos livres. Qual fica melhor pra você?"
+      },
+      "demoCompany": "Sua Loja",
+      "malu": {
+        "product1Name": "Kit Hidratação Facial",
+        "product1Price": "R$ 219",
+        "product2Name": "Sérum Vitamina C",
+        "product2Price": "R$ 129"
+      },
+      "ana": {
+        "day1": "Segunda-feira",
+        "day1Hours": "09:00 – 18:00",
+        "day2": "Terça-feira",
+        "day2Hours": "09:00 – 18:00"
+      },
+      "demo": {
+        "shippingText": "Enviamos pra todo o Brasil pelos Correios, 3–5 dias úteis, frete grátis acima de R$ 150.",
+        "returnsText": "Devolução em até 30 dias, produto sem uso e com etiqueta.",
+        "appointmentClient": "Camila Rocha",
+        "appointmentService": "Corte de cabelo",
+        "appointmentTime": "Amanhã, 14h",
+        "serviceName": "Corte de cabelo",
+        "serviceDuration": "45 min"
+      }
+    },
     "rag": {
       "eyebrow": "Treinamento sem Código",
       "heading": "Treine sua IA em minutos com os dados reais da sua empresa",

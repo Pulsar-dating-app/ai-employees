@@ -235,6 +235,62 @@
       "handoffDesc": "When the conversation goes off-script or the customer asks, the employee hands the chat to a person on your team — with the full history and conversation summary ready.",
       "handoffCta": "Meet the available employees"
     },
+    "interactiveDemo": {
+      "badge": "See It In Action",
+      "heading": "This is your real dashboard",
+      "sub": "Pick a teammate and follow the exact screens a merchant sees — team, settings, setup, and a live conversation.",
+      "back": "Previous step",
+      "next": "Next step",
+      "goToStep": "Go to step {step}",
+      "watchAgain": "Watch again",
+      "openSettingsHotspot": "Open {name}'s settings",
+      "screens": {
+        "team": "Click Malu or Ana to open her settings — this is the exact list you see when you sign in.",
+        "availability": "Turn {name} on or off for every channel at once, from one toggle.",
+        "shipping": "Set delivery cost and timeframe — {name} quotes it automatically, never a guess.",
+        "returns": "Your return window and process, explained exactly the way you write it here.",
+        "handoff": "Decide if {name} can bring in a person when a customer needs one.",
+        "products": "Add products one by one, or import your whole catalogue from Shopify or a spreadsheet — no manual typing needed.",
+        "schedulingAppointments": "Every booking {name} has confirmed, or is waiting on you to approve.",
+        "schedulingServices": "What customers can book with {name} — duration and price for each.",
+        "schedulingSettings": "Business hours, time off, Google Calendar — {name} only offers slots that are genuinely free.",
+        "live": "{name} is already answering real customers with exactly what you just configured."
+      },
+      "nav": {
+        "goToProducts": "Go to Products",
+        "goToScheduling": "Go to Scheduling",
+        "goToConversations": "Go to Conversations"
+      },
+      "live": {
+        "badge": "Active now",
+        "maluCustomerMsg": "Do you have this in blue, size M?",
+        "maluAgentMsg": "Yes! I have 3 left in blue, size M — want me to hold one for you?",
+        "anaCustomerMsg": "Do you have anything tomorrow afternoon?",
+        "anaAgentMsg": "Yes — 2pm or 4:30pm are both open tomorrow. Which works better for you?"
+      },
+      "demoCompany": "Your Store",
+      "malu": {
+        "product1Name": "Facial Hydration Kit",
+        "product1Price": "$45",
+        "product2Name": "Vitamin C Serum",
+        "product2Price": "$32"
+      },
+      "ana": {
+        "day1": "Monday",
+        "day1Hours": "9:00 AM – 6:00 PM",
+        "day2": "Tuesday",
+        "day2Hours": "9:00 AM – 6:00 PM"
+      },
+      "demo": {
+        "shippingText": "We ship nationwide via Correios, 3–5 business days, free over $50.",
+        "returnsText": "30-day returns, items must be unused with tags attached.",
+        "appointmentClient": "Camila Rocha",
+        "appointmentService": "Haircut",
+        "appointmentTime": "Tomorrow, 2:00 PM",
+        "serviceName": "Haircut",
+        "serviceDuration": "45 min"
+      }
+    },
     "rag": {
       "eyebrow": "No-Code Training",
       "heading": "Train your AI in minutes on your real business data",
