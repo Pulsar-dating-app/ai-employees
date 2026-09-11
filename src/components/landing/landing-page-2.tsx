@@ -230,7 +230,7 @@ export async function LandingPageV2() {
                 <a
                   href="#demo"
                   aria-label={t("hero.ctaSecondary")}
-                  className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-[14px] font-semibold text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#f5f2ff] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)] sm:w-auto"
+                  className="group hidden items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-[14px] font-semibold text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#f5f2ff] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)] sm:inline-flex"
                 >
                   <M name="play_circle" size={20} className="text-[#3525cd]" />
                   <CascadeText text={t("hero.ctaSecondary")} />
@@ -513,7 +513,11 @@ export async function LandingPageV2() {
         </section>
 
         {/* ── 5. Interactive demo ─────────────────────────────── */}
-        <section id="demo" className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
+        {/* Tablet/desktop only: the tour packs a full sidebar+content
+            dashboard chrome into a fixed-width frame, which has no usable
+            layout on a phone screen. Hidden below `sm` rather than shrunk,
+            so the hero's own CTA to it (below) is hidden the same way. */}
+        <section id="demo" className="hidden sm:block mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <span className="rounded-full bg-[#e2dfff] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[#0f0069]">
               {t("interactiveDemo.badge")}

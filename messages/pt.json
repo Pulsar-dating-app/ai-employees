@@ -254,19 +254,25 @@
         "schedulingAppointments": "Todo agendamento que a {name} confirmou, ou que está esperando sua aprovação.",
         "schedulingServices": "O que os clientes podem agendar com a {name} — duração e preço de cada um.",
         "schedulingSettings": "Horário de funcionamento, folgas, Google Calendar — a {name} só oferece horários realmente livres.",
-        "live": "A {name} já está respondendo clientes de verdade com exatamente o que você acabou de configurar."
+        "live": "Toda conversa à esquerda, não importa o canal — clique numa pra ler ela ali do lado, na direita."
       },
       "nav": {
         "goToProducts": "Ir para Produtos",
         "goToScheduling": "Ir para Agendamentos",
         "goToConversations": "Ir para Conversas"
       },
+      "openConversationHotspot": "Abrir conversa com {name}",
       "live": {
         "badge": "Ativa agora",
+        "maluCustomerName": "Rafael Martins",
         "maluCustomerMsg": "Tem esse modelo em azul, tamanho M?",
         "maluAgentMsg": "Tenho sim! Ainda tenho 3 em azul, tamanho M — quer que eu separe um pra você?",
+        "anaCustomerName": "Camila Rocha",
         "anaCustomerMsg": "Vocês têm horário amanhã à tarde?",
-        "anaAgentMsg": "Tenho sim — 14h ou 16h30 amanhã, ambos livres. Qual fica melhor pra você?"
+        "anaAgentMsg": "Tenho sim — 14h ou 16h30 amanhã, ambos livres. Qual fica melhor pra você?",
+        "secondCustomerName": "Juliana Alves",
+        "secondCustomerMsg": "Muito obrigada pela ajuda mais cedo!",
+        "secondAgentMsg": "Disponha! Qualquer coisa é só chamar de novo."
       },
       "demoCompany": "Sua Loja",
       "malu": {

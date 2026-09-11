@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
@@ -21,7 +21,6 @@ import { TeamAgentCard, type TeamAgent } from "../../app/dashboard/agent-card";
 
 export type DemoAgent = { slug: "malu" | "ana"; name: string; role: string; desc: string };
 
-const STEP_DURATION_MS = 5000;
 const PHOTO: Record<"malu" | "ana", string> = {
   malu: "/agents/sales-1.png",
   ana: "/agents/secretary-1.png",
@@ -601,30 +600,125 @@ function SchedulingStep({
   );
 }
 
-function LiveStep({ agent, t, onRestart }: { agent: DemoAgent; t: ReturnType<typeof useTranslations>; onRestart: () => void }) {
-  const customerMsg = t(agent.slug === "malu" ? "live.maluCustomerMsg" : "live.anaCustomerMsg");
-  const agentMsg = t(agent.slug === "malu" ? "live.maluAgentMsg" : "live.anaAgentMsg");
+// The two channels this demo shows conversations arriving on — the only
+// two `Conversations.channel` actually has copy for right now (no WhatsApp
+// entry yet, even though the channel itself is wired up elsewhere in the
+// product). Malu's example arrives on Instagram, Ana's on the website chat,
+// just so both real values get shown across the two branches.
+const PRIMARY_CHANNEL: Record<"malu" | "ana", "instagram" | "web_chat"> = {
+  malu: "instagram",
+  ana: "web_chat",
+};
+const SECONDARY_CHANNEL: Record<"malu" | "ana", "instagram" | "web_chat"> = {
+  malu: "web_chat",
+  ana: "instagram",
+};
+
+function ConvoRow({
+  name,
+  channelLabel,
+  preview,
+  selected,
+  showBadge,
+  label,
+  onClick,
+}: {
+  name: string;
+  channelLabel: string;
+  preview?: string;
+  selected: boolean;
+  showBadge?: boolean;
+  label: string;
+  onClick: () => void;
+}) {
   return (
-    <div className="flex flex-1 items-center justify-center p-4">
-      <div className="w-full max-w-xs rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-level1">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AgentAvatar role="intent" size="md" shape="circle" photoSrc={PHOTO[agent.slug]} alt={agent.name} />
-            <span className="text-sm font-semibold text-on-surface">{agent.name}</span>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={selected}
+      className={`relative block w-full border-b border-outline-variant px-2.5 py-2 text-left text-xs transition-colors ${
+        selected ? "bg-secondary-container/40" : "hover:bg-surface-container-low"
+      }`}
+    >
+      {showBadge ? <PingBadge size="h-2.5 w-2.5" /> : null}
+      <p className="truncate font-medium text-on-surface">{name}</p>
+      <p className="truncate text-[10px] text-on-surface-variant">{channelLabel}</p>
+      {preview ? <p className="mt-0.5 truncate text-on-surface-variant">{preview}</p> : null}
+    </button>
+  );
+}
+
+// WhatsApp-Web-style split: a narrow conversation list on the left (every
+// real one this demo shows, tagged with the channel it came in on) and the
+// selected thread open on the right — clicking a row swaps which one's
+// shown, same as the real app's own inbox pattern of "pick a conversation,
+// read it beside the list" rather than navigating away from it.
+function ConversationsStep({ agent, t, onRestart }: { agent: DemoAgent; t: ReturnType<typeof useTranslations>; onRestart: () => void }) {
+  const tChannel = useTranslations("Conversations.channel");
+  const tStatus = useTranslations("Conversations.filters.status");
+  const tDetail = useTranslations("Conversations.detail");
+  const [active, setActive] = useState<"primary" | "secondary">("primary");
+
+  const primary = {
+    name: t(agent.slug === "malu" ? "live.maluCustomerName" : "live.anaCustomerName"),
+    channel: PRIMARY_CHANNEL[agent.slug],
+    status: "active",
+    customerMsg: t(agent.slug === "malu" ? "live.maluCustomerMsg" : "live.anaCustomerMsg"),
+    agentMsg: t(agent.slug === "malu" ? "live.maluAgentMsg" : "live.anaAgentMsg"),
+  };
+  const secondary = {
+    name: t("live.secondCustomerName"),
+    channel: SECONDARY_CHANNEL[agent.slug],
+    status: "closed",
+    customerMsg: t("live.secondCustomerMsg"),
+    agentMsg: t("live.secondAgentMsg"),
+  };
+  const selected = active === "primary" ? primary : secondary;
+
+  return (
+    <div className="flex flex-1 overflow-hidden">
+      <div className="w-32 shrink-0 overflow-y-auto border-r border-outline-variant sm:w-44">
+        <ConvoRow
+          name={primary.name}
+          channelLabel={tChannel(primary.channel)}
+          preview={primary.customerMsg}
+          selected={active === "primary"}
+          showBadge={active !== "primary"}
+          label={t("openConversationHotspot", { name: primary.name })}
+          onClick={() => setActive("primary")}
+        />
+        <ConvoRow
+          name={secondary.name}
+          channelLabel={tChannel(secondary.channel)}
+          selected={active === "secondary"}
+          showBadge={active === "primary"}
+          label={t("openConversationHotspot", { name: secondary.name })}
+          onClick={() => setActive("secondary")}
+        />
+      </div>
+
+      <div className="flex flex-1 flex-col overflow-y-auto p-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-on-surface">{selected.name}</p>
+            <p className="truncate text-[11px] text-on-surface-variant">
+              {tDetail("withAgent", { name: agent.name })} · {tChannel(selected.channel)}
+            </p>
           </div>
-          <span className="rounded-full bg-primary-fixed px-2 py-0.5 text-xs font-semibold text-primary">
-            {t("live.badge")}
+          <span className="shrink-0 rounded-full bg-tertiary/10 px-2 py-0.5 text-[10px] font-semibold text-tertiary">
+            {tStatus(selected.status)}
           </span>
         </div>
         <div className="flex flex-col gap-1.5 text-sm">
           <div className="max-w-[85%] self-end rounded-xl rounded-tr-none bg-primary p-2.5 text-on-primary">
-            {customerMsg}
+            {selected.customerMsg}
           </div>
           <div className="max-w-[85%] self-start rounded-xl rounded-tl-none bg-surface-container p-2.5 text-on-surface">
-            {agentMsg}
+            {selected.agentMsg}
           </div>
         </div>
-        <button type="button" onClick={onRestart} className="mt-3 text-xs font-semibold text-primary hover:underline">
+        <button type="button" onClick={onRestart} className="mt-3 self-start text-xs font-semibold text-primary hover:underline">
           {t("watchAgain")}
         </button>
       </div>
@@ -638,21 +732,13 @@ export function InteractiveDemo({ agents }: { agents: DemoAgent[] }) {
   const tTeach = useTranslations("Teach");
   const tProducts = useTranslations("Products");
   const tSchedulingTabs = useTranslations("Scheduling.tabs");
-  const tDashboardTabs = useTranslations("Dashboard.tabs");
+  const tConversations = useTranslations("Conversations");
   const [step, setStep] = useState(0);
   const [branch, setBranch] = useState<DemoAgent>(agents[0]);
-  const [paused, setPaused] = useState(false);
 
   const screens = screensFor(branch.slug);
   const total = screens.length;
   const screen = screens[step] ?? screens[0];
-
-  useEffect(() => {
-    if (paused) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = setTimeout(() => setStep((s) => (s + 1) % total), STEP_DURATION_MS);
-    return () => clearTimeout(id);
-  }, [step, paused, total]);
 
   function restart() {
     setBranch(agents[0]);
@@ -689,7 +775,7 @@ export function InteractiveDemo({ agents }: { agents: DemoAgent[] }) {
           ? tProducts("pageTitle")
           : screen.kind === "scheduling"
             ? tSchedulingTabs(screen.tab)
-            : tDashboardTabs("conversations");
+            : tConversations("pageTitle");
   const captionKey =
     screen.kind === "settings"
       ? screen.tab
@@ -720,13 +806,7 @@ export function InteractiveDemo({ agents }: { agents: DemoAgent[] }) {
       : undefined;
 
   return (
-    <div
-      className="relative mx-auto w-full max-w-4xl"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
-    >
+    <div className="relative mx-auto w-full max-w-4xl">
       <div className="relative overflow-hidden rounded-xl bg-white shadow-[0_20px_50px_rgba(79,70,229,0.1)]">
         <div className="flex items-center gap-1.5 bg-[#0f172a] px-4 py-2.5">
           <span className="h-2.5 w-2.5 rounded-full bg-[#f87171]" />
@@ -747,7 +827,7 @@ export function InteractiveDemo({ agents }: { agents: DemoAgent[] }) {
             ) : screen.kind === "scheduling" ? (
               <SchedulingStep agent={branch} tab={screen.tab} onTabSelect={goToSchedulingTab} />
             ) : (
-              <LiveStep agent={branch} t={t} onRestart={restart} />
+              <ConversationsStep agent={branch} t={t} onRestart={restart} />
             )}
           </div>
         </div>
