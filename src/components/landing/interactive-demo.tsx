@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { BrandLogo } from "./brand-logos";
 import {
   BadgeCheckIcon,
   UsersIcon,
@@ -188,6 +190,26 @@ function PageHeaderMock({ icon: Icon, title, subtitle }: { icon: typeof UsersIco
   );
 }
 
+// A framing callout for a screen with several ways to do the same thing
+// (e.g. three tabs to add a product) — a solid accent panel with a short
+// bulleted overview, the same "orient before you click" move a recorded
+// product tour's own narration bubble makes at a busy step.
+function Callout({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="mb-3 rounded-xl bg-primary p-3 text-on-primary shadow-level2">
+      <p className="text-xs font-semibold">{title}</p>
+      <ul className="mt-1.5 flex flex-col gap-1 text-xs leading-snug text-on-primary/90">
+        {items.map((item) => (
+          <li key={item} className="flex gap-1.5">
+            <span aria-hidden>•</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // A small underlined tab strip, reused for the settings tabs and the
 // scheduling area's own sub-nav — every tab is a real, clickable jump to
 // that step (not just the current one), same as clicking a tab in the real
@@ -354,41 +376,153 @@ function SettingsStep({
 function ProductsStep() {
   const tProducts = useTranslations("Products");
   const t = useTranslations("LandingV2.interactiveDemo.malu");
+  const [addTab, setAddTab] = useState<"csv" | "shopify" | "manual">("csv");
+
   const rows = [
-    { name: t("product1Name"), price: t("product1Price") },
-    { name: t("product2Name"), price: t("product2Price") },
+    { name: t("product1Name"), price: t("product1Price"), stock: t("product1Stock"), category: t("product1Category") },
+    { name: t("product2Name"), price: t("product2Price"), stock: t("product2Stock"), category: t("product2Category") },
   ];
+  const addTabs = [
+    { key: "csv", label: tProducts("addTabs.csv") },
+    { key: "shopify", label: tProducts("addTabs.shopify") },
+    { key: "manual", label: tProducts("addTabs.manual") },
+  ];
+  const moreFields = [
+    tProducts("form.descriptionLabel"),
+    tProducts("form.categoryLabel"),
+    tProducts("form.stockLabel"),
+    tProducts("form.skuLabel"),
+    tProducts("form.imageUrlLabel"),
+    tProducts("form.productUrlLabel"),
+    tProducts("form.currencyLabel"),
+  ];
+
   return (
     <div className="flex-1 overflow-y-auto p-3">
       <PageHeaderMock icon={PackageIcon} title={tProducts("pageTitle")} subtitle={tProducts("pageSubtitle")} />
-      <div className="overflow-hidden rounded-lg border border-outline-variant">
-        <div className="flex bg-surface-container-low px-3 py-1.5 text-[11px] font-semibold text-on-surface-variant">
-          <span className="flex-1">{tProducts("form.nameLabel")}</span>
-          <span>{tProducts("form.priceLabel")}</span>
-        </div>
-        {rows.map((row) => (
-          <div key={row.name} className="flex items-center border-t border-outline-variant px-3 py-2 text-xs">
-            <span className="flex-1 font-medium text-on-surface">{row.name}</span>
-            <span className="text-on-surface-variant">{row.price}</span>
+
+      <Callout
+        title={t("productsIntro")}
+        items={[
+          `${tProducts("addTabs.manual")}: ${t("introManual")} ${t("moreFieldsShort", { count: moreFields.length })}`,
+          `${tProducts("addTabs.shopify")}: ${t("introShopify")}`,
+          `${tProducts("addTabs.csv")}: ${t("introCsv")}`,
+        ]}
+      />
+
+      {/* Real screen, card 1: the tabbed "Add products" card — one by one,
+          Shopify, or a spreadsheet import. Ringed to match the callout
+          above pointing at it — the highlighted-target-plus-explanation
+          pairing a recorded tour's own narration step makes. */}
+      <Card className="mb-4 ring-2 ring-primary ring-offset-2 ring-offset-surface">
+        <CardHeader>
+          <CardTitle>{tProducts("addTabs.cardTitle")}</CardTitle>
+        </CardHeader>
+        <TabStrip tabs={addTabs} active={addTab} onSelect={(key) => setAddTab(key as typeof addTab)} />
+        {addTab === "csv" ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-on-surface-variant">{tProducts("import.description")}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="secondary" size="sm">
+                {tProducts("import.downloadTemplateButton")}
+              </Button>
+              <Button type="button" variant="secondary" size="sm">
+                {tProducts("import.chooseFileButton")}
+              </Button>
+            </div>
           </div>
-        ))}
-      </div>
-      <div className="mt-3">
-        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-on-surface-variant">
-          {tProducts("addTabs.cardTitle")}
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          <span className="rounded-md border border-outline-variant bg-surface-container-lowest px-2.5 py-1 text-[11px] font-semibold text-on-surface">
-            {tProducts("addTabs.manual")}
-          </span>
-          <span className="rounded-md border border-outline-variant bg-surface-container-lowest px-2.5 py-1 text-[11px] font-semibold text-on-surface">
-            {tProducts("addTabs.shopify")}
-          </span>
-          <span className="rounded-md border border-outline-variant bg-surface-container-lowest px-2.5 py-1 text-[11px] font-semibold text-on-surface">
-            {tProducts("addTabs.csv")}
-          </span>
-        </div>
-      </div>
+        ) : addTab === "shopify" ? (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1.5">
+              <BrandLogo name="Shopify" className="h-4 w-4 shrink-0" />
+              <p className="text-xs font-semibold text-on-surface">{tProducts("shopify.title")}</p>
+            </div>
+            <p className="text-xs text-on-surface-variant">{tProducts("shopify.description")}</p>
+            <Input label={tProducts("shopify.shopLabel")} placeholder={tProducts("shopify.shopPlaceholder")} readOnly />
+            <div>
+              <Button type="button" size="sm">
+                {tProducts("shopify.connectButton")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-2">
+              <Input label={tProducts("form.nameLabel")} readOnly />
+              <Input label={tProducts("form.priceLabel")} readOnly />
+            </div>
+            <p className="text-[11px] text-on-surface-variant">
+              {t("moreFieldsHint", {
+                count: moreFields.length,
+                fields: moreFields.join(", "),
+              })}
+            </p>
+            <div>
+              <Button type="button" size="sm">
+                {tProducts("form.addButton")}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Real screen, card 2: the catalog itself — filters, list, pagination. */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{tProducts("pageTitle")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-2">
+            <Input label={tProducts("filters.searchLabel")} placeholder={tProducts("filters.searchPlaceholder")} readOnly />
+            <Button type="button" variant="secondary" size="sm">
+              {tProducts("filters.searchButton")}
+            </Button>
+            <label className="flex items-center gap-1.5 text-sm text-on-surface-variant">
+              <input type="checkbox" readOnly className="h-4 w-4 rounded border-outline-variant" />
+              {tProducts("filters.includeInactiveLabel")}
+            </label>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-outline-variant">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-outline-variant bg-surface-container-low text-on-surface-variant">
+                  <th className="px-3 py-1.5 font-semibold">{tProducts("list.nameColumn")}</th>
+                  <th className="px-3 py-1.5 font-semibold">{tProducts("list.priceColumn")}</th>
+                  <th className="px-3 py-1.5 font-semibold">{tProducts("list.stockColumn")}</th>
+                  <th className="px-3 py-1.5 font-semibold">{tProducts("list.categoryColumn")}</th>
+                  <th className="px-3 py-1.5 font-semibold">{tProducts("list.statusColumn")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.name} className="border-t border-outline-variant first:border-t-0">
+                    <td className="px-3 py-2 font-medium text-on-surface">{row.name}</td>
+                    <td className="px-3 py-2 text-on-surface-variant">{row.price}</td>
+                    <td className="px-3 py-2 text-on-surface-variant">{row.stock}</td>
+                    <td className="px-3 py-2 text-on-surface-variant">{row.category}</td>
+                    <td className="px-3 py-2">
+                      <span className="rounded-full bg-tertiary/10 px-2 py-0.5 text-[10px] font-semibold text-tertiary">
+                        {tProducts("list.activeLabel")}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <Button type="button" variant="secondary" size="sm" disabled>
+              {tProducts("filters.previousPage")}
+            </Button>
+            <span className="text-xs text-on-surface-variant">{tProducts("filters.pageOf", { page: 1, totalPages: 1 })}</span>
+            <Button type="button" variant="secondary" size="sm" disabled>
+              {tProducts("filters.nextPage")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

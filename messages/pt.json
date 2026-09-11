@@ -272,8 +272,18 @@
       "malu": {
         "product1Name": "Kit Hidratação Facial",
         "product1Price": "R$ 219",
+        "product1Stock": "18",
+        "product1Category": "Skincare",
         "product2Name": "Sérum Vitamina C",
-        "product2Price": "R$ 129"
+        "product2Price": "R$ 129",
+        "product2Stock": "42",
+        "product2Category": "Skincare",
+        "productsIntro": "Existem 3 formas de colocar produtos no catálogo:",
+        "introManual": "Cadastre um produto por vez — nome, preço, descrição.",
+        "introShopify": "Conecte sua loja e os produtos são importados automaticamente.",
+        "introCsv": "Suba uma planilha com o catálogo inteiro de uma vez.",
+        "moreFieldsHint": "+ {count} campos ao cadastrar individualmente: {fields}",
+        "moreFieldsShort": "(+{count} campos)"
       },
       "ana": {
         "day1": "Segunda-feira",

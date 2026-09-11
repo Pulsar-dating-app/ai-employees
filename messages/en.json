@@ -272,8 +272,18 @@
       "malu": {
         "product1Name": "Facial Hydration Kit",
         "product1Price": "$45",
+        "product1Stock": "18",
+        "product1Category": "Skincare",
         "product2Name": "Vitamin C Serum",
-        "product2Price": "$32"
+        "product2Price": "$32",
+        "product2Stock": "42",
+        "product2Category": "Skincare",
+        "productsIntro": "There are 3 ways to get products into the catalogue:",
+        "introManual": "Add one product at a time — name, price, description.",
+        "introShopify": "Connect your store and products import automatically.",
+        "introCsv": "Upload a spreadsheet with your whole catalogue at once.",
+        "moreFieldsHint": "+ {count} more fields when adding one by one: {fields}",
+        "moreFieldsShort": "(+{count} fields)"
       },
       "ana": {
         "day1": "Monday",
