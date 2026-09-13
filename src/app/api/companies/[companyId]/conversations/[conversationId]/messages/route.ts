@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
+import { sendWhatsappMessage } from "@/lib/whatsapp/meta-graph-api";
 
 // Trello F5 / N10 -- a merchant's manual reply. Sending one *is* taking
 // over: this always flips the conversation to 'paused' (unless already
@@ -11,10 +12,15 @@ import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
 //
 // N10: the reply is now also *delivered* on the conversation's own channel,
 // not just persisted. Web chat needs nothing (the customer's widget polls
-// and picks it up). Instagram needs an actual outbound send via
-// sendInstagramMessage. The message row is persisted first and always --
-// delivery is reported back as { delivery: { ok } } so the UI can warn
-// without ever losing the merchant's text.
+// and picks it up). Instagram and WhatsApp need an actual outbound send via
+// sendInstagramMessage / sendWhatsappMessage. The message row is persisted
+// first and always -- delivery is reported back as { delivery: { ok } } so
+// the UI can warn without ever losing the merchant's text.
+//
+// deliverOverWhatsapp has no HUMAN_AGENT-style equivalent to extend past the
+// window: WhatsApp's own 24h customer-service window has no tag that
+// reopens it for a genuine human reply (unlike Instagram's N11), so a send
+// past 24h just fails the same way an expired-window send always has.
 //
 // N11: past Instagram's 24h messaging window, delivery only works under the
 // HUMAN_AGENT tag (7 days, human replies only). deliverOverInstagram looks
@@ -121,6 +127,59 @@ async function deliverOverInstagram(
   return { ok: result.ok };
 }
 
+// Delivers a just-persisted merchant reply over WhatsApp. Returns whether
+// it reached the customer; never throws -- the caller has already saved the
+// message and only needs to know if it went out. Mirrors
+// deliverOverInstagram's shape; failure handling mirrors the webhook's own
+// (src/app/api/webhooks/whatsapp/route.ts) token_invalid/payment_issue paths.
+async function deliverOverWhatsapp(
+  companyId: string,
+  agentId: string | null,
+  customerId: string,
+  text: string,
+): Promise<{ ok: boolean }> {
+  if (!agentId) return { ok: false };
+  const service = createServiceClient();
+
+  const [{ data: connection }, { data: customer }] = await Promise.all([
+    service
+      .from("company_whatsapp_connections")
+      .select("access_token, phone_number_id, status")
+      .eq("company_id", companyId)
+      .eq("agent_id", agentId)
+      .maybeSingle(),
+    service.from("customers").select("phone").eq("id", customerId).maybeSingle(),
+  ]);
+
+  if (!connection || connection.status !== "connected" || !connection.access_token || !customer?.phone) {
+    return { ok: false };
+  }
+
+  const result = await sendWhatsappMessage(connection.access_token, connection.phone_number_id, customer.phone, text);
+
+  if (!result.ok) {
+    try {
+      if (result.kind === "token_invalid") {
+        await service
+          .from("company_whatsapp_connections")
+          .update({ status: "disconnected", access_token: null, token_expires_at: null })
+          .eq("company_id", companyId)
+          .eq("agent_id", agentId);
+      } else if (result.kind === "payment_issue") {
+        await service
+          .from("company_whatsapp_connections")
+          .update({ has_payment_issue: true, payment_issue_detected_at: new Date().toISOString() })
+          .eq("company_id", companyId)
+          .eq("agent_id", agentId);
+      }
+    } catch {
+      // Nothing further to do.
+    }
+  }
+
+  return { ok: result.ok };
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ companyId: string; conversationId: string }> },
@@ -183,7 +242,7 @@ export async function POST(
   }
 
   // Deliver on the channel. Web chat: nothing to do, the widget polls.
-  // Instagram: an actual outbound send.
+  // Instagram and WhatsApp: an actual outbound send.
   let delivery: { ok: boolean } | null = null;
   if (conversation.channel === "instagram") {
     delivery = await deliverOverInstagram(
@@ -193,6 +252,8 @@ export async function POST(
       conversation.customer_id,
       message,
     );
+  } else if (conversation.channel === "whatsapp") {
+    delivery = await deliverOverWhatsapp(companyId, conversation.agent_id, conversation.customer_id, message);
   }
 
   return NextResponse.json({ message: reply, delivery }, { status: 201 });
