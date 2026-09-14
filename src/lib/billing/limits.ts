@@ -1,18 +1,19 @@
 // Trello P7 -- the soft-cap knobs for the monthly AI-reply quota.
 //
 // The plan reply limits themselves are still placeholders (`plans.ts`), but
-// the grace policy itself is decided (2026-09-04, see decisions.md): 20%
-// head-room past 100%, then blocked. Both knobs still live in env so a
-// deploy can tune the number or, as an ops kill switch, disarm the hard
-// stop without a code change -- but the *shipped* default now enforces it.
+// the grace policy itself is decided: 5% head-room past 100%, then blocked
+// (2026-09-14, tightened from the original 20% -- see decisions.md). Both
+// knobs still live in env so a deploy can tune the number or, as an ops kill
+// switch, disarm the hard stop without a code change -- but the *shipped*
+// default now enforces it.
 
 // How far past 100% of the plan's snapshotted `reply_limit` the bots keep
-// answering before the hard stop engages. 1.2 = 20% head-room -- the
+// answering before the hard stop engages. 1.05 = 5% head-room -- the
 // decided number. Override with BILLING_GRACE_MULTIPLIER.
-const DEFAULT_GRACE_MULTIPLIER = 1.2;
+const DEFAULT_GRACE_MULTIPLIER = 1.05;
 
 // Whether crossing `reply_limit * grace_multiplier` actually stops the AI.
-// Armed by default: past the 20% grace band, the AI is skipped and the
+// Armed by default: past the 5% grace band, the AI is skipped and the
 // customer gets no reply at all -- fully silent, see enforcement.ts (nothing
 // is charged either way -- AgentEngine.run() never runs). Set
 // BILLING_HARD_STOP_ENABLED=false as an escape hatch if the policy ever
