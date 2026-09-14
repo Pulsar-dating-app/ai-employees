@@ -138,6 +138,7 @@ function MobileMoreSheet({
   onClose: () => void;
 }) {
   const t = useTranslations("Dashboard.tabs");
+  const tLegal = useTranslations("Legal");
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -191,6 +192,17 @@ function MobileMoreSheet({
             );
           })}
         </nav>
+        <div className="border-t border-outline-variant p-3">
+          <Link
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            className="block rounded-lg px-3 py-1.5 text-xs text-on-surface-variant transition-colors duration-150 hover:text-on-surface"
+          >
+            {tLegal("privacy.title")}
+          </Link>
+        </div>
       </div>
     </div>,
     document.body,
@@ -218,6 +230,7 @@ export function Sidebar({
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
   const tDash = useTranslations("Dashboard");
+  const tLegal = useTranslations("Legal");
 
   const identityLabel = companyName ?? email ?? "";
 
@@ -281,6 +294,14 @@ export function Sidebar({
         <UsageTracker usage={usage} />
 
         <div className="border-t border-outline-variant p-3">
+          <Link
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-lg px-3 py-1.5 text-xs text-on-surface-variant transition-colors duration-150 hover:text-on-surface"
+          >
+            {tLegal("privacy.title")}
+          </Link>
           <form action={logout}>
             <button
               type="submit"

@@ -1404,7 +1404,9 @@
         "sdkNotReady": "Still loading — try again in a moment.",
         "stepOneTitle": "Connect your Google account",
         "stepTwoTitle": "Bookings respect your calendar",
-        "stepTwoDescription": "Once connected, your team skips any time you're already busy in Google Calendar when offering slots."
+        "stepTwoDescription": "Once connected, your team skips any time you're already busy in Google Calendar when offering slots.",
+        "privacyNotice": "Your Google Calendar data is used only to check availability and manage appointments, per our",
+        "privacyNoticeLink": "Privacy Policy"
       },
       "intake": {
         "title": "Intake questions",
@@ -1605,7 +1607,7 @@
     "lastUpdated": "Last updated {date}",
     "privacy": {
       "title": "Privacy Policy",
-      "date": "September 2, 2026",
+      "date": "September 14, 2026",
       "intro": "This Privacy Policy explains how Pulsar LTDA (\"Pulsar\", \"we\", \"us\"), the company that operates the Staffra platform (\"Staffra\", the \"Service\"), collects, uses, shares, and protects personal information when you use our website, dashboard, and services (together, the \"Service\"). It also describes the choices you have about your information. Please read it together with our Terms of Service.",
       "sections": [
         {
@@ -1621,7 +1623,7 @@
             "Account information: name, email address, password (stored only as a secure hash by our authentication provider), company name, and role, provided when a Customer signs up or is invited to a team.",
             "Business information: the descriptions, policies, product catalog, pricing, opening hours, bookable services, and other content a Customer adds so its AI employees can answer questions accurately.",
             "Conversation content: the messages, attachments, and contact identifiers (such as an email address, a phone number, or a social handle) exchanged between an End User and an AI employee, along with any appointments, orders, or checkout links generated during a conversation.",
-            "Connection data: access tokens and account identifiers we store when a Customer connects a third-party channel or tool, such as a messaging platform or a calendar.",
+            "Connection data: access tokens and account identifiers we store when a Customer connects a third-party channel or tool, such as a messaging platform (WhatsApp, Instagram, Telegram) or a calendar (Google Calendar).",
             "Billing information: for paid subscriptions, the plan a Customer selects and the customer and subscription identifiers returned by our payment processor. We do not receive or store full card numbers.",
             "Usage and device data: log data, IP address, browser type, pages viewed, and actions taken in the dashboard, collected automatically to operate and secure the Service.",
             "Cookies: we use strictly necessary cookies to keep you signed in and to remember your language preference. We do not use advertising cookies."
@@ -1642,7 +1644,8 @@
           "heading": "4. Automated processing by AI providers",
           "paragraphs": [
             "AI employees generate replies using large-scale language models operated by trusted third-party providers. To produce a response, the relevant conversation content and the business information needed for context are sent to that provider for processing and are returned to Staffra.",
-            "Under our agreements with these providers, they may process this data only to generate the response and may not use it to train their general-purpose models. We do not sell personal information and we do not use conversation content for advertising."
+            "Under our agreements with these providers, they may process this data only to generate the response and may not use it to train their general-purpose models. We do not sell personal information and we do not use conversation content for advertising.",
+            "Where a Customer connects a Google Calendar, our access to and use of information received through Google APIs adheres to the Google API Services User Data Policy, including its Limited Use requirements. We use Google Calendar data only to check availability and to create, update, or cancel appointments on the Customer's behalf, and we delete it when the Customer disconnects the calendar or closes their account. We do not use Google user data for advertising, do not transfer it to data brokers, do not use it to determine creditworthiness or for lending purposes, and do not use it to train generalized (non-personalized) AI or machine learning models."
           ]
         },
         {
