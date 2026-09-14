@@ -148,6 +148,12 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     };
   }
 
+  console.warn("[agent-engine] grounding check failed, retrying turn", {
+    companyId: input.companyId,
+    conversationId: conversation.id,
+    violationCount: firstCheck.violations.length,
+  });
+
   // Drop the rejected draft from the conversation *before* regenerating, so
   // the retry isn't anchored on its own invented figure (and so no later turn
   // can quote it back).
@@ -169,6 +175,10 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   });
 
   if (secondCheck.grounded) {
+    console.warn("[agent-engine] grounding retry succeeded", {
+      companyId: input.companyId,
+      conversationId: conversation.id,
+    });
     return {
       responseText: retry.responseText,
       displayProductIds: retry.displayProductIds,
@@ -178,6 +188,12 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       toolCalls: [...draft.toolResults, ...retry.toolResults],
     };
   }
+
+  console.error("[agent-engine] grounding retry failed, falling back to canned response", {
+    companyId: input.companyId,
+    conversationId: conversation.id,
+    violationCount: secondCheck.violations.length,
+  });
 
   await discardConversationItems(openai, openAiConversationId, retry.messageItemIds);
 

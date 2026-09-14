@@ -214,10 +214,40 @@ async function withUnmatchableWordsDropped(
 // one) exactly as it behaves today -- lexical-only -- while the one caller
 // that's meant to get semantic recall, the Agent Engine's search_products
 // tool, passes ctx.openai through explicitly.
+const QUERY_EMBEDDING_CACHE_TTL_MS = 5 * 60 * 1000;
+const QUERY_EMBEDDING_CACHE_MAX_SIZE = 500;
+const queryEmbeddingCache = new Map<string, { embedding: number[]; expiresAt: number }>();
+
+function getCachedQueryEmbedding(key: string): number[] | undefined {
+  const entry = queryEmbeddingCache.get(key);
+  if (!entry) return undefined;
+  if (entry.expiresAt <= Date.now()) {
+    queryEmbeddingCache.delete(key);
+    return undefined;
+  }
+  return entry.embedding;
+}
+
+function setCachedQueryEmbedding(key: string, embedding: number[]): void {
+  if (queryEmbeddingCache.size >= QUERY_EMBEDDING_CACHE_MAX_SIZE) {
+    const oldestKey = queryEmbeddingCache.keys().next().value;
+    if (oldestKey !== undefined) queryEmbeddingCache.delete(oldestKey);
+  }
+  queryEmbeddingCache.set(key, { embedding, expiresAt: Date.now() + QUERY_EMBEDDING_CACHE_TTL_MS });
+}
+
 async function embedQuery(keywords: string[], openaiClient?: OpenAI): Promise<number[] | null> {
   if (!openaiClient || keywords.length === 0) return null;
   const text = [...new Set(keywords.map((k) => k.trim()).filter(Boolean))].join(" ");
-  return createProductEmbedding(text, openaiClient);
+  if (!text) return null;
+
+  const cacheKey = text.toLowerCase();
+  const cached = getCachedQueryEmbedding(cacheKey);
+  if (cached) return cached;
+
+  const embedding = await createProductEmbedding(text, openaiClient);
+  if (embedding) setCachedQueryEmbedding(cacheKey, embedding);
+  return embedding;
 }
 
 async function search(
