@@ -19,7 +19,7 @@
 // `company_message_usage.reply_limit` (Trello P2), seeded from the value
 // here but editable per company at any time.
 
-export type PlanKey = "starter" | "pro" | "enterprise";
+export type PlanKey = "starter" | "intermediate" | "pro" | "enterprise";
 
 /** Length of the free trial (Trello P8), for every self-serve plan that
  * offers one. Not a per-plan field -- every plan that offers a trial uses
@@ -55,9 +55,10 @@ export interface BillingPlan {
    * (`TRIAL_DAYS`). `null` means this plan never offers a trial -- the
    * checkout route only grants one when the chosen plan has a non-null
    * value here. Seeded the same way as `monthlyReplyLimit`, just for the
-   * subscription's trialing period instead of a normal one. Starter and Pro
-   * both offer the same 1,000-reply trial (2026-09-08) -- Enterprise never
-   * does (no self-serve Checkout to trial through).
+   * subscription's trialing period instead of a normal one. Every self-serve
+   * plan (Starter and Pro originally, 2026-09-08; Intermediate joined them
+   * 2026-09-14) offers the same 1,000-reply trial -- Enterprise never does
+   * (no self-serve Checkout to trial through).
    */
   trialReplyLimit: number | null;
   /**
@@ -79,6 +80,24 @@ export const BILLING_PLANS: readonly BillingPlan[] = [
     monthlyReplyLimit: 10_000,
     trialReplyLimit: 1_000,
     priceBrlCents: 94_000,
+    isSelfServe: true,
+  },
+  {
+    key: "intermediate",
+    displayName: "Intermediate",
+    // Trello P1 -- third self-serve tier, sitting between Starter and Pro
+    // (owner's ask, 2026-09-14: the two original plans priced too close
+    // together relative to their quota gap -- see decisions.md). Stripe
+    // Price created in the sandbox (product "Staffra Intermediate",
+    // prod_VGEy3azYF1IogE) mirroring Starter/Pro's own setup.
+    // monthlyReplyLimit is a placeholder same as the other two -- pick a
+    // real number once usage data justifies one; keep it between Starter's
+    // and Pro's.
+    stripeLookupKey: "intermediate_monthly",
+    stripePriceId: "price_1UFiUfHAg1kV3YLS7Je8CYL3",
+    monthlyReplyLimit: 15_000,
+    trialReplyLimit: 1_000,
+    priceBrlCents: 95_000,
     isSelfServe: true,
   },
   {

@@ -13,10 +13,10 @@ import {
 // a broken checkout in production.
 
 describe("billing plan catalog (Trello P1)", () => {
-  it("has exactly the three known plan keys, each unique", () => {
+  it("has exactly the four known plan keys, each unique", () => {
     const keys = BILLING_PLANS.map((p) => p.key);
-    expect(new Set(keys)).toEqual(new Set(["starter", "pro", "enterprise"]));
-    expect(keys).toHaveLength(3);
+    expect(new Set(keys)).toEqual(new Set(["starter", "intermediate", "pro", "enterprise"]));
+    expect(keys).toHaveLength(4);
   });
 
   it("gives every self-serve plan a Stripe Price and lookup key", () => {
@@ -37,9 +37,10 @@ describe("billing plan catalog (Trello P1)", () => {
     expect(enterprise.trialReplyLimit).toBeNull();
   });
 
-  // Trello P8 -- the free trial is self-serve-only (Starter + Pro); Enterprise
-  // must stay opted out (`null`) so the checkout route never grants one by
-  // accident (it also has no self-serve Checkout to trial through at all).
+  // Trello P8 -- the free trial is self-serve-only (Starter, Intermediate,
+  // Pro); Enterprise must stay opted out (`null`) so the checkout route
+  // never grants one by accident (it also has no self-serve Checkout to
+  // trial through at all).
   it("offers a trial on every self-serve plan, with a quota below its normal monthly limit", () => {
     for (const plan of getSelfServePlans()) {
       expect(plan.trialReplyLimit, plan.key).toBeGreaterThan(0);
@@ -49,8 +50,17 @@ describe("billing plan catalog (Trello P1)", () => {
     expect(getPlan("enterprise").trialReplyLimit).toBeNull();
   });
 
-  it("gives Starter and Pro the exact same trial quota", () => {
-    expect(getPlan("starter").trialReplyLimit).toBe(getPlan("pro").trialReplyLimit);
+  it("gives every self-serve plan the exact same trial quota", () => {
+    const trialLimits = new Set(getSelfServePlans().map((p) => p.trialReplyLimit));
+    expect(trialLimits.size).toBe(1);
+  });
+
+  it("prices each self-serve plan strictly above the one before it, quota included", () => {
+    const plans = getSelfServePlans();
+    for (let i = 1; i < plans.length; i++) {
+      expect(plans[i].priceBrlCents!, plans[i].key).toBeGreaterThan(plans[i - 1].priceBrlCents!);
+      expect(plans[i].monthlyReplyLimit!, plans[i].key).toBeGreaterThan(plans[i - 1].monthlyReplyLimit!);
+    }
   });
 
   it("keeps lookup keys unique across plans", () => {
