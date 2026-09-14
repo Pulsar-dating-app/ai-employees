@@ -57,9 +57,14 @@ const MAX_SLOTS_RETURNED = 20;
 // booking dozens of slots on the same day in one conversation, effectively
 // locking out every other customer that day. A hard per-customer daily cap,
 // same spirit as the web-chat rate limits (src/lib/web-chat/rate-limit.ts) --
-// generous enough for a real customer's rare "two things same day" need,
+// generous enough for a real customer's rare "a few things same day" need,
 // low enough that grabbing a whole day's schedule is impossible.
-const MAX_DAILY_BOOKINGS_PER_CUSTOMER = 2;
+//
+// This app-layer count is the fast path (it answers before the heavier
+// business-hours / intake work). The guarantee is the BEFORE INSERT trigger
+// private.enforce_daily_booking_cap (migration 20260914120000), which holds
+// under concurrent bookings -- keep its hard-coded limit equal to this one.
+const MAX_DAILY_BOOKINGS_PER_CUSTOMER = 3;
 
 // Trello J8 -- how far ahead find_next_available scans, and in what stride.
 // The engine takes a date range and returns every slot in it, so the "early
@@ -630,6 +635,12 @@ async function book(
     // overlap with an existing live appointment. Robust against the race an
     // app-layer check-then-insert can't be.
     if (error.code === "23P01") return { booked: false, reason: "slot_unavailable" };
+    // The daily cap's race-safe copy in the DB trigger: several bookings for
+    // this customer ran concurrently and all passed the count above before
+    // any of them had inserted.
+    if (error.message === "daily_booking_limit_reached") {
+      return { booked: false, reason: "daily_limit_reached" };
+    }
     throw error;
   }
 

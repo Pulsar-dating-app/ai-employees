@@ -1007,7 +1007,7 @@ describe("scheduling policy (J7)", () => {
 });
 
 describe("daily booking cap (abuse guard)", () => {
-  it("allows two same-day bookings for one customer, refuses a third", async () => {
+  it("allows three same-day bookings for one customer, refuses a fourth", async () => {
     const seed = await seedConversation(owner, "Daily Cap Co");
     const serviceId = await createService(owner, seed.companyId, { name: "Slot", duration_minutes: 30 });
     await setBusinessHours(owner, seed.companyId);
@@ -1020,7 +1020,10 @@ describe("daily booking cap (abuse guard)", () => {
     expect((second as { booked: boolean }).booked).toBe(true);
 
     const third = await book({ serviceId, startsAt: `${BOOKING_DATE}T11:00:00Z` }, ctx);
-    expect(third).toEqual({ booked: false, reason: "daily_limit_reached" });
+    expect((third as { booked: boolean }).booked).toBe(true);
+
+    const fourth = await book({ serviceId, startsAt: `${BOOKING_DATE}T12:00:00Z` }, ctx);
+    expect(fourth).toEqual({ booked: false, reason: "daily_limit_reached" });
   });
 
   it("doesn't count another customer's same-day appointments against this one", async () => {
@@ -1031,12 +1034,13 @@ describe("daily booking cap (abuse guard)", () => {
 
     await book({ serviceId, startsAt: `${BOOKING_DATE}T09:00:00Z` }, ctx);
     await book({ serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` }, ctx);
+    await book({ serviceId, startsAt: `${BOOKING_DATE}T11:00:00Z` }, ctx);
 
     // A different customer, same company, same day -- must not be blocked
     // by the first customer's count.
     const otherCustomerId = await createCustomer(owner, seed.companyId, "Other Customer");
     const otherCtx: ToolExecutionContext = { ...ctx, customerId: otherCustomerId };
-    const result = await book({ serviceId, startsAt: `${BOOKING_DATE}T11:00:00Z` }, otherCtx);
+    const result = await book({ serviceId, startsAt: `${BOOKING_DATE}T12:00:00Z` }, otherCtx);
     expect((result as { booked: boolean }).booked).toBe(true);
   });
 
@@ -1048,11 +1052,115 @@ describe("daily booking cap (abuse guard)", () => {
 
     await book({ serviceId, startsAt: `${BOOKING_DATE}T09:00:00Z` }, ctx);
     await book({ serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` }, ctx);
+    await book({ serviceId, startsAt: `${BOOKING_DATE}T11:00:00Z` }, ctx);
 
     const result = await book(
       { serviceId, startsAt: `${BOOKING_DATE_NEXT_WEEK}T09:00:00Z` },
       ctx,
     );
     expect((result as { booked: boolean }).booked).toBe(true);
+  });
+
+  // Found in live testing: asked to book every open slot in one message, the
+  // model fired several book_appointment calls at once, the tool loop ran
+  // them concurrently (Promise.all in tool-loop.ts), and every one of them
+  // read the same "0 booked so far" count before any had committed -- so the
+  // app-layer check in AppointmentRepository.book() let all of them through.
+  // The BEFORE INSERT trigger (migration 20260914120000) is the fix: it
+  // takes a per-(company, customer) advisory lock before counting, so
+  // concurrent inserts for the same customer serialize instead of racing.
+  it("caps concurrent same-day bookings even when they race (DB trigger, not just the app check)", async () => {
+    const seed = await seedConversation(owner, "Daily Cap Race Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Slot", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx = toolCtxFor(seed);
+
+    const hours = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00"];
+    const results = await Promise.all(
+      hours.map((hour) => book({ serviceId, startsAt: `${BOOKING_DATE}T${hour}:00Z` }, ctx)),
+    );
+
+    const succeeded = results.filter((r) => (r as { booked: boolean }).booked);
+    const refused = results.filter((r) => !(r as { booked: boolean }).booked);
+    expect(succeeded).toHaveLength(3);
+    refused.forEach((r) => expect(r).toEqual({ booked: false, reason: "daily_limit_reached" }));
+
+    // Confirms the trigger actually stopped rows at the DB, not just that the
+    // tool-level responses looked right.
+    const { count } = await getTestServiceClient()
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", seed.companyId)
+      .eq("customer_id", seed.customerId)
+      .not("status", "in", "(cancelled,no_show)");
+    expect(count).toBe(3);
+  });
+});
+
+// The daily cap answers "how many *different* times can this customer book
+// today"; this guard answers a narrower question -- "how many appointments
+// can one customer *message* create" -- which the daily cap alone doesn't
+// cover (a customer with zero bookings yet is still under the cap of 3 while
+// several book_appointment calls from the same reply race each other).
+describe("one booking per customer message (abuse guard)", () => {
+  it("books only the first of several book_appointment calls fired from one reply", async () => {
+    const seed = await seedConversation(owner, "One Booking Per Message Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Slot", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx: ToolExecutionContext = { ...toolCtxFor(seed), turnState: { bookingClaimed: false } };
+
+    const hours = ["09:00", "10:00", "11:00"];
+    const results = await Promise.all(
+      hours.map((hour) => book({ serviceId, startsAt: `${BOOKING_DATE}T${hour}:00Z` }, ctx)),
+    );
+
+    const succeeded = results.filter((r) => (r as { booked: boolean }).booked);
+    const refused = results.filter((r) => !(r as { booked: boolean }).booked);
+    expect(succeeded).toHaveLength(1);
+    refused.forEach((r) => expect(r).toEqual({ booked: false, reason: "one_booking_per_message" }));
+  });
+
+  it("releases the claim on a failed booking, so a later call in the same turn can still book", async () => {
+    const seed = await seedConversation(owner, "One Booking Retry Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Slot", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx: ToolExecutionContext = { ...toolCtxFor(seed), turnState: { bookingClaimed: false } };
+
+    // Someone else already holds this exact slot -- the first call fails on
+    // the overlap constraint, not on the per-message guard, so the claim
+    // must be released rather than permanently blocking the rest of the turn.
+    const otherCustomerId = await createCustomer(owner, seed.companyId, "Other Customer");
+    await book(
+      { serviceId, startsAt: `${BOOKING_DATE}T09:00:00Z` },
+      { ...ctx, customerId: otherCustomerId, turnState: undefined },
+    );
+
+    const failed = await book({ serviceId, startsAt: `${BOOKING_DATE}T09:00:00Z` }, ctx);
+    expect(failed).toEqual({ booked: false, reason: "slot_unavailable" });
+
+    const succeeded = await book({ serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` }, ctx);
+    expect((succeeded as { booked: boolean }).booked).toBe(true);
+  });
+
+  it("doesn't share a claim across different customers/turns", async () => {
+    const seed = await seedConversation(owner, "One Booking Isolation Co");
+    const serviceId = await createService(owner, seed.companyId, { name: "Slot", duration_minutes: 30 });
+    await setBusinessHours(owner, seed.companyId);
+    const ctx = toolCtxFor(seed);
+
+    const otherCustomerId = await createCustomer(owner, seed.companyId, "Other Customer");
+
+    const results = await Promise.all([
+      book(
+        { serviceId, startsAt: `${BOOKING_DATE}T09:00:00Z` },
+        { ...ctx, turnState: { bookingClaimed: false } },
+      ),
+      book(
+        { serviceId, startsAt: `${BOOKING_DATE}T10:00:00Z` },
+        { ...ctx, customerId: otherCustomerId, turnState: { bookingClaimed: false } },
+      ),
+    ]);
+
+    results.forEach((r) => expect((r as { booked: boolean }).booked).toBe(true));
   });
 });

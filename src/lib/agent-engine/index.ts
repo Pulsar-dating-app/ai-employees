@@ -119,6 +119,9 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       customerId: conversation.customer_id,
       supabase,
       openai,
+      // book_appointment claims this so one customer message can book at
+      // most one appointment, even when the model fires several calls at once.
+      turnState: { bookingClaimed: false },
     },
   };
 
