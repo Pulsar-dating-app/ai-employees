@@ -295,7 +295,9 @@
         "day1": "Monday",
         "day1Hours": "9:00 AM – 6:00 PM",
         "day2": "Tuesday",
-        "day2Hours": "9:00 AM – 6:00 PM"
+        "day2Hours": "9:00 AM – 6:00 PM",
+        "timeOffRange": "Dec 24 – Dec 25",
+        "timeOffReason": "Holiday"
       },
       "demo": {
         "shippingText": "We ship nationwide via Correios, 3–5 business days, free over $50.",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ import {
   ChatIcon,
   BarChartIcon,
   SettingsIcon,
+  ListIcon,
+  ChevronRightIcon,
 } from "@/components/ui/icons";
 import { TeamAgentCard, type TeamAgent } from "../../app/dashboard/agent-card";
 
@@ -526,6 +528,161 @@ function ProductsStep() {
   );
 }
 
+// A compact stand-in for <AppointmentCalendar>: a two-week grid (full
+// six-week months don't fit this frame) with the same weekday-header +
+// numbered-cell shape, and two example bookings placed on it so switching
+// into calendar view actually shows something, not an empty grid.
+function AppointmentsCalendarMock() {
+  const locale = useLocale();
+  const tDemo = useTranslations("LandingV2.interactiveDemo.demo");
+  const t = useTranslations("LandingV2.interactiveDemo");
+  const weekdayNames = Array.from({ length: 7 }, (_, i) =>
+    new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 7, 30 + i))),
+  );
+  const chips: Record<number, { time: string; name: string }> = {
+    2: { time: "09:00", name: tDemo("appointmentClient") },
+    9: { time: "14:30", name: t("live.secondCustomerName") },
+  };
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-outline-variant">
+      <div className="grid grid-cols-7 gap-px bg-outline-variant/30">
+        {weekdayNames.map((name) => (
+          <div key={name} className="bg-surface-container-low py-1 text-center text-[9px] font-bold uppercase text-on-surface-variant">
+            {name}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-px bg-outline-variant/30">
+        {Array.from({ length: 14 }, (_, i) => i).map((i) => {
+          const chip = chips[i];
+          const isToday = i === 4;
+          return (
+            <div
+              key={i}
+              className={`flex min-h-[42px] flex-col gap-0.5 bg-surface-container-lowest p-1 ${isToday ? "bg-primary-fixed/30" : ""}`}
+            >
+              <span className={`text-[9px] font-bold ${isToday ? "text-primary" : "text-on-surface"}`}>{i + 1}</span>
+              {chip ? (
+                <span className="truncate rounded bg-secondary-container/30 px-1 py-0.5 text-[8px] font-medium text-tertiary">
+                  {chip.time} {chip.name}
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+type SettingsSectionKey = "hours" | "controls" | "timeOff" | "calendar" | "intake";
+
+// The real Scheduling Settings screen (K8) is five collapsible sections, not
+// a flat stack — mirrored here as an accordion (one open panel, real titles
+// and subtitles for all five) instead of picking a favorite and dropping
+// the rest.
+function SchedulingSettingsSections() {
+  const tSettings = useTranslations("Scheduling.settings");
+  const tAna = useTranslations("LandingV2.interactiveDemo.ana");
+  const [open, setOpen] = useState<SettingsSectionKey>("hours");
+
+  const sections: { key: SettingsSectionKey; title: string; subtitle: string }[] = [
+    { key: "hours", title: tSettings("businessHours.title"), subtitle: tSettings("businessHours.subtitle") },
+    { key: "controls", title: tSettings("approval.title"), subtitle: tSettings("approval.subtitle") },
+    { key: "timeOff", title: tSettings("timeOff.title"), subtitle: tSettings("timeOff.subtitle") },
+    { key: "calendar", title: tSettings("googleCalendar.title"), subtitle: tSettings("googleCalendar.subtitle") },
+    { key: "intake", title: tSettings("intake.title"), subtitle: tSettings("intake.subtitle") },
+  ];
+  const standardFields = Object.values(tSettings.raw("intake.standardLabels") as Record<string, string>);
+
+  return (
+    <div className="flex flex-col gap-2">
+      {sections.map((section) => {
+        const isOpen = open === section.key;
+        return (
+          <Card key={section.key} className="overflow-hidden p-0">
+            <button
+              type="button"
+              onClick={() => setOpen(section.key)}
+              aria-expanded={isOpen}
+              className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-xs font-semibold text-on-surface">{section.title}</span>
+                <span className="block truncate text-[11px] text-on-surface-variant">{section.subtitle}</span>
+              </span>
+              <ChevronRightIcon
+                className={`h-4 w-4 shrink-0 text-on-surface-variant transition-transform ${isOpen ? "rotate-90" : ""}`}
+              />
+            </button>
+            {isOpen ? (
+              <div className="border-t border-outline-variant px-3 py-2.5">
+                {section.key === "hours" ? (
+                  <div className="flex flex-col gap-1.5">
+                    {[
+                      { day: tAna("day1"), hours: tAna("day1Hours") },
+                      { day: tAna("day2"), hours: tAna("day2Hours") },
+                    ].map((row) => (
+                      <div key={row.day} className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-on-surface">{row.day}</span>
+                        <span className="text-on-surface-variant">{row.hours}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : section.key === "controls" ? (
+                  <div className="flex flex-col gap-2">
+                    <label className="flex items-center gap-2 text-xs text-on-surface">
+                      <input type="checkbox" readOnly className="h-4 w-4 rounded border-outline-variant" />
+                      {tSettings("approval.toggleLabel")}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input label={tSettings("approval.leadTimeLabel")} defaultValue={`120 ${tSettings("approval.minutesUnit")}`} readOnly />
+                      <Input label={tSettings("approval.cancelCutoffLabel")} defaultValue={`24 ${tSettings("approval.hoursUnit")}`} readOnly />
+                    </div>
+                  </div>
+                ) : section.key === "timeOff" ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between rounded-lg border border-outline-variant px-2.5 py-1.5 text-xs">
+                      <span className="font-medium text-on-surface">{tAna("timeOffRange")}</span>
+                      <span className="text-on-surface-variant">{tAna("timeOffReason")}</span>
+                    </div>
+                    <div>
+                      <Button type="button" variant="secondary" size="sm">
+                        {tSettings("timeOff.addButton")}
+                      </Button>
+                    </div>
+                  </div>
+                ) : section.key === "calendar" ? (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs text-on-surface-variant">{tSettings("googleCalendar.notConnected")}</p>
+                    <div>
+                      <Button type="button" size="sm">
+                        {tSettings("googleCalendar.connectButton")}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    {standardFields.map((label) => (
+                      <div key={label} className="flex items-center justify-between text-xs">
+                        <span className="text-on-surface">{label}</span>
+                        <span className="rounded-full bg-tertiary/10 px-2 py-0.5 text-[10px] font-semibold text-tertiary">
+                          {tSettings("intake.alwaysOn")}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
 function SchedulingStep({
   agent,
   tab,
@@ -540,7 +697,7 @@ function SchedulingStep({
   const tServices = useTranslations("Services");
   const tSettings = useTranslations("Scheduling.settings");
   const tDemo = useTranslations("LandingV2.interactiveDemo.demo");
-  const tAna = useTranslations("LandingV2.interactiveDemo.ana");
+  const [appointmentsView, setAppointmentsView] = useState<"list" | "calendar">("list");
 
   const tabs: { key: SchedulingTab; label: string }[] = [
     { key: "appointments", label: tTabs("appointments") },
@@ -555,14 +712,34 @@ function SchedulingStep({
       <TabStrip tabs={tabs} active={tab} next={nextTab} onSelect={(key) => onTabSelect(key as SchedulingTab)} />
       {tab === "appointments" ? (
         <>
-          <PageHeaderMock icon={CalendarIcon} title={tAppointments("pageTitle")} subtitle={tAppointments("pageSubtitle")} />
-          <div className="flex items-center justify-between rounded-lg border border-outline-variant px-3 py-2 text-xs">
-            <div>
-              <p className="font-medium text-on-surface">{tDemo("appointmentClient")}</p>
-              <p className="text-on-surface-variant">{tDemo("appointmentService")}</p>
-            </div>
-            <span className="font-semibold text-primary">{tDemo("appointmentTime")}</span>
+          <div className="mb-1 flex items-start justify-between gap-2">
+            <PageHeaderMock icon={CalendarIcon} title={tAppointments("pageTitle")} subtitle={tAppointments("pageSubtitle")} />
+            <button
+              type="button"
+              aria-pressed={appointmentsView === "calendar"}
+              aria-label={appointmentsView === "list" ? tAppointments("calendarView") : tAppointments("listView")}
+              onClick={() => setAppointmentsView(appointmentsView === "list" ? "calendar" : "list")}
+              className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border shadow-level1 transition-all ${
+                appointmentsView === "calendar"
+                  ? "border-primary/50 bg-primary-fixed text-primary"
+                  : "border-outline-variant/50 bg-surface text-on-surface-variant"
+              }`}
+            >
+              {appointmentsView === "list" ? <CalendarIcon className="h-4 w-4" /> : <ListIcon className="h-4 w-4" />}
+              {appointmentsView === "list" ? <PingBadge size="h-2.5 w-2.5" /> : null}
+            </button>
           </div>
+          {appointmentsView === "calendar" ? (
+            <AppointmentsCalendarMock />
+          ) : (
+            <div className="flex items-center justify-between rounded-lg border border-outline-variant px-3 py-2 text-xs">
+              <div>
+                <p className="font-medium text-on-surface">{tDemo("appointmentClient")}</p>
+                <p className="text-on-surface-variant">{tDemo("appointmentService")}</p>
+              </div>
+              <span className="font-semibold text-primary">{tDemo("appointmentTime")}</span>
+            </div>
+          )}
         </>
       ) : tab === "services" ? (
         <>
@@ -581,18 +758,7 @@ function SchedulingStep({
       ) : (
         <>
           <PageHeaderMock icon={CalendarIcon} title={tSettings("pageTitle")} subtitle={tSettings("pageSubtitle")} />
-          <Card className="flex flex-col gap-2">
-            <p className="text-xs font-semibold text-on-surface">{tSettings("businessHours.title")}</p>
-            {[
-              { day: tAna("day1"), hours: tAna("day1Hours") },
-              { day: tAna("day2"), hours: tAna("day2Hours") },
-            ].map((row) => (
-              <div key={row.day} className="flex items-center justify-between border-t border-outline-variant pt-1.5 text-xs first:border-t-0 first:pt-0">
-                <span className="font-medium text-on-surface">{row.day}</span>
-                <span className="text-on-surface-variant">{row.hours}</span>
-              </div>
-            ))}
-          </Card>
+          <SchedulingSettingsSections />
         </>
       )}
       <span className="sr-only">{agent.name}</span>

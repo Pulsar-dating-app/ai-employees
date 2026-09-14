@@ -295,7 +295,9 @@
         "day1": "Segunda-feira",
         "day1Hours": "09:00 – 18:00",
         "day2": "Terça-feira",
-        "day2Hours": "09:00 – 18:00"
+        "day2Hours": "09:00 – 18:00",
+        "timeOffRange": "24/12 – 25/12",
+        "timeOffReason": "Feriado"
       },
       "demo": {
         "shippingText": "Enviamos pra todo o Brasil pelos Correios, 3–5 dias úteis, frete grátis acima de R$ 150.",
