@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import Script from "next/script";
 import { useTranslations } from "next-intl";
 import { LinkIcon, CheckIcon } from "@/components/ui/icons";
@@ -226,7 +227,7 @@ export function GoogleCalendarCard({
               <div className="flex flex-col gap-3">
                 <p className="text-sm text-on-surface-variant">{t("notConnected")}</p>
                 {isAdmin ? (
-                  <div>
+                  <div className="flex flex-col items-start gap-2">
                     <Button
                       type="button"
                       isLoading={view === "connecting"}
@@ -235,6 +236,12 @@ export function GoogleCalendarCard({
                     >
                       {view === "connecting" ? t("connecting") : t("connectButton")}
                     </Button>
+                    <p className="text-xs text-on-surface-variant">
+                      {t("privacyNotice")}{" "}
+                      <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">
+                        {t("privacyNoticeLink")}
+                      </Link>
+                    </p>
                   </div>
                 ) : (
                   <p className="text-sm text-on-surface-variant">{t("adminOnly")}</p>
