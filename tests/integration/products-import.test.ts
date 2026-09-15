@@ -7,12 +7,60 @@ import { signUpTestUser } from "./helpers/auth";
 // Trello ticket B4 — bulk product import via CSV/XLSX upload. Uses raw
 // fetch + FormData directly (not the shared `api()` helper, which always
 // JSON-stringifies the body) since this endpoint expects multipart/form-data.
+//
+// The actual insert runs in `after()`, after the response the tests below
+// assert on is already sent (see the import route's own top comment for the
+// full "why") — so a request's immediate JSON only ever reports what's known
+// synchronously (parse/validation results, as `queued`/`skippedCount`/
+// `skipped`/`jobId`), never a final imported count or the inserted rows.
+// Tests that need the real outcome poll GET .../import/status (via
+// waitForJob below) until the job reaches a terminal status, the same thing
+// ImportPanel itself polls for progress.
 
 interface ImportResult {
-  imported: number;
+  queued: number;
   skippedCount: number;
   skipped: { row: number; reason: string }[];
-  products: { id: string; name: string; stock: number | null }[];
+  jobId: string | null;
+}
+
+interface ProductRow {
+  id: string;
+  name: string;
+  stock: number | null;
+}
+
+interface JobStatusRow {
+  id: string;
+  status: "processing" | "succeeded" | "failed";
+  totalRows: number;
+  insertedCount: number;
+  error: string | null;
+}
+
+async function getImportStatus(ownerCookie: string, companyId: string): Promise<JobStatusRow | null> {
+  const res = await api<{ job: JobStatusRow | null }>(
+    "GET",
+    `/api/companies/${companyId}/products/import/status`,
+    ownerCookie,
+  );
+  return res.json.job;
+}
+
+// Polls GET .../import/status until the most recent job reaches a terminal
+// status, or throws after the timeout. Embeddings are disabled in tests
+// (DISABLE_PRODUCT_EMBEDDINGS, see embeddings.ts) so the background insert
+// this waits on is fast; the timeout is generous only to absorb normal
+// scheduling/DB round-trip jitter, same shape as helpers/email.ts's
+// waitForEmail.
+async function waitForJob(ownerCookie: string, companyId: string, timeoutMs = 5000): Promise<JobStatusRow> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const job = await getImportStatus(ownerCookie, companyId);
+    if (job && job.status !== "processing") return job;
+    await new Promise((r) => setTimeout(r, 150));
+  }
+  throw new Error(`import job for company ${companyId} did not reach a terminal status within ${timeoutMs}ms`);
 }
 
 async function createCompany(ownerCookie: string, name: string) {
@@ -78,10 +126,22 @@ describe("Product import POST /api/companies/:id/products/import", () => {
 
     const result = await importFile(owner.cookieHeader, companyId, csvFile(csv));
     expect(result.status).toBe(200);
-    expect(result.json.imported).toBe(2);
+    expect(result.json.queued).toBe(2);
     expect(result.json.skippedCount).toBe(0);
-    expect(result.json.products.map((p) => p.name).sort()).toEqual(["Gadget", "Widget"]);
-    expect(result.json.products.find((p) => p.name === "Widget")?.stock).toBe(10);
+    expect(result.json.jobId).toBeTruthy();
+
+    const job = await waitForJob(owner.cookieHeader, companyId);
+    expect(job.status).toBe("succeeded");
+    expect(job.insertedCount).toBe(2);
+    expect(job.id).toBe(result.json.jobId);
+
+    const products = await api<{ products: ProductRow[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=100`,
+      owner.cookieHeader,
+    );
+    expect(products.json.products.map((p) => p.name).sort()).toEqual(["Gadget", "Widget"]);
+    expect(products.json.products.find((p) => p.name === "Widget")?.stock).toBe(10);
   });
 
   it("imports only valid rows from a mix of valid/invalid rows, reporting specific reasons", async () => {
@@ -98,12 +158,8 @@ describe("Product import POST /api/companies/:id/products/import", () => {
 
     const result = await importFile(owner.cookieHeader, companyId, csvFile(csv));
     expect(result.status).toBe(200);
-    expect(result.json.imported).toBe(2);
+    expect(result.json.queued).toBe(2);
     expect(result.json.skippedCount).toBe(3);
-    expect(result.json.products.map((p) => p.name).sort()).toEqual([
-      "Another Good Widget",
-      "Good Widget",
-    ]);
     // Rows are 1-indexed among parsed data rows: row 2 (missing name),
     // row 3 (currency-less price), row 4 (negative stock).
     expect(result.json.skipped).toEqual([
@@ -111,12 +167,27 @@ describe("Product import POST /api/companies/:id/products/import", () => {
       { row: 3, reason: "currency is required when price is present" },
       { row: 4, reason: "stock must be a non-negative integer" },
     ]);
+
+    const job = await waitForJob(owner.cookieHeader, companyId);
+    expect(job.status).toBe("succeeded");
+    expect(job.insertedCount).toBe(2);
+
+    const products = await api<{ products: ProductRow[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=100`,
+      owner.cookieHeader,
+    );
+    expect(products.json.products.map((p) => p.name).sort()).toEqual(["Another Good Widget", "Good Widget"]);
   });
 
   it("rejects an oversized file with 400", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Oversized Co");
-    const oversized = "x".repeat(5 * 1024 * 1024 + 1024);
+    // MAX_FILE_SIZE_BYTES (route.ts) -- 3MB, not the old 5MB (see that
+    // constant's own comment for why: 5MB was above Vercel's real 4.5MB
+    // hard request-body ceiling, so it was never actually enforceable at
+    // the top end).
+    const oversized = "x".repeat(3 * 1024 * 1024 + 1024);
 
     const result = await importFile(owner.cookieHeader, companyId, csvFile(oversized));
     expect(result.status).toBe(400);
@@ -162,9 +233,91 @@ describe("Product import POST /api/companies/:id/products/import", () => {
 
     const result = await importFile(owner.cookieHeader, companyId, file);
     expect(result.status).toBe(200);
-    expect(result.json.imported).toBe(2);
+    expect(result.json.queued).toBe(2);
     expect(result.json.skippedCount).toBe(0);
-    const widget = result.json.products.find((p) => p.name === "Sheet Widget");
-    expect(widget?.stock).toBe(3);
+
+    const job = await waitForJob(owner.cookieHeader, companyId);
+    expect(job.status).toBe("succeeded");
+
+    const products = await api<{ products: ProductRow[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=100`,
+      owner.cookieHeader,
+    );
+    expect(products.json.products.find((p) => p.name === "Sheet Widget")?.stock).toBe(3);
+  });
+
+  // The route's own top comment explains why: several small inserts (100
+  // rows/chunk, so a big file clears Postgres's statement_timeout) must
+  // still behave as one all-or-nothing import. This forces a DB-level
+  // failure on row 150 (chunk 2 of 2, chunk size 100) that app-level
+  // validation doesn't catch -- `currency` is only checked for presence
+  // (validatePriceCurrency), not length, so a value past the column's
+  // `varchar(3)` limit sails through validation and only fails at insert
+  // time. Chunk 1 (rows 1-100) commits fine before chunk 2 fails; the test
+  // asserts that commit gets rolled back too, not just that chunk 2 never
+  // landed.
+  it("rolls back every already-inserted chunk when a later chunk fails at the DB", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Rollback Co");
+
+    const lines = ["name,price,currency,stock,sku"];
+    for (let i = 1; i <= 149; i++) lines.push(`Widget ${i},10,USD,5,ROLLBACK-${i}`);
+    // Row 150: passes mapAndValidateRow (currency is merely non-empty) but
+    // violates products.currency's varchar(3) at insert time.
+    lines.push("Widget 150,10,TOOLONG,5,ROLLBACK-150");
+
+    const result = await importFile(owner.cookieHeader, companyId, csvFile(lines.join("\n")));
+    expect(result.status).toBe(200);
+    expect(result.json.queued).toBe(150);
+    expect(result.json.skippedCount).toBe(0);
+
+    const job = await waitForJob(owner.cookieHeader, companyId);
+    expect(job.status).toBe("failed");
+    expect(job.error).toBeTruthy();
+
+    // The real assertion: chunk 1's 100 rows must not have survived just
+    // because chunk 2 was the one that failed.
+    const products = await api<{ total: number }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=1`,
+      owner.cookieHeader,
+    );
+    expect(products.json.total).toBe(0);
+  });
+});
+
+describe("GET /api/companies/:id/products/import/status", () => {
+  it("requires authentication and membership", async () => {
+    const owner = await signUpTestUser("owner");
+    const outsider = await signUpTestUser("outsider");
+    const companyId = await createCompany(owner.cookieHeader, "Status Auth Co");
+
+    const unauth = await api("GET", `/api/companies/${companyId}/products/import/status`, undefined);
+    expect(unauth.status).toBe(401);
+    const forbidden = await api("GET", `/api/companies/${companyId}/products/import/status`, outsider.cookieHeader);
+    expect(forbidden.status).toBe(403);
+  });
+
+  it("returns a null job when the company has never imported anything", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "No Imports Co");
+
+    expect(await getImportStatus(owner.cookieHeader, companyId)).toBeNull();
+  });
+
+  it("reflects the most recent job, not an earlier one, once a second import runs", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Second Import Co");
+
+    const first = await importFile(owner.cookieHeader, companyId, csvFile("name\nFirst Widget\n"));
+    await waitForJob(owner.cookieHeader, companyId);
+
+    const second = await importFile(owner.cookieHeader, companyId, csvFile("name\nSecond Widget\n"));
+    const job = await waitForJob(owner.cookieHeader, companyId);
+
+    expect(job.id).toBe(second.json.jobId);
+    expect(job.id).not.toBe(first.json.jobId);
+    expect(job.status).toBe("succeeded");
   });
 });

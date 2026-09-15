@@ -1231,17 +1231,21 @@
       "formatDescription": "The first row must have these column headers: name, description, price, currency, stock, image, product_url, category, sku. Only name is required — leave the rest blank if you don't have that info.",
       "formatPriceHint": "If you set a price, also set its currency (e.g. BRL, USD, EUR) — a price without one will be skipped.",
       "formatDescriptionHint": "Put everything a customer would ask about into description — size, material, color, weight, what's included. It's the only place your AI employee gets that detail from, so a few words often isn't enough. Download the template below for an example.",
+      "formatSizeHint": "Maximum file size: 3MB.",
       "downloadTemplateButton": "Download template",
       "chooseFileButton": "Choose file",
       "noFileChosen": "No file selected",
       "importButton": "Import",
       "importingButton": "Importing…",
       "importAnotherButton": "Import another file",
-      "resultSummary": "{imported} imported, {skippedCount} skipped",
+      "progressLabel": "Importing… {percent}%",
+      "succeededSummary": "{count} product(s) imported successfully.",
+      "failedSummary": "The import failed — nothing was saved. Please try again.",
       "skippedTableRowHeader": "Row",
       "skippedTableReasonHeader": "Reason",
       "genericError": "Something went wrong importing the file. Please try again.",
-      "fileRequired": "Choose a file first."
+      "fileRequired": "Choose a file first.",
+      "fileTooLarge": "This file is larger than 3MB. Split it into smaller files and import them one at a time."
     },
     "shopify": {
       "title": "Connect your Shopify store",

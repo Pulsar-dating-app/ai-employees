@@ -1231,17 +1231,21 @@
       "formatDescription": "A primeira linha deve ter estas colunas: name, description, price, currency, stock, image, product_url, category, sku. Somente name é obrigatório — deixe o resto em branco se não tiver essa informação.",
       "formatPriceHint": "Se você definir um preço, defina também a moeda (ex.: BRL, USD, EUR) — um preço sem moeda será ignorado.",
       "formatDescriptionHint": "Coloque em description tudo que um cliente perguntaria — tamanho, material, cor, peso, o que está incluso. É o único lugar de onde sua funcionária de IA tira esse detalhe, então poucas palavras muitas vezes não bastam. Baixe o modelo abaixo para ver um exemplo.",
+      "formatSizeHint": "Tamanho máximo do arquivo: 3MB.",
       "downloadTemplateButton": "Baixar modelo",
       "chooseFileButton": "Escolher arquivo",
       "noFileChosen": "Nenhum arquivo selecionado",
       "importButton": "Importar",
       "importingButton": "Importando…",
       "importAnotherButton": "Importar outro arquivo",
-      "resultSummary": "{imported} importados, {skippedCount} ignorados",
+      "progressLabel": "Importando… {percent}%",
+      "succeededSummary": "{count} produtos importados com sucesso.",
+      "failedSummary": "A importação falhou — nada foi salvo. Tente novamente.",
       "skippedTableRowHeader": "Linha",
       "skippedTableReasonHeader": "Motivo",
       "genericError": "Algo deu errado ao importar o arquivo. Tente novamente.",
-      "fileRequired": "Escolha um arquivo primeiro."
+      "fileRequired": "Escolha um arquivo primeiro.",
+      "fileTooLarge": "Esse arquivo passa de 3MB. Separe em arquivos menores e importe um de cada vez."
     },
     "shopify": {
       "title": "Conecte sua loja Shopify",
