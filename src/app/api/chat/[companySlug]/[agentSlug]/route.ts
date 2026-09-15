@@ -236,9 +236,8 @@ export async function POST(
     result = await AgentEngine.run({ companyId, conversationId: session.conversationId, message });
   } catch (err) {
     // Never leak internal error detail to the customer-facing response --
-    // unlike dev-chat-test (a merchant debug tool), this is real production
-    // traffic -- but do log it server-side, same as the Instagram/Telegram
-    // webhooks, so a 502 isn't a black box.
+    // this is real production traffic -- but do log it server-side, same as
+    // the Instagram/Telegram webhooks, so a 502 isn't a black box.
     console.error("[web-chat] AgentEngine.run failed", { companyId, error: err });
     return NextResponse.json({ error: "Failed to get a reply" }, { status: 502 });
   }
@@ -275,6 +274,14 @@ export async function POST(
     console.warn("[web-chat] could not build product cards for a reply", { companyId, error });
   }
 
+  // Real per-reply cost (tool-loop.ts's ReplyUsage -- see decisions.md),
+  // folded into the same metadata object and the same insert this row was
+  // always going to need, not a separate write. `readMessageMetadata` only
+  // ever looks for `products`, so this rides along invisibly to every
+  // card-rendering caller; it's read back directly from the column by
+  // whatever eventually reports on cost.
+  const metadataWithUsage = { ...(metadata ?? {}), usage: result.usage };
+
   const { data: reply, error: replyError } = await supabase
     .from("messages")
     .insert({
@@ -282,7 +289,7 @@ export async function POST(
       conversation_id: session.conversationId,
       role: "agent",
       content: result.responseText,
-      metadata,
+      metadata: metadataWithUsage,
     })
     .select("role, content, created_at, metadata")
     .single();

@@ -1,12 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Trello M3 -- find-or-create the customer for an anonymous web chat
-// visitor's session id, find-or-rotate their active conversation. Same
-// find-or-create-customer / find-or-rotate-conversation shape as the dev-only
-// src/app/api/companies/[companyId]/agents/[agentSlug]/dev-chat-test/route.ts
-// -- deliberately NOT extracted into something both files share:
-// dev-chat-test is test-only scaffolding tied to its own deletion condition
-// (D2 shipping, a different epic), not this ticket's call to touch.
+// visitor's session id, find-or-rotate their active conversation. This
+// used to share its find-or-create-customer / find-or-rotate-conversation
+// shape with the dev-only dev-chat-test route -- deliberately not
+// extracted into something both files shared at the time, since dev-chat-
+// test was test-only scaffolding tied to its own deletion condition (D2
+// shipping a real caller). That condition was met and dev-chat-test was
+// removed (2026-09-15) once the hosted chat link (this file's own real
+// caller) made it redundant.
 const CONVERSATION_TTL_MS = 24 * 60 * 60 * 1000;
 
 export type WebChatSession = { customerId: string; conversationId: string };

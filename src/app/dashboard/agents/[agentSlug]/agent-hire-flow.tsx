@@ -8,7 +8,6 @@ import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, XIcon, BadgeCheckIcon } from "@/components/ui/icons";
-import { DevChatTest } from "../../dev-chat-test";
 
 type Stage = "browsing" | "hired";
 
@@ -32,7 +31,6 @@ export function AgentHireFlow({
   companyId,
   initialIsHired,
   isBillingActive,
-  showDevChatTest,
 }: {
   agentSlug: string;
   name: string;
@@ -47,7 +45,6 @@ export function AgentHireFlow({
   // Trello P6: hiring is an activation, so it needs an active plan. When
   // false, the card sends the merchant to billing instead of hiring.
   isBillingActive: boolean;
-  showDevChatTest: boolean;
 }) {
   const t = useTranslations("AgentDetail");
   const tTraits = useTranslations("MyAgents.traits");
@@ -148,9 +145,6 @@ export function AgentHireFlow({
               <Link href={`/dashboard/my-agents/${agentSlug}`}>
                 <Button type="button">{t("goToSettings")}</Button>
               </Link>
-              {showDevChatTest && companyId ? (
-                <DevChatTest companyId={companyId} agentSlug={agentSlug} agentName={name} />
-              ) : null}
             </div>
           ) : !isBillingActive || needsPlan ? (
             <div className="flex flex-col gap-3">

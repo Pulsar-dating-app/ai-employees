@@ -13,7 +13,6 @@ import { ChannelTabsCard } from "./channel-tabs-card";
 import { AgentSettingsTabsCard } from "./agent-settings-tabs-card";
 import { TutorialVideoCard } from "./tutorial-video-card";
 import { IdentityEditor } from "./identity-editor";
-import { DevChatTest } from "../../dev-chat-test";
 import { AgentConnectionsTour } from "./agent-connections-tour";
 
 // A hired team member's own page is scoped to *how customers reach them* —
@@ -207,9 +206,6 @@ export default async function AgentConnectionsPage({
             />
           </Suspense>
         </div>
-        {process.env.NODE_ENV !== "production" ? (
-          <DevChatTest companyId={company.id} agentSlug={agentSlug} agentName={name} />
-        ) : null}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import type OpenAI from "openai";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AgentTool } from "./tools/types";
 import type { GroundingClaim } from "./grounding";
-import type { ToolCallRecord } from "./tool-loop";
+import type { ReplyUsage, ToolCallRecord } from "./tool-loop";
 
 // Trello ticket C1 -- the Agent Engine's public contract (spec §17). The
 // pipeline only starts once a `conversations` row already exists -- finding
@@ -25,8 +25,9 @@ export type AgentEngineInput = {
 // neither draft was ever sent. `violations` always describes the *first*
 // failure (the one that triggered the intervention), and is empty when
 // `grounded`. Surfaced rather than kept internal so G1's QA pass -- which
-// exists specifically to try to break this -- can see it fire, and so
-// dev-chat-test can flag it while hand-testing.
+// exists specifically to try to break this -- can see it fire (dev-chat-test
+// used to flag it live while hand-testing too, before it was removed in
+// favor of the real hosted chat link).
 export type GroundingOutcome = {
   status: "grounded" | "regenerated" | "blocked";
   violations: GroundingClaim[];
@@ -52,6 +53,12 @@ export type AgentEngineResult = {
   // For a search, they ARE the model's decision -- the only readable
   // record of why a given product matched.
   toolCalls: ToolCallRecord[];
+  // Summed across every runToolLoop call this turn made -- one on
+  // `grounded`, two (draft + retry) on `regenerated`/`blocked`. Real
+  // per-reply cost, not an estimate -- see decisions.md. Callers persist
+  // this into `messages.metadata` alongside the reply, piggybacking on the
+  // insert that already happens rather than a separate write.
+  usage: ReplyUsage;
 };
 
 // Every dependency is injectable and defaults to the real production

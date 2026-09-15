@@ -223,9 +223,18 @@ export async function POST(request: Request) {
       console.error("Instagram webhook: failed to build product cards", err);
     }
 
-    const { error: replyError } = await supabase
-      .from("messages")
-      .insert({ company_id: connection.company_id, conversation_id: session.conversationId, role: "agent", content: result.responseText, metadata });
+    // Real per-reply cost (tool-loop.ts's ReplyUsage -- see decisions.md),
+    // folded into a *separate* object from `metadata` above -- `metadata`
+    // itself still gates the cards-delivery call below (`if (metadata &&
+    // ...)`), so merging usage into it directly would make that check true
+    // even on a card-less reply and send an empty carousel.
+    const { error: replyError } = await supabase.from("messages").insert({
+      company_id: connection.company_id,
+      conversation_id: session.conversationId,
+      role: "agent",
+      content: result.responseText,
+      metadata: { ...(metadata ?? {}), usage: result.usage },
+    });
     if (replyError) {
       console.error("Instagram webhook: failed to persist reply", replyError);
       continue;

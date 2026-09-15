@@ -131,23 +131,6 @@ describe("PATCH /api/companies/:id/agents/:agentSlug (active-agent toggle)", () 
     expect((await getStatus(owner.cookieHeader, companyId)).json.companyAgent?.status).toBe("active");
   });
 
-  it("silences the dev-chat-test route while paused", async () => {
-    const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Toggle Dev Chat Co");
-    await hire(owner.cookieHeader, companyId);
-    await api("PATCH", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader, { status: "paused" });
-
-    // The status check short-circuits with a 403 before AgentEngine.run()
-    // (and any real OpenAI call) is ever reached — safe to assert here.
-    const res = await api(
-      "POST",
-      `/api/companies/${companyId}/agents/malu/dev-chat-test`,
-      owner.cookieHeader,
-      { message: "hello" },
-    );
-    expect(res.status).toBe(403);
-  });
-
   it("an admin (not just the owner) can toggle", async () => {
     const owner = await signUpTestUser("owner");
     const admin = await signUpTestUser("admin");
