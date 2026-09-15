@@ -1237,7 +1237,7 @@
       "importButton": "Import",
       "importingButton": "Importing…",
       "importAnotherButton": "Import another file",
-      "resultSummary": "{imported} imported, {skippedCount} skipped",
+      "resultSummary": "{queued} product(s) queued for import, {skippedCount} skipped. Import runs in the background — check your catalog in a few minutes.",
       "skippedTableRowHeader": "Row",
       "skippedTableReasonHeader": "Reason",
       "genericError": "Something went wrong importing the file. Please try again.",

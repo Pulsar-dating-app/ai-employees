@@ -1,30 +1,54 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { parse as parseCsvSync } from "csv-parse/sync";
 import ExcelJS from "exceljs";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { validatePriceCurrency, validateStock } from "../route";
 import { buildProductEmbeddingInput, createProductEmbeddingsBatch } from "@/lib/products/embeddings";
-import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 
 // Trello ticket B4 — bulk product import (spec §12: upload -> parse ->
-// validate -> report invalid rows -> import valid rows). MVP limits so the
-// import runs synchronously within a normal request: 5MB file, 2000 rows.
-// Row numbers in the response are 1-indexed positions among the data rows
-// actually parsed (blank rows are silently skipped for both formats, same
-// as CSV's own skip_empty_lines) — not a literal spreadsheet line number.
+// validate -> report invalid rows -> import valid rows). Row numbers in the
+// response are 1-indexed positions among the data rows actually parsed
+// (blank rows are silently skipped for both formats, same as CSV's own
+// skip_empty_lines) — not a literal spreadsheet line number.
 //
-// Found in production (2026-09-15): a 1000-row import 500'd with no useful
-// app-level error after ~32s -- the platform's default function timeout
-// (10s on Hobby) killed the request mid-flight, before the single batched
-// embeddings call + the bulk insert could finish. This route does the same
-// class of bulk-embeddings work as the Shopify sync route, which already
-// carries this same fix with the same reasoning -- see that route's own
-// comment. Needs a Vercel plan that allows it (Hobby caps at 10s regardless
-// of this setting).
+// Found in production (2026-09-15), two compounding issues with a 1000-row
+// import, root-caused from real evidence (not guessed) before each fix:
+//
+// 1. First 500: the platform's default function timeout killed the request
+//    mid-flight (~32s in). Fixed by setting maxDuration here, same as the
+//    Shopify sync route -- but this turned out not to be the real
+//    constraint (Vercel/Hobby already defaults to 300s under Fluid Compute,
+//    confirmed against Vercel's own docs), so this alone didn't fix it.
+// 2. Second 500, same symptom: Postgres error 57014, "canceling statement
+//    due to statement timeout" -- confirmed from this project's own
+//    Postgres logs. PostgREST always executes as the `authenticator` role,
+//    even for a service-role request, and `authenticator` carries an 8s
+//    `statement_timeout` here. The query PostgREST builds for a bulk
+//    `.insert(array)` is one `json_to_recordset($1)` statement over the
+//    whole JSON body -- with `embedding` populated (1536 floats/row), a few
+//    hundred rows' worth of vectors is enough JSON for that parse + insert
+//    to blow past 8s.
+//
+// Fix, both requirements from the same conversation: (a) insert in chunks
+// small enough to clear the 8s ceiling regardless of file size, and (b) the
+// import must still be all-or-nothing from the caller's point of view --
+// several small statements must never leave a partial catalog behind. Doing
+// both while also staying synchronous doesn't fit in one request/response
+// cycle (chunked commits take real wall-clock time, and "all or nothing"
+// means a late failure has to undo every earlier chunk before the caller
+// can be told anything) -- so the actual insert work happens in `after()`,
+// AFTER the response (which only reports parse/validation results) is
+// already sent. Success/failure isn't surfaced back to the caller at all
+// (by request) -- only to the server logs, via the row actually landing (or
+// not) in the company's catalog.
 export const maxDuration = 300;
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_ROWS = 2000;
+// Small enough that one chunk's json_to_recordset + insert always clears
+// the 8s statement_timeout above, however large the file is.
+const INSERT_CHUNK_SIZE = 100;
 
 type ParsedRow = Record<string, unknown>;
 
@@ -242,64 +266,72 @@ export async function POST(
     }
   });
 
-  let inserted: unknown[] = [];
   if (toInsert.length > 0) {
-    // One batched embeddings call for the whole file rather than one per
-    // row (createProductEmbeddingsBatch) -- see products/embeddings.ts.
-    // Order-preserving, so zipping back onto toInsert by index is safe.
-    // This call isn't the bottleneck below -- OpenAI's embeddings endpoint
-    // handles a 1000-row batch fine, and it isn't subject to Postgres's
-    // statement_timeout at all.
-    const embeddings = await createProductEmbeddingsBatch(
-      toInsert.map((row) => buildProductEmbeddingInput(row)),
-    );
-    const toInsertWithEmbeddings = toInsert.map((row, i) => ({ ...row, embedding: embeddings[i] }));
+    // See this file's top comment for the full story. Runs after the
+    // response below is already sent -- a service-role client, not the
+    // cookie-bound `supabase` request client, because writing a refreshed
+    // session cookie (which the request client can do mid-call) has
+    // nowhere to go once the response has already been flushed.
+    after(async () => {
+      const service = createServiceClient();
 
-    // Found in production (2026-09-15): a 1000-row import 500'd with
-    // "canceling statement due to statement timeout" (Postgres 57014).
-    // Root cause, confirmed from the project's own Postgres logs (not a
-    // guess) -- PostgREST always executes as the `authenticator` role, even
-    // for a service-role request, and `authenticator` carries an 8s
-    // `statement_timeout` on this project. The actual query PostgREST
-    // builds for a bulk `.insert(array)` is `json_to_recordset($1)` over
-    // the whole JSON body in ONE statement -- with `embedding` populated
-    // (1536 floats/row), a few hundred rows' worth of vectors is enough
-    // JSON for that parse + insert to blow past 8s. Raising Vercel's
-    // maxDuration (see this file's own git history) didn't help because
-    // Vercel was never the constraint -- Hobby already defaults to 300s
-    // under Fluid Compute.
-    //
-    // Fix: insert in chunks small enough to comfortably clear the 8s
-    // ceiling regardless of total file size, rather than one giant
-    // statement. This does mean a failure partway through leaves the
-    // already-inserted chunks committed (not fully atomic anymore) --
-    // acceptable, and strictly better than the old behavior, where the
-    // whole import died with nothing saved after the OpenAI embedding cost
-    // was already spent.
-    const INSERT_CHUNK_SIZE = 100;
-    for (let i = 0; i < toInsertWithEmbeddings.length; i += INSERT_CHUNK_SIZE) {
-      const chunk = toInsertWithEmbeddings.slice(i, i + INSERT_CHUNK_SIZE);
-      const { data, error } = await supabase.from("products").insert(chunk).select(PRODUCT_PUBLIC_COLUMNS);
-      if (error) {
-        return NextResponse.json(
-          {
-            error: error.message,
-            imported: inserted.length,
-            skippedCount: skipped.length,
-            skipped,
-            products: inserted,
-          },
-          { status: 500 },
-        );
+      // One batched embeddings call for the whole file rather than one per
+      // row (createProductEmbeddingsBatch) -- see products/embeddings.ts.
+      // Order-preserving, so zipping back onto toInsert by index is safe.
+      // Not the bottleneck this whole comment is about -- OpenAI's
+      // embeddings endpoint handles a 1000-row batch fine, and it isn't
+      // subject to Postgres's statement_timeout at all.
+      const embeddings = await createProductEmbeddingsBatch(
+        toInsert.map((row) => buildProductEmbeddingInput(row)),
+      );
+      const toInsertWithEmbeddings = toInsert.map((row, i) => ({ ...row, embedding: embeddings[i] }));
+
+      // All-or-nothing: each chunk's own insert stays comfortably under the
+      // 8s statement_timeout, but if any chunk fails, every row inserted by
+      // an earlier chunk in *this* run is deleted by id before giving up --
+      // the company's catalog must never be left with only part of a file
+      // imported. `id` is all `.select()` needs to ask for here; nothing
+      // else from this insert is ever read.
+      const insertedIds: string[] = [];
+      for (let i = 0; i < toInsertWithEmbeddings.length; i += INSERT_CHUNK_SIZE) {
+        const chunk = toInsertWithEmbeddings.slice(i, i + INSERT_CHUNK_SIZE);
+        const { data, error } = await service.from("products").insert(chunk).select("id");
+        if (error) {
+          console.error(
+            `products import (company ${companyId}): chunk at row ${i} failed, rolling back ` +
+              `${insertedIds.length} already-inserted row(s)`,
+            error,
+          );
+          if (insertedIds.length > 0) {
+            const { error: rollbackError } = await service.from("products").delete().in("id", insertedIds);
+            if (rollbackError) {
+              // Best-effort by design (see agent-engine's discardConversationItems
+              // for the same shape) -- there's no further fallback here, but
+              // this must be loud: it means the catalog is left partially
+              // imported despite the request having reported failure.
+              console.error(
+                `products import (company ${companyId}): rollback ALSO failed -- ` +
+                  `${insertedIds.length} row(s) may remain despite the import failing`,
+                rollbackError,
+              );
+            }
+          }
+          return;
+        }
+        insertedIds.push(...(data ?? []).map((row) => row.id as string));
       }
-      inserted = inserted.concat(data ?? []);
-    }
+      console.log(`products import (company ${companyId}): imported ${insertedIds.length} product(s)`);
+    });
   }
 
+  // The insert (and any rollback) happens after this response is sent --
+  // see the top comment. Only what's known synchronously (parse/validation
+  // results) is reported; there is deliberately no imported/products count
+  // here, since that outcome doesn't exist yet at response time.
   return NextResponse.json({
-    imported: inserted.length,
+    processing: toInsert.length > 0,
+    queued: toInsert.length,
     skippedCount: skipped.length,
     skipped,
-    products: inserted,
   });
 }

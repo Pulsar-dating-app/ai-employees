@@ -12,8 +12,12 @@ import { Button } from "@/components/ui/button";
 const TEMPLATE_LINK_CLASSES =
   "inline-flex h-9 items-center justify-center gap-2 rounded-md border border-outline-variant bg-surface-container px-4 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-high";
 
+// The insert itself now runs after the response (see the import route's own
+// top comment) -- there's no final imported/products count to show here,
+// only what's known synchronously: how many valid rows were queued and
+// which rows were skipped at validation.
 type ImportResult = {
-  imported: number;
+  queued: number;
   skippedCount: number;
   skipped: { row: number; reason: string }[];
 };
@@ -55,8 +59,12 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
 
     if (res.ok) {
       const json = await res.json();
-      setResult({ imported: json.imported, skippedCount: json.skippedCount, skipped: json.skipped ?? [] });
+      setResult({ queued: json.queued, skippedCount: json.skippedCount, skipped: json.skipped ?? [] });
       setStatus("done");
+      // The import itself is still running in the background at this point
+      // (see the route's own comment) -- this refresh won't show the new
+      // products yet. Still worth calling: it's a no-op today, but reflects
+      // a real re-fetch the moment this list ever starts polling/subscribing.
       onImported();
     } else {
       setStatus("error");
@@ -77,7 +85,7 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
     return (
       <div className="flex flex-col gap-3">
         <p className="text-sm text-neutral-800">
-          {t("resultSummary", { imported: result.imported, skippedCount: result.skippedCount })}
+          {t("resultSummary", { queued: result.queued, skippedCount: result.skippedCount })}
         </p>
         {result.skippedCount > 0 ? (
           <div className="overflow-x-auto">

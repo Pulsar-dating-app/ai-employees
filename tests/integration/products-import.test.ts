@@ -7,12 +7,49 @@ import { signUpTestUser } from "./helpers/auth";
 // Trello ticket B4 — bulk product import via CSV/XLSX upload. Uses raw
 // fetch + FormData directly (not the shared `api()` helper, which always
 // JSON-stringifies the body) since this endpoint expects multipart/form-data.
+//
+// The actual insert runs in `after()`, after the response the tests below
+// assert on is already sent (see the route's own top comment for the full
+// "why") — so a request's immediate JSON only ever reports what's known
+// synchronously (parse/validation results, as `queued`/`skippedCount`/
+// `skipped`), never a final imported count or the inserted rows. Tests that
+// need to assert the products actually landed poll the list endpoint via
+// waitForProducts below instead of reading them off the import response.
 
 interface ImportResult {
-  imported: number;
+  queued: number;
   skippedCount: number;
   skipped: { row: number; reason: string }[];
-  products: { id: string; name: string; stock: number | null }[];
+}
+
+interface ProductRow {
+  id: string;
+  name: string;
+  stock: number | null;
+}
+
+// Polls GET /products until at least `count` rows exist for the company, or
+// throws after the timeout. Embeddings are disabled in tests
+// (DISABLE_PRODUCT_EMBEDDINGS, see embeddings.ts) so the background insert
+// this waits on is fast; the timeout is generous only to absorb normal
+// scheduling/DB round-trip jitter, same shape as waitForEmail.
+async function waitForProducts(
+  ownerCookie: string,
+  companyId: string,
+  count: number,
+  timeoutMs = 5000,
+): Promise<ProductRow[]> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const res = await api<{ products: ProductRow[]; total: number }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=100`,
+      ownerCookie,
+    );
+    if (res.json.total >= count) return res.json.products;
+    await new Promise((r) => setTimeout(r, 150));
+  }
+  throw new Error(`fewer than ${count} product(s) landed for company ${companyId} within ${timeoutMs}ms`);
 }
 
 async function createCompany(ownerCookie: string, name: string) {
@@ -78,10 +115,12 @@ describe("Product import POST /api/companies/:id/products/import", () => {
 
     const result = await importFile(owner.cookieHeader, companyId, csvFile(csv));
     expect(result.status).toBe(200);
-    expect(result.json.imported).toBe(2);
+    expect(result.json.queued).toBe(2);
     expect(result.json.skippedCount).toBe(0);
-    expect(result.json.products.map((p) => p.name).sort()).toEqual(["Gadget", "Widget"]);
-    expect(result.json.products.find((p) => p.name === "Widget")?.stock).toBe(10);
+
+    const products = await waitForProducts(owner.cookieHeader, companyId, 2);
+    expect(products.map((p) => p.name).sort()).toEqual(["Gadget", "Widget"]);
+    expect(products.find((p) => p.name === "Widget")?.stock).toBe(10);
   });
 
   it("imports only valid rows from a mix of valid/invalid rows, reporting specific reasons", async () => {
@@ -98,12 +137,11 @@ describe("Product import POST /api/companies/:id/products/import", () => {
 
     const result = await importFile(owner.cookieHeader, companyId, csvFile(csv));
     expect(result.status).toBe(200);
-    expect(result.json.imported).toBe(2);
+    expect(result.json.queued).toBe(2);
     expect(result.json.skippedCount).toBe(3);
-    expect(result.json.products.map((p) => p.name).sort()).toEqual([
-      "Another Good Widget",
-      "Good Widget",
-    ]);
+
+    const products = await waitForProducts(owner.cookieHeader, companyId, 2);
+    expect(products.map((p) => p.name).sort()).toEqual(["Another Good Widget", "Good Widget"]);
     // Rows are 1-indexed among parsed data rows: row 2 (missing name),
     // row 3 (currency-less price), row 4 (negative stock).
     expect(result.json.skipped).toEqual([
@@ -162,9 +200,48 @@ describe("Product import POST /api/companies/:id/products/import", () => {
 
     const result = await importFile(owner.cookieHeader, companyId, file);
     expect(result.status).toBe(200);
-    expect(result.json.imported).toBe(2);
+    expect(result.json.queued).toBe(2);
     expect(result.json.skippedCount).toBe(0);
-    const widget = result.json.products.find((p) => p.name === "Sheet Widget");
-    expect(widget?.stock).toBe(3);
+
+    const products = await waitForProducts(owner.cookieHeader, companyId, 2);
+    expect(products.find((p) => p.name === "Sheet Widget")?.stock).toBe(3);
+  });
+
+  // The route's own top comment explains why: several small inserts (100
+  // rows/chunk, so a big file clears Postgres's statement_timeout) must
+  // still behave as one all-or-nothing import. This forces a DB-level
+  // failure on row 150 (chunk 2 of 2, chunk size 100) that app-level
+  // validation doesn't catch -- `currency` is only checked for presence
+  // (validatePriceCurrency), not length, so a value past the column's
+  // `varchar(3)` limit sails through validation and only fails at insert
+  // time. Chunk 1 (rows 1-100) commits fine before chunk 2 fails; the test
+  // asserts that commit gets rolled back too, not just that chunk 2 never
+  // landed.
+  it("rolls back every already-inserted chunk when a later chunk fails at the DB", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Rollback Co");
+
+    const lines = ["name,price,currency,stock,sku"];
+    for (let i = 1; i <= 149; i++) lines.push(`Widget ${i},10,USD,5,ROLLBACK-${i}`);
+    // Row 150: passes mapAndValidateRow (currency is merely non-empty) but
+    // violates products.currency's varchar(3) at insert time.
+    lines.push("Widget 150,10,TOOLONG,5,ROLLBACK-150");
+
+    const result = await importFile(owner.cookieHeader, companyId, csvFile(lines.join("\n")));
+    expect(result.status).toBe(200);
+    expect(result.json.queued).toBe(150);
+    expect(result.json.skippedCount).toBe(0);
+
+    // No poll-for-presence here (there's nothing successful to wait for) --
+    // give the background insert + rollback (fast with embeddings disabled)
+    // a generous fixed window to fully settle, then assert the end state is
+    // zero, not the 100 rows chunk 1 alone would have committed.
+    await new Promise((r) => setTimeout(r, 3000));
+    const res = await api<{ total: number }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=1`,
+      owner.cookieHeader,
+    );
+    expect(res.json.total).toBe(0);
   });
 });
