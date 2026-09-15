@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { ForgotPasswordForm } from "./forgot-password-form";
 import logo from "../../../public/logo.png";
 
-export function ForgotPasswordPanel() {
+export function ForgotPasswordPanel({ initialError }: { initialError?: string | null }) {
   const t = useTranslations("Auth.forgotPassword");
 
   return (
@@ -19,7 +19,7 @@ export function ForgotPasswordPanel() {
         <p className="text-sm text-on-surface-variant">{t("subtitle")}</p>
       </div>
 
-      <ForgotPasswordForm />
+      <ForgotPasswordForm initialError={initialError} />
 
       <div className="border-t border-outline-variant pt-4">
         <Link href="/?auth=login" replace className="text-sm font-medium text-primary hover:underline">

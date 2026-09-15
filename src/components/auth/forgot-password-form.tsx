@@ -2,15 +2,18 @@
 
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { requestPasswordReset, type AuthState } from "@/lib/auth/actions";
+import { requestPasswordReset } from "@/lib/auth/actions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const INITIAL: AuthState = { error: null };
-
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({ initialError }: { initialError?: string | null }) {
   const t = useTranslations("Auth.forgotPassword");
-  const [state, formAction, pending] = useActionState(requestPasswordReset, INITIAL);
+  // Seeds the very first render only (e.g. bounced back here after clicking
+  // an expired/already-used reset link) -- a real submit's own result always
+  // overwrites this via useActionState's normal flow.
+  const [state, formAction, pending] = useActionState(requestPasswordReset, {
+    error: initialError ?? null,
+  });
 
   if (state.checkEmail) {
     return (
