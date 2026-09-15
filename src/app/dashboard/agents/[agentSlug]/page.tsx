@@ -69,7 +69,6 @@ export default async function AgentDetailPage({
         companyId={company.id}
         initialIsHired={isHired}
         isBillingActive={billingActive}
-        showDevChatTest={process.env.NODE_ENV !== "production"}
       />
     </div>
   );
