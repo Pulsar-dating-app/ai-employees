@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
@@ -12,14 +12,26 @@ import { Button } from "@/components/ui/button";
 const TEMPLATE_LINK_CLASSES =
   "inline-flex h-9 items-center justify-center gap-2 rounded-md border border-outline-variant bg-surface-container px-4 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-high";
 
-// The insert itself now runs after the response (see the import route's own
-// top comment) -- there's no final imported/products count to show here,
-// only what's known synchronously: how many valid rows were queued and
-// which rows were skipped at validation.
-type ImportResult = {
-  queued: number;
+// What's known synchronously, from the import POST's own response — how
+// many valid rows were queued and which rows were skipped at validation.
+// Only ever populated by *this* browser tab actually submitting a file, so
+// it's absent after a reload resumes an in-progress job (see below).
+type ValidationResult = {
   skippedCount: number;
   skipped: { row: number; reason: string }[];
+};
+
+// Mirrors product_import_jobs (migration 20260915120000) / GET
+// .../import/status's response shape. `insertedCount` on a `failed` job is
+// diagnostic only — the route's compensating rollback means none of those
+// rows actually survive, so the UI must key off `status`, never treat
+// `insertedCount` as a real partial result.
+type JobStatus = "processing" | "succeeded" | "failed";
+type Job = {
+  id: string;
+  status: JobStatus;
+  totalRows: number;
+  insertedCount: number;
 };
 
 type ImportPanelProps = {
@@ -28,23 +40,69 @@ type ImportPanelProps = {
   onImported: () => void;
 };
 
+const POLL_INTERVAL_MS = 1200;
+
+async function fetchLatestJob(companyId: string): Promise<Job | null> {
+  const res = await fetch(`/api/companies/${companyId}/products/import/status`);
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.job ?? null;
+}
+
 export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps) {
   const t = useTranslations("Products.import");
 
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<"idle" | "importing" | "done" | "error">("idle");
-  const [result, setResult] = useState<ImportResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [job, setJob] = useState<Job | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Resume on mount: if there's a job at all for this company — still
+  // running, or finished since the last time this tab looked — show it
+  // instead of defaulting to a blank upload form, so leaving the page (or
+  // just reloading) doesn't lose the only sign an import ever happened.
+  useEffect(() => {
+    let cancelled = false;
+    fetchLatestJob(companyId).then((latest) => {
+      if (!cancelled && latest) setJob(latest);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // One-time resume on mount — not meant to re-run except if the company
+    // itself changes.
+  }, [companyId]);
+
+  // Poll only while a job is actually processing; stops itself the moment
+  // it reaches a terminal status (or this panel unmounts).
+  useEffect(() => {
+    if (!job || job.status !== "processing") return;
+
+    const interval = setInterval(async () => {
+      const latest = await fetchLatestJob(companyId);
+      if (!latest) return;
+      setJob(latest);
+      if (latest.status !== "processing") {
+        // Only now, not on the mount-time resume above — a plain page visit
+        // that happens to find an old finished job shouldn't itself trigger
+        // a product-list refresh; watching one actually finish should.
+        onImported();
+      }
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [job, companyId, onImported]);
 
   async function handleImport() {
     if (!file) {
-      setError(t("fileRequired"));
+      setUploadError(t("fileRequired"));
       return;
     }
 
-    setError(null);
-    setStatus("importing");
+    setUploadError(null);
+    setUploading(true);
 
     const formData = new FormData();
     formData.set("file", file);
@@ -57,37 +115,54 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
       body: formData,
     });
 
+    setUploading(false);
+
     if (res.ok) {
       const json = await res.json();
-      setResult({ queued: json.queued, skippedCount: json.skippedCount, skipped: json.skipped ?? [] });
-      setStatus("done");
-      // The import itself is still running in the background at this point
-      // (see the route's own comment) -- this refresh won't show the new
-      // products yet. Still worth calling: it's a no-op today, but reflects
-      // a real re-fetch the moment this list ever starts polling/subscribing.
-      onImported();
+      setValidation({ skippedCount: json.skippedCount, skipped: json.skipped ?? [] });
+      if (json.jobId) {
+        setJob({ id: json.jobId, status: "processing", totalRows: json.queued, insertedCount: 0 });
+      }
     } else {
-      setStatus("error");
-      setError(t("genericError"));
+      setUploadError(t("genericError"));
     }
   }
 
   function reset() {
     setFile(null);
-    setResult(null);
-    setError(null);
-    setStatus("idle");
+    setValidation(null);
+    setJob(null);
+    setUploadError(null);
   }
 
   if (!canEdit) return null;
 
-  if (status === "done" && result) {
+  if (job) {
+    const percent =
+      job.totalRows > 0 ? Math.round((Math.min(job.insertedCount, job.totalRows) / job.totalRows) * 100) : 0;
+
     return (
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-neutral-800">
-          {t("resultSummary", { queued: result.queued, skippedCount: result.skippedCount })}
-        </p>
-        {result.skippedCount > 0 ? (
+        {job.status === "processing" ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-neutral-800">{t("progressLabel", { percent })}</p>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${Math.max(2, percent)}%` }}
+              />
+            </div>
+          </div>
+        ) : job.status === "succeeded" ? (
+          <p className="text-sm text-neutral-800">{t("succeededSummary", { count: job.totalRows })}</p>
+        ) : (
+          // No count shown here on purpose — a failed run means zero
+          // products were actually kept (compensating rollback), so
+          // surfacing insertedCount would misreport a partial success.
+          <p className="text-sm text-error">{t("failedSummary")}</p>
+        )}
+
+        {validation && validation.skippedCount > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
@@ -97,7 +172,7 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
                 </tr>
               </thead>
               <tbody>
-                {result.skipped.map((row) => (
+                {validation.skipped.map((row) => (
                   <tr key={row.row} className="border-b border-neutral-100">
                     <td className="py-2 pr-3">{row.row}</td>
                     <td className="py-2 pr-3">{row.reason}</td>
@@ -107,11 +182,14 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
             </table>
           </div>
         ) : null}
-        <div>
-          <Button type="button" variant="secondary" size="sm" onClick={reset}>
-            {t("importAnotherButton")}
-          </Button>
-        </div>
+
+        {job.status !== "processing" ? (
+          <div>
+            <Button type="button" variant="secondary" size="sm" onClick={reset}>
+              {t("importAnotherButton")}
+            </Button>
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -135,7 +213,7 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
           type="button"
           variant="secondary"
           size="sm"
-          disabled={status === "importing"}
+          disabled={uploading}
           onClick={() => fileInputRef.current?.click()}
         >
           {t("chooseFileButton")}
@@ -145,21 +223,21 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
           ref={fileInputRef}
           type="file"
           accept=".csv,.xlsx,.xls"
-          disabled={status === "importing"}
+          disabled={uploading}
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="hidden"
         />
       </div>
 
-      {error ? (
+      {uploadError ? (
         <p role="alert" className="text-sm text-error">
-          {error}
+          {uploadError}
         </p>
       ) : null}
 
       <div>
-        <Button type="button" isLoading={status === "importing"} disabled={!file} onClick={handleImport}>
-          {status === "importing" ? t("importingButton") : t("importButton")}
+        <Button type="button" isLoading={uploading} disabled={!file} onClick={handleImport}>
+          {uploading ? t("importingButton") : t("importButton")}
         </Button>
       </div>
     </div>

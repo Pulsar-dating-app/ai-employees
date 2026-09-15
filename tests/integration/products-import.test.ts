@@ -9,17 +9,19 @@ import { signUpTestUser } from "./helpers/auth";
 // JSON-stringifies the body) since this endpoint expects multipart/form-data.
 //
 // The actual insert runs in `after()`, after the response the tests below
-// assert on is already sent (see the route's own top comment for the full
-// "why") — so a request's immediate JSON only ever reports what's known
+// assert on is already sent (see the import route's own top comment for the
+// full "why") — so a request's immediate JSON only ever reports what's known
 // synchronously (parse/validation results, as `queued`/`skippedCount`/
-// `skipped`), never a final imported count or the inserted rows. Tests that
-// need to assert the products actually landed poll the list endpoint via
-// waitForProducts below instead of reading them off the import response.
+// `skipped`/`jobId`), never a final imported count or the inserted rows.
+// Tests that need the real outcome poll GET .../import/status (via
+// waitForJob below) until the job reaches a terminal status, the same thing
+// ImportPanel itself polls for progress.
 
 interface ImportResult {
   queued: number;
   skippedCount: number;
   skipped: { row: number; reason: string }[];
+  jobId: string | null;
 }
 
 interface ProductRow {
@@ -28,28 +30,37 @@ interface ProductRow {
   stock: number | null;
 }
 
-// Polls GET /products until at least `count` rows exist for the company, or
-// throws after the timeout. Embeddings are disabled in tests
+interface JobStatusRow {
+  id: string;
+  status: "processing" | "succeeded" | "failed";
+  totalRows: number;
+  insertedCount: number;
+  error: string | null;
+}
+
+async function getImportStatus(ownerCookie: string, companyId: string): Promise<JobStatusRow | null> {
+  const res = await api<{ job: JobStatusRow | null }>(
+    "GET",
+    `/api/companies/${companyId}/products/import/status`,
+    ownerCookie,
+  );
+  return res.json.job;
+}
+
+// Polls GET .../import/status until the most recent job reaches a terminal
+// status, or throws after the timeout. Embeddings are disabled in tests
 // (DISABLE_PRODUCT_EMBEDDINGS, see embeddings.ts) so the background insert
 // this waits on is fast; the timeout is generous only to absorb normal
-// scheduling/DB round-trip jitter, same shape as waitForEmail.
-async function waitForProducts(
-  ownerCookie: string,
-  companyId: string,
-  count: number,
-  timeoutMs = 5000,
-): Promise<ProductRow[]> {
+// scheduling/DB round-trip jitter, same shape as helpers/email.ts's
+// waitForEmail.
+async function waitForJob(ownerCookie: string, companyId: string, timeoutMs = 5000): Promise<JobStatusRow> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const res = await api<{ products: ProductRow[]; total: number }>(
-      "GET",
-      `/api/companies/${companyId}/products?pageSize=100`,
-      ownerCookie,
-    );
-    if (res.json.total >= count) return res.json.products;
+    const job = await getImportStatus(ownerCookie, companyId);
+    if (job && job.status !== "processing") return job;
     await new Promise((r) => setTimeout(r, 150));
   }
-  throw new Error(`fewer than ${count} product(s) landed for company ${companyId} within ${timeoutMs}ms`);
+  throw new Error(`import job for company ${companyId} did not reach a terminal status within ${timeoutMs}ms`);
 }
 
 async function createCompany(ownerCookie: string, name: string) {
@@ -117,10 +128,20 @@ describe("Product import POST /api/companies/:id/products/import", () => {
     expect(result.status).toBe(200);
     expect(result.json.queued).toBe(2);
     expect(result.json.skippedCount).toBe(0);
+    expect(result.json.jobId).toBeTruthy();
 
-    const products = await waitForProducts(owner.cookieHeader, companyId, 2);
-    expect(products.map((p) => p.name).sort()).toEqual(["Gadget", "Widget"]);
-    expect(products.find((p) => p.name === "Widget")?.stock).toBe(10);
+    const job = await waitForJob(owner.cookieHeader, companyId);
+    expect(job.status).toBe("succeeded");
+    expect(job.insertedCount).toBe(2);
+    expect(job.id).toBe(result.json.jobId);
+
+    const products = await api<{ products: ProductRow[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=100`,
+      owner.cookieHeader,
+    );
+    expect(products.json.products.map((p) => p.name).sort()).toEqual(["Gadget", "Widget"]);
+    expect(products.json.products.find((p) => p.name === "Widget")?.stock).toBe(10);
   });
 
   it("imports only valid rows from a mix of valid/invalid rows, reporting specific reasons", async () => {
@@ -139,9 +160,6 @@ describe("Product import POST /api/companies/:id/products/import", () => {
     expect(result.status).toBe(200);
     expect(result.json.queued).toBe(2);
     expect(result.json.skippedCount).toBe(3);
-
-    const products = await waitForProducts(owner.cookieHeader, companyId, 2);
-    expect(products.map((p) => p.name).sort()).toEqual(["Another Good Widget", "Good Widget"]);
     // Rows are 1-indexed among parsed data rows: row 2 (missing name),
     // row 3 (currency-less price), row 4 (negative stock).
     expect(result.json.skipped).toEqual([
@@ -149,6 +167,17 @@ describe("Product import POST /api/companies/:id/products/import", () => {
       { row: 3, reason: "currency is required when price is present" },
       { row: 4, reason: "stock must be a non-negative integer" },
     ]);
+
+    const job = await waitForJob(owner.cookieHeader, companyId);
+    expect(job.status).toBe("succeeded");
+    expect(job.insertedCount).toBe(2);
+
+    const products = await api<{ products: ProductRow[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=100`,
+      owner.cookieHeader,
+    );
+    expect(products.json.products.map((p) => p.name).sort()).toEqual(["Another Good Widget", "Good Widget"]);
   });
 
   it("rejects an oversized file with 400", async () => {
@@ -203,8 +232,15 @@ describe("Product import POST /api/companies/:id/products/import", () => {
     expect(result.json.queued).toBe(2);
     expect(result.json.skippedCount).toBe(0);
 
-    const products = await waitForProducts(owner.cookieHeader, companyId, 2);
-    expect(products.find((p) => p.name === "Sheet Widget")?.stock).toBe(3);
+    const job = await waitForJob(owner.cookieHeader, companyId);
+    expect(job.status).toBe("succeeded");
+
+    const products = await api<{ products: ProductRow[] }>(
+      "GET",
+      `/api/companies/${companyId}/products?pageSize=100`,
+      owner.cookieHeader,
+    );
+    expect(products.json.products.find((p) => p.name === "Sheet Widget")?.stock).toBe(3);
   });
 
   // The route's own top comment explains why: several small inserts (100
@@ -232,16 +268,52 @@ describe("Product import POST /api/companies/:id/products/import", () => {
     expect(result.json.queued).toBe(150);
     expect(result.json.skippedCount).toBe(0);
 
-    // No poll-for-presence here (there's nothing successful to wait for) --
-    // give the background insert + rollback (fast with embeddings disabled)
-    // a generous fixed window to fully settle, then assert the end state is
-    // zero, not the 100 rows chunk 1 alone would have committed.
-    await new Promise((r) => setTimeout(r, 3000));
-    const res = await api<{ total: number }>(
+    const job = await waitForJob(owner.cookieHeader, companyId);
+    expect(job.status).toBe("failed");
+    expect(job.error).toBeTruthy();
+
+    // The real assertion: chunk 1's 100 rows must not have survived just
+    // because chunk 2 was the one that failed.
+    const products = await api<{ total: number }>(
       "GET",
       `/api/companies/${companyId}/products?pageSize=1`,
       owner.cookieHeader,
     );
-    expect(res.json.total).toBe(0);
+    expect(products.json.total).toBe(0);
+  });
+});
+
+describe("GET /api/companies/:id/products/import/status", () => {
+  it("requires authentication and membership", async () => {
+    const owner = await signUpTestUser("owner");
+    const outsider = await signUpTestUser("outsider");
+    const companyId = await createCompany(owner.cookieHeader, "Status Auth Co");
+
+    const unauth = await api("GET", `/api/companies/${companyId}/products/import/status`, undefined);
+    expect(unauth.status).toBe(401);
+    const forbidden = await api("GET", `/api/companies/${companyId}/products/import/status`, outsider.cookieHeader);
+    expect(forbidden.status).toBe(403);
+  });
+
+  it("returns a null job when the company has never imported anything", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "No Imports Co");
+
+    expect(await getImportStatus(owner.cookieHeader, companyId)).toBeNull();
+  });
+
+  it("reflects the most recent job, not an earlier one, once a second import runs", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Second Import Co");
+
+    const first = await importFile(owner.cookieHeader, companyId, csvFile("name\nFirst Widget\n"));
+    await waitForJob(owner.cookieHeader, companyId);
+
+    const second = await importFile(owner.cookieHeader, companyId, csvFile("name\nSecond Widget\n"));
+    const job = await waitForJob(owner.cookieHeader, companyId);
+
+    expect(job.id).toBe(second.json.jobId);
+    expect(job.id).not.toBe(first.json.jobId);
+    expect(job.status).toBe("succeeded");
   });
 });
