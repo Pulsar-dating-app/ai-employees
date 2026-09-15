@@ -19,6 +19,11 @@ export type ToolExecutionContext = {
   // already uses for the Responses/Conversations API -- no separate
   // connection or credential.
   openai: OpenAI;
+  // Scratch state scoped to one customer message: created per
+  // AgentEngine.run() and shared by every tool call in it, including the
+  // grounding retry. Optional so direct tool callers (tests) can omit it --
+  // a tool treats a missing turnState as "no per-message guard".
+  turnState?: { bookingClaimed: boolean };
 };
 
 // The tool-call contract this whole ticket exists to define. `parameters`

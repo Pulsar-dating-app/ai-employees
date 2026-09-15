@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { getPlan, TRIAL_DAYS, type PlanKey } from "@/lib/billing/plans";
+import { getSelfServePlans, TRIAL_DAYS } from "@/lib/billing/plans";
 import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import {
@@ -12,7 +12,8 @@ import {
 
 // Trello P3 -- POST /api/companies/[companyId]/billing/checkout
 //
-// A company picks Starter or Pro and pays before it can activate a bot.
+// A company picks a self-serve plan (Starter, Intermediate, or Pro today --
+// see plans.ts's isSelfServe) and pays before it can activate a bot.
 // Admin-gated at the app layer (membership alone shouldn't let a plain
 // member start a paid subscription) -- same requireAdmin shape as the
 // agents PATCH route.
@@ -33,7 +34,7 @@ import {
 // Enterprise is contact-only: 400 pointing at the "fale conosco" CTA.
 //
 // Trello P8 -- free trial: on the checkout branch, any plan with a
-// `trialReplyLimit` (Starter and Pro today, not Enterprise) grants
+// `trialReplyLimit` (every self-serve plan today, not Enterprise) grants
 // `TRIAL_DAYS` free if this user (not this company) hasn't had one before
 // (`users.trial_used_at`). Stripe still collects a card; P4's webhook seeds
 // the reduced trial quota and stamps `trial_used_at` once the subscription
@@ -213,16 +214,21 @@ export async function POST(
       { status: 400 },
     );
   }
-  if (planKey !== "starter" && planKey !== "pro") {
+  // Validated against the self-serve catalog, not a hardcoded key list, so a
+  // future plan (like this one, added 2026-09-14) doesn't need this route
+  // touched again -- it only needs an entry in plans.ts with isSelfServe.
+  const selfServePlans = getSelfServePlans();
+  const plan = selfServePlans.find((p) => p.key === planKey);
+  if (!plan) {
     return NextResponse.json(
-      { error: "planKey must be 'starter' or 'pro'" },
+      {
+        error: `planKey must be one of: ${selfServePlans.map((p) => p.key).join(", ")}`,
+      },
       { status: 400 },
     );
   }
-
-  const plan = getPlan(planKey as PlanKey);
   if (!plan.stripePriceId) {
-    // starter/pro always have a price; this is a config-drift guard.
+    // Every self-serve plan always has a price; this is a config-drift guard.
     return NextResponse.json(
       { error: `Plan '${planKey}' has no Stripe price configured` },
       { status: 500 },
@@ -260,7 +266,9 @@ export async function POST(
       {
         company_id: companyId,
         stripe_customer_id: customerId,
-        plan_key: planKey,
+        // plan.key (validated against the catalog above), not the raw
+        // request body value.
+        plan_key: plan.key,
         subscription_status: "incomplete",
       },
       { onConflict: "company_id" },
@@ -276,7 +284,7 @@ export async function POST(
     customerId,
     priceId: plan.stripePriceId,
     companyId,
-    planKey,
+    planKey: plan.key,
     baseUrl: resolveCheckoutBaseUrl(),
     ...(grantTrial ? { trialPeriodDays: TRIAL_DAYS, trialUserId: user.id } : {}),
   });

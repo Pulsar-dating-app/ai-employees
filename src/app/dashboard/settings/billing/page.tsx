@@ -183,6 +183,12 @@ export default async function BillingPage() {
     currentSelfServeIndex >= 0 && currentSelfServeIndex < selfServePlans.length - 1
       ? selfServePlans[currentSelfServeIndex + 1]
       : null;
+  // Mirror of nextSelfServePlan, one tier down -- the "Current plan" card
+  // below shows exactly one alternate-plan link: an upgrade when a higher
+  // tier exists, otherwise a downgrade off the top tier. Index-based (not a
+  // hardcoded key), so a plan inserted between two existing tiers (like
+  // Intermediate, 2026-09-14) needs no change here.
+  const prevSelfServePlan = currentSelfServeIndex > 0 ? selfServePlans[currentSelfServeIndex - 1] : null;
   const ENTERPRISE_MAILTO = "mailto:contato@staffra.com?subject=Enterprise";
 
   return (
@@ -237,7 +243,7 @@ export default async function BillingPage() {
                   ) : nextSelfServePlan ? (
                     <CheckoutButton
                       companyId={company.id}
-                      planKey={nextSelfServePlan.key as "starter" | "pro"}
+                      planKey={nextSelfServePlan.key as Exclude<PlanKey, "enterprise">}
                       label={t("banner.overLimit.action")}
                     />
                   ) : (
@@ -266,7 +272,7 @@ export default async function BillingPage() {
                   ) : nextSelfServePlan ? (
                     <CheckoutButton
                       companyId={company.id}
-                      planKey={nextSelfServePlan.key as "starter" | "pro"}
+                      planKey={nextSelfServePlan.key as Exclude<PlanKey, "enterprise">}
                       label={t("banner.nearLimit.action")}
                     />
                   ) : (
@@ -317,18 +323,18 @@ export default async function BillingPage() {
                           variant="secondary"
                         />
                       ) : null}
-                      {plan!.key === "starter" ? (
+                      {nextSelfServePlan ? (
                         <CheckoutButton
                           companyId={company.id}
-                          planKey="pro"
-                          label={t("upgradeToPro")}
+                          planKey={nextSelfServePlan.key as Exclude<PlanKey, "enterprise">}
+                          label={t("upgradeTo", { plan: nextSelfServePlan.displayName })}
                           variant="link"
                         />
-                      ) : plan!.key === "pro" ? (
+                      ) : prevSelfServePlan ? (
                         <CheckoutButton
                           companyId={company.id}
-                          planKey="starter"
-                          label={t("switchToStarter")}
+                          planKey={prevSelfServePlan.key as Exclude<PlanKey, "enterprise">}
+                          label={t("switchTo", { plan: prevSelfServePlan.displayName })}
                           variant="link"
                         />
                       ) : null}
@@ -391,7 +397,20 @@ export default async function BillingPage() {
                 </p>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/*
+                3 columns only from `2xl` (1536px), not `lg` (1024px): this
+                grid sits inside the dashboard's 8/12 main column, itself
+                inside a 256px-sidebar-offset `<main>` capped at
+                max-w-[1280px] (dashboard/layout.tsx) -- `main` only reaches
+                that 1280px cap once the viewport hits 256+1280=1536px, i.e.
+                exactly `2xl`. Below that, 3 columns of real card content
+                (price, reply count, a CTA button) don't fit; `lg:grid-cols-3`
+                (tried 2026-09-14, when Intermediate made this a 3-plan grid)
+                squeezed each card to ~120px and wrapped button labels
+                outside their fixed height -- see billing-actions.tsx's
+                min-h-11 comment for the other half of that fix.
+              */}
+              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
                 {selfServePlans.map((p) => {
                   const offersTrial = p.trialReplyLimit != null && trialAvailable;
                   return (
@@ -399,7 +418,7 @@ export default async function BillingPage() {
                       key={p.key}
                       className="flex flex-col rounded-lg border border-outline-variant/60 bg-surface-container-low p-5"
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <h3 className="text-label-md font-bold text-on-surface">{p.displayName}</h3>
                         {offersTrial ? (
                           <span className="inline-flex items-center rounded-full bg-tertiary/15 px-2.5 py-1 text-xs font-semibold text-tertiary">
@@ -427,7 +446,7 @@ export default async function BillingPage() {
                         {canEdit ? (
                           <CheckoutButton
                             companyId={company.id}
-                            planKey={p.key as "starter" | "pro"}
+                            planKey={p.key as Exclude<PlanKey, "enterprise">}
                             label={
                               offersTrial
                                 ? t("startTrial", { plan: p.displayName })

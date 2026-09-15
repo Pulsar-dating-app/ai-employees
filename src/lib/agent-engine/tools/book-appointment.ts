@@ -24,6 +24,9 @@ export const bookAppointmentTool: AgentTool = {
     "2026-09-01T14:00:00-03:00) and must be one of the slot starts returned by " +
     "find_available_slots -- never a time you chose yourself. The customer, this conversation, " +
     "and you are attached automatically; don't ask the customer for ids.\n\n" +
+    "Book exactly ONE appointment per customer message. If the customer asks to book several " +
+    "times, or every open slot, don't book them all: show the options and ask which single time " +
+    "they want, then book just that one. " +
     "Businesses require customer details before a booking -- an email always, plus whatever " +
     "else they configured. `find_available_slots` returns them as `intakeQuestions`, each with " +
     "a `key`, a `label`, and a `fieldType` (email/phone/cpf/date/name/text). Ask in your own " +
@@ -43,7 +46,9 @@ export const bookAppointmentTool: AgentTool = {
     "\"service_not_found\" = not something they offer, \"too_soon\" = the start is sooner than " +
     "the business accepts a booking (offer a later time), \"daily_limit_reached\" = this " +
     "customer already has the maximum number of appointments allowed on that day -- decline " +
-    "warmly and offer to book on a different day instead, \"missing_intake_answers\" = the " +
+    "warmly and offer to book on a different day instead, \"one_booking_per_message\" = a booking " +
+    "was already made (or is being made) for this message -- confirm that one and ask whether " +
+    "they want another, \"missing_intake_answers\" = the " +
     "business still needs the details listed in `missingRequired` -- ask for exactly those and " +
     "retry, \"invalid_intake_answers\" = a value was the wrong shape (`invalid` names which " +
     "label and why -- e.g. a bad email or a CPF that isn't 11 digits) -- ask again for those " +
@@ -85,20 +90,40 @@ export const bookAppointmentTool: AgentTool = {
   },
   async execute(rawArgs, ctx) {
     const args = rawArgs as BookAppointmentArgs;
-    return AppointmentRepository.book(
-      {
-        companyId: ctx.companyId,
-        serviceId: args.serviceId,
-        customerId: ctx.customerId,
-        conversationId: ctx.conversationId,
-        agentId: ctx.agentId,
-        startsAt: args.startsAt,
-        notes: typeof args.notes === "string" ? args.notes : null,
-        summary: typeof args.summary === "string" ? args.summary : null,
-        intakeAnswers:
-          args.intakeAnswers && typeof args.intakeAnswers === "object" ? args.intakeAnswers : null,
-      },
-      ctx.supabase,
-    );
+
+    // One booking per customer message. Asked to "book every free slot", the
+    // model emits several book_appointment calls in a single reply and the
+    // tool loop runs them in parallel. The claim is taken synchronously,
+    // before the first await, so exactly one of those calls proceeds and the
+    // rest are refused. It's released when the booking doesn't go through,
+    // so Ana can still try another slot in the same turn (e.g. after
+    // slot_unavailable).
+    const turn = ctx.turnState;
+    if (turn?.bookingClaimed) return { booked: false, reason: "one_booking_per_message" };
+    if (turn) turn.bookingClaimed = true;
+
+    let result;
+    try {
+      result = await AppointmentRepository.book(
+        {
+          companyId: ctx.companyId,
+          serviceId: args.serviceId,
+          customerId: ctx.customerId,
+          conversationId: ctx.conversationId,
+          agentId: ctx.agentId,
+          startsAt: args.startsAt,
+          notes: typeof args.notes === "string" ? args.notes : null,
+          summary: typeof args.summary === "string" ? args.summary : null,
+          intakeAnswers:
+            args.intakeAnswers && typeof args.intakeAnswers === "object" ? args.intakeAnswers : null,
+        },
+        ctx.supabase,
+      );
+    } catch (err) {
+      if (turn) turn.bookingClaimed = false;
+      throw err;
+    }
+    if (turn && !result.booked) turn.bookingClaimed = false;
+    return result;
   },
 };

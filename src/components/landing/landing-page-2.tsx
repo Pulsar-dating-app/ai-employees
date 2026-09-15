@@ -603,9 +603,23 @@ export async function LandingPageV2() {
             </div>
 
             <PlanFeaturesProvider>
-            <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-4">
               {plans.map((plan, i) => {
+                // The middle self-serve plan gets the "most chosen" badge --
+                // classic anchor-the-buyer-off-the-cheapest-tier pricing
+                // psychology, not "whichever plan happens to be Pro". With
+                // Intermediate inserted between Starter and Pro (2026-09-14)
+                // it's still index 1, so this needed no change -- but it's
+                // deliberately index-based (the middle *position*), not a
+                // `plan.tier === "Pro"` check, so it keeps following
+                // whichever plan is visually in the middle if the lineup
+                // changes again.
                 const featured = i === 1;
+                // The last plan is always the contact-us tier (Enterprise) --
+                // length-relative, not a hardcoded index, so inserting a
+                // self-serve plan earlier in the array (like Intermediate)
+                // doesn't silently point this at the wrong card.
+                const isContactPlan = i === plans.length - 1;
                 return (
                   <div
                     key={plan.name}
@@ -661,7 +675,7 @@ export async function LandingPageV2() {
                       />
                     </div>
                     <div className="mt-8 sm:mt-12">
-                      {i === 2 ? (
+                      {isContactPlan ? (
                         <SalesContactDialog
                           triggerLabel={plan.cta}
                           triggerClassName="group inline-flex w-full items-center justify-center rounded-lg bg-[#0f172a] py-3 text-[14px] font-semibold text-white transition-all hover:bg-[#3525cd]"

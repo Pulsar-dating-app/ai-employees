@@ -31,18 +31,21 @@ describe("classifyUsage (Trello P7)", () => {
   });
 
   it("defaults the multiplier to the env-backed value when omitted", () => {
-    // Default grace is 1.2, so 100/100 is still inside the band.
+    // Default grace is 1.05, so 100/100 is inside the band, and the
+    // boundary itself (104 vs 105) is what actually pins the default --
+    // not just values that happen to land past it under any grace > 1.
     expect(classifyUsage(100, 100)).toBe("over_plan");
-    expect(classifyUsage(120, 100)).toBe("past_grace");
+    expect(classifyUsage(104, 100)).toBe("over_plan");
+    expect(classifyUsage(105, 100)).toBe("past_grace");
   });
 });
 
 describe("getGraceMultiplier (Trello P7)", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("defaults to 1.2 when unset or empty", () => {
+  it("defaults to 1.05 when unset or empty", () => {
     vi.stubEnv("BILLING_GRACE_MULTIPLIER", "");
-    expect(getGraceMultiplier()).toBe(1.2);
+    expect(getGraceMultiplier()).toBe(1.05);
   });
 
   it("reads a valid override", () => {
@@ -52,9 +55,9 @@ describe("getGraceMultiplier (Trello P7)", () => {
 
   it("falls back on garbage or a sub-1 value rather than collapsing the grace band", () => {
     vi.stubEnv("BILLING_GRACE_MULTIPLIER", "not-a-number");
-    expect(getGraceMultiplier()).toBe(1.2);
+    expect(getGraceMultiplier()).toBe(1.05);
     vi.stubEnv("BILLING_GRACE_MULTIPLIER", "0.5");
-    expect(getGraceMultiplier()).toBe(1.2);
+    expect(getGraceMultiplier()).toBe(1.05);
   });
 });
 

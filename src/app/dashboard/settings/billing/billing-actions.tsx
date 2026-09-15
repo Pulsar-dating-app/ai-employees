@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
 import { SpinnerIcon } from "@/components/ui/icons";
+import type { PlanKey } from "@/lib/billing/plans";
 
 // Trello P5 -- every button on the billing page that leaves for Stripe.
 // Each POSTs to one of our billing routes and follows the `url` it returns
@@ -13,13 +14,20 @@ import { SpinnerIcon } from "@/components/ui/icons";
 
 type Variant = "primary" | "secondary" | "link" | "danger";
 
+// `min-h-11` (not `h-11`): a fixed height clips a label that wraps to a
+// second line -- and a narrow plan card (three cards sharing a column that
+// only really has room past the `2xl` breakpoint, see the grid below) plus a
+// longer plan name ("Intermediate", 2026-09-14) makes that a real case, not
+// just a translation edge case. `min-h-11` keeps the usual single-line
+// button exactly 44px (the flex-centered content is shorter than that) and
+// only grows for a wrapped label, instead of cutting it off.
 const VARIANT_CLASSES: Record<Variant, string> = {
   primary:
-    "h-11 rounded-lg bg-primary px-5 text-label-md font-semibold text-on-primary transition-all hover:brightness-90",
+    "min-h-11 rounded-lg bg-primary px-5 py-2 text-label-md font-semibold text-on-primary transition-all hover:brightness-90",
   secondary:
-    "h-11 rounded-lg border border-outline-variant bg-surface-container px-5 text-label-md font-semibold text-on-surface transition-colors hover:bg-surface-container-high",
+    "min-h-11 rounded-lg border border-outline-variant bg-surface-container px-5 py-2 text-label-md font-semibold text-on-surface transition-colors hover:bg-surface-container-high",
   danger:
-    "h-11 rounded-lg bg-error px-5 text-label-md font-semibold text-on-error transition-colors hover:brightness-95",
+    "min-h-11 rounded-lg bg-error px-5 py-2 text-label-md font-semibold text-on-error transition-colors hover:brightness-95",
   link: "text-label-md font-medium text-primary transition-colors hover:text-primary-container hover:underline",
 };
 
@@ -87,7 +95,7 @@ function ActionButton({
       onClick={onClick}
       disabled={pending || disabled}
       className={clsx(
-        "inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex items-center justify-center gap-2 text-center leading-tight disabled:cursor-not-allowed disabled:opacity-60",
         VARIANT_CLASSES[variant],
         fullWidth && "w-full",
       )}
@@ -108,7 +116,9 @@ export function CheckoutButton({
   fullWidth,
 }: {
   companyId: string;
-  planKey: "starter" | "pro";
+  // Any self-serve plan -- Enterprise has no Checkout Session to start (it's
+  // contact-only), so it's deliberately excluded from this type.
+  planKey: Exclude<PlanKey, "enterprise">;
   label: string;
   variant?: Variant;
   fullWidth?: boolean;

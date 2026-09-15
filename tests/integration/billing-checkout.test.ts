@@ -303,8 +303,8 @@ describe("Plan checkout (Trello P3)", () => {
     });
   });
 
-  describe("Free trial -- Starter and Pro (Trello P8)", () => {
-    it.each(["starter", "pro"] as const)(
+  describe("Free trial -- every self-serve plan (Trello P8)", () => {
+    it.each(["starter", "intermediate", "pro"] as const)(
       "grants a trial on a first checkout of %s",
       async (planKey) => {
         const owner = await signUpTestUser("owner");
