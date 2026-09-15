@@ -247,19 +247,53 @@ export async function POST(
     // One batched embeddings call for the whole file rather than one per
     // row (createProductEmbeddingsBatch) -- see products/embeddings.ts.
     // Order-preserving, so zipping back onto toInsert by index is safe.
+    // This call isn't the bottleneck below -- OpenAI's embeddings endpoint
+    // handles a 1000-row batch fine, and it isn't subject to Postgres's
+    // statement_timeout at all.
     const embeddings = await createProductEmbeddingsBatch(
       toInsert.map((row) => buildProductEmbeddingInput(row)),
     );
     const toInsertWithEmbeddings = toInsert.map((row, i) => ({ ...row, embedding: embeddings[i] }));
 
-    const { data, error } = await supabase
-      .from("products")
-      .insert(toInsertWithEmbeddings)
-      .select(PRODUCT_PUBLIC_COLUMNS);
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    // Found in production (2026-09-15): a 1000-row import 500'd with
+    // "canceling statement due to statement timeout" (Postgres 57014).
+    // Root cause, confirmed from the project's own Postgres logs (not a
+    // guess) -- PostgREST always executes as the `authenticator` role, even
+    // for a service-role request, and `authenticator` carries an 8s
+    // `statement_timeout` on this project. The actual query PostgREST
+    // builds for a bulk `.insert(array)` is `json_to_recordset($1)` over
+    // the whole JSON body in ONE statement -- with `embedding` populated
+    // (1536 floats/row), a few hundred rows' worth of vectors is enough
+    // JSON for that parse + insert to blow past 8s. Raising Vercel's
+    // maxDuration (see this file's own git history) didn't help because
+    // Vercel was never the constraint -- Hobby already defaults to 300s
+    // under Fluid Compute.
+    //
+    // Fix: insert in chunks small enough to comfortably clear the 8s
+    // ceiling regardless of total file size, rather than one giant
+    // statement. This does mean a failure partway through leaves the
+    // already-inserted chunks committed (not fully atomic anymore) --
+    // acceptable, and strictly better than the old behavior, where the
+    // whole import died with nothing saved after the OpenAI embedding cost
+    // was already spent.
+    const INSERT_CHUNK_SIZE = 100;
+    for (let i = 0; i < toInsertWithEmbeddings.length; i += INSERT_CHUNK_SIZE) {
+      const chunk = toInsertWithEmbeddings.slice(i, i + INSERT_CHUNK_SIZE);
+      const { data, error } = await supabase.from("products").insert(chunk).select(PRODUCT_PUBLIC_COLUMNS);
+      if (error) {
+        return NextResponse.json(
+          {
+            error: error.message,
+            imported: inserted.length,
+            skippedCount: skipped.length,
+            skipped,
+            products: inserted,
+          },
+          { status: 500 },
+        );
+      }
+      inserted = inserted.concat(data ?? []);
     }
-    inserted = data ?? [];
   }
 
   return NextResponse.json({
