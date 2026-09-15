@@ -822,7 +822,17 @@
     },
     "noCompany": "Crie sua empresa para começar a acompanhar o desempenho.",
     "browseMarketplace": "Explorar o marketplace",
-    "agentSelectLabel": "Integrante"
+    "agentSelectLabel": "Integrante",
+    "reliability": {
+      "title": "Confiabilidade",
+      "subtitle": "Todo preço e quantidade em estoque que {name} envia é conferido no seu catálogo antes de chegar ao cliente.",
+      "empty": "Nenhuma resposta de {name} foi conferida neste período ainda.",
+      "scope": "Cobre preços e quantidades em estoque, conferidos no seu catálogo. Outros tipos de afirmação não passam por essa verificação.",
+      "checkedLabel": "Respostas conferidas",
+      "regeneratedLabel": "Corrigidas antes de enviar",
+      "blockedLabel": "Seguradas para confirmação",
+      "cta": "Ver quem está aguardando confirmação"
+    }
   },
   "AgentDetail": {
     "shouldTitle": "O que {name} faz",
@@ -1647,7 +1657,21 @@
       "channel": {
         "web_chat": "Chat do site",
         "instagram": "Instagram"
+      },
+      "grounding": {
+        "regeneratedTitle": "Corrigido antes de enviar",
+        "regeneratedBody": "Esta resposta citava um valor que não tinha sido conferido no seu catálogo, então foi reescrita. O cliente só viu a versão correta.",
+        "blockedTitle": "Resposta segurada — este cliente ainda está esperando",
+        "blockedBody": "Não foi possível confirmar um valor no seu catálogo, então o cliente foi convidado a aguardar uma confirmação em vez de receber um número não verificado.",
+        "discarded": "Valor descartado: {figures}"
       }
+    },
+    "pending": {
+      "bannerTitle": "{count, plural, =1 {# cliente está esperando uma confirmação} other {# clientes estão esperando uma confirmação}}",
+      "bannerBody": "Sua equipe prometeu conferir uma informação e voltar. Ninguém respondeu ainda.",
+      "showPending": "Ver essas",
+      "showAll": "Ver todas as conversas",
+      "rowBadge": "Aguardando confirmação"
     }
   },
   "Chat": {

@@ -20,6 +20,7 @@ import {
 import { PageHeader } from "../page-header";
 import { MetricCard } from "./metric-card";
 import { AgentHealthCard, type HealthState } from "./agent-health-card";
+import { ReliabilityCard, type ReliabilityCardProps } from "./reliability-card";
 import { RangeToggle } from "./range-toggle";
 
 type IconComponent = (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
@@ -63,6 +64,7 @@ export type MetricsClientProps = {
     body: string;
     cta?: { href: string; label: string };
   };
+  reliability: ReliabilityCardProps;
 };
 
 // Owns the interactive shell: the period toggle drives a router transition,
@@ -81,6 +83,7 @@ export function MetricsClient({
   cards,
   notASale,
   health,
+  reliability,
 }: MetricsClientProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -180,13 +183,14 @@ export function MetricsClient({
         <p className={clsx("text-sm text-on-surface-variant", dim)}>{notASale}</p>
       </div>
 
-      <div className={dim}>
+      <div className={clsx("flex flex-col gap-6", dim)}>
         <AgentHealthCard
           state={health.state}
           title={health.title}
           body={health.body}
           cta={health.cta}
         />
+        <ReliabilityCard {...reliability} />
       </div>
     </div>
   );

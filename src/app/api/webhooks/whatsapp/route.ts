@@ -6,6 +6,7 @@ import { resolveWhatsappSession } from "@/lib/whatsapp/session";
 import { verifyWhatsappSignature } from "@/lib/whatsapp/webhook-signature";
 import { decideWhatsappSendGate } from "@/lib/whatsapp/enforcement";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
+import { toStoredGrounding } from "@/lib/chat/grounding";
 
 // Trello D2/D4 -- Meta's single fixed callback URL for every company's
 // WhatsApp numbers, the same shape as the Instagram webhook
@@ -289,7 +290,7 @@ export async function POST(request: Request) {
       conversation_id: session.conversationId,
       role: "agent",
       content: result.responseText,
-      metadata: { usage: result.usage },
+      metadata: { usage: result.usage, grounding: toStoredGrounding(result.grounding) },
     });
     if (replyError) {
       console.error("WhatsApp webhook: failed to persist reply", replyError);

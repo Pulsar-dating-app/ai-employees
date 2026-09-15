@@ -6,6 +6,7 @@ import { isEmbedOriginAllowed } from "@/lib/web-chat/embed-authorization";
 import { checkAndRecordIpRateLimit, checkConversationRateLimit, getClientIp } from "@/lib/web-chat/rate-limit";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
 import { readMessageMetadata } from "@/lib/chat/product-cards";
+import { toStoredGrounding } from "@/lib/chat/grounding";
 import { buildReplyProductCards } from "@/lib/chat/reply-product-cards";
 
 // Trello M3 -- the public, unauthenticated chat API a website visitor (or
@@ -280,7 +281,11 @@ export async function POST(
   // ever looks for `products`, so this rides along invisibly to every
   // card-rendering caller; it's read back directly from the column by
   // whatever eventually reports on cost.
-  const metadataWithUsage = { ...(metadata ?? {}), usage: result.usage };
+  const metadataWithUsage = {
+    ...(metadata ?? {}),
+    usage: result.usage,
+    grounding: toStoredGrounding(result.grounding),
+  };
 
   const { data: reply, error: replyError } = await supabase
     .from("messages")

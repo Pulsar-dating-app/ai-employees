@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { resolveAgentPhoto } from "@/lib/agents/media";
 import { readMessageMetadata, type MessageMetadata } from "@/lib/chat/product-cards";
+import { readGrounding, type StoredGrounding } from "@/lib/chat/grounding";
 
 // Trello F5 -- shared between the detail page's own server-side fetch and
 // the GET API route the client re-fetches through (e.g. after sending a
@@ -26,6 +27,7 @@ export type ConversationMessage = {
   // only today). Surfaced here so the inbox shows the merchant exactly what
   // their customer saw, not a text-only version of it.
   metadata: MessageMetadata | null;
+  grounding: StoredGrounding | null;
 };
 
 export async function getConversationDetail(
@@ -88,6 +90,7 @@ export async function getConversationDetail(
       content: m.content,
       created_at: m.created_at,
       metadata: readMessageMetadata(m.metadata),
+      grounding: m.role === "agent" ? readGrounding(m.metadata) : null,
     })),
   };
 }

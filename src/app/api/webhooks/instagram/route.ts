@@ -7,6 +7,7 @@ import { toDeliverableCards } from "@/lib/chat/product-cards";
 import { resolveInstagramSession } from "@/lib/instagram/session";
 import { verifyInstagramSignature } from "@/lib/instagram/webhook-signature";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
+import { toStoredGrounding } from "@/lib/chat/grounding";
 
 // Trello N4/N5 -- Meta's single fixed callback URL for every company's
 // Instagram DMs, the way instagram-callback/route.ts is one shared OAuth
@@ -233,7 +234,7 @@ export async function POST(request: Request) {
       conversation_id: session.conversationId,
       role: "agent",
       content: result.responseText,
-      metadata: { ...(metadata ?? {}), usage: result.usage },
+      metadata: { ...(metadata ?? {}), usage: result.usage, grounding: toStoredGrounding(result.grounding) },
     });
     if (replyError) {
       console.error("Instagram webhook: failed to persist reply", replyError);

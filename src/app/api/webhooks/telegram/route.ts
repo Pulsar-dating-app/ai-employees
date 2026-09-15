@@ -6,6 +6,7 @@ import { buildReplyProductCards } from "@/lib/chat/reply-product-cards";
 import { toDeliverableCards } from "@/lib/chat/product-cards";
 import { resolveTelegramSession } from "@/lib/telegram/session";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
+import { toStoredGrounding } from "@/lib/chat/grounding";
 
 // Trello O1 -- one shared bot for every company's Telegram customers,
 // unlike WhatsApp/Instagram's per-merchant assets. There is no connect
@@ -194,7 +195,7 @@ export async function POST(request: Request) {
     conversation_id: conversation.id,
     role: "agent",
     content: result.responseText,
-    metadata: { ...(metadata ?? {}), usage: result.usage },
+    metadata: { ...(metadata ?? {}), usage: result.usage, grounding: toStoredGrounding(result.grounding) },
   });
   if (replyError) {
     console.error("Telegram webhook: failed to persist reply", replyError);

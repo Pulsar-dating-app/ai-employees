@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { listConversations } from "@/lib/conversations/list";
+import { findUnconfirmedConversationIds } from "@/lib/conversations/pending";
 import { Button } from "@/components/ui/button";
 import { ChatIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
@@ -33,7 +34,10 @@ export default async function ConversationsPage() {
     );
   }
 
-  const result = await listConversations(supabase, company.id, { page: 1, pageSize: PAGE_SIZE });
+  const [result, pendingIds] = await Promise.all([
+    listConversations(supabase, company.id, { page: 1, pageSize: PAGE_SIZE }),
+    findUnconfirmedConversationIds(supabase, company.id),
+  ]);
   const { rows: conversations, total } = "error" in result ? { rows: [], total: 0 } : result;
 
   return (
@@ -44,6 +48,7 @@ export default async function ConversationsPage() {
         companyId={company.id}
         initialConversations={conversations}
         initialTotal={total}
+        initialPendingTotal={pendingIds.length}
         pageSize={PAGE_SIZE}
       />
     </div>

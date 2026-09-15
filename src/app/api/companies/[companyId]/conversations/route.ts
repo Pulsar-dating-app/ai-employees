@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { listConversations } from "@/lib/conversations/list";
+import { findUnconfirmedConversationIds } from "@/lib/conversations/pending";
 
 // Trello F5 / N10 -- the merchant-facing "who's talking to my customers,
 // and do any of them need me" list. Every channel with local message
@@ -65,13 +66,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ comp
     ? (statusParam as "paused" | "active" | "closed")
     : null;
   const search = searchParams.get("search")?.trim() || null;
+  const pendingOnly = searchParams.get("pending") === "true";
   const page = parsePositiveInt(searchParams.get("page"), 1);
   const pageSize = parsePositiveInt(searchParams.get("pageSize"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
 
-  const result = await listConversations(supabase, companyId, { status, search, page, pageSize });
+  const [result, pendingIds] = await Promise.all([
+    listConversations(supabase, companyId, { status, search, pendingOnly, page, pageSize }),
+    findUnconfirmedConversationIds(supabase, companyId),
+  ]);
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
-  return NextResponse.json({ conversations: result.rows, total: result.total, page, pageSize });
+  return NextResponse.json({
+    conversations: result.rows,
+    total: result.total,
+    pendingTotal: pendingIds.length,
+    page,
+    pageSize,
+  });
 }
