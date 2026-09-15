@@ -71,8 +71,12 @@ export async function requestPasswordReset(_prev: AuthState, formData: FormData)
   const email = String(formData.get("email") ?? "").trim();
 
   const supabase = await createClient();
+  // No `?next=` here -- see src/app/auth/callback/route.ts's doc comment:
+  // Supabase's Redirect URLs allow-list match is exact (query string
+  // included), so this must be byte-identical to the allow-listed entry.
+  // The callback route defaults to /reset-password on its own.
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: absoluteUrl("/auth/callback?next=/reset-password"),
+    redirectTo: absoluteUrl("/auth/callback"),
   });
 
   if (error) {
