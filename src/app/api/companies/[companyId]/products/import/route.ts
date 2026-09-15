@@ -12,6 +12,16 @@ import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 // Row numbers in the response are 1-indexed positions among the data rows
 // actually parsed (blank rows are silently skipped for both formats, same
 // as CSV's own skip_empty_lines) — not a literal spreadsheet line number.
+//
+// Found in production (2026-09-15): a 1000-row import 500'd with no useful
+// app-level error after ~32s -- the platform's default function timeout
+// (10s on Hobby) killed the request mid-flight, before the single batched
+// embeddings call + the bulk insert could finish. This route does the same
+// class of bulk-embeddings work as the Shopify sync route, which already
+// carries this same fix with the same reasoning -- see that route's own
+// comment. Needs a Vercel plan that allows it (Hobby caps at 10s regardless
+// of this setting).
+export const maxDuration = 300;
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_ROWS = 2000;
