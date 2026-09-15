@@ -10,7 +10,7 @@ import { isValidTimeZone } from "@/lib/analytics/load";
 import { determineIntent } from "./stubs";
 import { buildInitialInput, buildSystemPrompt } from "./prompt";
 import { buildGroundingCorrectionInput, checkResponseGrounding } from "./grounding";
-import { runToolLoop } from "./tool-loop";
+import { runToolLoop, sumUsage } from "./tool-loop";
 import { resolveToolsForAgent } from "./tools/tool-sets";
 
 // A human-readable "weekday, month day, year (timezone)" string for the
@@ -148,6 +148,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       openAiConversationId,
       grounding: { status: "grounded", violations: [] },
       toolCalls: draft.toolResults,
+      usage: draft.usage,
     };
   }
 
@@ -189,6 +190,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       openAiConversationId,
       grounding: { status: "regenerated", violations: firstCheck.violations },
       toolCalls: [...draft.toolResults, ...retry.toolResults],
+      usage: sumUsage(draft.usage, retry.usage),
     };
   }
 
@@ -208,6 +210,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     openAiConversationId,
     grounding: { status: "blocked", violations: firstCheck.violations },
     toolCalls: [...draft.toolResults, ...retry.toolResults],
+    usage: sumUsage(draft.usage, retry.usage),
   };
 }
 

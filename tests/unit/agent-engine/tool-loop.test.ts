@@ -20,21 +20,47 @@ function fakeToolCtx(): ToolExecutionContext {
   };
 }
 
-function textResponse(text: string, messageId = "msg_1") {
-  return { output: [{ type: "message", id: messageId }], output_text: text };
-}
-
-function jsonReplyResponse(message: string, productIds: string[], messageId = "msg_1") {
+// Real ResponseUsage shape, minimal but structurally accurate -- exercises
+// addUsage's actual field reads rather than relying on it silently no-op-ing
+// on a fake with no `usage` at all (every other fake response in this file
+// still omits it deliberately, to keep proving that path never breaks).
+function fakeUsage(inputTokens: number, cachedTokens: number, outputTokens: number) {
   return {
-    output: [{ type: "message", id: messageId }],
-    output_text: JSON.stringify({ message, product_ids: productIds }),
+    input_tokens: inputTokens,
+    input_tokens_details: { cached_tokens: cachedTokens, cache_write_tokens: 0 },
+    output_tokens: outputTokens,
+    output_tokens_details: { reasoning_tokens: 0 },
+    total_tokens: inputTokens + outputTokens,
   };
 }
 
-function functionCallResponse(callId: string, name: string, args: Record<string, unknown>) {
+function textResponse(text: string, messageId = "msg_1", usage?: ReturnType<typeof fakeUsage>) {
+  return { output: [{ type: "message", id: messageId }], output_text: text, usage };
+}
+
+function jsonReplyResponse(
+  message: string,
+  productIds: string[],
+  messageId = "msg_1",
+  usage?: ReturnType<typeof fakeUsage>,
+) {
+  return {
+    output: [{ type: "message", id: messageId }],
+    output_text: JSON.stringify({ message, product_ids: productIds }),
+    usage,
+  };
+}
+
+function functionCallResponse(
+  callId: string,
+  name: string,
+  args: Record<string, unknown>,
+  usage?: ReturnType<typeof fakeUsage>,
+) {
   return {
     output: [{ type: "function_call", call_id: callId, name, arguments: JSON.stringify(args) }],
     output_text: "",
+    usage,
   };
 }
 
@@ -84,6 +110,88 @@ describe("runToolLoop", () => {
     // conversation.
     expect(result.messageItemIds).toEqual(["msg_1"]);
     expect(create).toHaveBeenCalledTimes(1);
+    // This fake carries no `usage` at all -- addUsage must degrade to zeros
+    // rather than throw, the same real-world case a network hiccup or an
+    // API version drift could produce.
+    expect(result.usage).toEqual({
+      inputTokens: 0,
+      cachedInputTokens: 0,
+      cacheWriteTokens: 0,
+      outputTokens: 0,
+      reasoningTokens: 0,
+      totalTokens: 0,
+      calls: 0,
+    });
+  });
+
+  it("returns the real per-call usage from the response", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce(jsonReplyResponse("Temos essas:", ["p1"], "msg_1", fakeUsage(500, 300, 40)));
+    const openai = { responses: { create } } as never;
+
+    const result = await runToolLoop({
+      openai,
+      model: "test-model",
+      openAiConversationId: "conv_abc",
+      instructions: "be helpful",
+      initialInput: [{ role: "user", content: "hi" }],
+      tools: [],
+      maxToolIterations: 4,
+      toolCtx: fakeToolCtx(),
+    });
+
+    expect(result.usage).toEqual({
+      inputTokens: 500,
+      cachedInputTokens: 300,
+      cacheWriteTokens: 0,
+      outputTokens: 40,
+      reasoningTokens: 0,
+      totalTokens: 540,
+      calls: 1,
+    });
+  });
+
+  it("sums usage across a tool-call round trip, not just the final call", async () => {
+    const tool: AgentTool = {
+      name: "do_thing",
+      description: "does a thing",
+      parameters: null,
+      execute: vi.fn().mockResolvedValue({ ok: true }),
+    };
+
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce(
+        functionCallResponse("call_1", "do_thing", { foo: "bar" }, fakeUsage(1000, 200, 15)),
+      )
+      .mockResolvedValueOnce(textResponse("Done!", "msg_1", fakeUsage(1400, 900, 25)));
+    const openai = { responses: { create } } as never;
+
+    const result = await runToolLoop({
+      openai,
+      model: "test-model",
+      openAiConversationId: "conv_abc",
+      instructions: "be helpful",
+      initialInput: [{ role: "user", content: "do the thing" }],
+      tools: [tool],
+      maxToolIterations: 4,
+      toolCtx: fakeToolCtx(),
+    });
+
+    // Both calls' tokens summed -- the second call's larger input reflects
+    // the first call's own prompt plus the tool's output being replayed
+    // back, which is real cost this customer message caused, not just
+    // whichever single call happened to answer.
+    expect(result.usage).toEqual({
+      inputTokens: 2400,
+      cachedInputTokens: 1100,
+      cacheWriteTokens: 0,
+      outputTokens: 40,
+      reasoningTokens: 0,
+      totalTokens: 2440,
+      calls: 2,
+    });
   });
 
   it("executes a matching tool and resubmits its output, then returns the final text", async () => {
