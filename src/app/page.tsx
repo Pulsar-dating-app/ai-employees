@@ -17,13 +17,25 @@ export const metadata: Metadata = {
 // Signed-in visitors go straight to the app; everyone else sees the real
 // public landing page instead of being bounced to /login. Login / sign-up
 // are overlays on this page, driven by the `?auth=` query param.
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ auth?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user) redirect("/dashboard");
+  // Exception: completing a password reset means exchanging the emailed
+  // code for a real, valid session first (src/app/auth/callback/route.ts) --
+  // that's the whole mechanism, not a side effect. Bouncing straight to
+  // /dashboard the moment that session exists, before the user ever sees
+  // the "set a new password" form, would skip the entire point of the flow.
+  // Every other `?auth=` mode keeps the usual behavior: an already-signed-in
+  // visitor has no reason to see login/signup/forgot-password.
+  const { auth } = await searchParams;
+  if (user && auth !== "reset-password") redirect("/dashboard");
 
   return (
     <>
