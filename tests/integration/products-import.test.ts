@@ -183,7 +183,11 @@ describe("Product import POST /api/companies/:id/products/import", () => {
   it("rejects an oversized file with 400", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Oversized Co");
-    const oversized = "x".repeat(5 * 1024 * 1024 + 1024);
+    // MAX_FILE_SIZE_BYTES (route.ts) -- 3MB, not the old 5MB (see that
+    // constant's own comment for why: 5MB was above Vercel's real 4.5MB
+    // hard request-body ceiling, so it was never actually enforceable at
+    // the top end).
+    const oversized = "x".repeat(3 * 1024 * 1024 + 1024);
 
     const result = await importFile(owner.cookieHeader, companyId, csvFile(oversized));
     expect(result.status).toBe(400);

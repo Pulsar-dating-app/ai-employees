@@ -41,6 +41,12 @@ type ImportPanelProps = {
 };
 
 const POLL_INTERVAL_MS = 1200;
+// Kept in sync by hand with MAX_FILE_SIZE_BYTES in the import route (see
+// that constant's own comment for why 3MB — Vercel's real request-body
+// ceiling is 4.5MB, not configurable). Checked here too so an oversized
+// file is rejected instantly, client-side, instead of only after a full
+// upload round-trip just to be told it was too big.
+const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024;
 
 async function fetchLatestJob(companyId: string): Promise<Job | null> {
   const res = await fetch(`/api/companies/${companyId}/products/import/status`);
@@ -98,6 +104,11 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
   async function handleImport() {
     if (!file) {
       setUploadError(t("fileRequired"));
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setUploadError(t("fileTooLarge"));
       return;
     }
 
@@ -201,6 +212,7 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
         <p className="mt-1">{t("formatDescription")}</p>
         <p className="mt-1">{t("formatPriceHint")}</p>
         <p className="mt-1">{t("formatDescriptionHint")}</p>
+        <p className="mt-1">{t("formatSizeHint")}</p>
         <div className="mt-2">
           <a href={`/api/companies/${companyId}/products/import-template`} className={TEMPLATE_LINK_CLASSES}>
             {t("downloadTemplateButton")}

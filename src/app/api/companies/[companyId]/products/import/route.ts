@@ -55,7 +55,18 @@ import { buildProductEmbeddingInput, createProductEmbeddingsBatch } from "@/lib/
 // is the source of truth for "how many actually landed" (all, or none).
 export const maxDuration = 300;
 
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+// Was 5MB -- found (2026-09-15) to be unsafe on its own terms: Vercel hard-
+// caps a Function's request body at 4.5MB, enforced at the infrastructure
+// level (no config can raise it), so a 4.5-5MB upload never reached this
+// check at all -- it died as a raw platform 413 before our own friendlier
+// 400 could ever fire. 3MB is the number the owner picked with that ceiling
+// in view: comfortably under 4.5MB, and (checked against a real 1000-row
+// test file, ~320 bytes/row for a short description) still generous enough
+// for a full MAX_ROWS catalog even with real per-product descriptions
+// (Products.import.formatDescriptionHint actively tells merchants to write
+// those, not keep them short) -- 2000 rows at that denser size lands
+// around 1-1.5MB, well inside this limit.
+const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024;
 const MAX_ROWS = 2000;
 // Small enough that one chunk's json_to_recordset + insert always clears
 // the 8s statement_timeout above, however large the file is.
@@ -228,7 +239,7 @@ export async function POST(
   }
 
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    return NextResponse.json({ error: "File exceeds the 5MB limit" }, { status: 400 });
+    return NextResponse.json({ error: "File exceeds the 3MB limit" }, { status: 400 });
   }
 
   const filename = file.name.toLowerCase();
