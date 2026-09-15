@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { absoluteUrl } from "@/lib/seo/site";
 
 // Shape returned to `useActionState` in the auth forms — errors and the
 // sign-up "confirm your email" state render inline (in a modal or a full
@@ -26,6 +27,9 @@ async function friendlyAuthError(message: string): Promise<string> {
   }
   if (lower.includes("password should be at least")) {
     return t("passwordTooShort");
+  }
+  if (lower.includes("session") || lower.includes("expired") || lower.includes("invalid or has expired")) {
+    return t("resetLinkInvalid");
   }
   return message;
 }
@@ -58,6 +62,36 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   // No session back means the project requires email confirmation before login.
   if (!data.session) {
     return { error: null, checkEmail: true };
+  }
+
+  redirect("/dashboard");
+}
+
+export async function requestPasswordReset(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "").trim();
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: absoluteUrl("/auth/callback?next=/reset-password"),
+  });
+
+  if (error) {
+    return { error: await friendlyAuthError(error.message) };
+  }
+
+  // Supabase never reveals whether the email exists -- always show the same
+  // "check your email" state, mirroring signUp's identical no-enumeration shape.
+  return { error: null, checkEmail: true };
+}
+
+export async function resetPassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const password = String(formData.get("password") ?? "");
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: await friendlyAuthError(error.message) };
   }
 
   redirect("/dashboard");
