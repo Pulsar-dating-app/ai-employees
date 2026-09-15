@@ -822,7 +822,17 @@
     },
     "noCompany": "Create your business to start tracking performance.",
     "browseMarketplace": "Browse the marketplace",
-    "agentSelectLabel": "Team member"
+    "agentSelectLabel": "Team member",
+    "reliability": {
+      "title": "Reliability",
+      "subtitle": "Every price and stock figure {name} sends is checked against your catalogue before it reaches a customer.",
+      "empty": "No replies from {name} have been checked in this period yet.",
+      "scope": "Covers prices and stock quantities, checked against your catalogue. Other kinds of claims aren't verified this way.",
+      "checkedLabel": "Replies checked",
+      "regeneratedLabel": "Corrected before sending",
+      "blockedLabel": "Held for confirmation",
+      "cta": "See who's waiting on a confirmation"
+    }
   },
   "AgentDetail": {
     "shouldTitle": "What {name} does",
@@ -1647,7 +1657,21 @@
       "channel": {
         "web_chat": "Website chat",
         "instagram": "Instagram"
+      },
+      "grounding": {
+        "regeneratedTitle": "Corrected before sending",
+        "regeneratedBody": "This reply quoted a figure that hadn't been checked against your catalogue, so it was rewritten. The customer only ever saw the corrected version.",
+        "blockedTitle": "Held back — this customer is still waiting",
+        "blockedBody": "A figure couldn't be confirmed against your catalogue, so the customer was asked to wait for a confirmation instead of being given an unverified number.",
+        "discarded": "Discarded figure: {figures}"
       }
+    },
+    "pending": {
+      "bannerTitle": "{count, plural, =1 {# customer is waiting on a confirmation} other {# customers are waiting on a confirmation}}",
+      "bannerBody": "Your team promised to check something and get back to them. Nobody has replied yet.",
+      "showPending": "Show these",
+      "showAll": "Show all conversations",
+      "rowBadge": "Awaiting confirmation"
     }
   },
   "Chat": {

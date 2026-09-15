@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { LinkifiedText } from "@/components/chat/linkified-text";
 import { ProductCardList } from "@/components/chat/product-card-list";
+import { GroundingNotice } from "./grounding-notice";
 import type { ConversationDetail, ConversationMessage } from "@/lib/conversations/detail";
 
 const POLL_INTERVAL_MS = 5000;
@@ -192,6 +193,7 @@ export function ConversationThread({
                     <LinkifiedText text={m.content} className="whitespace-pre-wrap" />
                     {m.metadata ? <ProductCardList products={m.metadata.products} locale={locale} /> : null}
                   </div>
+                  {m.grounding ? <GroundingNotice grounding={m.grounding} /> : null}
                 </div>
               </div>
             ))

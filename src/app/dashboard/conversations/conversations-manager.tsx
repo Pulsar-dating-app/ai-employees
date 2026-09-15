@@ -6,31 +6,41 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ConversationFilters } from "./conversation-filters";
 import { ConversationList } from "./conversation-list";
+import { PendingConfirmationBanner } from "./pending-confirmation-banner";
 import type { ConversationRow } from "@/lib/conversations/list";
 
 export type ConversationFiltersState = {
   status: "all" | "paused" | "active" | "closed";
   search: string;
+  pendingOnly: boolean;
   page: number;
 };
 
-const DEFAULT_FILTERS: ConversationFiltersState = { status: "all", search: "", page: 1 };
+const DEFAULT_FILTERS: ConversationFiltersState = {
+  status: "all",
+  search: "",
+  pendingOnly: false,
+  page: 1,
+};
 
 export function ConversationsManager({
   companyId,
   initialConversations,
   initialTotal,
+  initialPendingTotal,
   pageSize,
 }: {
   companyId: string;
   initialConversations: ConversationRow[];
   initialTotal: number;
+  initialPendingTotal: number;
   pageSize: number;
 }) {
   const t = useTranslations("Conversations");
 
   const [conversations, setConversations] = useState<ConversationRow[]>(initialConversations);
   const [total, setTotal] = useState(initialTotal);
+  const [pendingTotal, setPendingTotal] = useState(initialPendingTotal);
   const [filters, setFilters] = useState<ConversationFiltersState>(DEFAULT_FILTERS);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,6 +49,7 @@ export function ConversationsManager({
     const params = new URLSearchParams();
     if (nextFilters.status !== "all") params.set("status", nextFilters.status);
     if (nextFilters.search) params.set("search", nextFilters.search);
+    if (nextFilters.pendingOnly) params.set("pending", "true");
     params.set("page", String(nextFilters.page));
     params.set("pageSize", String(pageSize));
 
@@ -47,6 +58,7 @@ export function ConversationsManager({
       const json = await res.json();
       setConversations(json.conversations ?? []);
       setTotal(json.total ?? 0);
+      if (typeof json.pendingTotal === "number") setPendingTotal(json.pendingTotal);
     }
     setIsLoading(false);
   }
@@ -64,34 +76,48 @@ export function ConversationsManager({
   }
 
   return (
-    <Card>
-      <CardContent>
-        <ConversationFilters filters={filters} onChange={handleFilterChange} />
+    <div className="flex flex-col gap-4">
+      {pendingTotal > 0 || filters.pendingOnly ? (
+        <PendingConfirmationBanner
+          count={pendingTotal}
+          isFiltered={filters.pendingOnly}
+          isLoading={isLoading}
+          onToggle={() => handleFilterChange({ pendingOnly: !filters.pendingOnly })}
+        />
+      ) : null}
 
-        <ConversationList conversations={conversations} isLoading={isLoading} />
+      <Card>
+        <CardContent>
+          <ConversationFilters filters={filters} onChange={handleFilterChange} />
 
-        <div className="flex items-center justify-between pt-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={filters.page <= 1 || isLoading}
-            onClick={() => handlePageChange(filters.page - 1)}
-          >
-            {t("filters.previousPage")}
-          </Button>
-          <span className="text-sm text-on-surface-variant">
-            {t("filters.pageOf", { page: filters.page, totalPages: Math.max(1, Math.ceil(total / pageSize)) })}
-          </span>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={filters.page * pageSize >= total || isLoading}
-            onClick={() => handlePageChange(filters.page + 1)}
-          >
-            {t("filters.nextPage")}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <ConversationList conversations={conversations} isLoading={isLoading} />
+
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={filters.page <= 1 || isLoading}
+              onClick={() => handlePageChange(filters.page - 1)}
+            >
+              {t("filters.previousPage")}
+            </Button>
+            <span className="text-sm text-on-surface-variant">
+              {t("filters.pageOf", {
+                page: filters.page,
+                totalPages: Math.max(1, Math.ceil(total / pageSize)),
+              })}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={filters.page * pageSize >= total || isLoading}
+              onClick={() => handlePageChange(filters.page + 1)}
+            >
+              {t("filters.nextPage")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

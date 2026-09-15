@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { defaultAgentName } from "@/lib/agents/naming";
+import { readGrounding } from "@/lib/chat/grounding";
+import { findUnconfirmedConversationIds } from "./pending";
 
 // Trello F5 -- shared between the Conversations page's own server-side
 // first fetch (page.tsx) and the API route (GET
@@ -18,11 +20,21 @@ export type ConversationRow = {
   customer: { id: string; displayName: string };
   agentName: string | null;
   lastMessage: { content: string; created_at: string } | null;
+  pendingConfirmation: boolean;
+};
+
+type LatestMessageRow = {
+  conversation_id: string;
+  content: string;
+  created_at: string;
+  role: string;
+  metadata: unknown;
 };
 
 export type ConversationListFilters = {
   status?: "paused" | "active" | "closed" | null;
   search?: string | null;
+  pendingOnly?: boolean;
   page: number;
   pageSize: number;
 };
@@ -41,6 +53,11 @@ export async function listConversations(
     .eq("company_id", companyId);
 
   if (filters.status) query = query.eq("status", filters.status);
+  if (filters.pendingOnly) {
+    const pendingIds = await findUnconfirmedConversationIds(supabase, companyId);
+    if (pendingIds.length === 0) return { rows: [], total: 0 };
+    query = query.in("id", pendingIds);
+  }
   // customers.name/phone are effectively always null today (no
   // name-collection step exists on any channel yet) -- this filter is real
   // and correct, it just won't match anything meaningful until a future
@@ -65,10 +82,10 @@ export async function listConversations(
     conversationIds.length > 0
       ? supabase
           .from("messages")
-          .select("conversation_id, content, created_at")
+          .select("conversation_id, content, created_at, role, metadata")
           .in("conversation_id", conversationIds)
           .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [] as { conversation_id: string; content: string; created_at: string }[] }),
+      : Promise.resolve({ data: [] as LatestMessageRow[] }),
     agentIds.length > 0
       ? supabase
           .from("company_agents")
@@ -81,9 +98,16 @@ export async function listConversations(
   // Sorted desc above, so the first row seen per conversation_id is its
   // most recent message -- no per-row subquery needed.
   const latestByConversation = new Map<string, { content: string; created_at: string }>();
-  for (const m of latestMessages ?? []) {
+  const pendingByConversation = new Map<string, boolean>();
+  for (const m of (latestMessages ?? []) as LatestMessageRow[]) {
     if (!latestByConversation.has(m.conversation_id)) {
       latestByConversation.set(m.conversation_id, { content: m.content, created_at: m.created_at });
+    }
+    if (pendingByConversation.has(m.conversation_id)) continue;
+    if (m.role === "merchant") {
+      pendingByConversation.set(m.conversation_id, false);
+    } else if (m.role === "agent" && readGrounding(m.metadata)?.status === "blocked") {
+      pendingByConversation.set(m.conversation_id, true);
     }
   }
 
@@ -108,6 +132,7 @@ export async function listConversations(
       },
       agentName: c.agent_id ? (agentNameById.get(c.agent_id) ?? null) : null,
       lastMessage: latestByConversation.get(c.id) ?? null,
+      pendingConfirmation: c.status !== "closed" && (pendingByConversation.get(c.id) ?? false),
     };
   });
 

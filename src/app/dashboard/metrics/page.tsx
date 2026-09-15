@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { addDays, loadCompanyAnalytics, localToday } from "@/lib/analytics/load";
+import { loadGroundingCounts, localDayRangeUtc } from "@/lib/analytics/grounding";
 import {
   agentMetricRole,
   loadSchedulingAnalytics,
@@ -117,10 +118,19 @@ export default async function MetricsPage({
     to,
     agentId: selected.agent_id,
   };
-  const analytics =
+  const { startUtc, endUtc } = localDayRangeUtc(from, to, timezone);
+  const [analytics, groundingCounts] = await Promise.all([
     role === "scheduling"
-      ? await loadSchedulingAnalytics({ supabase, ...rangeOpts })
-      : await loadCompanyAnalytics({ supabase, ...rangeOpts });
+      ? loadSchedulingAnalytics({ supabase, ...rangeOpts })
+      : loadCompanyAnalytics({ supabase, ...rangeOpts }),
+    loadGroundingCounts({
+      supabase,
+      companyId: company.id,
+      startUtc,
+      endUtc,
+      agentId: selected.agent_id,
+    }),
+  ]);
   const metricOrder = role === "scheduling" ? SCHEDULING_METRIC_ORDER : SALES_METRIC_ORDER;
 
   const byMetric = new Map(analytics.metrics.map((m) => [m.metric, m]));
@@ -189,6 +199,36 @@ export default async function MetricsPage({
           state: healthState,
           title: HEALTH_COPY[healthState].title,
           body: HEALTH_COPY[healthState].body,
+        }}
+        reliability={{
+          title: t("reliability.title"),
+          subtitle: t("reliability.subtitle", { name: agentName }),
+          emptyBody: t("reliability.empty", { name: agentName }),
+          scopeNote: t("reliability.scope"),
+          checked: groundingCounts.checked,
+          stats: [
+            {
+              key: "checked",
+              value: numberFormat.format(groundingCounts.checked),
+              label: t("reliability.checkedLabel"),
+            },
+            {
+              key: "regenerated",
+              value: numberFormat.format(groundingCounts.regenerated),
+              label: t("reliability.regeneratedLabel"),
+              emphasis: groundingCounts.regenerated > 0,
+            },
+            {
+              key: "blocked",
+              value: numberFormat.format(groundingCounts.blocked),
+              label: t("reliability.blockedLabel"),
+              emphasis: groundingCounts.blocked > 0,
+            },
+          ],
+          cta:
+            groundingCounts.blocked > 0
+              ? { href: "/dashboard/conversations", label: t("reliability.cta") }
+              : undefined,
         }}
       />
     </Suspense>
