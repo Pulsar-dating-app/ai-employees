@@ -280,9 +280,17 @@ export async function POST(request: Request) {
 
     await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", session.conversationId);
 
-    const { error: replyError } = await supabase
-      .from("messages")
-      .insert({ company_id: connection.company_id, conversation_id: session.conversationId, role: "agent", content: result.responseText });
+    // Real per-reply cost (tool-loop.ts's ReplyUsage -- see decisions.md),
+    // folded into this insert rather than a separate write. WhatsApp has no
+    // product cards (see reply-product-cards.ts's own file comment), so this
+    // is the only thing `metadata` ever carries on this channel.
+    const { error: replyError } = await supabase.from("messages").insert({
+      company_id: connection.company_id,
+      conversation_id: session.conversationId,
+      role: "agent",
+      content: result.responseText,
+      metadata: { usage: result.usage },
+    });
     if (replyError) {
       console.error("WhatsApp webhook: failed to persist reply", replyError);
       continue;

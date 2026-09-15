@@ -14,6 +14,56 @@ import { AGENT_REPLY_FORMAT, parseAgentReply } from "./reply-format";
 // capture, and Postgres doesn't log function parameters by default.
 export type ToolCallRecord = { name: string; args: Record<string, unknown>; result: unknown };
 
+// Real per-reply cost, straight from the API response rather than estimated
+// -- see decisions.md. `calls` is how many openai.responses.create() round
+// trips contributed to this number: a plain answer is 1, one tool call
+// (search then answer) is at least 2, and a text.format rejection (see
+// isUnsupportedFormatError below) adds one more for the retry.
+export type ReplyUsage = {
+  inputTokens: number;
+  cachedInputTokens: number;
+  cacheWriteTokens: number;
+  outputTokens: number;
+  reasoningTokens: number;
+  totalTokens: number;
+  calls: number;
+};
+
+function emptyUsage(): ReplyUsage {
+  return { inputTokens: 0, cachedInputTokens: 0, cacheWriteTokens: 0, outputTokens: 0, reasoningTokens: 0, totalTokens: 0, calls: 0 };
+}
+
+// Accumulates in place. `response.usage` is optional in the SDK's own types
+// (and absent on the plain-object responses several in-process test fakes
+// return), so a missing one just contributes nothing rather than breaking
+// the loop -- usage tracking must never be able to fail a real customer
+// turn over it.
+function addUsage(usage: ReplyUsage, responseUsage: OpenAI.Responses.ResponseUsage | undefined | null): void {
+  if (!responseUsage) return;
+  usage.inputTokens += responseUsage.input_tokens ?? 0;
+  usage.cachedInputTokens += responseUsage.input_tokens_details?.cached_tokens ?? 0;
+  usage.cacheWriteTokens += responseUsage.input_tokens_details?.cache_write_tokens ?? 0;
+  usage.outputTokens += responseUsage.output_tokens ?? 0;
+  usage.reasoningTokens += responseUsage.output_tokens_details?.reasoning_tokens ?? 0;
+  usage.totalTokens += responseUsage.total_tokens ?? 0;
+  usage.calls += 1;
+}
+
+// Combines two runs' usage -- the grounding retry path (index.ts) needs
+// draft + retry summed, since a customer message that triggered a retry
+// genuinely cost both calls, not just the one that was actually sent.
+export function sumUsage(a: ReplyUsage, b: ReplyUsage): ReplyUsage {
+  return {
+    inputTokens: a.inputTokens + b.inputTokens,
+    cachedInputTokens: a.cachedInputTokens + b.cachedInputTokens,
+    cacheWriteTokens: a.cacheWriteTokens + b.cacheWriteTokens,
+    outputTokens: a.outputTokens + b.outputTokens,
+    reasoningTokens: a.reasoningTokens + b.reasoningTokens,
+    totalTokens: a.totalTokens + b.totalTokens,
+    calls: a.calls + b.calls,
+  };
+}
+
 export type ToolLoopResult = {
   responseText: string;
   // The product ids the model put in its structured reply's `product_ids`
@@ -29,6 +79,9 @@ export type ToolLoopResult = {
   // check, so an invented figure can't be read back as something Malu already
   // said on the next turn.
   messageItemIds: string[];
+  // Summed across every openai.responses.create() call this loop made --
+  // see ReplyUsage.
+  usage: ReplyUsage;
 };
 
 // Flips to false, for the life of the process, the first time the model
@@ -83,6 +136,7 @@ export async function runToolLoop({
   const openAiTools = tools.map(toOpenAiTool);
 
   const toolResults: ToolCallRecord[] = [];
+  const usage = emptyUsage();
   let input: ResponseInput = initialInput;
 
   // `text.format` asks for the `{ message, product_ids }` shape (see
@@ -120,6 +174,8 @@ export async function runToolLoop({
       response = await callModel(false);
     }
 
+    addUsage(usage, response.usage);
+
     const functionCalls = response.output.filter(
       (item): item is ResponseFunctionToolCall => item.type === "function_call",
     );
@@ -134,6 +190,7 @@ export async function runToolLoop({
           .filter((item) => item.type === "message")
           .map((item) => item.id)
           .filter((id): id is string => Boolean(id)),
+        usage,
       };
     }
 

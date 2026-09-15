@@ -4,9 +4,10 @@ import { SchedulingTestPanel } from "./panel";
 
 // DEV-ONLY test harness for Epics H (services/business hours/appointments)
 // and I (Google Calendar connect/availability/sync) -- there's no real
-// dashboard UI for any of this yet (K-epic). Same category as dev-chat-test:
-// real API calls against the actual routes, no i18n, no design polish,
-// deleted once real UI exists.
+// dashboard UI for any of this yet (K-epic). Real API calls against the
+// actual routes, no i18n, no design polish, deleted once real UI exists
+// (the same shape dev-chat-test used before it was removed once the real
+// hosted chat link made it redundant).
 //
 // The NODE_ENV guard is deliberately INSIDE this function, not at module
 // scope -- a module-scope throw breaks `next build`'s page-data collection

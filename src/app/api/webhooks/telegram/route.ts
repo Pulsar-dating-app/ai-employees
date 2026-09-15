@@ -185,9 +185,17 @@ export async function POST(request: Request) {
     console.error("Telegram webhook: failed to build product cards", err);
   }
 
-  const { error: replyError } = await supabase
-    .from("messages")
-    .insert({ company_id: customer.company_id, conversation_id: conversation.id, role: "agent", content: result.responseText, metadata });
+  // Real per-reply cost (tool-loop.ts's ReplyUsage -- see decisions.md),
+  // folded into a *separate* object from `metadata` above -- `metadata`
+  // itself still gates the album-delivery call below, so merging usage into
+  // it directly would send an empty album on a card-less reply.
+  const { error: replyError } = await supabase.from("messages").insert({
+    company_id: customer.company_id,
+    conversation_id: conversation.id,
+    role: "agent",
+    content: result.responseText,
+    metadata: { ...(metadata ?? {}), usage: result.usage },
+  });
   if (replyError) {
     console.error("Telegram webhook: failed to persist reply", replyError);
     return new NextResponse(null, { status: 200 });
