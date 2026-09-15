@@ -13,7 +13,8 @@
       "passwordLabel": "Senha",
       "submit": "Entrar",
       "noAccount": "Ainda não tem uma conta?",
-      "signUpLink": "Criar conta"
+      "signUpLink": "Criar conta",
+      "forgotPasswordLink": "Esqueceu a senha?"
     },
     "signUp": {
       "title": "Criar conta",
@@ -26,11 +27,27 @@
       "haveAccount": "Já tem uma conta?",
       "loginLink": "Entrar"
     },
+    "forgotPassword": {
+      "title": "Redefinir sua senha",
+      "subtitle": "Informe seu e-mail e enviaremos um link para redefinir sua senha.",
+      "emailLabel": "E-mail",
+      "submit": "Enviar link de redefinição",
+      "checkEmail": "Se existir uma conta com esse e-mail, enviamos um link para redefinir sua senha.",
+      "backToLogin": "Voltar para o login"
+    },
+    "resetPassword": {
+      "title": "Defina uma nova senha",
+      "subtitle": "Escolha uma nova senha para sua conta.",
+      "passwordLabel": "Nova senha",
+      "passwordHint": "Pelo menos 6 caracteres.",
+      "submit": "Atualizar senha"
+    },
     "errors": {
       "invalidCredentials": "E-mail ou senha incorretos.",
       "emailNotConfirmed": "Confirme seu e-mail antes de entrar.",
       "userExists": "Já existe uma conta com este e-mail.",
-      "passwordTooShort": "A senha deve ter pelo menos 6 caracteres."
+      "passwordTooShort": "A senha deve ter pelo menos 6 caracteres.",
+      "resetLinkInvalid": "Este link de redefinição é inválido ou expirou. Solicite um novo."
     }
   },
   "Agents": {

@@ -13,7 +13,8 @@
       "passwordLabel": "Password",
       "submit": "Log in",
       "noAccount": "Don't have an account?",
-      "signUpLink": "Sign up"
+      "signUpLink": "Sign up",
+      "forgotPasswordLink": "Forgot password?"
     },
     "signUp": {
       "title": "Sign up",
@@ -26,11 +27,27 @@
       "haveAccount": "Already have an account?",
       "loginLink": "Log in"
     },
+    "forgotPassword": {
+      "title": "Reset your password",
+      "subtitle": "Enter your email and we'll send you a link to reset it.",
+      "emailLabel": "Email",
+      "submit": "Send reset link",
+      "checkEmail": "If an account exists for that email, we've sent a link to reset your password.",
+      "backToLogin": "Back to log in"
+    },
+    "resetPassword": {
+      "title": "Set a new password",
+      "subtitle": "Choose a new password for your account.",
+      "passwordLabel": "New password",
+      "passwordHint": "At least 6 characters.",
+      "submit": "Update password"
+    },
     "errors": {
       "invalidCredentials": "Incorrect email or password.",
       "emailNotConfirmed": "Please confirm your email before logging in.",
       "userExists": "An account with this email already exists.",
-      "passwordTooShort": "Password must be at least 6 characters."
+      "passwordTooShort": "Password must be at least 6 characters.",
+      "resetLinkInvalid": "This reset link is invalid or has expired. Please request a new one."
     }
   },
   "Agents": {

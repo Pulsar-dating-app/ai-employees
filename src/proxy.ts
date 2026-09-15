@@ -1,7 +1,20 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function proxy(request: NextRequest) {
+  // Safety net for a Supabase auth email whose `redirectTo` doesn't
+  // exactly match the Redirect URLs allow-list (query string included) --
+  // Supabase falls back to the Site URL but still attaches a valid `?code=`,
+  // which would otherwise just sit inert on the bare landing page. Forward
+  // it to the real handler instead of losing an already-valid code.
+  // See src/app/auth/callback/route.ts's doc comment for the full story.
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname === "/" && searchParams.has("code")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   return await updateSession(request);
 }
 
