@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { SendIcon } from "@/components/ui/icons";
@@ -182,11 +182,11 @@ export function ProofChat({
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-primary-fixed pt-6">
         <p className="mr-auto text-label-sm text-on-surface-variant">{t("finishHint")}</p>
-        <form action={finishOnboarding}>
-          <Button type="submit" variant={started ? "primary" : "secondary"}>
+        <Link href="/onboarding/plan" aria-disabled={!started} tabIndex={started ? undefined : -1}>
+          <Button type="button" variant={started ? "primary" : "secondary"} disabled={!started}>
             {t("finish")}
           </Button>
-        </form>
+        </Link>
       </div>
     </div>
   );

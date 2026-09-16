@@ -57,6 +57,13 @@ export async function createCheckoutSession(opts: {
    */
   trialPeriodDays?: number;
   trialUserId?: string;
+  /**
+   * Where Stripe returns the merchant. Defaults to the billing settings page.
+   * Only ever an allowlisted path (see CHECKOUT_RETURN_ALLOWED in the checkout
+   * route) -- this ends up in a URL Stripe echoes back, so an
+   * attacker-controlled value would be an open redirect.
+   */
+  returnPath?: string;
 }): Promise<{ url: string | null }> {
   const stripe = getStripeClient();
   const session = await stripe.checkout.sessions.create({
@@ -72,8 +79,8 @@ export async function createCheckoutSession(opts: {
       },
       ...(opts.trialPeriodDays ? { trial_period_days: opts.trialPeriodDays } : {}),
     },
-    success_url: `${opts.baseUrl}/dashboard/settings/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${opts.baseUrl}/dashboard/settings/billing?checkout=cancel`,
+    success_url: `${opts.baseUrl}${opts.returnPath ?? "/dashboard/settings/billing"}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${opts.baseUrl}${opts.returnPath ?? "/dashboard/settings/billing"}?checkout=cancel`,
   });
   return { url: session.url };
 }

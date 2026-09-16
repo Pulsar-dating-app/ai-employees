@@ -69,7 +69,8 @@
       "company": "Seu negócio",
       "hire": "Sua contratação",
       "setup": "O que ela precisa",
-      "ready": "Ver ela trabalhando"
+      "ready": "Ver ela trabalhando",
+      "plan": "Seu plano"
     },
     "hire": {
       "title": "Quem você vai contratar para a {company}?",
@@ -200,6 +201,22 @@
       "errorSilent": "A {name} não respondeu. Se continuar acontecendo, confira Cobrança no painel.",
       "logLabel": "Conversa com {name}",
       "typing": "{name} está digitando"
+    },
+    "plan": {
+      "title": "Coloque a {name} para trabalhar",
+      "subtitle": "Ela está configurada e você já viu ela responder. Escolha um plano e ela começa a atender seus clientes.",
+      "groupLabel": "Escolha um plano",
+      "trialNote": "Seus primeiros {days} dias são grátis. Nada é cobrado até lá, e dá para cancelar quando quiser.",
+      "cancelled": "Sem problema — nada foi cobrado. Escolha um plano quando quiser.",
+      "perMonth": "{price}/mês",
+      "replyLimit": "{count} respostas por mês",
+      "featureChannels": "WhatsApp, Instagram, Telegram e seu site",
+      "featureTeam": "Sua equipe inteira, sem cobrar por pessoa",
+      "featureHistory": "Todas as conversas e os números delas",
+      "cta": "Escolher plano",
+      "ctaTrial": "Começar grátis",
+      "later": "Decido depois",
+      "error": "Não conseguimos abrir o checkout. Tente de novo."
     }
   },
   "CheckoutLink": {

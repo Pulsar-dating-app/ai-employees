@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // The four steps the merchant actually walks, in order. This is exactly what
 // the rail renders, which is why "done" is deliberately not a member: having
 // finished is a state, not a fifth segment.
-export const ONBOARDING_STEPS = ["company", "hire", "setup", "ready"] as const;
+export const ONBOARDING_STEPS = ["company", "hire", "setup", "ready", "plan"] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
@@ -15,6 +15,7 @@ export const ONBOARDING_PATHS: Record<OnboardingStatus, string> = {
   hire: "/onboarding/hire",
   setup: "/onboarding/setup",
   ready: "/onboarding/ready",
+  plan: "/onboarding/plan",
   done: "/dashboard",
 };
 
@@ -49,7 +50,7 @@ export async function resolveOnboardingState(supabase: SupabaseClient): Promise<
 
   const { data: companies, error } = await supabase
     .from("companies")
-    .select("id, name, onboarding_completed_at")
+    .select("id, name, onboarding_completed_at, proof_seen_at")
     .limit(1);
 
   // A failed read is not the same fact as "this account has no company", and
@@ -67,7 +68,12 @@ export async function resolveOnboardingState(supabase: SupabaseClient): Promise<
   }
 
   const company = companies?.[0] as
-    | { id: string; name: string; onboarding_completed_at: string | null }
+    | {
+        id: string;
+        name: string;
+        onboarding_completed_at: string | null;
+        proof_seen_at: string | null;
+      }
     | undefined;
   if (!company) return empty;
 
@@ -77,6 +83,8 @@ export async function resolveOnboardingState(supabase: SupabaseClient): Promise<
   // the data, so a merchant who later empties their catalogue is not walked
   // back through a flow they already completed.
   if (company.onboarding_completed_at) return { ...base, step: "done" };
+
+  const hasSeenProof = Boolean(company.proof_seen_at);
 
   // Oldest hire first, explicitly: a company that hired both would otherwise
   // have its whole setup branch decided by whichever row Postgres happened to
@@ -120,7 +128,14 @@ export async function resolveOnboardingState(supabase: SupabaseClient): Promise<
 
   const { count } = await query;
 
-  return { ...withAgent, step: count && count > 0 ? "ready" : "setup" };
+  if (!count || count === 0) return { ...withAgent, step: "setup" };
+
+  // She can work; what is left is the ask. The proof step comes first and the
+  // plan step is last on purpose -- the merchant decides at the moment she has
+  // just answered them with their own data, not before they have seen
+  // anything. `hasSeenProof` is what moves them on, so the proof is never
+  // skipped past on the way to being charged.
+  return { ...withAgent, step: hasSeenProof ? "plan" : "ready" };
 }
 
 // Each step page calls this. Two rules: a merchant who already finished never

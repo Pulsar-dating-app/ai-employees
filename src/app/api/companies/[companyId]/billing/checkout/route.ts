@@ -48,6 +48,11 @@ import {
 // the buyer's country by IP and presents a converted local price. No geo
 // code here.
 
+// The first session ends on its own plan step, so Checkout has to be able to
+// come back into the flow instead of dropping the merchant in Settings
+// halfway through it.
+const CHECKOUT_RETURN_ALLOWED: readonly string[] = ["/onboarding/plan"];
+
 async function requireAdmin(
   supabase: Awaited<ReturnType<typeof createClient>>,
   companyId: string,
@@ -203,7 +208,13 @@ export async function POST(
   }
 
   // --- No subscription yet -> Checkout ----------------------------------
-  const planKey = (await request.json().catch(() => null))?.planKey as unknown;
+  const body = (await request.json().catch(() => null)) as { planKey?: unknown; returnTo?: unknown } | null;
+  const planKey = body?.planKey as unknown;
+  // Allowlisted, never free-form: this rides into a URL Stripe echoes back.
+  const returnPath =
+    typeof body?.returnTo === "string" && CHECKOUT_RETURN_ALLOWED.includes(body.returnTo)
+      ? body.returnTo
+      : undefined;
 
   if (planKey === "enterprise") {
     return NextResponse.json(
@@ -286,6 +297,7 @@ export async function POST(
     companyId,
     planKey: plan.key,
     baseUrl: resolveCheckoutBaseUrl(),
+    ...(returnPath ? { returnPath } : {}),
     ...(grantTrial ? { trialPeriodDays: TRIAL_DAYS, trialUserId: user.id } : {}),
   });
 

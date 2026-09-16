@@ -128,6 +128,50 @@ describe("Onboarding flow", () => {
       currency: "BRL",
     });
     expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/ready");
+
+    // Saw her answer, closed the tab before choosing a plan.
+    await getTestServiceClient()
+      .from("companies")
+      .update({ proof_seen_at: new Date().toISOString() })
+      .eq("id", companyId);
+    expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/plan");
+  });
+
+  // The ask is last on purpose: the merchant decides after she has answered
+  // them, never before.
+  it("does not open the plan step until the proof has actually happened", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hire(owner, companyId, "malu");
+    await api("POST", `/api/companies/${companyId}/products`, owner.cookieHeader, {
+      name: "Camiseta Tie Dye",
+      price: 51.79,
+      currency: "BRL",
+    });
+
+    expect((await page("/onboarding/plan", owner.cookieHeader)).redirectedTo).toBe("/onboarding/ready");
+
+    await getTestServiceClient()
+      .from("companies")
+      .update({ proof_seen_at: new Date().toISOString() })
+      .eq("id", companyId);
+
+    const plan = await page("/onboarding/plan", owner.cookieHeader);
+    expect(plan.status).toBe(200);
+    // Real plan names off the catalogue, not placeholders.
+    expect(plan.html).toContain("Starter");
+  });
+
+  it("keeps the proof flag out of the merchant's own reach", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+
+    const forged = await owner.client
+      .from("companies")
+      .update({ proof_seen_at: new Date().toISOString() })
+      .eq("id", companyId)
+      .select();
+    expect(forged.error?.code).toBe("42501");
   });
 
   it("lets a finished merchant into the dashboard, and does not bounce them", async () => {

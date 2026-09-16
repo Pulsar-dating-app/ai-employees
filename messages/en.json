@@ -69,7 +69,8 @@
       "company": "Your business",
       "hire": "Your hire",
       "setup": "What she needs",
-      "ready": "See her work"
+      "ready": "See her work",
+      "plan": "Your plan"
     },
     "hire": {
       "title": "Who are you hiring for {company}?",
@@ -200,6 +201,22 @@
       "errorSilent": "{name} didn't answer. If this keeps happening, check Billing in your dashboard.",
       "logLabel": "Conversation with {name}",
       "typing": "{name} is typing"
+    },
+    "plan": {
+      "title": "Put {name} to work",
+      "subtitle": "She's set up and you've seen her answer. Choose a plan and she starts taking your customers.",
+      "groupLabel": "Choose a plan",
+      "trialNote": "Your first {days} days are free. No charge until then, and you can cancel any time.",
+      "cancelled": "No problem — nothing was charged. Pick a plan whenever you're ready.",
+      "perMonth": "{price}/month",
+      "replyLimit": "{count} replies a month",
+      "featureChannels": "WhatsApp, Instagram, Telegram and your website",
+      "featureTeam": "Your whole team, no extra seats",
+      "featureHistory": "Every conversation and its numbers",
+      "cta": "Choose plan",
+      "ctaTrial": "Start free",
+      "later": "I'll decide later",
+      "error": "We couldn't open the checkout. Please try again."
     }
   },
   "CheckoutLink": {

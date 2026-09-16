@@ -93,6 +93,18 @@ export async function POST(
 
   await recordAiReply(companyId, service);
 
+  // The proof has happened. Stamped here rather than on page load, because
+  // opening the step is not seeing her work -- getting an answer is. Only the
+  // first one matters, so a later reply leaves it alone.
+  const { error: proofError } = await service
+    .from("companies")
+    .update({ proof_seen_at: new Date().toISOString() })
+    .eq("id", companyId)
+    .is("proof_seen_at", null);
+  if (proofError) {
+    console.error("[preview-chat] could not record the proof", { companyId, error: proofError });
+  }
+
   return NextResponse.json({ reply: { content: result.responseText } });
 }
 

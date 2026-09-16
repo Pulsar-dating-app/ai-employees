@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { ONBOARDING_STEPS, stepIndex, type OnboardingStep } from "@/lib/companies/onboarding-step";
 
 function currentStep(pathname: string): OnboardingStep {
+  if (pathname.startsWith("/onboarding/plan")) return "plan";
   if (pathname.startsWith("/onboarding/ready")) return "ready";
   if (pathname.startsWith("/onboarding/setup")) return "setup";
   if (pathname.startsWith("/onboarding/hire")) return "hire";
