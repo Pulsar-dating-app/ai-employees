@@ -22,6 +22,10 @@ export function calendarVisibleEndsAt(startsAt: string, durationMinutes: number)
   return new Date(new Date(startsAt).getTime() + durationMinutes * 60_000).toISOString();
 }
 
+export function toCalendarIso(value: string): string {
+  return new Date(value).toISOString();
+}
+
 export type AppointmentSyncDetails = {
   serviceName: string;
   customerName: string;
@@ -53,8 +57,8 @@ export async function syncAppointmentConfirmed(
     const event = await createCalendarEvent(connection.accessToken, connection.calendarId, {
       summary,
       description: details.summary ?? null,
-      startIso: details.startsAt,
-      endIso: details.visibleEndsAt,
+      startIso: toCalendarIso(details.startsAt),
+      endIso: toCalendarIso(details.visibleEndsAt),
     });
     return event.id;
   } catch (err) {
@@ -77,8 +81,8 @@ export async function syncAppointmentRescheduled(
 
   try {
     await updateCalendarEvent(connection.accessToken, connection.calendarId, googleEventId, {
-      startIso: details.startsAt,
-      endIso: details.visibleEndsAt,
+      startIso: toCalendarIso(details.startsAt),
+      endIso: toCalendarIso(details.visibleEndsAt),
     });
   } catch (err) {
     console.error("Failed to update Google Calendar event for rescheduled appointment", err);
