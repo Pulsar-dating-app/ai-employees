@@ -331,8 +331,28 @@ describe("AgentEngine.run", () => {
       );
 
       expect(result.grounding.status).toBe("grounded");
+      // A real figure was stated and verified -- this is what separates a
+      // verified answer from a greeting that is trivially grounded.
+      expect(result.grounding.claimCount).toBeGreaterThan(0);
       expect(result.responseText).toBe("Isso, ela é R$ 89,90 mesmo!");
       expect(responsesCreate).toHaveBeenCalledTimes(1);
+    });
+
+    it("reports no claims for a reply that quotes no figure at all", async () => {
+      const owner = await signUpTestUser("owner");
+      const { companyId, conversationId } = await seedConversation(owner, "Small Talk Co");
+
+      const responsesCreate = vi
+        .fn()
+        .mockResolvedValueOnce(textResponse("Claro 😊 Você procura camiseta ou camisa?"));
+
+      const result = await AgentEngine.run(
+        { companyId, conversationId, message: "oi, tudo bem?" },
+        { supabase: getTestServiceClient(), openai: fakeOpenAi(responsesCreate) },
+      );
+
+      expect(result.grounding.status).toBe("grounded");
+      expect(result.grounding.claimCount).toBe(0);
     });
   });
 

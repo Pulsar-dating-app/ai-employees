@@ -31,6 +31,11 @@ export type AgentEngineInput = {
 export type GroundingOutcome = {
   status: "grounded" | "regenerated" | "blocked";
   violations: GroundingClaim[];
+  // How many checkable price/stock claims the sent reply actually contained.
+  // Zero is the common case (a reply quoting no figure), and it is what stops
+  // small talk from being counted as a verified answer on any merchant-facing
+  // surface -- `grounded` alone cannot tell the two apart.
+  claimCount: number;
 };
 
 export type AgentEngineResult = {

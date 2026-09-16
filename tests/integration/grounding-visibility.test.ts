@@ -11,18 +11,24 @@ type ListResponse = {
   pendingTotal: number;
 };
 
+type StoredGrounding = {
+  status: string;
+  violations: { kind: string; text: string }[];
+  claims?: number;
+};
+
 type DetailResponse = {
   messages: {
     role: string;
     content: string;
-    grounding: { status: string; violations: { kind: string; text: string }[] } | null;
+    grounding: (StoredGrounding & { claims: number }) | null;
   }[];
 };
 
 type Reply = {
   role: "customer" | "agent" | "merchant";
   content: string;
-  grounding?: { status: string; violations: { kind: string; text: string }[] } | null;
+  grounding?: StoredGrounding | null;
   offsetMs: number;
 };
 
@@ -79,7 +85,7 @@ describe("Grounding visibility", () => {
   const blockedReply = (offsetMs: number): Reply => ({
     role: "agent",
     content: "Deixa eu confirmar essa informação certinho pra não te passar nada errado, e já te falo 😊",
-    grounding: { status: "blocked", violations: [{ kind: "price", text: "R$ 129,90" }] },
+    grounding: { status: "blocked", violations: [{ kind: "price", text: "R$ 129,90" }], claims: 0 },
     offsetMs,
   });
 
@@ -215,8 +221,18 @@ describe("Grounding visibility", () => {
       {
         role: "agent",
         content: "O azul sai por R$ 129,90 😊",
-        grounding: { status: "regenerated", violations: [{ kind: "price", text: "R$ 99,00" }] },
+        grounding: {
+          status: "regenerated",
+          violations: [{ kind: "price", text: "R$ 99,00" }],
+          claims: 1,
+        },
         offsetMs: 2000,
+      },
+      {
+        role: "agent",
+        content: "Claro 😊 Você procura camiseta ou camisa?",
+        grounding: { status: "grounded", violations: [], claims: 0 },
+        offsetMs: 2500,
       },
       blockedReply(3000),
     ]);
@@ -228,13 +244,17 @@ describe("Grounding visibility", () => {
     );
 
     expect(res.status).toBe(200);
-    const [customerMsg, legacy, regenerated, blocked] = res.json.messages;
+    const [customerMsg, legacy, regenerated, smallTalk, blocked] = res.json.messages;
     expect(customerMsg.grounding).toBeNull();
     expect(legacy.grounding).toBeNull();
     expect(regenerated.grounding).toEqual({
       status: "regenerated",
       violations: [{ kind: "price", text: "R$ 99,00" }],
+      claims: 1,
     });
+    // Trivially grounded: no figure in it, so nothing was verified and the
+    // thread must not mark it as checked.
+    expect(smallTalk.grounding).toEqual({ status: "grounded", violations: [], claims: 0 });
     expect(blocked.grounding?.status).toBe("blocked");
   });
 

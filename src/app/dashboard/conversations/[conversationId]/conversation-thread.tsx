@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LinkifiedText } from "@/components/chat/linkified-text";
 import { ProductCardList } from "@/components/chat/product-card-list";
 import { GroundingNotice } from "./grounding-notice";
+import { channelLabel } from "@/lib/conversations/channel-label";
 import type { ConversationDetail, ConversationMessage } from "@/lib/conversations/detail";
 
 const POLL_INTERVAL_MS = 5000;
@@ -238,7 +239,7 @@ export function ConversationThread({
           </div>
           <div>
             <dt className="text-xs text-on-surface-variant">{t("detailsChannel")}</dt>
-            <dd className="text-on-surface">{t(`channel.${conversation.channel}`)}</dd>
+            <dd className="text-on-surface">{channelLabel(t, conversation.channel)}</dd>
           </div>
           <div>
             <dt className="text-xs text-on-surface-variant">{t("detailsAgent")}</dt>

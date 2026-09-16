@@ -825,13 +825,13 @@
     "agentSelectLabel": "Integrante",
     "reliability": {
       "title": "Confiabilidade",
-      "subtitle": "Todo preço e quantidade em estoque que {name} envia é conferido no seu catálogo antes de chegar ao cliente.",
-      "empty": "Nenhuma resposta de {name} foi conferida neste período ainda.",
-      "scope": "Cobre preços e quantidades em estoque, conferidos no seu catálogo. Outros tipos de afirmação não passam por essa verificação.",
-      "checkedLabel": "Respostas conferidas",
+      "subtitle": "{name} só afirma preço ou estoque que dê para rastrear até o seu catálogo. O que ela não consegue confirmar é reescrito, ou segurado.",
+      "empty": "Nada a relatar ainda para {name} neste período. Os números aparecem aqui quando ela responder sobre preço ou quantidade em estoque.",
+      "scope": "Conta respostas que de fato citaram um preço ou uma quantidade em estoque. Resposta sem número não tem o que conferir, e não entra nesta conta.",
       "regeneratedLabel": "Corrigidas antes de enviar",
       "blockedLabel": "Seguradas para confirmação",
-      "cta": "Ver quem está aguardando confirmação"
+      "cta": "Ver quem está aguardando confirmação",
+      "verifiedLabel": "Respostas com valor conferido"
     }
   },
   "AgentDetail": {
@@ -1605,8 +1605,10 @@
     "browseMarketplace": "Ver marketplace",
     "backToConversations": "Voltar para conversas",
     "channel": {
+      "whatsapp": "WhatsApp",
       "web_chat": "Chat do site",
-      "instagram": "Instagram"
+      "instagram": "Instagram",
+      "telegram": "Telegram"
     },
     "filters": {
       "status": {
@@ -1655,15 +1657,18 @@
       "detailsMessageCount": "Mensagens",
       "detailsNoAgent": "Nenhum",
       "channel": {
+        "whatsapp": "WhatsApp",
         "web_chat": "Chat do site",
-        "instagram": "Instagram"
+        "instagram": "Instagram",
+        "telegram": "Telegram"
       },
       "grounding": {
         "regeneratedTitle": "Corrigido antes de enviar",
         "regeneratedBody": "Esta resposta citava um valor que não tinha sido conferido no seu catálogo, então foi reescrita. O cliente só viu a versão correta.",
         "blockedTitle": "Resposta segurada — este cliente ainda está esperando",
         "blockedBody": "Não foi possível confirmar um valor no seu catálogo, então o cliente foi convidado a aguardar uma confirmação em vez de receber um número não verificado.",
-        "discarded": "Valor descartado: {figures}"
+        "discarded": "Valor descartado: {figures}",
+        "verified": "{count, plural, =1 {Valor conferido no seu catálogo} other {# valores conferidos no seu catálogo}}"
       }
     },
     "pending": {

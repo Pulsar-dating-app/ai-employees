@@ -146,7 +146,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       displayProductIds: draft.displayProductIds,
       conversationId: conversation.id,
       openAiConversationId,
-      grounding: { status: "grounded", violations: [] },
+      grounding: { status: "grounded", violations: [], claimCount: firstCheck.claimCount },
       toolCalls: draft.toolResults,
       usage: draft.usage,
     };
@@ -188,7 +188,11 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       displayProductIds: retry.displayProductIds,
       conversationId: conversation.id,
       openAiConversationId,
-      grounding: { status: "regenerated", violations: firstCheck.violations },
+      grounding: {
+        status: "regenerated",
+        violations: firstCheck.violations,
+        claimCount: secondCheck.claimCount,
+      },
       toolCalls: [...draft.toolResults, ...retry.toolResults],
       usage: sumUsage(draft.usage, retry.usage),
     };
@@ -208,7 +212,9 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     displayProductIds: [],
     conversationId: conversation.id,
     openAiConversationId,
-    grounding: { status: "blocked", violations: firstCheck.violations },
+    // The canned fallback quotes no figure, so it carries no claim of its
+    // own -- what happened here is told by `status`, not by a count.
+    grounding: { status: "blocked", violations: firstCheck.violations, claimCount: 0 },
     toolCalls: [...draft.toolResults, ...retry.toolResults],
     usage: sumUsage(draft.usage, retry.usage),
   };

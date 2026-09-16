@@ -8,7 +8,20 @@ import type { StoredGrounding } from "@/lib/chat/grounding";
 export function GroundingNotice({ grounding }: { grounding: StoredGrounding }) {
   const t = useTranslations("Conversations.detail.grounding");
 
-  if (grounding.status === "grounded") return null;
+  // A grounded reply that quoted no figure had nothing to verify, so it gets
+  // no marker -- a badge on every "olá, posso ajudar?" would be noise and,
+  // worse, would claim a check that never happened.
+  if (grounding.status === "grounded") {
+    if (grounding.claims === 0) return null;
+    return (
+      <div className="ml-1 flex items-center gap-1.5 px-1">
+        <BadgeCheckIcon className="h-3.5 w-3.5 shrink-0 text-tertiary" />
+        <span className="text-xs text-on-surface-variant">
+          {t("verified", { count: grounding.claims })}
+        </span>
+      </div>
+    );
+  }
 
   const isBlocked = grounding.status === "blocked";
   const Icon = isBlocked ? ClockIcon : BadgeCheckIcon;
