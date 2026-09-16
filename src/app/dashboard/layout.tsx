@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { isBillingPastDue as checkBillingPastDue } from "@/lib/billing/activation";
+import { ONBOARDING_PATHS, resolveOnboardingState } from "@/lib/companies/onboarding-step";
+import {
+  isBillingPastDue as checkBillingPastDue,
+  isSilentForNoPlan as checkSilentForNoPlan,
+} from "@/lib/billing/activation";
 import { getUsageSummary } from "@/lib/billing/usage-summary";
 import { TourProvider } from "@/components/tour/tour-provider";
 import { Sidebar } from "./sidebar";
@@ -34,7 +38,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     locale,
   ] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.from("companies").select("id, name"),
+    supabase.from("companies").select("id, name, onboarding_completed_at"),
     // Only used to mute + lock-icon the tabs whose team member isn't hired
     // (the page itself is the real gate). `company_agents`' select policy is
     // `is_company_member`, so this is already scoped to the user's companies.
@@ -51,13 +55,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/onboarding");
   }
 
+  // ...and a merchant who walked out mid-flow is put back where they stopped,
+  // rather than dropped in a dashboard for a hire that cannot work yet. Only
+  // costs a query for someone who has not finished: the flag rides along on
+  // the companies select above, and a finished company short-circuits here.
+  if (user && companies?.[0] && !companies[0].onboarding_completed_at) {
+    const state = await resolveOnboardingState(supabase);
+    if (state.step !== "done") redirect(ONBOARDING_PATHS[state.step]);
+  }
+
   // Surfaced everywhere in the shell (not just the billing page's own
   // banner, and now also the My Team page's) so a merchant sees "your team
   // is paused" no matter which tab they land on.
   const companyId = companies?.[0]?.id ?? null;
-  const [isBillingPastDue, usage] = companyId
-    ? await Promise.all([checkBillingPastDue(companyId, supabase), getUsageSummary(companyId, supabase)])
-    : [false, null];
+  const [isBillingPastDue, isSilentForNoPlan, usage] = companyId
+    ? await Promise.all([
+        checkBillingPastDue(companyId, supabase),
+        checkSilentForNoPlan(companyId, supabase),
+        getUsageSummary(companyId, supabase),
+      ])
+    : [false, false, null];
+
+  // A failed payment and a plan that was never chosen both silence the team,
+  // and the merchant has to be told which -- past_due wins when somehow both.
+  const silence = isBillingPastDue ? "past_due" : isSilentForNoPlan ? "no_plan" : null;
 
   const hiredAgentSlugs = ((hired ?? []) as unknown as { agents: { slug: string } | null }[])
     .map((row) => row.agents?.slug)
@@ -72,11 +93,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           email={user?.email ?? null}
           locale={locale as "en" | "pt"}
           hiredAgentSlugs={hiredAgentSlugs}
-          isBillingPastDue={isBillingPastDue}
+          silence={silence}
           usage={usage}
         />
         <div className="relative z-10 sm:pl-64">
-          <TopBar locale={locale as "en" | "pt"} isBillingPastDue={isBillingPastDue} />
+          <TopBar locale={locale as "en" | "pt"} silence={silence} />
           <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
             {children}
           </main>

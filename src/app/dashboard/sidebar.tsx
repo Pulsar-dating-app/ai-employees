@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import type { UsageSummary } from "@/lib/billing/usage-summary";
-import { BillingPastDueAlert } from "./billing-alert";
+import { BillingPastDueAlert, type SilenceReason } from "./billing-alert";
 
 // Every tab is always shown. Products → Malu, Scheduling → Ana, Performance
 // → any hire: while that team member isn't hired the tab is **muted + gets a
@@ -217,14 +217,14 @@ export function Sidebar({
   email,
   locale,
   hiredAgentSlugs,
-  isBillingPastDue,
+  silence,
   usage,
 }: {
   companyName: string | null;
   email: string | null;
   locale: "en" | "pt";
   hiredAgentSlugs: string[];
-  isBillingPastDue: boolean;
+  silence: SilenceReason | null;
   usage: UsageSummary | null;
 }) {
   const pathname = usePathname();
@@ -321,7 +321,7 @@ export function Sidebar({
           <span className="text-base font-bold tracking-tight text-primary">Staffra</span>
         </div>
         <div className="flex items-center gap-2">
-          {isBillingPastDue ? <BillingPastDueAlert compact /> : null}
+          {silence ? <BillingPastDueAlert compact reason={silence} /> : null}
           <LanguageSwitcher currentLocale={locale} />
           <form action={logout}>
             <button type="submit" aria-label={tDash("logout")} className="p-1.5 text-on-surface-variant">

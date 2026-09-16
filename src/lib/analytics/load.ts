@@ -91,6 +91,10 @@ async function fetchWindow(
       .range(offset, offset + PAGE_SIZE - 1);
 
     if (agentId) query = query.eq("agent_id", agentId);
+    // The first session's rehearsal is the merchant talking to their own
+    // hire. Counting it as a conversation would inflate the first number on
+    // a panel whose whole job is to be trusted.
+    if (table === "conversations") query = query.eq("is_preview", false);
 
     const { data, error } = await query;
 
@@ -114,7 +118,7 @@ export async function fetchMessagesWindow(
   endUtc: string,
   agentId?: string | null,
 ): Promise<Row[]> {
-  const columns = agentId ? "created_at, conversations!inner(agent_id)" : "created_at";
+  const columns = "created_at, conversations!inner(agent_id, is_preview)";
   const rows: Row[] = [];
   for (let offset = 0; ; offset += PAGE_SIZE) {
     let query = supabase
@@ -127,6 +131,7 @@ export async function fetchMessagesWindow(
       .range(offset, offset + PAGE_SIZE - 1);
 
     if (agentId) query = query.eq("conversations.agent_id", agentId);
+    query = query.eq("conversations.is_preview", false);
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);

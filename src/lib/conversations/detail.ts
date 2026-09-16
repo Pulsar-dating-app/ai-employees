@@ -42,6 +42,7 @@ export async function getConversationDetail(
     )
     .eq("id", conversationId)
     .eq("company_id", companyId)
+    .eq("is_preview", false)
     .maybeSingle();
   if (convError) return { error: convError.message, status: 500 };
   if (!conv) return { error: "Not found", status: 404 };

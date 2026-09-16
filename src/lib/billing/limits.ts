@@ -20,6 +20,22 @@ const DEFAULT_GRACE_MULTIPLIER = 1.05;
 // needs to be paused without a deploy.
 const DEFAULT_HARD_STOP_ENABLED = true;
 
+// How many replies a company gets before it has any plan at all. Sized for the
+// first session's proof step -- a merchant asks her two or three things with
+// their own catalogue in front of them -- with room to come back and try again
+// tomorrow. Deliberately small: the allowance is per company, one company per
+// account, so the only way to farm it is to keep making accounts, and at this
+// size that costs more effort than the replies are worth. Override with
+// BILLING_FREE_REPLY_ALLOWANCE.
+const DEFAULT_FREE_REPLY_ALLOWANCE = 20;
+
+export function getFreeReplyAllowance(): number {
+  const raw = process.env.BILLING_FREE_REPLY_ALLOWANCE;
+  if (raw === undefined) return DEFAULT_FREE_REPLY_ALLOWANCE;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : DEFAULT_FREE_REPLY_ALLOWANCE;
+}
+
 /**
  * The grace multiplier from env, or {@link DEFAULT_GRACE_MULTIPLIER}. A
  * missing, non-numeric, or `< 1` value falls back rather than silently

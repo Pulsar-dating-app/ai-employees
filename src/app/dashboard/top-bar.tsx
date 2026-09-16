@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { BillingPastDueAlert } from "./billing-alert";
+import { BillingPastDueAlert, type SilenceReason } from "./billing-alert";
 
 const SECTIONS = [
   {
@@ -21,10 +21,10 @@ const SECTIONS = [
 // alert (if any), and the language toggle.
 export function TopBar({
   locale,
-  isBillingPastDue,
+  silence,
 }: {
   locale: "en" | "pt";
-  isBillingPastDue: boolean;
+  silence: SilenceReason | null;
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
@@ -34,7 +34,7 @@ export function TopBar({
     <header className="sticky top-0 z-30 hidden h-16 items-center justify-between border-b border-outline-variant bg-surface/80 px-10 backdrop-blur-md sm:flex">
       <span className="text-lg font-extrabold tracking-tight text-primary">{t(section)}</span>
       <div className="flex items-center gap-3">
-        {isBillingPastDue ? <BillingPastDueAlert /> : null}
+        {silence ? <BillingPastDueAlert reason={silence} /> : null}
         <LanguageSwitcher currentLocale={locale} />
       </div>
     </header>

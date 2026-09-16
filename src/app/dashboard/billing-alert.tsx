@@ -12,20 +12,37 @@ import { WarningIcon } from "@/components/ui/icons";
 // itself (top bar on desktop, mobile header), so it's visible no matter
 // which page they land on after logging in. Links straight to the billing
 // page, which owns the actual fix action (update payment method).
-export function BillingPastDueAlert({ compact = false }: { compact?: boolean }) {
+// Two ways a team goes silent, and a merchant needs to be told which: a
+// payment that failed ("fix your card") and a plan that was never chosen
+// ("pick one"). Same placement, same shape, different tone -- no_plan is not
+// an error, it is the product waiting to be paid for.
+export type SilenceReason = "past_due" | "no_plan";
+
+export function BillingPastDueAlert({
+  compact = false,
+  reason = "past_due",
+}: {
+  compact?: boolean;
+  reason?: SilenceReason;
+}) {
   const t = useTranslations("Dashboard");
+  const label = reason === "no_plan" ? t("noPlanAlert") : t("billingPastDueAlert");
+  const tone =
+    reason === "no_plan"
+      ? "border-primary/30 bg-primary-fixed text-primary"
+      : "border-error/30 bg-error-container/60 text-error";
   return (
     <Link
       href="/dashboard/settings/billing"
-      aria-label={t("billingPastDueAlert")}
+      aria-label={label}
       className={
         compact
-          ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-error/30 bg-error-container/60 text-error"
-          : "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-error/30 bg-error-container/60 px-3 py-1.5 text-xs font-semibold text-error transition-colors hover:brightness-95"
+          ? `flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${tone}`
+          : `inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors hover:brightness-95 ${tone}`
       }
     >
       <WarningIcon className="h-3.5 w-3.5 shrink-0" />
-      {compact ? null : t("billingPastDueAlert")}
+      {compact ? null : label}
     </Link>
   );
 }

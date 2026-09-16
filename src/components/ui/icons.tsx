@@ -67,6 +67,17 @@ export function PackageIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// First-session catalogue import: a sheet with an arrow coming out of it.
+export function UploadIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <path d="M20.5 15.5v3.2a1.8 1.8 0 0 1-1.8 1.8H5.3a1.8 1.8 0 0 1-1.8-1.8v-3.2" />
+      <path d="M8 8.2 12 4.2l4 4" />
+      <path d="M12 4.2v11.3" />
+    </svg>
+  );
+}
+
 // The Scheduling area's tab and the Appointments page header (K4/K5).
 export function CalendarIcon(props: React.SVGProps<SVGSVGElement>) {
   return (

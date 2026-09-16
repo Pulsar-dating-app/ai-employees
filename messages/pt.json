@@ -57,13 +57,150 @@
     }
   },
   "Onboarding": {
-    "title": "Configure seu negócio",
-    "subtitle": "É isso que sua equipe representa ao falar com seus clientes. Você pode mudar quando quiser nas configurações.",
+    "title": "Primeiro: como se chama seu negócio?",
+    "subtitle": "Ela vai usar esse nome quando falar com seus clientes.",
     "nameLabel": "Nome do negócio",
-    "namePlaceholder": "ex.: abc LTDA",
+    "namePlaceholder": "ex.: Camisetas Coi",
     "nameMissing": "Digite o nome do seu negócio.",
     "continue": "Continuar",
-    "error": "Algo deu errado ao criar seu negócio. Tente novamente."
+    "error": "Algo deu errado ao criar seu negócio. Tente novamente.",
+    "rail": {
+      "label": "Sua primeira sessão",
+      "company": "Seu negócio",
+      "hire": "Sua contratação",
+      "setup": "O que ela precisa",
+      "ready": "Ver ela trabalhando"
+    },
+    "hire": {
+      "title": "Quem você vai contratar para a {company}?",
+      "subtitle": "Cada uma faz um trabalho diferente. Dá para contratar a outra depois, na página da sua equipe.",
+      "groupLabel": "Escolha quem contratar",
+      "cta": "Contratar {name}",
+      "error": "Algo deu errado. Tente de novo.",
+      "errorPlan": "Seu plano precisa estar ativo para contratar.",
+      "ctaEmpty": "Escolha alguém primeiro"
+    },
+    "setup": {
+      "catalog": {
+        "title": "Dê seu catálogo para a {name}",
+        "subtitle": "Ela só fala de produto que consegue consultar de verdade. Traga uma vez e ela está pronta.",
+        "groupLabel": "De onde vem seu catálogo",
+        "shopifyTitle": "Minha loja Shopify",
+        "shopifyHint": "Lemos direto do Shopify — nomes, preços e fotos exatos.",
+        "shopifyPlaceholder": "sua-loja.myshopify.com",
+        "shopifyCta": "Conectar",
+        "fileTitle": "Uma planilha",
+        "fileHint": "CSV ou Excel, até 2000 produtos. Só o nome é obrigatório.",
+        "fileCta": "Escolher arquivo",
+        "fileTemplate": "Baixar o modelo",
+        "skip": "Cadastro os produtos depois",
+        "feedOpening": "Abrindo {file}",
+        "feedRows": "{count} linhas lidas",
+        "feedSkipped": "{count} ignoradas — sem nome",
+        "feedSaving": "Salvando no seu catálogo",
+        "feedProducts": "{count} produtos prontos",
+        "feedReady": "A {name} já pode vender",
+        "errorTooBig": "Esse arquivo passa de 3 MB. Tente dividir em dois.",
+        "errorImport": "Não conseguimos ler esse arquivo. Confira com o modelo e tente de novo.",
+        "errorSlow": "Está demorando mais que o normal. Seus produtos podem ainda estar entrando — confira a página de Produtos daqui a pouco.",
+        "retry": "Tentar outro arquivo"
+      },
+      "services": {
+        "title": "O que o seu negócio faz?",
+        "subtitle": "Escolha o ramo e a gente começa a lista por você. Apague o que não faz, ajuste o que for diferente.",
+        "tradeLabel": "Seu ramo",
+        "tradeCount": "{count} para começar",
+        "tradeEmpty": "começa vazia",
+        "trades": {
+          "salon": "Salão de beleza",
+          "barber": "Barbearia",
+          "aesthetics": "Estética e bem-estar",
+          "clinic": "Consultório ou clínica",
+          "studio": "Estúdio de tatuagem",
+          "other": "Outro ramo"
+        },
+        "presets": {
+          "salon": {
+            "cut": "Corte feminino",
+            "blowout": "Escova",
+            "colour": "Coloração",
+            "manicure": "Manicure",
+            "brows": "Sobrancelha"
+          },
+          "barber": {
+            "cut": "Corte",
+            "beard": "Barba",
+            "cutBeard": "Corte e barba",
+            "lineup": "Pezinho"
+          },
+          "aesthetics": {
+            "facial": "Limpeza de pele",
+            "massage": "Massagem",
+            "waxing": "Depilação",
+            "drainage": "Drenagem linfática"
+          },
+          "clinic": {
+            "consultation": "Consulta",
+            "followUp": "Retorno",
+            "assessment": "Avaliação"
+          },
+          "studio": {
+            "quote": "Orçamento",
+            "smallSession": "Sessão pequena",
+            "largeSession": "Sessão completa"
+          },
+          "other": {}
+        },
+        "listTitle": "O que você oferece",
+        "changeTrade": "Trocar de ramo",
+        "nameLabel": "Nome do serviço",
+        "durationLabel": "Duração em minutos",
+        "minutes": "min",
+        "remove": "Remover {name}",
+        "addService": "Adicionar outro",
+        "hoursTitle": "Quando você atende",
+        "days": {
+          "0": "Dom",
+          "1": "Seg",
+          "2": "Ter",
+          "3": "Qua",
+          "4": "Qui",
+          "5": "Sex",
+          "6": "Sáb"
+        },
+        "fromLabel": "Abre às",
+        "toLabel": "Fecha às",
+        "until": "às",
+        "laterHint": "Dá para ajustar tudo isso depois",
+        "cta": "Salvar e continuar",
+        "feedSaving": "Salvando seus serviços",
+        "feedServices": "{count} serviços prontos",
+        "feedHours": "{count} dias de atendimento",
+        "feedReady": "A {name} já pode agendar",
+        "errorSaving": "Não conseguimos salvar seus serviços. Tente de novo.",
+        "errorHours": "Seus serviços foram salvos, mas o horário não. Tente definir de novo.",
+        "skip": "Configuro isso depois"
+      }
+    },
+    "ready": {
+      "title": "A {name} está pronta. Teste ela.",
+      "subtitle": "Ela está respondendo com os seus dados de verdade, não com uma demonstração.",
+      "opener": "Oi! Me pergunta alguma coisa como se você fosse um cliente seu 😊",
+      "placeholder": "Escreva como um cliente escreveria…",
+      "send": "Enviar",
+      "suggestPrice": "Quanto custa a {name}?",
+      "suggestPriceGeneric": "O que vocês têm à venda?",
+      "suggestBrowse": "O que você me recomenda?",
+      "suggestBook": "Queria agendar um {name}",
+      "suggestBookGeneric": "Queria agendar um horário",
+      "suggestHours": "Que horas vocês abrem?",
+      "finish": "Ir para o painel",
+      "finishHint": "O próximo passo é conectar WhatsApp, Instagram ou seu site",
+      "error": "Algo deu errado. Tente de novo.",
+      "errorSilent": "A {name} não respondeu. Se continuar acontecendo, confira Cobrança no painel.",
+      "logLabel": "Conversa com {name}",
+      "typing": "{name} está digitando"
+    }
   },
   "CheckoutLink": {
     "title": "Este link não está mais disponível",
@@ -749,7 +886,8 @@
       "metricsTitle": "Contrate alguém para ver o desempenho",
       "metricsBody": "Depois de contratar um integrante da equipe, é aqui que você acompanha o desempenho dele.",
       "metricsCta": "Explorar o marketplace"
-    }
+    },
+    "noPlanAlert": "Escolha um plano para ela começar"
   },
   "Metrics": {
     "pageTitle": "Desempenho",

@@ -79,7 +79,7 @@ async function syncBillingFromSubscription(
 
   const { data: existing } = await service
     .from("company_billing")
-    .select("plan_key, current_period_start")
+    .select("plan_key, current_period_start, subscription_status")
     .eq("company_id", companyId)
     .maybeSingle();
 
@@ -156,6 +156,26 @@ async function syncBillingFromSubscription(
     // 23505 -> a concurrent delivery just inserted it; a later event reconciles.
     if (insertError && insertError.code !== "23505") {
       throw new Error(`company_billing insert failed: ${insertError.message}`);
+    }
+  }
+
+  // The first session parks a hire when the merchant leaves without a plan
+  // (see lib/companies/finish-onboarding.ts). Paying is the thing that was
+  // missing, so paying is what puts her back to work -- making someone hunt
+  // for a toggle right after they paid is exactly the friction the flow
+  // exists to remove. Scoped to hires this app paused itself: a merchant who
+  // deliberately pauses someone later keeps them paused, because by then the
+  // company already has a plan and never reaches this branch again.
+  const wasPaying =
+    existing?.subscription_status === "active" || existing?.subscription_status === "trialing";
+  if ((knownStatus === "active" || knownStatus === "trialing") && !wasPaying) {
+    const { error: resumeError } = await service
+      .from("company_agents")
+      .update({ status: "active" })
+      .eq("company_id", companyId)
+      .eq("status", "paused");
+    if (resumeError) {
+      console.error("stripe webhook: could not resume hires after first activation", resumeError);
     }
   }
 

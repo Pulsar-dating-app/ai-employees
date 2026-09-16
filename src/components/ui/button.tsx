@@ -39,6 +39,9 @@ export function Button({
       disabled={disabled || isLoading}
       className={clsx(
         "inline-flex cursor-pointer items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+        // Every other custom control in the app themes its own focus ring;
+        // without this the primitive alone fell back to the UA default.
+        "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30",
         VARIANT_CLASSES[variant],
         SIZE_CLASSES[size],
         className,

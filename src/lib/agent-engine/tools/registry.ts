@@ -12,6 +12,7 @@ import { listMyAppointmentsTool } from "./list-my-appointments";
 import { rescheduleAppointmentTool } from "./reschedule-appointment";
 import { addToWaitlistTool } from "./add-to-waitlist";
 import { getBusinessInformationTool } from "./get-business-information";
+import { getBusinessHoursTool } from "./get-business-hours";
 import { getPolicyInformationTool } from "./get-policy-information";
 import { requestHumanTool } from "./request-human";
 
@@ -38,6 +39,7 @@ export const defaultTools: AgentTool[] = [
   rescheduleAppointmentTool,
   addToWaitlistTool,
   getBusinessInformationTool,
+  getBusinessHoursTool,
   getPolicyInformationTool,
   requestHumanTool,
 ];

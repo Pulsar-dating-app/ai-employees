@@ -159,6 +159,10 @@ export type FindAvailableSlotsResult =
       // the customer the business is away then instead of just "nothing's
       // free".
       timeOff: { start: string; end: string; reason: string | null }[];
+      // Dates in the window the business never opens on -- see
+      // lib/availability/load.ts for why this is distinct from an empty slot
+      // list and from `timeOff`.
+      closedDates: string[];
       // Trello K8/K9/R2 -- the customer details this business wants
       // collected before a booking. `key` is the stable slug the agent
       // keys its answers by; `label` is what the agent phrases the question
@@ -319,7 +323,7 @@ async function findAvailableSlots(
   const client = supabaseClient ?? createServiceClient();
 
   try {
-    const { slots, googleCalendarChecked, timeOff } = await loadAvailableSlots({
+    const { slots, googleCalendarChecked, timeOff, closedDates } = await loadAvailableSlots({
       supabase: client,
       companyId,
       serviceId,
@@ -344,6 +348,7 @@ async function findAvailableSlots(
       })),
       truncated: slots.length > MAX_SLOTS_RETURNED,
       timeOff,
+      closedDates,
       intakeQuestions: intakeFields.map((f) => ({
         key: f.key,
         label: f.label,

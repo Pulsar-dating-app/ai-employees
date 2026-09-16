@@ -55,6 +55,9 @@ export async function GET(request: Request) {
   );
 
   if (connectResponse.ok) {
+    // A merchant who started this from the first-session flow goes back into
+    // it rather than being dropped in the dashboard mid-onboarding.
+    if (state.returnTo) return redirectTo(new URL(state.returnTo, url.origin));
     productsUrl.searchParams.set("shopify", "connected");
     return redirectTo(productsUrl);
   }

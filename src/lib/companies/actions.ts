@@ -29,7 +29,7 @@ export async function createCompany(
 
   // A stale tab or double-submit shouldn't mint a second company.
   const { data: existing } = await supabase.from("companies").select("id").limit(1);
-  if (existing && existing.length > 0) redirect("/dashboard");
+  if (existing && existing.length > 0) redirect("/onboarding/hire");
 
   // Same atomic RPC the POST /api/companies route uses — companies insert +
   // company_users(owner) insert in one call.
@@ -54,5 +54,5 @@ export async function createCompany(
     return { error: t("error") };
   }
 
-  redirect("/dashboard");
+  redirect("/onboarding/hire");
 }
