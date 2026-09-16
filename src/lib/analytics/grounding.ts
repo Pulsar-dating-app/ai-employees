@@ -33,7 +33,7 @@ async function countReplies(
   status: string,
   onlyWithClaims: boolean,
 ): Promise<number> {
-  const columns = agentId ? "id, conversations!inner(agent_id)" : "id";
+  const columns = "id, conversations!inner(agent_id, is_preview)";
   let query = supabase
     .from("messages")
     .select(columns, { count: "exact", head: true })
@@ -47,6 +47,7 @@ async function countReplies(
   // also excludes them rather than counting them as verified on faith.
   if (onlyWithClaims) query = query.gt(CLAIMS_PATH, 0);
   if (agentId) query = query.eq("conversations.agent_id", agentId);
+  query = query.eq("conversations.is_preview", false);
 
   const { count, error } = await query;
   if (error) return 0;

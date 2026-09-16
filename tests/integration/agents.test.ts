@@ -44,30 +44,15 @@ describe("GET/POST /api/companies/:id/agents/:agentSlug", () => {
     expect(post.status).toBe(404);
   });
 
-  // Trello P6: hiring is an activation, so it needs an active plan. Without
-  // one the POST is a 402 pointing the merchant at billing; nothing is
-  // written. An already-hired company is exempt (the idempotent no-op).
-  it("402s the hire when the company has no active plan", async () => {
+  // P6 originally made this route the paywall, which dead-ended a brand-new
+  // merchant on step 2 of the first session. The gate moved to the reply gate
+  // (2026-09-16): hiring is free, and what a plan buys is the right to answer
+  // customers. See tests/unit/billing/pre-billing-gate.test.ts for the gate
+  // itself and free-replies-rls.test.ts for the columns behind it.
+  it("hires without a plan, so the first session can reach its proof step", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "No Plan Hiring Co");
 
-    const blocked = await api<{ error: string }>(
-      "POST",
-      `/api/companies/${companyId}/agents/malu`,
-      owner.cookieHeader,
-    );
-    expect(blocked.status).toBe(402);
-    expect(blocked.json.error).toBe("plan_required");
-
-    const stillNotHired = await api<{ companyAgent: unknown }>(
-      "GET",
-      `/api/companies/${companyId}/agents/malu`,
-      owner.cookieHeader,
-    );
-    expect(stillNotHired.json.companyAgent).toBeNull();
-
-    // Subscribe -> the same call now succeeds.
-    await seedActivePlan(companyId);
     const hired = await api<{ companyAgent: { status: string } }>(
       "POST",
       `/api/companies/${companyId}/agents/malu`,
@@ -75,6 +60,15 @@ describe("GET/POST /api/companies/:id/agents/:agentSlug", () => {
     );
     expect(hired.status).toBe(201);
     expect(hired.json.companyAgent.status).toBe("active");
+
+    // Paying later changes nothing about the hire itself.
+    await seedActivePlan(companyId);
+    const again = await api<{ companyAgent: { status: string } }>(
+      "POST",
+      `/api/companies/${companyId}/agents/malu`,
+      owner.cookieHeader,
+    );
+    expect(again.status).toBe(200);
   });
 
   it("hires Malu, is idempotent on a repeat hire, and reports status correctly", async () => {

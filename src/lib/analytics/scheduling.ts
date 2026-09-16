@@ -94,6 +94,7 @@ export async function loadSchedulingAnalytics(
       .select("created_at")
       .eq("company_id", opts.companyId)
       .eq("agent_id", opts.agentId)
+      .eq("is_preview", false)
       .gte("created_at", startUtc)
       .lt("created_at", endUtc),
     fetchMessagesWindow(opts.supabase, opts.companyId, startUtc, endUtc, opts.agentId),

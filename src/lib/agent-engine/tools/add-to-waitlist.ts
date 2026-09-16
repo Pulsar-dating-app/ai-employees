@@ -55,6 +55,42 @@ export const addToWaitlistTool: AgentTool = {
   },
   async execute(rawArgs, ctx) {
     const args = rawArgs as AddToWaitlistArgs;
+
+    // A waitlist promises "I'll tell you if something frees up", which is a
+    // promise nobody can keep for a day the business never works. The tool
+    // description says so, but a description is a suggestion and this is a
+    // rule -- the same reasoning C7 used for putting grounding in code rather
+    // than trusting the prompt alone.
+    const { data: openRows, error: hoursError } = await ctx.supabase
+      .from("business_hours")
+      .select("day_of_week")
+      .eq("company_id", ctx.companyId)
+      .eq("is_active", true);
+    if (hoursError) throw hoursError;
+
+    // Only meaningful for a well-formed range: a backwards one iterates zero
+    // times below and would be reported as "closed" instead of reaching the
+    // repository's own `invalid_range`.
+    const openWeekdays = new Set((openRows ?? []).map((r) => r.day_of_week as number));
+    if (openWeekdays.size > 0 && args.from <= args.to) {
+      let anyOpen = false;
+      for (let date = args.from; date <= args.to; date = addDays(date, 1)) {
+        if (openWeekdays.has(new Date(`${date}T00:00:00Z`).getUTCDay())) {
+          anyOpen = true;
+          break;
+        }
+      }
+      if (!anyOpen) {
+        return {
+          added: false,
+          reason: "closed",
+          message:
+            "The business does not open on any day in that range, so there is nothing to wait " +
+            "for. Tell the customer which days it does open and offer one of those instead.",
+        };
+      }
+    }
+
     return WaitlistRepository.addToWaitlist(
       {
         companyId: ctx.companyId,
@@ -70,3 +106,9 @@ export const addToWaitlistTool: AgentTool = {
     );
   },
 };
+
+function addDays(dateOnly: string, days: number): string {
+  const d = new Date(`${dateOnly}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}

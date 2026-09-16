@@ -50,7 +50,11 @@ export async function listConversations(
   let query = supabase
     .from("conversations")
     .select("id, agent_id, status, channel, updated_at, customer:customers!inner(id, name, phone)", { count: "exact" })
-    .eq("company_id", companyId);
+    .eq("company_id", companyId)
+    // The first session's rehearsal is not a customer conversation, and the
+    // inbox is a work queue -- one seeded thread at the top of it every time
+    // a merchant logs in is noise, not history.
+    .eq("is_preview", false);
 
   if (filters.status) query = query.eq("status", filters.status);
   if (filters.pendingOnly) {

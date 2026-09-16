@@ -47,6 +47,9 @@ export const AGENT_TOOL_SETS: Record<string, readonly string[]> = {
   // offering to sell a product is the exact failure J2 exists to prevent.
   ana: [
     ...COMMON_TOOL_NAMES,
+    // Opening hours are a scheduling fact and live in their own table; no
+    // other tool can reach them (see get-business-hours.ts).
+    "get_business_hours",
     "list_services",
     "find_available_slots",
     "find_next_available",

@@ -36,8 +36,14 @@ export const findAvailableSlotsTool: AgentTool = {
     "`reason` you may share it naturally (e.g. \"they're on holiday until the 15th\"); if " +
     "`reason` is null just say they're closed then. Then offer to look at a date after the " +
     "block ends.\n\n" +
-    "If the list is empty and there's no `timeOff` explaining it, say nothing is open in that " +
-    "range and offer to try another -- never invent a slot that isn't in the result. " +
+    "`closedDates` lists dates in the window the business simply does not open on -- a weekday " +
+    "it never works, not a one-off block. If the customer asked about one of these, say the " +
+    "business does not open that day (name the day) rather than \"nothing is available\", and " +
+    "never offer the waitlist for it: no slot can free up on a day nobody works. Offer the " +
+    "nearest day that is open instead.\n\n" +
+    "If the list is empty and there's no `timeOff` or `closedDates` explaining it, say nothing " +
+    "is open in that range and offer to try another -- never invent a slot that isn't in the " +
+    "result. " +
     "`available: false` means that service isn't something this business offers.\n\n" +
     "`intakeQuestions` lists customer details this business wants before a booking. Each has a " +
     "`key` (an id -- key your `intakeAnswers` object by this), a `label` (phrase the question " +

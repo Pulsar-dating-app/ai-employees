@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildAuthorizeUrl, normalizeShopDomain } from "@/lib/shopify/admin-api";
-import { encodeState, generateNonce, SHOPIFY_OAUTH_STATE_COOKIE } from "@/lib/shopify/oauth-state";
+import { encodeState, generateNonce, safeReturnTo, SHOPIFY_OAUTH_STATE_COOKIE } from "@/lib/shopify/oauth-state";
 import { requireAdmin } from "../../access";
 
 // The merchant-facing entry point into Shopify OAuth: the connect card
@@ -39,7 +39,8 @@ export async function GET(
   }
 
   const nonce = generateNonce();
-  const state = encodeState({ companyId, shop, nonce });
+  const returnTo = safeReturnTo(new URL(request.url).searchParams.get("returnTo"));
+  const state = encodeState({ companyId, shop, nonce, returnTo });
 
   const response = NextResponse.redirect(buildAuthorizeUrl(shop, state), { status: 302 });
 

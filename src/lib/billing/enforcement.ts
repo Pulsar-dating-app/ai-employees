@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
-import { classifyUsage, isHardStopEnabled } from "./limits";
+import { classifyUsage, getFreeReplyAllowance, isHardStopEnabled } from "./limits";
 
 // Trello P7 -- the single pre-run decision every inbound channel makes
 // before calling AgentEngine.run(), plus the one metering call it makes
@@ -23,7 +23,18 @@ const BILLING_ACTIVE_STATUSES = new Set(["active", "trialing"]);
 
 export type ReplyGateDecision =
   | { allow: true; overPlan: boolean }
-  | { allow: false; reason: "lapsed" | "grace_exceeded" };
+  | { allow: false; reason: "lapsed" | "grace_exceeded" | "no_plan" };
+
+// A company with no company_billing row at all. It used to be allowed
+// outright ("the no-plan-at-all cut-over is P6, not here"), because hiring was
+// gated on a plan and so a plan-less company could never have a hire to reply
+// with. The first session now lets a merchant hire and try her out before
+// paying, which moves that cut-over here: free while they are still in the
+// flow and inside the allowance, blocked after.
+export type PreBillingFacts = {
+  onboardingCompletedAt: string | null;
+  freeRepliesUsed: number;
+} | null;
 
 type BillingFacts = {
   subscription_status: string;
@@ -32,19 +43,42 @@ type BillingFacts = {
 
 type UsageFacts = { replies_used: number; reply_limit: number } | null;
 
+// Two independent stops, and both have to hold. The onboarding flag alone
+// would let anyone who simply never presses "finish" answer customers forever
+// -- the /talk link works from the moment they hire. The allowance alone would
+// keep dripping free replies at a company that finished and declined to pay.
+export function decidePreBillingGate(
+  preBilling: PreBillingFacts,
+  options: ReplyGateOptions = {},
+): ReplyGateDecision {
+  // No company row to read (deleted mid-flight, or a caller that didn't load
+  // one). Fail closed: this branch only ever describes an unpaid company.
+  if (!preBilling) return { allow: false, reason: "no_plan" };
+  if (preBilling.onboardingCompletedAt) return { allow: false, reason: "no_plan" };
+
+  const allowance = options.freeReplyAllowance ?? getFreeReplyAllowance();
+  if (preBilling.freeRepliesUsed >= allowance) return { allow: false, reason: "no_plan" };
+
+  return { allow: true, overPlan: false };
+}
+
 export type ReplyGateOptions = {
   /** Override env for tests. Defaults to {@link isHardStopEnabled}. */
   hardStopEnabled?: boolean;
   /** Passed straight to {@link classifyUsage}; defaults to the env grace multiplier. */
   graceMultiplier?: number;
+  /** Override env for tests. Defaults to {@link getFreeReplyAllowance}. */
+  freeReplyAllowance?: number;
 };
 
 /**
  * Pure decision: given the billing row, the current-period usage row, and
  * the config, what should the channel do?
  *
- *  - no billing row              -> allow (a pre-billing company; the "no
- *                                   plan at all" cut-over is P6, not here)
+ *  - no billing row              -> decidePreBillingGate: free while the
+ *                                   merchant is still inside the first
+ *                                   session and inside the allowance,
+ *                                   `no_plan` after either runs out
  *  - status not active/trialing  -> block `lapsed` (P4: card declined /
  *                                   unpaid / canceled / incomplete)
  *  - no usage row this period    -> allow (P4 hasn't provisioned it;
@@ -59,8 +93,9 @@ export function decideReplyGate(
   billing: BillingFacts,
   usage: UsageFacts,
   options: ReplyGateOptions = {},
+  preBilling: PreBillingFacts = null,
 ): ReplyGateDecision {
-  if (!billing) return { allow: true, overPlan: false };
+  if (!billing) return decidePreBillingGate(preBilling, options);
   if (!BILLING_ACTIVE_STATUSES.has(billing.subscription_status)) {
     return { allow: false, reason: "lapsed" };
   }
@@ -92,7 +127,27 @@ export async function evaluateReplyGate(
     .eq("company_id", companyId)
     .maybeSingle();
 
-  if (!billing) return { allow: true, overPlan: false };
+  // Only read the pre-billing facts on the path that needs them: a paying
+  // company pays no extra query for a branch it can never take.
+  if (!billing) {
+    const { data: company } = await supabase
+      .from("companies")
+      .select("onboarding_completed_at, free_replies_used")
+      .eq("id", companyId)
+      .maybeSingle();
+    const facts = company as
+      | { onboarding_completed_at: string | null; free_replies_used: number }
+      | null;
+    return decidePreBillingGate(
+      facts
+        ? {
+            onboardingCompletedAt: facts.onboarding_completed_at,
+            freeRepliesUsed: facts.free_replies_used ?? 0,
+          }
+        : null,
+      options,
+    );
+  }
   if (!BILLING_ACTIVE_STATUSES.has(billing.subscription_status as string)) {
     return { allow: false, reason: "lapsed" };
   }
@@ -133,5 +188,13 @@ export async function recordAiReply(companyId: string, client?: SupabaseClient):
   const { error } = await supabase.rpc("record_ai_reply", { p_company_id: companyId });
   if (error) {
     console.error("[billing] record_ai_reply failed", { companyId, error: error.message });
+  }
+
+  // The pre-plan allowance is counted by its own writer, which no-ops the
+  // moment a billing row exists -- so both calls are unconditional here and
+  // exactly one of them ever does anything.
+  const { error: freeError } = await supabase.rpc("record_free_reply", { p_company_id: companyId });
+  if (freeError) {
+    console.error("[billing] record_free_reply failed", { companyId, error: freeError.message });
   }
 }

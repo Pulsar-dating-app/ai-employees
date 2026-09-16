@@ -35,7 +35,7 @@ export function OnboardingForm() {
           autoComplete="organization"
           autoFocus
           placeholder={t("namePlaceholder")}
-          className="h-11 w-full rounded-md border border-outline bg-surface-container-lowest px-3 text-body-md text-on-surface transition-all duration-200 placeholder:text-outline-variant focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
+          className="h-11 w-full rounded-md border border-outline bg-surface-container-lowest px-3 text-body-md text-on-surface transition-all duration-200 placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
         />
       </div>
 

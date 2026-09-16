@@ -144,9 +144,10 @@ describe("PATCH /api/companies/:id/agents/:agentSlug (active-agent toggle)", () 
     expect(res.status).toBe(200);
   });
 
-  // Trello P6: turning a hire back on is an activation and needs an active
-  // plan; pausing and renaming never do.
-  it("402s a PATCH to active once the plan has lapsed, but still allows pause", async () => {
+  // Turning a hire back on asks the reply gate itself, so activation is
+  // allowed exactly when a reply would be. A lapsed company cannot flip the
+  // switch and be told "Active" while every channel stays silent.
+  it("402s a PATCH to active once the plan has lapsed, but still allows pause and rename", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Toggle Lapsed Co");
     await hire(owner.cookieHeader, companyId); // seeds an active plan + hires
@@ -170,7 +171,8 @@ describe("PATCH /api/companies/:id/agents/:agentSlug (active-agent toggle)", () 
     expect(reactivate.status).toBe(402);
     expect((reactivate.json as { error: string }).error).toBe("plan_required");
 
-    // A rename still goes through -- only status:active is gated.
+    // Pausing and renaming are never gated -- a lapsed company must still be
+    // able to switch its own team off and label it.
     const renamed = await api("PATCH", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader, {
       name: "Malu Renamed",
     });

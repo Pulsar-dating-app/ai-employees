@@ -45,6 +45,14 @@ export type LoadAvailableSlotsResult = {
   // when it's why `slots` is empty, a caller can say *why* (and `reason`,
   // if the merchant gave one) instead of a bare "nothing available".
   timeOff: { start: string; end: string; reason: string | null }[];
+  // Local dates in [from, to] the business simply does not open on -- no
+  // active business_hours row for that weekday. Distinct from `timeOff`,
+  // which is a one-off closure, and from an empty `slots`, which until now
+  // was the only thing a caller could see. Without this, "we don't work
+  // Thursdays" and "Thursday is fully booked" were the same answer, so a
+  // scheduling agent would offer the waitlist for a day no slot can ever
+  // free up on.
+  closedDates: string[];
 };
 
 export async function loadAvailableSlots(
@@ -128,9 +136,20 @@ export async function loadAvailableSlots(
     now,
   });
 
+  const openWeekdays = new Set(
+    ((businessHoursRows ?? []) as BusinessHourWindow[]).map((row) => row.day_of_week),
+  );
+  const closedDates: string[] = [];
+  for (let date = from; date <= to; date = addDays(date, 1)) {
+    // Parsed as UTC midnight purely to read the weekday off a plain date
+    // string; no instant is being converted here.
+    if (!openWeekdays.has(new Date(`${date}T00:00:00Z`).getUTCDay())) closedDates.push(date);
+  }
+
   return {
     slots,
     googleCalendarChecked,
+    closedDates,
     timeOff: timeOffRowsSafe.map((r) => ({
       start: r.start_date,
       end: r.end_date,

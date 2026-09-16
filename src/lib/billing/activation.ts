@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
+import { decidePreBillingGate } from "./enforcement";
 
 // The single source of truth for "is this company's billing in good enough
-// standing to run a bot". A paid plan is mandatory (no free tier, no
-// trial).
+// standing to run a bot". A paid plan is mandatory to serve customers -- the
+// only replies that happen without one are the small pre-plan allowance the
+// first session spends on its proof step (see enforcement.ts).
 const BILLING_ACTIVE_STATUSES = new Set(["active", "trialing"]);
 
 // Trello P3 (stub) -- NOT yet wired as a block. P6 gates the hire route
@@ -70,4 +72,35 @@ export async function isBillingPastDue(
     .maybeSingle();
 
   return data ? PAST_DUE_STATUSES.has(data.subscription_status as string) : false;
+}
+
+// The other reason a team can be silent: no plan was ever chosen, and either
+// the first session is over or the free allowance is spent. Distinct from
+// past-due — the merchant did not fail a payment, they never started one — so
+// it reads as "pick a plan", never "fix your card".
+export async function isSilentForNoPlan(
+  companyId: string,
+  client?: SupabaseClient,
+): Promise<boolean> {
+  const supabase = client ?? createServiceClient();
+
+  const { data: billing } = await supabase
+    .from("company_billing")
+    .select("company_id")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  if (billing) return false;
+
+  const { data: company } = await supabase
+    .from("companies")
+    .select("onboarding_completed_at, free_replies_used")
+    .eq("id", companyId)
+    .maybeSingle();
+  const facts = company as { onboarding_completed_at: string | null; free_replies_used: number } | null;
+  if (!facts) return false;
+
+  return !decidePreBillingGate({
+    onboardingCompletedAt: facts.onboarding_completed_at,
+    freeRepliesUsed: facts.free_replies_used ?? 0,
+  }).allow;
 }

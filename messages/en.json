@@ -57,13 +57,150 @@
     }
   },
   "Onboarding": {
-    "title": "Set up your business",
-    "subtitle": "This is what your team represents when they talk to your customers. You can change it any time in settings.",
+    "title": "First, what's your business called?",
+    "subtitle": "She'll use this name when she talks to your customers.",
     "nameLabel": "Business name",
     "namePlaceholder": "e.g. ABC Company",
     "nameMissing": "Enter your business name.",
     "continue": "Continue",
-    "error": "Something went wrong creating your business. Please try again."
+    "error": "Something went wrong creating your business. Please try again.",
+    "rail": {
+      "label": "Your first session",
+      "company": "Your business",
+      "hire": "Your hire",
+      "setup": "What she needs",
+      "ready": "See her work"
+    },
+    "hire": {
+      "title": "Who are you hiring for {company}?",
+      "subtitle": "Each one does a different job. You can hire the other one later, from your team page.",
+      "groupLabel": "Choose who to hire",
+      "cta": "Hire {name}",
+      "error": "Something went wrong. Please try again.",
+      "errorPlan": "Your plan needs to be active before you can hire.",
+      "ctaEmpty": "Choose someone first"
+    },
+    "setup": {
+      "catalog": {
+        "title": "Give {name} your catalogue",
+        "subtitle": "She can only talk about products she can actually look up. Bring them in once and she is ready.",
+        "groupLabel": "Where your catalogue comes from",
+        "shopifyTitle": "My Shopify store",
+        "shopifyHint": "We read it straight from Shopify — exact names, prices and photos.",
+        "shopifyPlaceholder": "your-store.myshopify.com",
+        "shopifyCta": "Connect",
+        "fileTitle": "A spreadsheet",
+        "fileHint": "CSV or Excel, up to 2000 products. Only the name is required.",
+        "fileCta": "Choose file",
+        "fileTemplate": "Download the template",
+        "skip": "I'll add products later",
+        "feedOpening": "Opening {file}",
+        "feedRows": "{count} rows read",
+        "feedSkipped": "{count} skipped — no name",
+        "feedSaving": "Saving to your catalogue",
+        "feedProducts": "{count} products ready",
+        "feedReady": "{name} can start selling",
+        "errorTooBig": "That file is over 3 MB. Try splitting it in two.",
+        "errorImport": "We couldn't read that file. Check it against the template and try again.",
+        "errorSlow": "This is taking longer than usual. Your products may still be importing — check the Products page in a moment.",
+        "retry": "Try another file"
+      },
+      "services": {
+        "title": "What does your business do?",
+        "subtitle": "Pick your trade and we'll start the list for you. Remove what you don't do, fix what's different.",
+        "tradeLabel": "Your trade",
+        "tradeCount": "{count} to start",
+        "tradeEmpty": "start empty",
+        "trades": {
+          "salon": "Hair salon",
+          "barber": "Barbershop",
+          "aesthetics": "Aesthetics & wellness",
+          "clinic": "Practice or clinic",
+          "studio": "Tattoo studio",
+          "other": "Something else"
+        },
+        "presets": {
+          "salon": {
+            "cut": "Women's cut",
+            "blowout": "Blow-dry",
+            "colour": "Colour",
+            "manicure": "Manicure",
+            "brows": "Eyebrows"
+          },
+          "barber": {
+            "cut": "Haircut",
+            "beard": "Beard",
+            "cutBeard": "Cut & beard",
+            "lineup": "Line-up"
+          },
+          "aesthetics": {
+            "facial": "Facial",
+            "massage": "Massage",
+            "waxing": "Waxing",
+            "drainage": "Lymphatic drainage"
+          },
+          "clinic": {
+            "consultation": "Consultation",
+            "followUp": "Follow-up",
+            "assessment": "Assessment"
+          },
+          "studio": {
+            "quote": "Quote",
+            "smallSession": "Small session",
+            "largeSession": "Full session"
+          },
+          "other": {}
+        },
+        "listTitle": "What you offer",
+        "changeTrade": "Change trade",
+        "nameLabel": "Service name",
+        "durationLabel": "Duration in minutes",
+        "minutes": "min",
+        "remove": "Remove {name}",
+        "addService": "Add another",
+        "hoursTitle": "When you're open",
+        "days": {
+          "0": "Sun",
+          "1": "Mon",
+          "2": "Tue",
+          "3": "Wed",
+          "4": "Thu",
+          "5": "Fri",
+          "6": "Sat"
+        },
+        "fromLabel": "Opens at",
+        "toLabel": "Closes at",
+        "until": "to",
+        "laterHint": "You can refine all of this later",
+        "cta": "Save and continue",
+        "feedSaving": "Saving your services",
+        "feedServices": "{count} services ready",
+        "feedHours": "{count} days open",
+        "feedReady": "{name} can start booking",
+        "errorSaving": "We couldn't save your services. Please try again.",
+        "errorHours": "Your services were saved, but the opening hours weren't. Try setting them again.",
+        "skip": "I'll set this up later"
+      }
+    },
+    "ready": {
+      "title": "{name} is ready. Try her out.",
+      "subtitle": "She's answering from your real data, not a demo.",
+      "opener": "Hi! Ask me something as if you were one of your own customers 😊",
+      "placeholder": "Type like a customer would…",
+      "send": "Send",
+      "suggestPrice": "How much is the {name}?",
+      "suggestPriceGeneric": "What do you have for sale?",
+      "suggestBrowse": "What do you recommend?",
+      "suggestBook": "I'd like to book a {name}",
+      "suggestBookGeneric": "I'd like to book an appointment",
+      "suggestHours": "What time do you open?",
+      "finish": "Go to my dashboard",
+      "finishHint": "You can connect WhatsApp, Instagram or your website next",
+      "error": "Something went wrong. Please try again.",
+      "errorSilent": "{name} didn't answer. If this keeps happening, check Billing in your dashboard.",
+      "logLabel": "Conversation with {name}",
+      "typing": "{name} is typing"
+    }
   },
   "CheckoutLink": {
     "title": "This link is no longer available",
@@ -749,7 +886,8 @@
       "metricsTitle": "Hire someone to see how they are doing",
       "metricsBody": "Once you've hired a team member, this is where you'll follow their performance.",
       "metricsCta": "Browse the marketplace"
-    }
+    },
+    "noPlanAlert": "Choose a plan to put her to work"
   },
   "Metrics": {
     "pageTitle": "Performance",

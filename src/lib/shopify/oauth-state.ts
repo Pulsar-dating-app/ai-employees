@@ -15,9 +15,21 @@ export interface OAuthState {
   companyId: string;
   shop: string;
   nonce: string;
+  // Where to land after a successful connect, when the merchant did not start
+  // from the products page. Only ever one of RETURN_TO_ALLOWED -- an
+  // attacker-controlled value here would be an open redirect on a URL Shopify
+  // echoes back verbatim.
+  returnTo?: string;
 }
 
 export const SHOPIFY_OAUTH_STATE_COOKIE = "shopify_oauth_nonce";
+
+const RETURN_TO_ALLOWED = ["/onboarding/ready"] as const;
+
+export function safeReturnTo(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  return (RETURN_TO_ALLOWED as readonly string[]).includes(value) ? value : undefined;
+}
 
 export function generateNonce(): string {
   return randomBytes(16).toString("base64url");
@@ -38,7 +50,7 @@ export function decodeState(raw: string): OAuthState | null {
       typeof parsed?.shop === "string" &&
       typeof parsed?.nonce === "string"
     ) {
-      return parsed as OAuthState;
+      return { ...parsed, returnTo: safeReturnTo(parsed?.returnTo) } as OAuthState;
     }
     return null;
   } catch {

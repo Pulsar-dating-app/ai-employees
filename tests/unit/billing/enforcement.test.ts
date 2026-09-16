@@ -10,8 +10,16 @@ import { decideReplyGate } from "@/lib/billing/enforcement";
 const active = { subscription_status: "active", current_period_start: "2026-09-01T00:00:00Z" };
 
 describe("decideReplyGate (Trello P7)", () => {
-  it("allows a company with no billing row (pre-billing -- the cut-over is P6)", () => {
-    expect(decideReplyGate(null, null)).toEqual({ allow: true, overPlan: false });
+  // The no-billing branch moved out of P6's hire gate and into this one on
+  // 2026-09-16; decidePreBillingGate owns it now and is covered in full by
+  // tests/unit/billing/pre-billing-gate.test.ts. What matters here is only
+  // that this function routes into it instead of waving the company through.
+  it("hands a company with no billing row to the pre-billing gate", () => {
+    expect(decideReplyGate(null, null, {}, { onboardingCompletedAt: null, freeRepliesUsed: 0 })).toEqual({
+      allow: true,
+      overPlan: false,
+    });
+    expect(decideReplyGate(null, null)).toEqual({ allow: false, reason: "no_plan" });
   });
 
   it("blocks 'lapsed' for every non active/trialing status", () => {
