@@ -1,6 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
+import { seedActivePlan } from "./helpers/billing";
 
 // Trello ticket D1. company_whatsapp_connections.access_token is locked
 // down with column-level privileges (migration 20260826104820), not a
@@ -22,11 +24,15 @@ describe("company_whatsapp_connections RLS: access_token is column-locked for ev
     );
     const companyId = created.json.company.id;
 
+    await seedActivePlan(companyId);
+    await api("POST", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader);
+
+    const unique = randomUUID().slice(0, 8);
     const connected = await api(
       "POST",
-      `/api/companies/${companyId}/whatsapp/connect`,
+      `/api/companies/${companyId}/agents/malu/whatsapp/connect`,
       owner.cookieHeader,
-      { code: "good-code", phoneNumberId: "1234567890", wabaId: "0987654321" },
+      { code: "good-code", phoneNumberId: `phone-${unique}`, wabaId: `waba-${unique}` },
     );
     expect(connected.status).toBe(200);
 
