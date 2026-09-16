@@ -3,6 +3,7 @@ import type { GroundingCounts } from "@/lib/chat/grounding";
 import { addDays, isValidTimeZone } from "./load";
 
 const STATUS_PATH = "metadata->grounding->>status";
+const CLAIMS_PATH = "metadata->grounding->claims";
 
 export function localMidnightUtc(dateOnly: string, timezone: string | null): string {
   const tz = timezone && isValidTimeZone(timezone) ? timezone : "UTC";
@@ -23,13 +24,14 @@ export function localDayRangeUtc(
   };
 }
 
-async function countWithStatus(
+async function countReplies(
   supabase: SupabaseClient,
   companyId: string,
   startUtc: string,
   endUtc: string,
   agentId: string | null | undefined,
-  status: string | null,
+  status: string,
+  onlyWithClaims: boolean,
 ): Promise<number> {
   const columns = agentId ? "id, conversations!inner(agent_id)" : "id";
   let query = supabase
@@ -38,9 +40,12 @@ async function countWithStatus(
     .eq("company_id", companyId)
     .eq("role", "agent")
     .gte("created_at", startUtc)
-    .lt("created_at", endUtc);
+    .lt("created_at", endUtc)
+    .eq(STATUS_PATH, status);
 
-  query = status === null ? query.not(STATUS_PATH, "is", null) : query.eq(STATUS_PATH, status);
+  // Rows written before claims existed have no `claims` key at all, so this
+  // also excludes them rather than counting them as verified on faith.
+  if (onlyWithClaims) query = query.gt(CLAIMS_PATH, 0);
   if (agentId) query = query.eq("conversations.agent_id", agentId);
 
   const { count, error } = await query;
@@ -57,11 +62,11 @@ export async function loadGroundingCounts(opts: {
 }): Promise<GroundingCounts> {
   const { supabase, companyId, startUtc, endUtc, agentId } = opts;
 
-  const [checked, regenerated, blocked] = await Promise.all([
-    countWithStatus(supabase, companyId, startUtc, endUtc, agentId, null),
-    countWithStatus(supabase, companyId, startUtc, endUtc, agentId, "regenerated"),
-    countWithStatus(supabase, companyId, startUtc, endUtc, agentId, "blocked"),
+  const [verified, regenerated, blocked] = await Promise.all([
+    countReplies(supabase, companyId, startUtc, endUtc, agentId, "grounded", true),
+    countReplies(supabase, companyId, startUtc, endUtc, agentId, "regenerated", false),
+    countReplies(supabase, companyId, startUtc, endUtc, agentId, "blocked", false),
   ]);
 
-  return { checked, grounded: Math.max(0, checked - regenerated - blocked), regenerated, blocked };
+  return { verified, regenerated, blocked };
 }

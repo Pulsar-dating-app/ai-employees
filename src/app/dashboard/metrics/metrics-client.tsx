@@ -184,13 +184,13 @@ export function MetricsClient({
       </div>
 
       <div className={clsx("flex flex-col gap-6", dim)}>
+        <ReliabilityCard {...reliability} />
         <AgentHealthCard
           state={health.state}
           title={health.title}
           body={health.body}
           cta={health.cta}
         />
-        <ReliabilityCard {...reliability} />
       </div>
     </div>
   );

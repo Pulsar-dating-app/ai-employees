@@ -825,13 +825,13 @@
     "agentSelectLabel": "Team member",
     "reliability": {
       "title": "Reliability",
-      "subtitle": "Every price and stock figure {name} sends is checked against your catalogue before it reaches a customer.",
-      "empty": "No replies from {name} have been checked in this period yet.",
-      "scope": "Covers prices and stock quantities, checked against your catalogue. Other kinds of claims aren't verified this way.",
-      "checkedLabel": "Replies checked",
+      "subtitle": "{name} can only state a price or stock figure that traces back to your catalogue. Anything she can't confirm is rewritten, or held back.",
+      "empty": "Nothing to report yet for {name} in this period. Numbers appear here once she answers a question about a price or how many you have in stock.",
+      "scope": "Counts replies that actually stated a price or a stock quantity. A reply with no figure in it has nothing to check, and is not counted here.",
       "regeneratedLabel": "Corrected before sending",
       "blockedLabel": "Held for confirmation",
-      "cta": "See who's waiting on a confirmation"
+      "cta": "See who's waiting on a confirmation",
+      "verifiedLabel": "Answers with a checked figure"
     }
   },
   "AgentDetail": {
@@ -1605,8 +1605,10 @@
     "browseMarketplace": "Browse the marketplace",
     "backToConversations": "Back to conversations",
     "channel": {
+      "whatsapp": "WhatsApp",
       "web_chat": "Website chat",
-      "instagram": "Instagram"
+      "instagram": "Instagram",
+      "telegram": "Telegram"
     },
     "filters": {
       "status": {
@@ -1655,15 +1657,18 @@
       "detailsMessageCount": "Messages",
       "detailsNoAgent": "None",
       "channel": {
+        "whatsapp": "WhatsApp",
         "web_chat": "Website chat",
-        "instagram": "Instagram"
+        "instagram": "Instagram",
+        "telegram": "Telegram"
       },
       "grounding": {
         "regeneratedTitle": "Corrected before sending",
         "regeneratedBody": "This reply quoted a figure that hadn't been checked against your catalogue, so it was rewritten. The customer only ever saw the corrected version.",
         "blockedTitle": "Held back — this customer is still waiting",
         "blockedBody": "A figure couldn't be confirmed against your catalogue, so the customer was asked to wait for a confirmation instead of being given an unverified number.",
-        "discarded": "Discarded figure: {figures}"
+        "discarded": "Discarded figure: {figures}",
+        "verified": "{count, plural, =1 {Figure checked against your catalogue} other {# figures checked against your catalogue}}"
       }
     },
     "pending": {

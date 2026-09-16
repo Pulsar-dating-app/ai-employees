@@ -46,6 +46,7 @@ export type GroundingClaim = {
 export type GroundingCheckResult = {
   grounded: boolean;
   violations: GroundingClaim[];
+  claimCount: number;
 };
 
 // Money and quantities are compared as integer cents/units so 129.90, "129,9"
@@ -286,8 +287,10 @@ export async function checkResponseGrounding({
 }): Promise<GroundingCheckResult> {
   const claims = extractGroundingClaims(responseText);
   // The overwhelmingly common case: a reply that quotes no figure at all
-  // costs nothing to validate, not even a query.
-  if (claims.length === 0) return { grounded: true, violations: [] };
+  // costs nothing to validate, not even a query. `claimCount: 0` is what
+  // keeps this out of any merchant-facing "we checked this" count -- there
+  // was nothing here to check.
+  if (claims.length === 0) return { grounded: true, violations: [], claimCount: 0 };
 
   const grounded = new Set<number>();
   collectNumbers(
@@ -299,12 +302,12 @@ export async function checkResponseGrounding({
   collectNumbersFromText(customerMessage, grounded);
 
   const unmatched = claims.filter((claim) => !isGrounded(claim, grounded));
-  if (unmatched.length === 0) return { grounded: true, violations: [] };
+  if (unmatched.length === 0) return { grounded: true, violations: [], claimCount: claims.length };
 
   const companyNumbers = await collectCompanyFactNumbers(supabase, companyId, unmatched);
   const violations = unmatched.filter((claim) => !isGrounded(claim, companyNumbers));
 
-  return { grounded: violations.length === 0, violations };
+  return { grounded: violations.length === 0, violations, claimCount: claims.length };
 }
 
 // Sent as the retry turn's input when a draft fails the check. A `developer`

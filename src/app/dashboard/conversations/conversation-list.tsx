@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
 import { ClockIcon } from "@/components/ui/icons";
+import { channelLabel } from "@/lib/conversations/channel-label";
 import type { ConversationRow } from "@/lib/conversations/list";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -74,7 +75,7 @@ export function ConversationList({
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-on-surface">{c.customer.displayName}</span>
                   <span className="inline-flex items-center rounded-full bg-surface-container px-2 py-0.5 text-label-sm text-on-surface-variant">
-                    {t(`channel.${c.channel}`)}
+                    {channelLabel(t, c.channel)}
                   </span>
                   {c.pendingConfirmation ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-primary-fixed px-2 py-0.5 text-label-sm font-semibold text-primary">

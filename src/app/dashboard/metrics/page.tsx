@@ -205,12 +205,13 @@ export default async function MetricsPage({
           subtitle: t("reliability.subtitle", { name: agentName }),
           emptyBody: t("reliability.empty", { name: agentName }),
           scopeNote: t("reliability.scope"),
-          checked: groundingCounts.checked,
+          hasActivity:
+            groundingCounts.verified + groundingCounts.regenerated + groundingCounts.blocked > 0,
           stats: [
             {
-              key: "checked",
-              value: numberFormat.format(groundingCounts.checked),
-              label: t("reliability.checkedLabel"),
+              key: "verified",
+              value: numberFormat.format(groundingCounts.verified),
+              label: t("reliability.verifiedLabel"),
             },
             {
               key: "regenerated",

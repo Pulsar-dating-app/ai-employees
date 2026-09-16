@@ -7,7 +7,7 @@ export type ReliabilityCardProps = {
   emptyBody: string;
   scopeNote: string;
   stats: { key: string; value: string; label: string; emphasis?: boolean }[];
-  checked: number;
+  hasActivity: boolean;
   cta?: { href: string; label: string };
 };
 
@@ -17,7 +17,7 @@ export function ReliabilityCard({
   emptyBody,
   scopeNote,
   stats,
-  checked,
+  hasActivity,
   cta,
 }: ReliabilityCardProps) {
   return (
@@ -32,7 +32,7 @@ export function ReliabilityCard({
         </div>
       </div>
 
-      {checked === 0 ? (
+      {!hasActivity ? (
         <p className="text-sm text-on-surface-variant">{emptyBody}</p>
       ) : (
         <>
