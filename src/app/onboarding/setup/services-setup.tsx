@@ -19,12 +19,23 @@ import { NarratedFeed, type FeedLine } from "./narrated-feed";
 import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import { OnboardingLoader } from "../onboarding-loader";
 
-type Draft = { id: string; name: string; durationMinutes: number };
+type Draft = { id: string; name: string; durationMinutes: number; price: string };
+type DayHours = { start: string; end: string };
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
 const PAYOFF_DWELL_MS = 1400;
 const FIELD =
   "h-11 rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-body-md text-on-surface transition-all duration-200 placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20";
+
+function initialHours(): Record<number, DayHours | null> {
+  const initial: Record<number, DayHours | null> = {};
+  for (const day of DAY_ORDER) {
+    initial[day] = (DEFAULT_OPEN_DAYS as readonly number[]).includes(day)
+      ? { start: DEFAULT_OPEN_FROM, end: DEFAULT_OPEN_TO }
+      : null;
+  }
+  return initial;
+}
 
 export function ServicesSetup({ companyId, agentName }: { companyId: string; agentName: string }) {
   const t = useTranslations("Onboarding.setup.services");
@@ -32,9 +43,7 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
 
   const [trade, setTrade] = useState<ServicePresetTrade | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [days, setDays] = useState<number[]>([...DEFAULT_OPEN_DAYS]);
-  const [from, setFrom] = useState(DEFAULT_OPEN_FROM);
-  const [to, setTo] = useState(DEFAULT_OPEN_TO);
+  const [hours, setHours] = useState<Record<number, DayHours | null>>(initialHours);
   const [lines, setLines] = useState<FeedLine[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +55,7 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
         id: `${next}-${preset.key}`,
         name: t(`presets.${next}.${preset.key}`),
         durationMinutes: preset.durationMinutes,
+        price: "",
       })),
     );
   }
@@ -54,7 +64,31 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
     setDrafts((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
   }
 
-  const valid = drafts.length > 0 && drafts.every((d) => d.name.trim() && d.durationMinutes > 0) && days.length > 0 && from < to;
+  // Toggling a day off drops its hours; toggling it back on starts from the
+  // same default every day begins with, not whatever it last held -- a
+  // reopened day is a fresh choice, not an undo.
+  function toggleDay(day: number) {
+    setHours((prev) => ({
+      ...prev,
+      [day]: prev[day] ? null : { start: DEFAULT_OPEN_FROM, end: DEFAULT_OPEN_TO },
+    }));
+  }
+
+  function setDayHours(day: number, patch: Partial<DayHours>) {
+    setHours((prev) => {
+      const current = prev[day];
+      return current ? { ...prev, [day]: { ...current, ...patch } } : prev;
+    });
+  }
+
+  const openDays = DAY_ORDER.filter((day) => hours[day]);
+  const hoursValid = openDays.length > 0 && openDays.every((day) => hours[day]!.start < hours[day]!.end);
+  const pricesValid = drafts.every((d) => d.price.trim() === "" || Number(d.price) >= 0);
+  const valid =
+    drafts.length > 0 &&
+    drafts.every((d) => d.name.trim() && d.durationMinutes > 0) &&
+    pricesValid &&
+    hoursValid;
 
   function settle(id: string, patch: Partial<FeedLine>) {
     setLines((prev) => prev.map((line) => (line.id === id ? { ...line, ...patch, state: "done" } : line)));
@@ -72,16 +106,23 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
     setLines([{ id: "services", text: t("feedSaving"), state: "running" }]);
 
     const created = await Promise.all(
-      drafts.map((draft) =>
-        fetch(`/api/companies/${companyId}/services`, {
+      drafts.map((draft) => {
+        const hasPrice = draft.price.trim() !== "";
+        return fetch(`/api/companies/${companyId}/services`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: draft.name.trim(),
             duration_minutes: draft.durationMinutes,
+            // Onboarding never asks the currency: every company created here
+            // starts with currency unset (createCompany only collects the
+            // name), and this product is Brazil-first everywhere else a
+            // price is shown (see plan/page.tsx). Settings lets her change it
+            // later along with the price itself.
+            ...(hasPrice ? { price: Number(draft.price), currency: "BRL" } : {}),
           }),
-        }).then((res) => res.ok),
-      ),
+        }).then((res) => res.ok);
+      }),
     );
 
     if (created.some((ok) => !ok)) {
@@ -98,7 +139,11 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        businessHours: days.map((day) => ({ day_of_week: day, start_time: from, end_time: to })),
+        businessHours: openDays.map((day) => ({
+          day_of_week: day,
+          start_time: hours[day]!.start,
+          end_time: hours[day]!.end,
+        })),
       }),
     });
 
@@ -109,7 +154,18 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
       return;
     }
 
-    settle("hours", { text: t("feedHours", { count: days.length }), detail: `${from}–${to}` });
+    // The detail only names a single range when every open day actually
+    // shares it -- the common case, and the only one a single "09:00–18:00"
+    // line can say honestly. Different hours per day still get a truthful
+    // count with no invented range.
+    const first = hours[openDays[0]]!;
+    const sameEveryDay = openDays.every(
+      (day) => hours[day]!.start === first.start && hours[day]!.end === first.end,
+    );
+    settle("hours", {
+      text: t("feedHours", { count: openDays.length }),
+      detail: sameEveryDay ? `${first.start}–${first.end}` : undefined,
+    });
     setLines((prev) => [...prev, { id: "ready", text: t("feedReady", { name: agentName }), state: "done" }]);
     setIsSaving(false);
 
@@ -173,35 +229,53 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
 
         <ul className="flex flex-col gap-2">
           {drafts.map((draft) => (
-            <li key={draft.id} className="flex items-center gap-2">
+            <li key={draft.id} className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 value={draft.name}
                 onChange={(e) => updateDraft(draft.id, { name: e.target.value })}
                 aria-label={t("nameLabel")}
                 className={clsx(FIELD, "min-w-0 flex-1")}
               />
-              <div className="relative shrink-0">
-                <input
-                  type="number"
-                  min={5}
-                  step={5}
-                  value={draft.durationMinutes}
-                  onChange={(e) => updateDraft(draft.id, { durationMinutes: Number(e.target.value) })}
-                  aria-label={t("durationLabel")}
-                  className={clsx(FIELD, "w-[104px] pr-10 tabular-nums")}
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-label-sm text-on-surface-variant">
-                  {t("minutes")}
-                </span>
+              <div className="flex items-center gap-2">
+                <div className="relative shrink-0">
+                  <input
+                    type="number"
+                    min={5}
+                    step={5}
+                    value={draft.durationMinutes}
+                    onChange={(e) => updateDraft(draft.id, { durationMinutes: Number(e.target.value) })}
+                    aria-label={t("durationLabel")}
+                    className={clsx(FIELD, "w-[104px] pr-10 tabular-nums")}
+                  />
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-label-sm text-on-surface-variant">
+                    {t("minutes")}
+                  </span>
+                </div>
+                <div className="relative shrink-0">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-label-sm text-on-surface-variant">
+                    {t("pricePrefix")}
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    inputMode="decimal"
+                    value={draft.price}
+                    onChange={(e) => updateDraft(draft.id, { price: e.target.value })}
+                    placeholder={t("pricePlaceholder")}
+                    aria-label={t("priceLabel")}
+                    className={clsx(FIELD, "w-[112px] pl-9 tabular-nums")}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDrafts((prev) => prev.filter((d) => d.id !== draft.id))}
+                  aria-label={t("remove", { name: draft.name })}
+                  className="flex h-11 w-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-error-container/40 hover:text-error focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setDrafts((prev) => prev.filter((d) => d.id !== draft.id))}
-                aria-label={t("remove", { name: draft.name })}
-                className="flex h-11 w-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-error-container/40 hover:text-error focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
-              >
-                <XIcon className="h-4 w-4" />
-              </button>
             </li>
           ))}
         </ul>
@@ -211,7 +285,7 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
           onClick={() =>
             setDrafts((prev) => [
               ...prev,
-              { id: `custom-${Date.now()}`, name: "", durationMinutes: 60 },
+              { id: `custom-${Date.now()}`, name: "", durationMinutes: 60, price: "" },
             ])
           }
           className="flex w-fit items-center gap-1.5 text-label-md font-medium text-primary underline-offset-4 hover:underline"
@@ -225,43 +299,60 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
         <h2 className="text-label-md font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
           {t("hoursTitle")}
         </h2>
-        <div className="flex flex-wrap gap-1.5">
+        {/* Each day keeps its own hours -- same shape as Settings' business
+            hours card, minus split shifts (one range a day covers what
+            onboarding needs; a second shift is a Settings-time edit). */}
+        <div className="flex flex-col gap-2">
           {DAY_ORDER.map((day) => {
-            const on = days.includes(day);
+            const dayHours = hours[day];
+            const open = dayHours !== null;
+            const dayName = t(`days.${day}`);
             return (
-              <button
+              <div
                 key={day}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setDays((prev) => (on ? prev.filter((d) => d !== day) : [...prev, day]))}
                 className={clsx(
-                  "h-10 w-11 rounded-md text-label-md font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25",
-                  on
-                    ? "bg-primary text-on-primary"
-                    : "border border-primary-fixed bg-white/70 text-on-surface-variant hover:border-primary/40",
+                  "flex flex-col gap-2 rounded-md border px-3 py-2 transition-colors duration-200 sm:flex-row sm:items-center sm:gap-3",
+                  open ? "border-primary-fixed bg-white/70" : "border-transparent",
                 )}
               >
-                {t(`days.${day}`)}
-              </button>
+                <button
+                  type="button"
+                  aria-pressed={open}
+                  onClick={() => toggleDay(day)}
+                  className={clsx(
+                    "h-10 w-11 shrink-0 rounded-md text-label-md font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25",
+                    open
+                      ? "bg-primary text-on-primary"
+                      : "border border-primary-fixed bg-white/70 text-on-surface-variant hover:border-primary/40",
+                  )}
+                >
+                  {dayName}
+                </button>
+
+                {dayHours ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="time"
+                      value={dayHours.start}
+                      onChange={(e) => setDayHours(day, { start: e.target.value })}
+                      aria-label={`${dayName} — ${t("fromLabel")}`}
+                      className={clsx(FIELD, "w-[120px] tabular-nums")}
+                    />
+                    <span className="text-on-surface-variant">{t("until")}</span>
+                    <input
+                      type="time"
+                      value={dayHours.end}
+                      onChange={(e) => setDayHours(day, { end: e.target.value })}
+                      aria-label={`${dayName} — ${t("toLabel")}`}
+                      className={clsx(FIELD, "w-[120px] tabular-nums")}
+                    />
+                  </div>
+                ) : (
+                  <span className="text-label-sm text-on-surface-variant">{t("closed")}</span>
+                )}
+              </div>
             );
           })}
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="time"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            aria-label={t("fromLabel")}
-            className={clsx(FIELD, "w-[130px] tabular-nums")}
-          />
-          <span className="text-on-surface-variant">{t("until")}</span>
-          <input
-            type="time"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            aria-label={t("toLabel")}
-            className={clsx(FIELD, "w-[130px] tabular-nums")}
-          />
         </div>
       </section>
 
