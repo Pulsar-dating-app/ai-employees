@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
+import { WarningIcon } from "@/components/ui/icons";
 
 // Trello K5 — Scheduling is an area, not a page: K1 (services), K4
 // (appointments) and K3 (settings — business hours + approval) all live
@@ -18,9 +19,23 @@ const TABS = [
   { href: "/dashboard/scheduling/settings", key: "settings" as const, exact: false },
 ];
 
-export function SchedulingTabs() {
+export function SchedulingTabs({
+  servicesNeedAttention = false,
+  settingsNeedAttention = false,
+}: {
+  /** No services created yet (excluding the seeded default). */
+  servicesNeedAttention?: boolean;
+  /** Google Calendar not connected, or business hours never set. */
+  settingsNeedAttention?: boolean;
+}) {
   const pathname = usePathname();
   const t = useTranslations("Scheduling.tabs");
+  const tDash = useTranslations("Dashboard.tabs");
+
+  const attentionByKey: Partial<Record<(typeof TABS)[number]["key"], boolean>> = {
+    services: servicesNeedAttention,
+    settings: settingsNeedAttention,
+  };
 
   return (
     <nav className="flex gap-1 border-b border-outline-variant" aria-label={t("ariaLabel")}>
@@ -32,13 +47,19 @@ export function SchedulingTabs() {
             href={tab.href}
             aria-current={isActive ? "page" : undefined}
             className={clsx(
-              "-mb-px border-b-2 px-4 py-2.5 text-sm transition-colors duration-150",
+              "-mb-px flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm transition-colors duration-150",
               isActive
                 ? "border-primary font-semibold text-primary"
                 : "border-transparent font-medium text-on-surface-variant hover:border-outline-variant hover:text-on-surface",
             )}
           >
             {t(tab.key)}
+            {attentionByKey[tab.key] ? (
+              <>
+                <WarningIcon className="h-3.5 w-3.5 shrink-0 text-orange-600" />
+                <span className="sr-only">{tDash("needsAttention")}</span>
+              </>
+            ) : null}
           </Link>
         );
       })}

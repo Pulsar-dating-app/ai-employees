@@ -2,25 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { countFilledSections, SETTINGS_TOTAL_SECTIONS } from "@/lib/companies/settings-completeness";
 import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
 import { CartIcon, ChevronRightIcon, SettingsIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
-
-function countFilledSections(company: {
-  description: string | null;
-  payment_policy: string | null;
-  additional_information: string | null;
-  faq: unknown[] | null;
-}): number {
-  return [
-    Boolean(company.description),
-    Boolean(company.payment_policy),
-    Array.isArray(company.faq) && company.faq.length > 0,
-    Boolean(company.additional_information),
-  ].filter(Boolean).length;
-}
 
 // Company-wide settings — the business knowledge every hired team member
 // draws on. Lives at the top level, not under a specific hired agent: it's
@@ -66,7 +53,7 @@ export default async function SettingsPage() {
     .maybeSingle();
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
 
-  const totalSections = 4;
+  const totalSections = SETTINGS_TOTAL_SECTIONS;
   const filledSections = countFilledSections(company);
 
   return (

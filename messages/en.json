@@ -910,6 +910,7 @@
       "metrics": "Performance",
       "settings": "Settings",
       "locked": "locked",
+      "needsAttention": "needs attention",
       "more": "More"
     },
     "locked": {

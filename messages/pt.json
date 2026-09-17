@@ -910,6 +910,7 @@
       "metrics": "Desempenho",
       "settings": "Configurações",
       "locked": "bloqueado",
+      "needsAttention": "precisa de atenção",
       "more": "Mais"
     },
     "locked": {
