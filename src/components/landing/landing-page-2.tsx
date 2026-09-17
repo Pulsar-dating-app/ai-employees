@@ -6,7 +6,7 @@ import { landingV2Sans } from "./fonts";
 import { BrandLogo } from "./brand-logos";
 import { ChannelShowcase, type ChannelItem } from "./channel-showcase";
 import { M } from "./landing-icons";
-import { PlanFeatures, PlanFeaturesProvider } from "./plan-features";
+import { PricingSection } from "./pricing-section";
 import { SalesContactDialog } from "./sales-contact-dialog";
 import { ShaderBackground } from "@/components/ui/shader-background";
 import { ScrollHeader } from "./scroll-header";
@@ -70,13 +70,16 @@ type Agent = {
 };
 type Step = { title: string; desc: string };
 type Source = { title: string; sub: string };
+// price/priceSuffix/priceNote are only read for the Enterprise (contact-us)
+// card now -- the 3 self-serve cards compute those from the real catalog
+// (plans.ts) instead, see pricing-section.tsx.
 type Plan = {
   tier: string;
   name: string;
   desc: string;
-  price: string;
+  price?: string;
   priceSuffix?: string;
-  priceNote: string;
+  priceNote?: string;
   features: string[];
   cta: string;
 };
@@ -120,6 +123,22 @@ export async function LandingPageV2() {
   const steps = t.raw("rag.steps") as Step[];
   const sources = t.raw("rag.sources") as Source[];
   const plans = t.raw("pricing.plans") as Plan[];
+  const pricingCopy = {
+    eyebrow: t("pricing.eyebrow"),
+    heading: t("pricing.heading"),
+    sub: t("pricing.sub"),
+    featuredBadge: t("pricing.featuredBadge"),
+    showMore: t("pricing.showMore"),
+    showLess: t("pricing.showLess"),
+    periodMonthly: t("pricing.periodToggle.monthly"),
+    periodAnnual: t("pricing.periodToggle.annual"),
+    wppToggleLabel: t("pricing.wppToggleLabel"),
+    wppToggleNote: t("pricing.wppToggleNote"),
+    priceNoteMonthly: t("pricing.priceNoteMonthly"),
+    priceNoteAnnual: t("pricing.priceNoteAnnual"),
+    perMonth: t("pricing.perMonth"),
+    perYear: t("pricing.perYear"),
+  };
   const stats = t.raw("impact.stats") as Stat[];
   const faqs = t.raw("faq.items") as Faq[];
   const footerCols = t.raw("footer.columns") as FooterCol[];
@@ -590,119 +609,7 @@ export async function LandingPageV2() {
         </section>
 
         {/* ── 7. Pricing ──────────────────────────────────────── */}
-        <section id="planos" className="w-full bg-[#f5f2ff] py-12">
-          <div className="mx-auto max-w-[1440px] px-4 md:px-10">
-            <div className="mx-auto mb-12 max-w-2xl text-center">
-              <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
-                {t("pricing.eyebrow")}
-              </span>
-              <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
-                {t("pricing.heading")}
-              </h2>
-              <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("pricing.sub")}</p>
-            </div>
-
-            <PlanFeaturesProvider>
-            <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-4">
-              {plans.map((plan, i) => {
-                // The middle self-serve plan gets the "most chosen" badge --
-                // classic anchor-the-buyer-off-the-cheapest-tier pricing
-                // psychology, not "whichever plan happens to be Pro". With
-                // Intermediate inserted between Starter and Pro (2026-09-14)
-                // it's still index 1, so this needed no change -- but it's
-                // deliberately index-based (the middle *position*), not a
-                // `plan.tier === "Pro"` check, so it keeps following
-                // whichever plan is visually in the middle if the lineup
-                // changes again.
-                const featured = i === 1;
-                // The last plan is always the contact-us tier (Enterprise) --
-                // length-relative, not a hardcoded index, so inserting a
-                // self-serve plan earlier in the array (like Intermediate)
-                // doesn't silently point this at the wrong card.
-                const isContactPlan = i === plans.length - 1;
-                return (
-                  <div
-                    key={plan.name}
-                    className={`relative flex flex-col justify-between rounded-xl bg-white p-6 transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 ${
-                      featured
-                        ? "shadow-[0_12px_40px_rgba(53,37,205,0.12)] ring-2 ring-[#3525cd] hover:shadow-[0_24px_56px_rgba(53,37,205,0.2)]"
-                        : "shadow-[0_4px_24px_rgba(79,70,229,0.04)] hover:shadow-[0_16px_40px_rgba(79,70,229,0.14)]"
-                    }`}
-                  >
-                    {featured && (
-                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#3525cd] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
-                        {t("pricing.featuredBadge")}
-                      </div>
-                    )}
-                    <div>
-                      <span
-                        className={`text-[12px] font-bold uppercase tracking-[0.14em] ${
-                          featured ? "text-[#3525cd]" : "text-[#64748b]"
-                        }`}
-                      >
-                        {plan.tier}
-                      </span>
-                      <h3 className="mt-1 text-[24px] font-semibold leading-[32px] text-[#0f172a]">
-                        {plan.name}
-                      </h3>
-                      <p className="mt-1 text-[14px] leading-[20px] text-[#464555]">{plan.desc}</p>
-                      <div className="my-6">
-                        <div className="flex items-baseline gap-1">
-                          <span
-                            className={`font-extrabold tabular-nums text-[#0f172a] ${
-                              featured ? "text-[48px] leading-[56px] tracking-[-0.02em]" : "text-[24px] leading-[32px]"
-                            }`}
-                          >
-                            {plan.price}
-                          </span>
-                          {plan.priceSuffix && (
-                            <span className="text-[16px] text-[#464555]">{plan.priceSuffix}</span>
-                          )}
-                        </div>
-                        <span
-                          className={`text-[11px] ${
-                            featured ? "font-semibold text-[#3525cd]" : "text-[#64748b]"
-                          }`}
-                        >
-                          {plan.priceNote}
-                        </span>
-                      </div>
-                      <PlanFeatures
-                        features={plan.features}
-                        featured={featured}
-                        moreLabel={t("pricing.showMore")}
-                        lessLabel={t("pricing.showLess")}
-                      />
-                    </div>
-                    <div className="mt-8 sm:mt-12">
-                      {isContactPlan ? (
-                        <SalesContactDialog
-                          triggerLabel={plan.cta}
-                          triggerClassName="group inline-flex w-full items-center justify-center rounded-lg bg-[#0f172a] py-3 text-[14px] font-semibold text-white transition-all hover:bg-[#3525cd]"
-                        >
-                          <CascadeText text={plan.cta} />
-                        </SalesContactDialog>
-                      ) : (
-                        <Link
-                          href={HIRE}
-                          aria-label={plan.cta}
-                          className={`group inline-flex w-full items-center justify-center rounded-lg py-3 text-[14px] font-semibold transition-all ${
-                            featured
-                              ? "bg-[#3525cd] text-white shadow-[0_8px_24px_rgba(53,37,205,0.25)] hover:bg-[#4f46e5]"
-                              : "bg-[#eae6f4] text-[#0f172a] hover:bg-[#0f172a] hover:text-white"
-                          }`}
-                        >
-                          <CascadeText text={plan.cta} />
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            </PlanFeaturesProvider>
-          </div>
-        </section>
+        <PricingSection plans={plans} copy={pricingCopy} />
 
         {/* ── 8. Proven impact stats ─────────────────────────── */}
         <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">

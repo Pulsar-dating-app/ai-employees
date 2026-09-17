@@ -536,14 +536,21 @@
       "featuredBadge": "Mais Escolhido por Empresas",
       "showMore": "Ver mais",
       "showLess": "Ver menos",
+      "periodToggle": {
+        "monthly": "Mensal",
+        "annual": "Anual"
+      },
+      "wppToggleLabel": "Incluir WhatsApp no plano",
+      "wppToggleNote": "Sem essa opção, a Meta cobra o uso do WhatsApp separadamente, direto no seu cartão.",
+      "priceNoteMonthly": "Cobrança mensal recorrente",
+      "priceNoteAnnual": "Cobrança anual recorrente",
+      "perMonth": "/ mês",
+      "perYear": "/ ano",
       "plans": [
         {
           "tier": "Starter",
           "name": "Automação Individual",
           "desc": "Ideal para autônomos e pequenos comércios que precisam de atendimento ágil.",
-          "price": "R$ 399",
-          "priceSuffix": "/ mês",
-          "priceNote": "Cobrança mensal recorrente",
           "features": [
             "Malu para vendas e Ana para agendamentos",
             "Nome e foto personalizados por funcionário",
@@ -588,9 +595,6 @@
           "tier": "Intermediate",
           "name": "Operação em Crescimento",
           "desc": "Para negócios em crescimento que precisam de mais volume com recursos completos de vendas e agendamento.",
-          "price": "R$ 950",
-          "priceSuffix": "/ mês",
-          "priceNote": "Cobrança mensal recorrente",
           "features": [
             "Malu para vendas e Ana para agendamentos",
             "Nome e foto personalizados por funcionário",
@@ -635,9 +639,6 @@
           "tier": "Pro",
           "name": "Operação Comercial Completa",
           "desc": "Para empresas em expansão que exigem qualificação de leads e agendamento.",
-          "price": "R$ 990",
-          "priceSuffix": "/ mês",
-          "priceNote": "Economize 20% no faturamento anual",
           "features": [
             "Malu para vendas e Ana para agendamentos",
             "Nome e foto personalizados por funcionário",
@@ -2091,6 +2092,7 @@
     "pageSubtitle": "Seu plano, uso e pagamentos.",
     "readOnly": "Você pode ver a cobrança, mas só donos e administradores podem alterar.",
     "perMonth": "/ mês",
+    "perYear": "/ ano",
     "renewsOn": "Renova em {date}",
     "endsOn": "Encerra em {date}",
     "noRenewalDate": "Data de renovação pendente",
@@ -2156,10 +2158,20 @@
     },
     "plan": {
       "replies": "{limit, number} respostas por mês",
+      "repliesAnnual": "{limit, number} respostas por ano",
       "teammates": "Membros ilimitados na sua conta",
       "custom": "Preço personalizado",
       "trialBadge": "15 dias grátis",
       "trialNote": "Nos primeiros 15 dias: até {limit, number} respostas, sem cobrança"
+    },
+    "picker": {
+      "period": {
+        "monthly": "Mensal",
+        "annual": "Anual"
+      },
+      "wppToggleLabel": "Incluir WhatsApp no plano",
+      "wppToggleNote": "Sem essa opção, a Meta cobra o uso do WhatsApp separadamente, direto no seu cartão — veja mais na tela de canais.",
+      "wppBadge": "WhatsApp incluso"
     },
     "enterprise": {
       "title": "Precisa de mais volume ou condições sob medida?",
