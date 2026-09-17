@@ -159,6 +159,10 @@ export function GoogleCalendarCard({
       iconTone="secondary"
       title={t("title")}
       subtitle={t("subtitle")}
+      // Only once we actually know it's not connected -- not during the
+      // initial fetch, and not when Google Calendar isn't even configured
+      // for this workspace (nothing to connect, so nothing to warn about).
+      warning={Boolean(googleClientId) && view !== "loading" && !isConnected}
     >
       {/* `onReady`, not `onLoad`: onLoad only fires the first time the script
           loads, so after a disconnect + remount (script already cached) the

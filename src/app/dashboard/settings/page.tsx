@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { countFilledSections, SETTINGS_TOTAL_SECTIONS } from "@/lib/companies/settings-completeness";
+import { isBillingPastDue } from "@/lib/billing/activation";
+import { Alert } from "@/components/ui/alert";
 import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
@@ -52,6 +54,10 @@ export default async function SettingsPage() {
     .eq("user_id", user!.id)
     .maybeSingle();
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
+  // Same predicate the shell's own past-due banners already use -- this is
+  // the on-page explanation for the sidebar's Settings warning icon when
+  // it's the billing reason, not the completeness one.
+  const pastDue = await isBillingPastDue(company.id, supabase);
 
   const totalSections = SETTINGS_TOTAL_SECTIONS;
   const filledSections = countFilledSections(company);
@@ -59,6 +65,20 @@ export default async function SettingsPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader icon={SettingsIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
+
+      {pastDue ? (
+        <Alert
+          variant="error"
+          title={t("pastDueAlert.title")}
+          action={
+            <Link href="/dashboard/settings/billing" className="text-sm font-semibold underline">
+              {t("pastDueAlert.action")}
+            </Link>
+          }
+        >
+          {t("pastDueAlert.body")}
+        </Alert>
+      ) : null}
 
       <div className="rounded-md bg-primary-fixed/40 px-4 py-3">
         <p className="text-sm font-semibold text-primary">

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { useTranslations } from "next-intl";
 import clsx from "clsx";
-import { ChevronRightIcon } from "@/components/ui/icons";
+import { ChevronRightIcon, WarningIcon } from "@/components/ui/icons";
 
 type IconComponent = (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
 
@@ -26,6 +27,7 @@ export function SettingsSection({
   children,
   id,
   defaultOpen = false,
+  warning = false,
 }: {
   icon: IconComponent;
   iconTone?: "primary" | "secondary";
@@ -37,9 +39,15 @@ export function SettingsSection({
   // top bar after the jump, and a matching hash opens it.
   id?: string;
   defaultOpen?: boolean;
+  // Shows a small warning icon in the header, visible even collapsed — the
+  // caller decides what "needs attention" means for its own section (e.g.
+  // GoogleCalendarCard on not-connected, BusinessHoursCard on zero open
+  // days). Same icon/color as the sidebar's own per-tab warning indicator.
+  warning?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const bodyId = useId();
+  const t = useTranslations("Dashboard.tabs");
 
   // Open on a direct link. Done in an effect (not the initial state) so the
   // server and first client render agree — the hash isn't visible on the
@@ -86,6 +94,12 @@ export function SettingsSection({
           <h2 className="text-headline-md font-semibold text-on-surface">{title}</h2>
           <p className="mt-0.5 text-label-md text-on-surface-variant">{subtitle}</p>
         </div>
+        {warning ? (
+          <>
+            <WarningIcon className="h-6 w-6 shrink-0 text-orange-600" aria-hidden="true" />
+            <span className="sr-only">{t("needsAttention")}</span>
+          </>
+        ) : null}
         <ChevronRightIcon
           className={clsx(
             "h-5 w-5 shrink-0 text-on-surface-variant transition-transform",

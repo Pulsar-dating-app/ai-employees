@@ -1037,6 +1037,11 @@
     "completeness": "{filled} de {total} seções preenchidas",
     "completenessHint": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
     "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "pastDueAlert": {
+      "title": "Pagamento falhou",
+      "body": "Toda a sua equipe está pausada e não responde a nenhum cliente até isso ser resolvido.",
+      "action": "Atualizar pagamento"
+    },
     "billingLink": {
       "title": "Plano e cobrança",
       "hint": "Sua assinatura, uso e forma de pagamento."
@@ -1358,6 +1363,10 @@
     "noCompany": "Contrate o primeiro integrante da sua equipe para começar a gerenciar seu catálogo de produtos.",
     "browseMarketplace": "Ver marketplace",
     "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "emptyAlert": {
+      "title": "Seu catálogo está vazio",
+      "body": "Sua equipe não consegue recomendar ou vender nada até você adicionar pelo menos um produto."
+    },
     "save": "Salvar",
     "saving": "Salvando…",
     "saved": "Salvo",
