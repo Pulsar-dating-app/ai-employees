@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CheckIcon } from "@/components/ui/icons";
 import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import { StepActions } from "../step-card";
+import { OnboardingLoader } from "../onboarding-loader";
 
 export type PlanOption = {
   key: string;
@@ -146,7 +147,13 @@ export function PlanPicker({
             {t("later")}
           </button>
         </form>
-        <Button type="button" isLoading={isStarting} disabled={!selected} onClick={start}>
+        <Button
+          type="button"
+          isLoading={isStarting}
+          loadingIndicator={<OnboardingLoader />}
+          disabled={!selected}
+          onClick={start}
+        >
           {trialAvailable ? t("ctaTrial") : t("cta")}
         </Button>
       </StepActions>

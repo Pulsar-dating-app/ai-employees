@@ -175,6 +175,7 @@
         "laterHint": "You can refine all of this later",
         "cta": "Save and continue",
         "feedSaving": "Saving your services",
+        "feedSavingHours": "Saving your opening hours",
         "feedServices": "{count} services ready",
         "feedHours": "{count} days open",
         "feedReady": "{name} can start booking",
@@ -201,7 +202,8 @@
       "typing": "{name} is typing",
       "continue": "Continue",
       "continueHint": "Next: choose a plan so she can start taking customers",
-      "askFirstHint": "Ask {name} something to continue"
+      "askFirstHint": "Ask {name} something to continue",
+      "skip": "I'll try this later"
     },
     "plan": {
       "title": "Put {name} to work",

@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { createCompany, type OnboardingState } from "@/lib/companies/actions";
 import { setLocale } from "@/lib/i18n/actions";
-import { SpinnerIcon } from "@/components/ui/icons";
+import { OnboardingLoader } from "./onboarding-loader";
 import type { Locale } from "@/i18n/request";
 
 const INITIAL: OnboardingState = { error: null };
@@ -50,7 +50,7 @@ export function OnboardingForm() {
         disabled={pending}
         className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-primary text-label-md font-semibold text-on-primary shadow-md transition-colors duration-200 hover:bg-primary-container hover:text-on-primary-container disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {pending ? <SpinnerIcon className="h-4 w-4" /> : null}
+        {pending ? <OnboardingLoader /> : null}
         {t("continue")}
       </button>
     </form>

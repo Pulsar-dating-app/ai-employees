@@ -8,8 +8,20 @@ import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { SendIcon } from "@/components/ui/icons";
 import { LinkifiedText } from "@/components/chat/linkified-text";
+import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 
 type Turn = { role: "customer" | "agent"; content: string };
+
+// Same device as the hosted chat widget's own withArrivals: the index a
+// turn is new from lives in the same state as the list itself, decided once
+// at the moment a turn is appended, rather than a ref diffed during render
+// (which the transcript's own re-renders -- the typing dots toggling -- can
+// race). Only turns at or after arrivalsFrom carry the entrance animation.
+type View = { turns: Turn[]; arrivalsFrom: number };
+
+function appendTurn(view: View, turn: Turn): View {
+  return { turns: [...view.turns, turn], arrivalsFrom: view.turns.length };
+}
 
 // The proof is a rehearsal, and deliberately so. The agent, her prompt, her
 // reads and the grounding check are all the real thing -- she answers from
@@ -32,11 +44,12 @@ export function ProofChat({
 }) {
   const t = useTranslations("Onboarding.ready");
 
-  const [turns, setTurns] = useState<Turn[]>([]);
+  const [view, setView] = useState<View>({ turns: [], arrivalsFrom: 0 });
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { turns, arrivalsFrom } = view;
 
   useEffect(() => {
     if (turns.length > 0) bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -48,7 +61,7 @@ export function ProofChat({
 
     setError(null);
     setDraft("");
-    setTurns((prev) => [...prev, { role: "customer", content: message }]);
+    setView((prev) => appendTurn(prev, { role: "customer", content: message }));
     setIsSending(true);
 
     try {
@@ -69,7 +82,7 @@ export function ProofChat({
         return;
       }
 
-      setTurns((prev) => [...prev, { role: "agent", content: reply.content }]);
+      setView((prev) => appendTurn(prev, { role: "agent", content: reply.content }));
     } catch {
       setError(t("error"));
     } finally {
@@ -102,27 +115,31 @@ export function ProofChat({
           </p>
         </div>
 
-        {turns.map((turn, i) =>
-          turn.role === "customer" ? (
+        {turns.map((turn, i) => {
+          const arriving = i >= arrivalsFrom ? "chat-message-in" : "";
+          return turn.role === "customer" ? (
             <p
               key={i}
-              className="max-w-[85%] self-end rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-body-md text-on-primary"
+              className={clsx(
+                arriving,
+                "max-w-[85%] self-end rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-body-md text-on-primary",
+              )}
             >
               {turn.content}
             </p>
           ) : (
-            <div key={i} className="flex items-start gap-3">
+            <div key={i} className={clsx(arriving, "flex items-start gap-3")}>
               <Portrait portrait={portrait} name={agentName} />
               <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-surface-container-low px-4 py-2.5 text-body-md text-on-surface">
                 <LinkifiedText text={turn.content} className="whitespace-pre-wrap" />
               </div>
             </div>
-          ),
-        )}
+          );
+        })}
 
         {isSending ? (
           <div className="flex items-center gap-3">
-            <Portrait portrait={portrait} name={agentName} />
+            <Portrait portrait={portrait} name={agentName} active />
             <span className="flex items-center gap-1 rounded-2xl rounded-tl-sm bg-surface-container-low px-4 py-3.5">
               <span className="sr-only">{t("typing", { name: agentName })}</span>
               {[0, 1, 2].map((i) => (
@@ -185,6 +202,18 @@ export function ProofChat({
         </p>
       ) : null}
 
+      {/* Same exit as every earlier step's own "skip": a plain text link, not
+          a second button competing with Continue. finishOnboarding parks the
+          merchant same as it does there -- nothing here traps her either. */}
+      <form action={finishOnboarding}>
+        <button
+          type="submit"
+          className="w-fit rounded-md text-label-md font-medium text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
+        >
+          {t("skip")}
+        </button>
+      </form>
+
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-primary-fixed pt-6">
         <p className="mr-auto text-label-sm text-on-surface-variant">
           {answered ? t("continueHint") : t("askFirstHint", { name: agentName })}
@@ -203,9 +232,26 @@ export function ProofChat({
   );
 }
 
-function Portrait({ portrait, name }: { portrait: string | null; name: string }) {
+// `active` marks the one instance that sits beside the typing dots -- a
+// soft ring blooming from her own portrait while she composes the reply
+// this whole step is building to, rather than a bare spinner standing in
+// for her.
+function Portrait({
+  portrait,
+  name,
+  active,
+}: {
+  portrait: string | null;
+  name: string;
+  active?: boolean;
+}) {
   return (
-    <span className="relative mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-primary-fixed">
+    <span
+      className={clsx(
+        "relative mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-primary-fixed",
+        active && "onboarding-portrait-active",
+      )}
+    >
       {portrait ? (
         <Image src={portrait} alt="" fill sizes="32px" className="object-cover object-top" />
       ) : (

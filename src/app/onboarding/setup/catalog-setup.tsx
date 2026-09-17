@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PackageIcon, UploadIcon } from "@/components/ui/icons";
 import { NarratedFeed, type FeedLine } from "./narrated-feed";
 import { finishOnboarding } from "@/lib/companies/finish-onboarding";
+import { OnboardingLoader } from "../onboarding-loader";
 
 const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024;
 const POLL_INTERVAL_MS = 1200;
@@ -192,6 +193,7 @@ export function CatalogSetup({ companyId, agentName }: { companyId: string; agen
               type="button"
               size="sm"
               isLoading={isWorking}
+              loadingIndicator={<OnboardingLoader />}
               onClick={() => fileInput.current?.click()}
             >
               {t("fileCta")}

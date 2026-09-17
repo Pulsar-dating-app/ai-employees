@@ -5,6 +5,10 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "md" | "sm";
   isLoading?: boolean;
+  // Every call site keeps the plain spinner unless it opts into its own --
+  // added for the onboarding CTAs' own loading mark (src/app/onboarding/
+  // onboarding-loader.tsx) without changing the spinner anywhere else.
+  loadingIndicator?: React.ReactNode;
 };
 
 // Staffra "Human-Centric AI" (Stitch): 48px-tall primary actions, filled
@@ -28,6 +32,7 @@ export function Button({
   variant = "primary",
   size = "md",
   isLoading = false,
+  loadingIndicator,
   disabled,
   className,
   children,
@@ -48,7 +53,7 @@ export function Button({
       )}
       {...props}
     >
-      {isLoading ? <SpinnerIcon className="h-4 w-4" /> : null}
+      {isLoading ? (loadingIndicator ?? <SpinnerIcon className="h-4 w-4" />) : null}
       {children}
     </button>
   );

@@ -244,6 +244,214 @@ select:not(:disabled) {
 }
 
 /* ============================================================
+   Onboarding (src/app/onboarding/)
+   ============================================================ */
+
+/* The step card's own arrival on every step change -- horizontal and
+   softly out-of-focus rather than the shared .animate-fade-up's vertical
+   rise, so it reads as moving forward into the next step (echoing the
+   rail's own left-to-right fill just above it) instead of a panel dropping
+   in from nowhere. */
+@keyframes onboarding-step-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px) scale(0.97);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+.animate-onboarding-step-in {
+  animation: onboarding-step-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* The narrated feed's own panel (src/app/onboarding/setup/narrated-feed.tsx)
+   while a line is still running -- a slow breathing border, so the wait
+   during a catalogue import or a services save reads as her doing
+   something rather than the screen being stalled. Border and shadow only
+   (no transform, no layout shift) so it stays legible under reduced motion
+   with the animation simply switched off below. */
+@keyframes onboarding-working-glow {
+  0%,
+  100% {
+    border-color: var(--color-primary-fixed);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 0%, transparent);
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-primary-fixed));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 8%, transparent);
+  }
+}
+.onboarding-working {
+  animation: onboarding-working-glow 2.2s ease-in-out infinite;
+}
+
+/* A feed line's checkmark, the moment one part of her setup actually
+   finishes -- a small confident pop rather than a static swap from the
+   spinner. Plays once: the icon itself only mounts when a line's state
+   flips to "done", so re-renders after that never retrigger it. */
+@keyframes onboarding-check-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-onboarding-check-pop {
+  animation: onboarding-check-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* The proof chat's portrait (src/app/onboarding/ready/proof-chat.tsx) while
+   she is composing a reply -- a soft ring blooming outward from her avatar,
+   so the wait for the one moment this whole flow is building to reads as
+   her presence, not a bare typing indicator. */
+@keyframes onboarding-portrait-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-primary) 0%, transparent);
+  }
+}
+.onboarding-portrait-active {
+  animation: onboarding-portrait-pulse 1.8s ease-in-out infinite;
+}
+
+/* The onboarding CTAs' own loading mark (src/app/onboarding/
+   onboarding-loader.tsx) -- a small liquid shape continuously turning and
+   changing form, standing in for the plain ring spinner everywhere a step
+   is mid-request. `background: currentColor` so it always matches whatever
+   text color the button it sits in already uses; nothing to theme per
+   variant. */
+@keyframes onboarding-loader-morph {
+  0%,
+  100% {
+    border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%;
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    border-radius: 58% 42% 38% 62% / 63% 47% 53% 37%;
+    transform: rotate(90deg) scale(1.05);
+  }
+  50% {
+    border-radius: 50%;
+    transform: rotate(180deg) scale(0.95);
+  }
+  75% {
+    border-radius: 37% 63% 56% 44% / 49% 56% 44% 51%;
+    transform: rotate(270deg) scale(1.05);
+  }
+}
+.onboarding-loader {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: onboarding-loader-morph 1.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* Browser-level swap between one step and the next (src/app/onboarding/
+   step-card.tsx) -- the outgoing card dissolves and softens out of frame
+   while the incoming one plays its own animate-onboarding-step-in entrance
+   underneath, rather than the two just cutting. React's ViewTransition
+   activates this automatically on navigation; no config beyond the class
+   names below. */
+@keyframes onboarding-card-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98) translateX(-10px);
+    filter: blur(6px);
+  }
+}
+::view-transition-old(.onboarding-card-swap) {
+  animation: onboarding-card-exit 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+/* The onboarding ground itself (src/app/onboarding/layout.tsx) -- two soft
+   light pools of the brand indigo drifting very slowly past each other
+   behind the frosted card, plus a faint grain over everything so the
+   gradient reads as a material rather than a flat CSS fill. Transform and
+   opacity only, so it stays cheap; frozen (not hidden) under reduced
+   motion, since the pools are also the ground's only depth cue. */
+@keyframes onboarding-drift-a {
+  0%,
+  100% {
+    transform: translate(-6%, -4%) scale(1);
+  }
+  50% {
+    transform: translate(4%, 6%) scale(1.12);
+  }
+}
+@keyframes onboarding-drift-b {
+  0%,
+  100% {
+    transform: translate(5%, 4%) scale(1.08);
+  }
+  50% {
+    transform: translate(-4%, -6%) scale(1);
+  }
+}
+.onboarding-ground-pool-a {
+  animation: onboarding-drift-a 26s ease-in-out infinite;
+}
+.onboarding-ground-pool-b {
+  animation: onboarding-drift-b 32s ease-in-out infinite;
+}
+
+@keyframes onboarding-loader-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-onboarding-step-in {
+    animation: none;
+  }
+  .onboarding-working,
+  .onboarding-portrait-active {
+    animation: none;
+  }
+  /* Kept, not removed: this is the only signal a request is in flight, so
+     reduced motion trades the spin/morph for a still shape that only
+     breathes in place. */
+  .onboarding-loader {
+    animation: onboarding-loader-pulse 1.4s ease-in-out infinite;
+  }
+  .animate-onboarding-check-pop {
+    animation: none;
+  }
+  ::view-transition-old(.onboarding-card-swap) {
+    animation: none;
+  }
+  .onboarding-ground-pool-a,
+  .onboarding-ground-pool-b {
+    animation: none;
+  }
+}
+
+/* ============================================================
    Metrics dashboard (src/app/dashboard/metrics/)
    ============================================================ */
 

@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "@/components/ui/icons";
 import { StepActions } from "../step-card";
+import { OnboardingLoader } from "../onboarding-loader";
 
 export type HireableAgent = {
   slug: string;
@@ -143,7 +144,13 @@ export function HirePicker({ companyId, agents }: { companyId: string; agents: H
       ) : null}
 
       <StepActions>
-        <Button type="button" isLoading={isHiring} disabled={!selected} onClick={handleHire}>
+        <Button
+          type="button"
+          isLoading={isHiring}
+          loadingIndicator={<OnboardingLoader />}
+          disabled={!selected}
+          onClick={handleHire}
+        >
           {selected
             ? t("cta", { name: agents.find((a) => a.slug === selected)?.name ?? "" })
             : t("ctaEmpty")}

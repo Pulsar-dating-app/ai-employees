@@ -17,6 +17,7 @@ import {
 import { StepActions } from "../step-card";
 import { NarratedFeed, type FeedLine } from "./narrated-feed";
 import { finishOnboarding } from "@/lib/companies/finish-onboarding";
+import { OnboardingLoader } from "../onboarding-loader";
 
 type Draft = { id: string; name: string; durationMinutes: number };
 
@@ -55,11 +56,20 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
 
   const valid = drafts.length > 0 && drafts.every((d) => d.name.trim() && d.durationMinutes > 0) && days.length > 0 && from < to;
 
+  function settle(id: string, patch: Partial<FeedLine>) {
+    setLines((prev) => prev.map((line) => (line.id === id ? { ...line, ...patch, state: "done" } : line)));
+  }
+
+  // Narrated one stage at a time, as each actually finishes -- services then
+  // hours really do save in that order, so this tells the truth about it
+  // rather than declaring all three lines done the moment both requests
+  // happen to have settled. Each line lands as its own state change, so
+  // NarratedFeed's per-line entrance staggers them exactly as they occur.
   async function handleSave() {
     if (!valid || isSaving) return;
     setError(null);
     setIsSaving(true);
-    setLines([{ id: "saving", text: t("feedSaving"), state: "running" }]);
+    setLines([{ id: "services", text: t("feedSaving"), state: "running" }]);
 
     const created = await Promise.all(
       drafts.map((draft) =>
@@ -81,6 +91,9 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
       return;
     }
 
+    settle("services", { text: t("feedServices", { count: drafts.length }) });
+    setLines((prev) => [...prev, { id: "hours", text: t("feedSavingHours"), state: "running" }]);
+
     const hoursRes = await fetch(`/api/companies/${companyId}/business-hours`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -96,11 +109,9 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
       return;
     }
 
-    setLines([
-      { id: "services", text: t("feedServices", { count: drafts.length }), state: "done" },
-      { id: "hours", text: t("feedHours", { count: days.length }), detail: `${from}–${to}`, state: "done" },
-      { id: "ready", text: t("feedReady", { name: agentName }), state: "done" },
-    ]);
+    settle("hours", { text: t("feedHours", { count: days.length }), detail: `${from}–${to}` });
+    setLines((prev) => [...prev, { id: "ready", text: t("feedReady", { name: agentName }), state: "done" }]);
+    setIsSaving(false);
 
     // Same reason as the catalogue branch: the payoff needs a frame to land in.
     await new Promise((resolve) => setTimeout(resolve, PAYOFF_DWELL_MS));
@@ -262,7 +273,13 @@ export function ServicesSetup({ companyId, agentName }: { companyId: string; age
 
       <StepActions>
         <p className="mr-auto text-label-sm text-on-surface-variant">{t("laterHint")}</p>
-        <Button type="button" isLoading={isSaving} disabled={!valid} onClick={handleSave}>
+        <Button
+          type="button"
+          isLoading={isSaving}
+          loadingIndicator={<OnboardingLoader />}
+          disabled={!valid}
+          onClick={handleSave}
+        >
           {t("cta")}
         </Button>
       </StepActions>

@@ -175,6 +175,7 @@
         "laterHint": "Dá para ajustar tudo isso depois",
         "cta": "Salvar e continuar",
         "feedSaving": "Salvando seus serviços",
+        "feedSavingHours": "Salvando o horário de atendimento",
         "feedServices": "{count} serviços prontos",
         "feedHours": "{count} dias de atendimento",
         "feedReady": "A {name} já pode agendar",
@@ -201,7 +202,8 @@
       "typing": "{name} está digitando",
       "continue": "Continuar",
       "continueHint": "Próximo: escolher um plano para ela começar a atender",
-      "askFirstHint": "Pergunte algo para a {name} para continuar"
+      "askFirstHint": "Pergunte algo para a {name} para continuar",
+      "skip": "Testo isso depois"
     },
     "plan": {
       "title": "Coloque a {name} para trabalhar",
