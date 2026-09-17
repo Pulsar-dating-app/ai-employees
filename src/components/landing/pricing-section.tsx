@@ -81,15 +81,24 @@ export function PricingSection({ plans, copy }: { plans: Plan[]; copy: PricingCo
               </button>
             ))}
           </div>
-          <label className="inline-flex cursor-pointer items-center gap-2 text-[14px] font-medium text-[#0f172a]">
-            <input
-              type="checkbox"
-              checked={whatsappIncluded}
-              onChange={(e) => setWhatsappIncluded(e.target.checked)}
-              className="h-4 w-4 rounded border-[#c9c6e0] text-[#3525cd] focus:ring-[#3525cd]"
-            />
-            {copy.wppToggleLabel}
-          </label>
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-[#e2dfff] bg-white px-4 py-2 shadow-[0_4px_24px_rgba(79,70,229,0.04)]">
+            <span className="text-[14px] font-medium text-[#0f172a]">{copy.wppToggleLabel}</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={whatsappIncluded}
+              onClick={() => setWhatsappIncluded((v) => !v)}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                whatsappIncluded ? "bg-[#3525cd]" : "bg-[#e2dfff]"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  whatsappIncluded ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
           <p className="max-w-md text-center text-[13px] leading-[18px] text-[#64748b]">{copy.wppToggleNote}</p>
         </div>
 

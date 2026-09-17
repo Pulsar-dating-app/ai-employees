@@ -49,15 +49,26 @@ export function PlanPicker({
             </button>
           ))}
         </div>
-        <label className="inline-flex cursor-pointer items-center gap-2 text-label-md text-on-surface">
-          <input
-            type="checkbox"
-            checked={whatsappIncluded}
-            onChange={(e) => setWhatsappIncluded(e.target.checked)}
-            className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
-          />
-          {t("picker.wppToggleLabel")}
-        </label>
+        <div className="inline-flex items-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container px-3 py-2">
+          <span className="text-label-md font-medium text-on-surface">{t("picker.wppToggleLabel")}</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={whatsappIncluded}
+            onClick={() => setWhatsappIncluded((v) => !v)}
+            className={clsx(
+              "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
+              whatsappIncluded ? "bg-primary" : "bg-outline-variant",
+            )}
+          >
+            <span
+              className={clsx(
+                "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+                whatsappIncluded ? "translate-x-6" : "translate-x-1",
+              )}
+            />
+          </button>
+        </div>
       </div>
       <p className="-mt-2 text-sm text-on-surface-variant">{t("picker.wppToggleNote")}</p>
 
