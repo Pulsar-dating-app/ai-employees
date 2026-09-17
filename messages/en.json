@@ -195,12 +195,13 @@
       "suggestBook": "I'd like to book a {name}",
       "suggestBookGeneric": "I'd like to book an appointment",
       "suggestHours": "What time do you open?",
-      "finish": "Go to my dashboard",
-      "finishHint": "You can connect WhatsApp, Instagram or your website next",
       "error": "Something went wrong. Please try again.",
       "errorSilent": "{name} didn't answer. If this keeps happening, check Billing in your dashboard.",
       "logLabel": "Conversation with {name}",
-      "typing": "{name} is typing"
+      "typing": "{name} is typing",
+      "continue": "Continue",
+      "continueHint": "Next: choose a plan so she can start taking customers",
+      "askFirstHint": "Ask {name} something to continue"
     },
     "plan": {
       "title": "Put {name} to work",

@@ -77,6 +77,11 @@ export function ProofChat({
     }
   }
 
+  // "She has answered", not "I have typed". The flow's next step is gated on
+  // proof_seen_at, which the route stamps when the reply actually lands -- so
+  // enabling this on the sent message let a merchant click through in the gap
+  // and get bounced straight back here.
+  const answered = turns.some((turn) => turn.role === "agent");
   const started = turns.length > 0;
 
   return (
@@ -181,12 +186,18 @@ export function ProofChat({
       ) : null}
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-primary-fixed pt-6">
-        <p className="mr-auto text-label-sm text-on-surface-variant">{t("finishHint")}</p>
-        <Link href="/onboarding/plan" aria-disabled={!started} tabIndex={started ? undefined : -1}>
-          <Button type="button" variant={started ? "primary" : "secondary"} disabled={!started}>
-            {t("finish")}
+        <p className="mr-auto text-label-sm text-on-surface-variant">
+          {answered ? t("continueHint") : t("askFirstHint", { name: agentName })}
+        </p>
+        {answered ? (
+          <Link href="/onboarding/plan">
+            <Button type="button">{t("continue")}</Button>
+          </Link>
+        ) : (
+          <Button type="button" variant="secondary" disabled>
+            {t("continue")}
           </Button>
-        </Link>
+        )}
       </div>
     </div>
   );

@@ -195,12 +195,13 @@
       "suggestBook": "Queria agendar um {name}",
       "suggestBookGeneric": "Queria agendar um horário",
       "suggestHours": "Que horas vocês abrem?",
-      "finish": "Ir para o painel",
-      "finishHint": "O próximo passo é conectar WhatsApp, Instagram ou seu site",
       "error": "Algo deu errado. Tente de novo.",
       "errorSilent": "A {name} não respondeu. Se continuar acontecendo, confira Cobrança no painel.",
       "logLabel": "Conversa com {name}",
-      "typing": "{name} está digitando"
+      "typing": "{name} está digitando",
+      "continue": "Continuar",
+      "continueHint": "Próximo: escolher um plano para ela começar a atender",
+      "askFirstHint": "Pergunte algo para a {name} para continuar"
     },
     "plan": {
       "title": "Coloque a {name} para trabalhar",

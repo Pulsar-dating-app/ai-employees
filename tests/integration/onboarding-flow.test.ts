@@ -162,6 +162,34 @@ describe("Onboarding flow", () => {
     expect(plan.html).toContain("Starter");
   });
 
+  // The button that leaves the proof step is gated on her having answered,
+  // because the plan step is gated on the same thing. Enabling it on the
+  // *sent* message opened a gap where clicking through bounced straight back
+  // here -- the merchant's own report, and the reason `answered` is not
+  // `turns.length > 0`.
+  it("does not open the plan step on a message that has not been answered", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hire(owner, companyId, "malu");
+    await api("POST", `/api/companies/${companyId}/products`, owner.cookieHeader, {
+      name: "Camiseta Tie Dye",
+      price: 51.79,
+      currency: "BRL",
+    });
+
+    const svc = getTestServiceClient();
+    const { data: before } = await svc
+      .from("companies")
+      .select("proof_seen_at")
+      .eq("id", companyId)
+      .single();
+    // Nothing has been answered, so the flag the step depends on is unset...
+    expect((before as { proof_seen_at: string | null }).proof_seen_at).toBeNull();
+    // ...and the step refuses, which is exactly what the UI must not let the
+    // merchant walk into.
+    expect((await page("/onboarding/plan", owner.cookieHeader)).redirectedTo).toBe("/onboarding/ready");
+  });
+
   it("keeps the proof flag out of the merchant's own reach", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner);
