@@ -201,7 +201,7 @@ function MobileMoreSheet({
                   </>
                 ) : item.attention ? (
                   <>
-                    <WarningIcon className="ml-auto h-3.5 w-3.5 shrink-0 text-orange-600" />
+                    <WarningIcon className="ml-auto h-6 w-6 shrink-0 text-orange-600" />
                     <span className="sr-only">{t("needsAttention")}</span>
                   </>
                 ) : null}
@@ -267,6 +267,9 @@ export function Sidebar({
   const mobilePrimaryItems = navItems.filter((item) => item.mobilePrimary);
   const mobileOverflowItems = navItems.filter((item) => !item.mobilePrimary);
   const overflowActive = mobileOverflowItems.some((item) => item.match(pathname));
+  // The "More" tab is a proxy for whatever's folded inside it -- a warning
+  // buried in the sheet is invisible unless the entry point says so too.
+  const overflowNeedsAttention = mobileOverflowItems.some((item) => item.attention);
 
   const [moreOpen, setMoreOpen] = useState(false);
   // A route change -- a row tapped inside the sheet, or the browser's own
@@ -313,7 +316,7 @@ export function Sidebar({
                   </>
                 ) : item.attention ? (
                   <>
-                    <WarningIcon className="ml-auto h-3.5 w-3.5 shrink-0 text-orange-600" />
+                    <WarningIcon className="ml-auto h-6 w-6 shrink-0 text-orange-600" />
                     <span className="sr-only">{t("needsAttention")}</span>
                   </>
                 ) : null}
@@ -388,7 +391,7 @@ export function Sidebar({
                 {item.locked ? (
                   <LockIcon className="absolute -right-1.5 -top-1 h-3 w-3 text-on-surface-variant" />
                 ) : item.attention ? (
-                  <WarningIcon className="absolute -right-1.5 -top-1 h-3 w-3 text-orange-600" />
+                  <WarningIcon className="absolute -right-2 -top-1.5 h-4 w-4 text-orange-600" />
                 ) : null}
               </span>
               <span
@@ -409,12 +412,20 @@ export function Sidebar({
           aria-expanded={moreOpen}
           className="flex flex-1 flex-col items-center gap-1 py-2.5"
         >
-          <MoreIcon
-            className={clsx(
-              "h-5 w-5 transition-colors duration-150",
-              overflowActive ? "text-primary" : "text-on-surface-variant",
-            )}
-          />
+          <span className="relative">
+            <MoreIcon
+              className={clsx(
+                "h-5 w-5 transition-colors duration-150",
+                overflowActive ? "text-primary" : "text-on-surface-variant",
+              )}
+            />
+            {overflowNeedsAttention ? (
+              <>
+                <WarningIcon className="absolute -right-2 -top-1.5 h-4 w-4 text-orange-600" />
+                <span className="sr-only">{t("needsAttention")}</span>
+              </>
+            ) : null}
+          </span>
           <span
             className={clsx(
               "text-[11px] font-medium transition-colors duration-150",

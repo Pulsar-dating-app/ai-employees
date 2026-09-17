@@ -56,7 +56,7 @@ export function SchedulingTabs({
             {t(tab.key)}
             {attentionByKey[tab.key] ? (
               <>
-                <WarningIcon className="h-3.5 w-3.5 shrink-0 text-orange-600" />
+                <WarningIcon className="h-6 w-6 shrink-0 text-orange-600" />
                 <span className="sr-only">{tDash("needsAttention")}</span>
               </>
             ) : null}
