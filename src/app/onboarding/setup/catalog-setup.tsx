@@ -5,16 +5,15 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
-import { PackageIcon, UploadIcon } from "@/components/ui/icons";
+import { PackageIcon, PlusIcon, UploadIcon } from "@/components/ui/icons";
 import { NarratedFeed, type FeedLine } from "./narrated-feed";
-import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import { OnboardingLoader } from "../onboarding-loader";
 
 const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024;
 const POLL_INTERVAL_MS = 1200;
 const PAYOFF_DWELL_MS = 1400;
 
-type Source = "shopify" | "spreadsheet";
+type Source = "shopify" | "spreadsheet" | "manual";
 // Shape as the status route actually returns it -- camelCase, not the column
 // names. Reading `inserted_count` here silently rendered "0 products ready".
 type Job = { status: string; totalRows: number | null; insertedCount: number | null };
@@ -25,6 +24,8 @@ export function CatalogSetup({ companyId, agentName }: { companyId: string; agen
 
   const [source, setSource] = useState<Source>("shopify");
   const [shop, setShop] = useState("");
+  const [manualName, setManualName] = useState("");
+  const [manualPrice, setManualPrice] = useState("");
   const [lines, setLines] = useState<FeedLine[]>([]);
   const [isWorking, setIsWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +111,45 @@ export function CatalogSetup({ companyId, agentName }: { companyId: string; agen
 
     setIsWorking(false);
     setError(t("errorSlow"));
+  }
+
+  // The step has no skip any more: the proof chat's whole point is her
+  // answering from real data, so this is the fastest way to a working demo
+  // for a merchant with no Shopify store and no spreadsheet ready yet. Price
+  // is required (not optional, unlike a service's) for the same reason --
+  // the proof chat's own first suggestion is a price question, and a
+  // product with nothing to answer would prove the opposite of the point.
+  async function handleManualAdd() {
+    const name = manualName.trim();
+    if (!name || !manualPrice.trim() || isWorking) return;
+
+    setError(null);
+    setIsWorking(true);
+    setLines([{ id: "saving", text: t("feedSaving"), state: "running" }]);
+
+    const res = await fetch(`/api/companies/${companyId}/products`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Same BRL assumption as the services step: onboarding never asks the
+      // currency, and every company created here starts without one.
+      body: JSON.stringify({ name, price: Number(manualPrice), currency: "BRL" }),
+    });
+
+    if (!res.ok) {
+      setIsWorking(false);
+      setLines([]);
+      setError(t("errorManual"));
+      return;
+    }
+
+    setLines((prev) =>
+      prev.map((l) => (l.id === "saving" ? { ...l, state: "done", text: t("feedProducts", { count: 1 }) } : l)),
+    );
+    setLines((prev) => [...prev, { id: "ready", text: t("feedReady", { name: agentName }), state: "done" }]);
+    setIsWorking(false);
+
+    await new Promise((resolve) => setTimeout(resolve, PAYOFF_DWELL_MS));
+    router.push("/onboarding/ready");
   }
 
   function reset() {
@@ -206,6 +246,53 @@ export function CatalogSetup({ companyId, agentName }: { companyId: string; agen
             </a>
           </div>
         </SourceOption>
+
+        <SourceOption
+          id="catalog-source-manual"
+          name="catalog-source"
+          active={source === "manual"}
+          onSelect={() => setSource("manual")}
+          icon={<PlusIcon className="h-5 w-5" />}
+          title={t("manualTitle")}
+          hint={t("manualHint")}
+        >
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              value={manualName}
+              onChange={(e) => setManualName(e.target.value)}
+              placeholder={t("manualNamePlaceholder")}
+              aria-label={t("manualNameLabel")}
+              className="h-11 min-w-0 flex-1 rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-body-md text-on-surface transition-all duration-200 placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
+            />
+            <div className="relative shrink-0">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-label-sm text-on-surface-variant">
+                {t("manualPricePrefix")}
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                inputMode="decimal"
+                value={manualPrice}
+                onChange={(e) => setManualPrice(e.target.value)}
+                placeholder={t("manualPricePlaceholder")}
+                aria-label={t("manualPriceLabel")}
+                className="h-11 w-[120px] rounded-md border border-outline-variant bg-surface-container-lowest pl-9 pr-3 text-body-md tabular-nums text-on-surface transition-all duration-200 placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
+              />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              isLoading={isWorking}
+              loadingIndicator={<OnboardingLoader />}
+              disabled={!manualName.trim() || !manualPrice.trim()}
+              onClick={handleManualAdd}
+              className="h-11 shrink-0"
+            >
+              {t("manualCta")}
+            </Button>
+          </div>
+        </SourceOption>
       </fieldset>
 
       {error ? (
@@ -213,19 +300,6 @@ export function CatalogSetup({ companyId, agentName }: { companyId: string; agen
           {error}
         </p>
       ) : null}
-
-      {/* A real way out, not a detour: the dashboard now returns an unfinished
-          merchant to the step they stopped on, so sending them there without
-          closing the flow would bounce them straight back. Choosing "later" is
-          them opting out, and the dashboard's own empty states take over. */}
-      <form action={finishOnboarding}>
-        <button
-          type="submit"
-          className="w-fit rounded-md text-label-md font-medium text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
-        >
-          {t("skip")}
-        </button>
-      </form>
     </div>
   );
 }
