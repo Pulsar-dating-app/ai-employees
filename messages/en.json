@@ -536,14 +536,21 @@
       "featuredBadge": "Most Chosen by Companies",
       "showMore": "See more",
       "showLess": "See less",
+      "periodToggle": {
+        "monthly": "Monthly",
+        "annual": "Annual"
+      },
+      "wppToggleLabel": "Include WhatsApp in the plan",
+      "wppToggleNote": "Without this, Meta charges WhatsApp usage separately, straight to your card.",
+      "priceNoteMonthly": "Recurring monthly billing",
+      "priceNoteAnnual": "Recurring annual billing",
+      "perMonth": "/ month",
+      "perYear": "/ year",
       "plans": [
         {
           "tier": "Starter",
           "name": "Individual Automation",
           "desc": "Ideal for freelancers and small shops that need fast customer service.",
-          "price": "R$ 399",
-          "priceSuffix": "/ month",
-          "priceNote": "Recurring monthly billing",
           "features": [
             "Malu for sales and Ana for scheduling",
             "Custom name and photo per employee",
@@ -588,9 +595,6 @@
           "tier": "Intermediate",
           "name": "Growing Operation",
           "desc": "For growing businesses that need more volume, with the full sales and scheduling toolkit.",
-          "price": "R$ 950",
-          "priceSuffix": "/ month",
-          "priceNote": "Recurring monthly billing",
           "features": [
             "Malu for sales and Ana for scheduling",
             "Custom name and photo per employee",
@@ -635,9 +639,6 @@
           "tier": "Pro",
           "name": "Complete Commercial Operation",
           "desc": "For growing companies that require lead qualification and scheduling.",
-          "price": "R$ 990",
-          "priceSuffix": "/ month",
-          "priceNote": "Save 20% on annual billing",
           "features": [
             "Malu for sales and Ana for scheduling",
             "Custom name and photo per employee",
@@ -2091,6 +2092,7 @@
     "pageSubtitle": "Your plan, usage, and payments.",
     "readOnly": "You can view billing, but only owners and admins can make changes.",
     "perMonth": "/ month",
+    "perYear": "/ year",
     "renewsOn": "Renews on {date}",
     "endsOn": "Ends on {date}",
     "noRenewalDate": "Renewal date pending",
@@ -2156,10 +2158,20 @@
     },
     "plan": {
       "replies": "{limit, number} replies per month",
+      "repliesAnnual": "{limit, number} replies per year",
       "teammates": "Unlimited teammates on your account",
       "custom": "Custom pricing",
       "trialBadge": "15 days free",
       "trialNote": "First 15 days: up to {limit, number} replies, no charge"
+    },
+    "picker": {
+      "period": {
+        "monthly": "Monthly",
+        "annual": "Annual"
+      },
+      "wppToggleLabel": "Include WhatsApp in the plan",
+      "wppToggleNote": "Without this, Meta charges WhatsApp usage separately, straight to your card — see the channels page for details.",
+      "wppBadge": "WhatsApp included"
     },
     "enterprise": {
       "title": "Need higher volume or custom terms?",

@@ -4,10 +4,11 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
-import { BILLING_PLANS, getPlan, type PlanKey } from "@/lib/billing/plans";
+import { getPlan, getSelfServePlansForVariant, type PlanKey } from "@/lib/billing/plans";
 import { CartIcon, CalendarIcon, InfoIcon, WarningIcon } from "@/components/ui/icons";
 import { PageHeader } from "../../page-header";
 import { CheckoutButton, EndTrialButton, ManageBillingButton } from "./billing-actions";
+import { PlanPicker } from "./plan-picker";
 
 // Trello P5 -- /dashboard/settings/billing. The merchant's view of the plan
 // (P1), the usage counter (P2), and the doors into Stripe Checkout (P3) /
@@ -170,25 +171,33 @@ export default async function BillingPage() {
   const overLimit = limit > 0 && used >= limit;
   const nearLimit = limit > 0 && rawPct >= 80 && !overLimit;
 
-  const selfServePlans = BILLING_PLANS.filter((p) => p.isSelfServe);
-
   // The near/over-limit banners offer an upgrade -- but only when a higher
   // self-serve plan actually exists. A company already on the top tier
   // (Pro today) has nowhere to self-serve upgrade to; Enterprise is
   // contact-only and isn't in the Portal's plan-switch config, so sending
   // that company through CheckoutButton would just land them on a Portal
   // screen with no more room to move. Point them at "talk to us" instead.
-  const currentSelfServeIndex = selfServePlans.findIndex((p) => p.key === billing?.plan_key);
+  //
+  // 2026-09-16: "next/prev tier" is computed within the company's own
+  // billing period + WhatsApp choice (getSelfServePlansForVariant), not
+  // across the whole flat catalog -- an annual/WhatsApp-included subscriber
+  // upgrading a tier should land on that same billing choice at the next
+  // tier, not silently switch them to monthly or drop the WhatsApp add-on.
+  const currentVariantPlans =
+    plan && plan.key !== "enterprise"
+      ? getSelfServePlansForVariant(plan.billingPeriod ?? "monthly", plan.whatsappIncluded)
+      : [];
+  const currentSelfServeIndex = currentVariantPlans.findIndex((p) => p.key === billing?.plan_key);
   const nextSelfServePlan =
-    currentSelfServeIndex >= 0 && currentSelfServeIndex < selfServePlans.length - 1
-      ? selfServePlans[currentSelfServeIndex + 1]
+    currentSelfServeIndex >= 0 && currentSelfServeIndex < currentVariantPlans.length - 1
+      ? currentVariantPlans[currentSelfServeIndex + 1]
       : null;
   // Mirror of nextSelfServePlan, one tier down -- the "Current plan" card
   // below shows exactly one alternate-plan link: an upgrade when a higher
   // tier exists, otherwise a downgrade off the top tier. Index-based (not a
   // hardcoded key), so a plan inserted between two existing tiers (like
   // Intermediate, 2026-09-14) needs no change here.
-  const prevSelfServePlan = currentSelfServeIndex > 0 ? selfServePlans[currentSelfServeIndex - 1] : null;
+  const prevSelfServePlan = currentSelfServeIndex > 0 ? currentVariantPlans[currentSelfServeIndex - 1] : null;
   const ENTERPRISE_MAILTO = "mailto:contato@staffra.com?subject=Enterprise";
 
   return (
@@ -295,13 +304,20 @@ export default async function BillingPage() {
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-headline-md font-semibold text-on-surface">{plan!.displayName}</h2>
                   <StatusChip status={status!} label={t(`status.${status}`)} />
+                  {plan!.whatsappIncluded ? (
+                    <span className="inline-flex items-center rounded-full bg-secondary-container/40 px-2.5 py-1 text-xs font-semibold text-tertiary">
+                      {t("picker.wppBadge")}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="text-headline-lg font-semibold tracking-tight text-on-surface">
                     {plan!.priceBrlCents !== null ? BRL.format(plan!.priceBrlCents / 100) : t("plan.custom")}
                   </span>
                   {plan!.priceBrlCents !== null ? (
-                    <span className="text-on-surface-variant">{t("perMonth")}</span>
+                    <span className="text-on-surface-variant">
+                      {plan!.billingPeriod === "annual" ? t("perYear") : t("perMonth")}
+                    </span>
                   ) : null}
                 </div>
 
@@ -398,67 +414,22 @@ export default async function BillingPage() {
               </div>
 
               {/*
-                3 columns only from `2xl` (1536px), not `lg` (1024px): this
-                grid sits inside the dashboard's 8/12 main column, itself
-                inside a 256px-sidebar-offset `<main>` capped at
-                max-w-[1280px] (dashboard/layout.tsx) -- `main` only reaches
-                that 1280px cap once the viewport hits 256+1280=1536px, i.e.
-                exactly `2xl`. Below that, 3 columns of real card content
-                (price, reply count, a CTA button) don't fit; `lg:grid-cols-3`
-                (tried 2026-09-14, when Intermediate made this a 3-plan grid)
-                squeezed each card to ~120px and wrapped button labels
-                outside their fixed height -- see billing-actions.tsx's
-                min-h-11 comment for the other half of that fix.
+                Cards render 3-up only from `2xl` (1536px), not `lg`
+                (1024px): this grid sits inside the dashboard's 8/12 main
+                column, itself inside a 256px-sidebar-offset `<main>` capped
+                at max-w-[1280px] (dashboard/layout.tsx) -- `main` only
+                reaches that 1280px cap once the viewport hits
+                256+1280=1536px, i.e. exactly `2xl`. Below that, 3 columns of
+                real card content (price, reply count, a CTA button) don't
+                fit; `lg:grid-cols-3` (tried 2026-09-14, when Intermediate
+                made this a 3-plan grid) squeezed each card to ~120px and
+                wrapped button labels outside their fixed height -- see
+                billing-actions.tsx's min-h-11 comment for the other half of
+                that fix. `PlanPicker` (2026-09-16) owns this grid now, plus
+                the period/WhatsApp toggles above it.
               */}
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-                {selfServePlans.map((p) => {
-                  const offersTrial = p.trialReplyLimit != null && trialAvailable;
-                  return (
-                    <div
-                      key={p.key}
-                      className="flex flex-col rounded-lg border border-outline-variant/60 bg-surface-container-low p-5"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-label-md font-bold text-on-surface">{p.displayName}</h3>
-                        {offersTrial ? (
-                          <span className="inline-flex items-center rounded-full bg-tertiary/15 px-2.5 py-1 text-xs font-semibold text-tertiary">
-                            {t("plan.trialBadge")}
-                          </span>
-                        ) : null}
-                      </div>
-                      <div className="mt-2 flex items-baseline gap-1.5">
-                        <span className="text-headline-lg font-semibold text-on-surface">
-                          {/* Non-null: this loop is over selfServePlans only. */}
-                          {BRL.format(p.priceBrlCents! / 100)}
-                        </span>
-                        <span className="text-sm text-on-surface-variant">{t("perMonth")}</span>
-                      </div>
-                      <p className="mt-3 text-sm text-on-surface-variant">
-                        {t("plan.replies", { limit: p.monthlyReplyLimit! })}
-                      </p>
-                      {offersTrial ? (
-                        <p className="mt-1 text-sm font-medium text-tertiary">
-                          {t("plan.trialNote", { limit: p.trialReplyLimit! })}
-                        </p>
-                      ) : null}
-                      <p className="mt-1 text-sm text-on-surface-variant">{t("plan.teammates")}</p>
-                      <div className="mt-5">
-                        {canEdit ? (
-                          <CheckoutButton
-                            companyId={company.id}
-                            planKey={p.key as Exclude<PlanKey, "enterprise">}
-                            label={
-                              offersTrial
-                                ? t("startTrial", { plan: p.displayName })
-                                : t("choosePlan", { plan: p.displayName })
-                            }
-                            fullWidth
-                          />
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="mt-6">
+                <PlanPicker companyId={company.id} canEdit={canEdit} trialAvailable={trialAvailable} />
               </div>
             </div>
           )}
