@@ -12,6 +12,12 @@ import { findUnconfirmedConversationIds } from "./pending";
 // customer fallback identity) is real logic, not a flat column select the
 // way Products' PRODUCT_PUBLIC_COLUMNS is.
 
+// The strongest signal wins when a conversation has both: a customer who
+// actually clicked through to checkout is a step further along than one who
+// only said they wanted to buy. Never a sale (spec §14/§15) -- this is
+// "worth your attention first", not "this converted".
+export type HotSignal = "checkout_click" | "buying_intent" | null;
+
 export type ConversationRow = {
   id: string;
   status: string;
@@ -21,6 +27,7 @@ export type ConversationRow = {
   agentName: string | null;
   lastMessage: { content: string; created_at: string } | null;
   pendingConfirmation: boolean;
+  hotSignal: HotSignal;
 };
 
 type LatestMessageRow = {
@@ -82,7 +89,7 @@ export async function listConversations(
   const conversationIds = (conversations ?? []).map((c) => c.id);
   const agentIds = [...new Set((conversations ?? []).map((c) => c.agent_id).filter((id): id is string => id !== null))];
 
-  const [{ data: latestMessages }, { data: companyAgents }] = await Promise.all([
+  const [{ data: latestMessages }, { data: companyAgents }, { data: hotEvents }] = await Promise.all([
     conversationIds.length > 0
       ? supabase
           .from("messages")
@@ -97,6 +104,18 @@ export async function listConversations(
           .eq("company_id", companyId)
           .in("agent_id", agentIds)
       : Promise.resolve({ data: [] as { agent_id: string; name: string | null; agents: unknown }[] }),
+    // Same events table Metrics' buying-intent/checkout-click totals already
+    // aggregate from (src/lib/analytics/aggregate.ts) -- read here per row
+    // instead of only ever summed on another page the merchant has to think
+    // to go check.
+    conversationIds.length > 0
+      ? supabase
+          .from("events")
+          .select("conversation_id, type")
+          .eq("company_id", companyId)
+          .in("conversation_id", conversationIds)
+          .in("type", ["buying_intent", "checkout_click"])
+      : Promise.resolve({ data: [] as { conversation_id: string; type: string }[] }),
   ]);
 
   // Sorted desc above, so the first row seen per conversation_id is its
@@ -113,6 +132,16 @@ export async function listConversations(
     } else if (m.role === "agent" && readGrounding(m.metadata)?.status === "blocked") {
       pendingByConversation.set(m.conversation_id, true);
     }
+  }
+
+  // checkout_click beats buying_intent regardless of which happened first --
+  // an actual click is further along than a spoken "I want this".
+  const hotSignalByConversation = new Map<string, HotSignal>();
+  for (const e of (hotEvents ?? []) as { conversation_id: string; type: string }[]) {
+    if (e.type !== "buying_intent" && e.type !== "checkout_click") continue;
+    const current = hotSignalByConversation.get(e.conversation_id);
+    if (current === "checkout_click") continue;
+    hotSignalByConversation.set(e.conversation_id, e.type as HotSignal);
   }
 
   const agentNameById = new Map<string, string>();
@@ -137,6 +166,7 @@ export async function listConversations(
       agentName: c.agent_id ? (agentNameById.get(c.agent_id) ?? null) : null,
       lastMessage: latestByConversation.get(c.id) ?? null,
       pendingConfirmation: c.status !== "closed" && (pendingByConversation.get(c.id) ?? false),
+      hotSignal: hotSignalByConversation.get(c.id) ?? null,
     };
   });
 

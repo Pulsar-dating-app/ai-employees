@@ -1859,6 +1859,10 @@
       "showPending": "Show these",
       "showAll": "Show all conversations",
       "rowBadge": "Awaiting confirmation"
+    },
+    "hot": {
+      "rowBadgeClick": "Clicked the link",
+      "rowBadgeIntent": "Wants to buy"
     }
   },
   "Chat": {

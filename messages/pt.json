@@ -1859,6 +1859,10 @@
       "showPending": "Ver essas",
       "showAll": "Ver todas as conversas",
       "rowBadge": "Aguardando confirmação"
+    },
+    "hot": {
+      "rowBadgeClick": "Clicou no link",
+      "rowBadgeIntent": "Quer comprar"
     }
   },
   "Chat": {

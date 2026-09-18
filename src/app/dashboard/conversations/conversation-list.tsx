@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
-import { ClockIcon } from "@/components/ui/icons";
+import { CartIcon, ClockIcon } from "@/components/ui/icons";
 import { channelLabel } from "@/lib/conversations/channel-label";
 import type { ConversationRow } from "@/lib/conversations/list";
 
@@ -81,6 +81,23 @@ export function ConversationList({
                     <span className="inline-flex items-center gap-1 rounded-full bg-primary-fixed px-2 py-0.5 text-label-sm font-semibold text-primary">
                       <ClockIcon className="h-3 w-3" />
                       {t("pending.rowBadge")}
+                    </span>
+                  ) : null}
+                  {/* Never claimed as a sale (spec §14/§15) -- just the
+                      customer signal that decides which conversation to
+                      open first. checkout_click reads warmer than
+                      buying_intent since it's an action, not just words. */}
+                  {c.hotSignal ? (
+                    <span
+                      className={clsx(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-label-sm font-semibold",
+                        c.hotSignal === "checkout_click"
+                          ? "bg-tertiary-container text-on-tertiary-container"
+                          : "bg-tertiary-container/50 text-tertiary",
+                      )}
+                    >
+                      <CartIcon className="h-3 w-3" />
+                      {t(c.hotSignal === "checkout_click" ? "hot.rowBadgeClick" : "hot.rowBadgeIntent")}
                     </span>
                   ) : null}
                 </div>
