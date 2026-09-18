@@ -105,7 +105,7 @@ export async function POST(
 
   const { data: company, error: companyError } = await supabase
     .from("companies")
-    .select("name, email")
+    .select("name")
     .eq("id", companyId)
     .maybeSingle();
   if (companyError) {
@@ -264,7 +264,13 @@ export async function POST(
   const customerId = await getOrCreateStripeCustomer({
     companyId,
     companyName: company.name as string,
-    email: (company.email as string | null) ?? user.email,
+    // The login account's email, not `companies.email` -- that field is
+    // free-text the merchant can edit in Settings (only length-checked, not
+    // format-checked; see decisions.md), so an invalid value there used to
+    // silently break every Checkout attempt for that company (Stripe rejects
+    // a malformed customer email). `user.email` comes from Supabase Auth, so
+    // it's always a real, verified address.
+    email: user.email,
     existingCustomerId: billing?.stripe_customer_id ?? null,
   });
 
