@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { getPlan, getSelfServePlansForVariant, type PlanKey } from "@/lib/billing/plans";
-import { CartIcon, CalendarIcon, InfoIcon, WarningIcon } from "@/components/ui/icons";
+import { CartIcon, CalendarIcon, InfoIcon, WarningIcon, BadgeCheckIcon } from "@/components/ui/icons";
 import { PageHeader } from "../../page-header";
 import { CheckoutButton, EndTrialButton, ManageBillingButton } from "./billing-actions";
 import { PlanPicker } from "./plan-picker";
@@ -200,6 +200,62 @@ export default async function BillingPage() {
   const prevSelfServePlan = currentSelfServeIndex > 0 ? currentVariantPlans[currentSelfServeIndex - 1] : null;
   const ENTERPRISE_MAILTO = "mailto:contato@staffra.com?subject=Enterprise";
 
+  // Shared between both branches below: the current/lapsed-payment layout
+  // keeps these in the sticky 8/4 grid; the no-plan/canceled layout renders
+  // the pricing choice full-width instead (see 2026-09-18 decisions.md),
+  // then drops back to the same two blocks underneath it.
+  const enterpriseStrip =
+    plan?.key !== "enterprise" ? (
+      <div className="flex flex-col gap-1 rounded-xl border border-outline-variant/60 bg-surface-container-low px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-label-md font-semibold text-on-surface">{t("enterprise.title")}</p>
+          <p className="text-sm text-on-surface-variant">{t("enterprise.body")}</p>
+        </div>
+        <a href={ENTERPRISE_MAILTO} className="text-label-md font-medium text-primary hover:underline">
+          {t("enterprise.cta")}
+        </a>
+      </div>
+    ) : null;
+
+  const summaryCard = (
+    <div className={CARD}>
+      <h3 className="border-b border-outline-variant/60 pb-4 text-label-md font-bold text-on-surface">
+        {t("summary.title")}
+      </h3>
+      <dl className="mt-4 flex flex-col gap-3 text-sm">
+        <div className="flex items-center justify-between">
+          <dt className="text-on-surface-variant">{t("summary.plan")}</dt>
+          <dd className="font-semibold text-on-surface">{plan ? plan.displayName : t("summary.none")}</dd>
+        </div>
+        <div className="flex items-center justify-between">
+          <dt className="text-on-surface-variant">{t("summary.status")}</dt>
+          <dd>
+            <StatusChip status={status ?? "none"} label={status ? t(`status.${status}`) : t("summary.none")} />
+          </dd>
+        </div>
+        {renewsOn ? (
+          <div className="flex items-center justify-between">
+            <dt className="text-on-surface-variant">
+              {billing?.cancel_at_period_end ? t("summary.endsOn") : t("summary.nextRenewal")}
+            </dt>
+            <dd className="text-on-surface">{renewsOn}</dd>
+          </div>
+        ) : null}
+      </dl>
+      {canEdit && billing?.stripe_customer_id ? (
+        <div className="mt-6">
+          <ManageBillingButton
+            companyId={company.id}
+            label={t("summary.manageInStripe")}
+            variant="secondary"
+            fullWidth
+          />
+        </div>
+      ) : null}
+      <p className="mt-4 text-center text-xs text-on-surface-variant">{t("summary.support")}</p>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader icon={CartIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
@@ -300,8 +356,15 @@ export default async function BillingPage() {
           {isActive || isLapsedPayment ? (
             <>
               {/* Current plan */}
-              <div className={CARD}>
-                <div className="flex flex-wrap items-center gap-3">
+              <div className={clsx(CARD, "relative overflow-hidden")}>
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-primary/[0.07] to-transparent"
+                />
+                <div className="relative flex flex-wrap items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <BadgeCheckIcon className="h-5 w-5" />
+                  </span>
                   <h2 className="text-headline-md font-semibold text-on-surface">{plan!.displayName}</h2>
                   <StatusChip status={status!} label={t(`status.${status}`)} />
                   {plan!.whatsappIncluded ? (
@@ -310,8 +373,8 @@ export default async function BillingPage() {
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-headline-lg font-semibold tracking-tight text-on-surface">
+                <div className="relative mt-3 flex items-baseline gap-2">
+                  <span className="text-display-lg font-semibold tracking-tight text-on-surface">
                     {plan!.priceBrlCents !== null ? BRL.format(plan!.priceBrlCents / 100) : t("plan.custom")}
                   </span>
                   {plan!.priceBrlCents !== null ? (
@@ -321,7 +384,7 @@ export default async function BillingPage() {
                   ) : null}
                 </div>
 
-                <div className="mt-6 flex flex-col gap-4 border-t border-outline-variant/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="relative mt-6 flex flex-col gap-4 border-t border-outline-variant/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
                   <p className="flex items-center gap-2 text-label-md text-on-surface">
                     <CalendarIcon className="h-5 w-5 text-on-surface-variant" />
                     {billing!.cancel_at_period_end
@@ -396,106 +459,41 @@ export default async function BillingPage() {
             </>
           ) : (
             /* No plan / canceled -> activate */
-            <div className={CARD}>
+            <div className={clsx(CARD, "relative overflow-hidden")}>
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-primary/[0.06] to-transparent"
+              />
               {isCanceled ? (
-                <Banner
-                  tone="neutral"
-                  title={t("banner.canceled.title", { date: renewsOn ?? "" })}
-                  body={t("banner.canceled.body")}
-                />
+                <div className="relative">
+                  <Banner
+                    tone="neutral"
+                    title={t("banner.canceled.title", { date: renewsOn ?? "" })}
+                    body={t("banner.canceled.body")}
+                  />
+                </div>
               ) : null}
-              <div className={isCanceled ? "mt-6" : undefined}>
-                <h2 className="text-headline-md font-semibold text-on-surface">
+              <div className={clsx("relative", isCanceled && "mt-6")}>
+                <h2 className="text-display-lg font-semibold tracking-tight text-on-surface">
                   {isCanceled ? t("reactivate.title") : t("activate.title")}
                 </h2>
-                <p className="mt-1 max-w-xl text-body-md text-on-surface-variant">
+                <p className="mt-2 max-w-xl text-body-lg text-on-surface-variant">
                   {isCanceled ? t("reactivate.body") : t("activate.body")}
                 </p>
               </div>
 
-              {/*
-                Cards render 3-up only from `2xl` (1536px), not `lg`
-                (1024px): this grid sits inside the dashboard's 8/12 main
-                column, itself inside a 256px-sidebar-offset `<main>` capped
-                at max-w-[1280px] (dashboard/layout.tsx) -- `main` only
-                reaches that 1280px cap once the viewport hits
-                256+1280=1536px, i.e. exactly `2xl`. Below that, 3 columns of
-                real card content (price, reply count, a CTA button) don't
-                fit; `lg:grid-cols-3` (tried 2026-09-14, when Intermediate
-                made this a 3-plan grid) squeezed each card to ~120px and
-                wrapped button labels outside their fixed height -- see
-                billing-actions.tsx's min-h-11 comment for the other half of
-                that fix. `PlanPicker` (2026-09-16) owns this grid now, plus
-                the period/WhatsApp toggles above it.
-              */}
-              <div className="mt-6">
+              <div className="relative mt-6">
                 <PlanPicker companyId={company.id} canEdit={canEdit} trialAvailable={trialAvailable} />
               </div>
             </div>
           )}
 
-          {/* Enterprise */}
-          {plan?.key !== "enterprise" ? (
-            <div className="flex flex-col gap-1 rounded-xl border border-outline-variant/60 bg-surface-container-low px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-label-md font-semibold text-on-surface">{t("enterprise.title")}</p>
-                <p className="text-sm text-on-surface-variant">{t("enterprise.body")}</p>
-              </div>
-              <a
-                href="mailto:contato@staffra.com?subject=Enterprise"
-                className="text-label-md font-medium text-primary hover:underline"
-              >
-                {t("enterprise.cta")}
-              </a>
-            </div>
-          ) : null}
+          {enterpriseStrip}
         </div>
 
         {/* ASIDE */}
         <div className="lg:col-span-4">
-          <div className="sticky top-24 flex flex-col gap-4">
-            <div className={CARD}>
-              <h3 className="border-b border-outline-variant/60 pb-4 text-label-md font-bold text-on-surface">
-                {t("summary.title")}
-              </h3>
-              <dl className="mt-4 flex flex-col gap-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <dt className="text-on-surface-variant">{t("summary.plan")}</dt>
-                  <dd className="font-semibold text-on-surface">
-                    {plan ? plan.displayName : t("summary.none")}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between">
-                  <dt className="text-on-surface-variant">{t("summary.status")}</dt>
-                  <dd>
-                    <StatusChip
-                      status={status ?? "none"}
-                      label={status ? t(`status.${status}`) : t("summary.none")}
-                    />
-                  </dd>
-                </div>
-                {renewsOn ? (
-                  <div className="flex items-center justify-between">
-                    <dt className="text-on-surface-variant">
-                      {billing?.cancel_at_period_end ? t("summary.endsOn") : t("summary.nextRenewal")}
-                    </dt>
-                    <dd className="text-on-surface">{renewsOn}</dd>
-                  </div>
-                ) : null}
-              </dl>
-              {canEdit && billing?.stripe_customer_id ? (
-                <div className="mt-6">
-                  <ManageBillingButton
-                    companyId={company.id}
-                    label={t("summary.manageInStripe")}
-                    variant="secondary"
-                    fullWidth
-                  />
-                </div>
-              ) : null}
-              <p className="mt-4 text-center text-xs text-on-surface-variant">{t("summary.support")}</p>
-            </div>
-          </div>
+          <div className="sticky top-24 flex flex-col gap-4">{summaryCard}</div>
         </div>
       </div>
     </div>

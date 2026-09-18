@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { redirectTargetFor, resolveOnboardingState } from "@/lib/companies/onboarding-step";
 import { finishOnboarding } from "@/lib/companies/finish-onboarding";
-import { getSelfServePlans, TRIAL_DAYS } from "@/lib/billing/plans";
+import { TRIAL_DAYS } from "@/lib/billing/plans";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { agentPhoto } from "@/lib/agents/media";
 import { StepCard } from "../step-card";
-import { PlanPicker, type PlanOption } from "./plan-picker";
+import { PlanPicker } from "./plan-picker";
 
 // The last step, and deliberately after the proof rather than before it: the
 // merchant decides at the moment she has just answered them with their own
@@ -33,26 +33,10 @@ export default async function OnboardingPlanPage({
   const back = redirectTargetFor(state, "plan");
   if (back) redirect(back);
 
-  const [t, locale, { data: userRow }] = await Promise.all([
+  const [t, { data: userRow }] = await Promise.all([
     getTranslations("Onboarding.plan"),
-    getLocale(),
     supabase.from("users").select("trial_used_at").eq("id", user.id).maybeSingle(),
   ]);
-
-  const money = new Intl.NumberFormat(locale === "pt" ? "pt-BR" : "en-US", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  });
-  const count = new Intl.NumberFormat(locale === "pt" ? "pt-BR" : "en-US");
-
-  const plans: PlanOption[] = getSelfServePlans().map((plan) => ({
-    key: plan.key,
-    name: plan.displayName,
-    priceLabel: t("perMonth", { price: money.format((plan.priceBrlCents ?? 0) / 100) }),
-    replyLimit: t("replyLimit", { count: count.format(plan.monthlyReplyLimit ?? 0) }),
-    features: [t("featureChannels"), t("featureTeam"), t("featureHistory")],
-  }));
 
   const name = state.agentName ?? defaultAgentName(state.agentSlug!);
 
@@ -65,7 +49,6 @@ export default async function OnboardingPlanPage({
     >
       <PlanPicker
         companyId={state.companyId!}
-        plans={plans}
         trialDays={TRIAL_DAYS}
         trialAvailable={!(userRow as { trial_used_at: string | null } | null)?.trial_used_at}
         checkoutCancelled={checkout === "cancel"}

@@ -438,6 +438,91 @@ describe("Conversations API", () => {
     expect((connection as { status: string }).status).toBe("disconnected");
   });
 
+  // The badge the inbox list shows per row -- same `events` table Metrics'
+  // buying-intent/checkout-click totals already aggregate from (E2), now
+  // read per conversation instead of only ever summed on another page.
+  async function seedEvent(companyId: string, conversationId: string, type: "buying_intent" | "checkout_click") {
+    const svc = getTestServiceClient();
+    const { data: conversation } = await svc
+      .from("conversations")
+      .select("agent_id, customer_id")
+      .eq("id", conversationId)
+      .single();
+    const { agent_id, customer_id } = conversation as { agent_id: string; customer_id: string };
+    await svc.from("events").insert({
+      company_id: companyId,
+      agent_id,
+      conversation_id: conversationId,
+      customer_id,
+      type,
+    });
+  }
+
+  it("flags a conversation where the customer showed buying intent", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Conv Hot Intent Co");
+    await hireMalu(owner.cookieHeader, company.id);
+    const conversationId = await seedConversation(company.id);
+    await seedEvent(company.id, conversationId, "buying_intent");
+
+    const res = await api<{ conversations: { id: string; hotSignal: string | null }[] }>(
+      "GET",
+      `/api/companies/${company.id}/conversations`,
+      owner.cookieHeader,
+    );
+    expect(res.json.conversations.find((c) => c.id === conversationId)?.hotSignal).toBe("buying_intent");
+  });
+
+  it("prefers checkout_click over buying_intent when a conversation has both", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Conv Hot Click Co");
+    await hireMalu(owner.cookieHeader, company.id);
+    const conversationId = await seedConversation(company.id);
+    await seedEvent(company.id, conversationId, "buying_intent");
+    await seedEvent(company.id, conversationId, "checkout_click");
+
+    const res = await api<{ conversations: { id: string; hotSignal: string | null }[] }>(
+      "GET",
+      `/api/companies/${company.id}/conversations`,
+      owner.cookieHeader,
+    );
+    expect(res.json.conversations.find((c) => c.id === conversationId)?.hotSignal).toBe("checkout_click");
+  });
+
+  it("leaves hotSignal null for a conversation with no buying signal", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Conv Hot None Co");
+    await hireMalu(owner.cookieHeader, company.id);
+    const conversationId = await seedConversation(company.id);
+
+    const res = await api<{ conversations: { id: string; hotSignal: string | null }[] }>(
+      "GET",
+      `/api/companies/${company.id}/conversations`,
+      owner.cookieHeader,
+    );
+    expect(res.json.conversations.find((c) => c.id === conversationId)?.hotSignal).toBeNull();
+  });
+
+  it("keeps one company's buying signals out of another's inbox", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Conv Hot Mine Co");
+    await hireMalu(owner.cookieHeader, company.id);
+    const conversationId = await seedConversation(company.id);
+    await seedEvent(company.id, conversationId, "checkout_click");
+
+    const otherOwner = await signUpTestUser("owner");
+    const otherCompany = await createCompany(otherOwner.cookieHeader, "Conv Hot Theirs Co");
+    await hireMalu(otherOwner.cookieHeader, otherCompany.id);
+    await seedConversation(otherCompany.id);
+
+    const theirs = await api<{ conversations: { hotSignal: string | null }[] }>(
+      "GET",
+      `/api/companies/${otherCompany.id}/conversations`,
+      otherOwner.cookieHeader,
+    );
+    expect(theirs.json.conversations.every((c) => c.hotSignal === null)).toBe(true);
+  });
+
   it("rejects an unsupported PATCH status", async () => {
     const owner = await signUpTestUser("owner");
     const company = await createCompany(owner.cookieHeader, "Conv Bad Patch Co");

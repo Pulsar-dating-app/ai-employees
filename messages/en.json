@@ -224,10 +224,21 @@
       "trialNote": "Your first {days} days are free. No charge until then, and you can cancel any time.",
       "cancelled": "No problem — nothing was charged. Pick a plan whenever you're ready.",
       "perMonth": "{price}/month",
+      "perYear": "{price}/year",
       "replyLimit": "{count} replies a month",
+      "replyLimitAnnual": "{count} replies a year",
       "featureChannels": "WhatsApp, Instagram, Telegram and your website",
       "featureTeam": "Your whole team, no extra seats",
       "featureHistory": "Every conversation and its numbers",
+      "recommended": "Most popular",
+      "picker": {
+        "period": {
+          "monthly": "Monthly",
+          "annual": "Annual"
+        },
+        "wppToggleLabel": "Include WhatsApp in the plan",
+        "wppToggleNote": "Without this, Meta charges WhatsApp usage separately, straight to your card — you can change this later in Settings."
+      },
       "cta": "Choose plan",
       "ctaTrial": "Start free",
       "later": "I'll decide later",
@@ -1858,6 +1869,10 @@
       "showPending": "Show these",
       "showAll": "Show all conversations",
       "rowBadge": "Awaiting confirmation"
+    },
+    "hot": {
+      "rowBadgeClick": "Clicked the link",
+      "rowBadgeIntent": "Wants to buy"
     }
   },
   "Chat": {
@@ -2195,7 +2210,8 @@
       },
       "wppToggleLabel": "Include WhatsApp in the plan",
       "wppToggleNote": "Without this, Meta charges WhatsApp usage separately, straight to your card — see the channels page for details.",
-      "wppBadge": "WhatsApp included"
+      "wppBadge": "WhatsApp included",
+      "recommended": "Most popular"
     },
     "enterprise": {
       "title": "Need higher volume or custom terms?",

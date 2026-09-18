@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { getStripeClient } from "./client";
 
 // Trello P3 -- the Stripe side of plan checkout. Thin wrappers over the SDK
@@ -7,8 +8,13 @@ import { getStripeClient } from "./client";
 // by IP and present a converted local price -- Staffra still settles BRL.
 
 // Reuse the company's existing Stripe Customer if we already recorded one;
-// otherwise create it. The idempotency key means a double-submitted first
-// checkout can't leave two Customers for the same company.
+// otherwise create it. The idempotency key guards against a double-submitted
+// first checkout leaving two Customers for the same company -- but it must
+// vary with the actual request body, not just `companyId`. A key fixed per
+// company forever means any later change to name/email (e.g. fixing bad data
+// -- see decisions.md, a malformed `companies.email` once reached here)
+// collides with Stripe's 24h idempotency cache and 400s with
+// `StripeIdempotencyError` instead of retrying cleanly.
 export async function getOrCreateStripeCustomer(opts: {
   companyId: string;
   companyName: string;
@@ -18,13 +24,17 @@ export async function getOrCreateStripeCustomer(opts: {
   if (opts.existingCustomerId) return opts.existingCustomerId;
 
   const stripe = getStripeClient();
+  const requestFingerprint = createHash("sha256")
+    .update(`${opts.companyName}|${opts.email ?? ""}`)
+    .digest("hex")
+    .slice(0, 16);
   const customer = await stripe.customers.create(
     {
       name: opts.companyName,
       email: opts.email ?? undefined,
       metadata: { companyId: opts.companyId },
     },
-    { idempotencyKey: `billing-customer:${opts.companyId}` },
+    { idempotencyKey: `billing-customer:${opts.companyId}:${requestFingerprint}` },
   );
   return customer.id;
 }
