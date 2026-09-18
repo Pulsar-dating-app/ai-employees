@@ -224,10 +224,21 @@
       "trialNote": "Seus primeiros {days} dias são grátis. Nada é cobrado até lá, e dá para cancelar quando quiser.",
       "cancelled": "Sem problema — nada foi cobrado. Escolha um plano quando quiser.",
       "perMonth": "{price}/mês",
+      "perYear": "{price}/ano",
       "replyLimit": "{count} respostas por mês",
+      "replyLimitAnnual": "{count} respostas por ano",
       "featureChannels": "WhatsApp, Instagram, Telegram e seu site",
       "featureTeam": "Sua equipe inteira, sem cobrar por pessoa",
       "featureHistory": "Todas as conversas e os números delas",
+      "recommended": "Mais popular",
+      "picker": {
+        "period": {
+          "monthly": "Mensal",
+          "annual": "Anual"
+        },
+        "wppToggleLabel": "Incluir WhatsApp no plano",
+        "wppToggleNote": "Sem essa opção, a Meta cobra o uso do WhatsApp separadamente, direto no seu cartão — dá para mudar isso depois nas Configurações."
+      },
       "cta": "Escolher plano",
       "ctaTrial": "Começar grátis",
       "later": "Decido depois",
@@ -2185,7 +2196,8 @@
       },
       "wppToggleLabel": "Incluir WhatsApp no plano",
       "wppToggleNote": "Sem essa opção, a Meta cobra o uso do WhatsApp separadamente, direto no seu cartão — veja mais na tela de canais.",
-      "wppBadge": "WhatsApp incluso"
+      "wppBadge": "WhatsApp incluso",
+      "recommended": "Mais popular"
     },
     "enterprise": {
       "title": "Precisa de mais volume ou condições sob medida?",
