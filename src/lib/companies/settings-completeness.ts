@@ -1,4 +1,8 @@
 export const SETTINGS_TOTAL_SECTIONS = 4;
+// Below this many filled sections the sidebar's Settings tab shows its
+// warning icon and the Settings page shows its "almost empty" alert -- one
+// constant so the two can't disagree.
+export const SETTINGS_MIN_SECTIONS = 2;
 
 export type SettingsCompletenessFields = {
   description: string | null;

@@ -8,7 +8,7 @@ import {
   isSilentForNoPlan as checkSilentForNoPlan,
 } from "@/lib/billing/activation";
 import { getUsageSummary } from "@/lib/billing/usage-summary";
-import { countFilledSections } from "@/lib/companies/settings-completeness";
+import { countFilledSections, SETTINGS_MIN_SECTIONS } from "@/lib/companies/settings-completeness";
 import { getSchedulingWarnings } from "@/lib/scheduling/warnings";
 import { TourProvider } from "@/components/tour/tour-provider";
 import { Sidebar, type Attention } from "./sidebar";
@@ -114,7 +114,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Settings/Billing is never locked, so it just checks its own conditions.
   const filledSections = settingsFields.data ? countFilledSections(settingsFields.data) : 0;
   const attention: Attention = {
-    settings: filledSections < 2 || silence === "past_due",
+    settings: filledSections < SETTINGS_MIN_SECTIONS || silence === "past_due",
     products: hiredAgentSlugs.includes("malu") && (productsCount.count ?? 0) === 0,
     scheduling:
       hiredAgentSlugs.includes("ana") &&

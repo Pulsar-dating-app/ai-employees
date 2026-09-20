@@ -2,7 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { countFilledSections, SETTINGS_TOTAL_SECTIONS } from "@/lib/companies/settings-completeness";
+import {
+  countFilledSections,
+  SETTINGS_MIN_SECTIONS,
+  SETTINGS_TOTAL_SECTIONS,
+} from "@/lib/companies/settings-completeness";
 import { isBillingPastDue } from "@/lib/billing/activation";
 import { Alert } from "@/components/ui/alert";
 import { BusinessInfoSection } from "./business-info-section";
@@ -77,6 +81,16 @@ export default async function SettingsPage() {
           }
         >
           {t("pastDueAlert.body")}
+        </Alert>
+      ) : null}
+
+      {filledSections < SETTINGS_MIN_SECTIONS ? (
+        <Alert variant="warning" title={t("lowCompletenessAlert.title")}>
+          {t("lowCompletenessAlert.body", {
+            filled: filledSections,
+            total: totalSections,
+            min: SETTINGS_MIN_SECTIONS,
+          })}
         </Alert>
       ) : null}
 
