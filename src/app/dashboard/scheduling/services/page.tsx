@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import { ClockIcon } from "@/components/ui/icons";
 import { PageHeader } from "../../page-header";
 import { ServicesManager } from "./services-manager";
@@ -72,6 +73,12 @@ export default async function ServicesPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader icon={ClockIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
+
+      {(count ?? 0) === 0 ? (
+        <Alert variant="warning" title={t("emptyAlert.title")}>
+          {t("emptyAlert.body")}
+        </Alert>
+      ) : null}
 
       {!canEdit ? (
         <p className="rounded-md border border-outline-variant bg-surface-container px-3 py-2 text-sm text-on-surface-variant">

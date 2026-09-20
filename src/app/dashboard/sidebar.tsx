@@ -16,6 +16,7 @@ import {
   SettingsIcon,
   LogoutIcon,
   LockIcon,
+  WarningIcon,
   ChatIcon,
   MoreIcon,
 } from "@/components/ui/icons";
@@ -54,6 +55,17 @@ const NAV_ITEMS = [
   { href: "/dashboard/metrics", key: "metrics" as const, icon: BarChartIcon, match: (p: string) => p.startsWith("/dashboard/metrics"), isLocked: (s: string[]) => s.length === 0 },
   { href: "/dashboard/settings", key: "settings" as const, icon: SettingsIcon, match: (p: string) => p.startsWith("/dashboard/settings"), mobilePrimary: true },
 ];
+
+// Computed server-side in dashboard/layout.tsx (business logic none of this
+// file should own) -- "this hired-and-unlocked tab has something important
+// left incomplete", distinct from `isLocked` ("you haven't hired anyone for
+// this yet"). Only the three tabs with a real, cheap-to-check completeness
+// signal are covered; every other key is implicitly "no warning".
+export type Attention = {
+  settings: boolean;
+  products: boolean;
+  scheduling: boolean;
+};
 
 // Sidebar top (Stitch "Performance Analytics" screen): the brand, then an
 // identity block — avatar-initial, the account label, the workspace tier —
@@ -120,7 +132,7 @@ function UsageTracker({ usage }: { usage: UsageSummary | null }) {
   );
 }
 
-type OverflowItem = (typeof NAV_ITEMS)[number] & { locked: boolean };
+type OverflowItem = (typeof NAV_ITEMS)[number] & { locked: boolean; attention: boolean };
 
 // The bottom bar's overflow -- a sheet rising from the bar itself (not a
 // centered `Dialog`, which would read as unrelated to the tab that opened
@@ -187,6 +199,11 @@ function MobileMoreSheet({
                     <LockIcon className="ml-auto h-3.5 w-3.5 shrink-0" />
                     <span className="sr-only">{t("locked")}</span>
                   </>
+                ) : item.attention ? (
+                  <>
+                    <WarningIcon className="ml-auto h-6 w-6 shrink-0 text-orange-600" />
+                    <span className="sr-only">{t("needsAttention")}</span>
+                  </>
                 ) : null}
               </Link>
             );
@@ -219,6 +236,7 @@ export function Sidebar({
   hiredAgentSlugs,
   silence,
   usage,
+  attention,
 }: {
   companyName: string | null;
   email: string | null;
@@ -226,6 +244,7 @@ export function Sidebar({
   hiredAgentSlugs: string[];
   silence: SilenceReason | null;
   usage: UsageSummary | null;
+  attention: Attention;
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
@@ -234,13 +253,23 @@ export function Sidebar({
 
   const identityLabel = companyName ?? email ?? "";
 
-  const navItems = NAV_ITEMS.map((item) => ({
-    ...item,
-    locked: item.isLocked?.(hiredAgentSlugs) ?? false,
-  }));
+  const attentionByKey: Partial<Record<(typeof NAV_ITEMS)[number]["key"], boolean>> = attention;
+  const navItems = NAV_ITEMS.map((item) => {
+    const locked = item.isLocked?.(hiredAgentSlugs) ?? false;
+    return {
+      ...item,
+      locked,
+      // A locked tab already gets its own LockIcon + dimming -- a warning on
+      // top of that would be noise for something the merchant can't act on yet.
+      attention: !locked && (attentionByKey[item.key] ?? false),
+    };
+  });
   const mobilePrimaryItems = navItems.filter((item) => item.mobilePrimary);
   const mobileOverflowItems = navItems.filter((item) => !item.mobilePrimary);
   const overflowActive = mobileOverflowItems.some((item) => item.match(pathname));
+  // The "More" tab is a proxy for whatever's folded inside it -- a warning
+  // buried in the sheet is invisible unless the entry point says so too.
+  const overflowNeedsAttention = mobileOverflowItems.some((item) => item.attention);
 
   const [moreOpen, setMoreOpen] = useState(false);
   // A route change -- a row tapped inside the sheet, or the browser's own
@@ -284,6 +313,11 @@ export function Sidebar({
                   <>
                     <LockIcon className="ml-auto h-3.5 w-3.5 shrink-0" />
                     <span className="sr-only">{t("locked")}</span>
+                  </>
+                ) : item.attention ? (
+                  <>
+                    <WarningIcon className="ml-auto h-6 w-6 shrink-0 text-orange-600" />
+                    <span className="sr-only">{t("needsAttention")}</span>
                   </>
                 ) : null}
               </Link>
@@ -356,6 +390,8 @@ export function Sidebar({
                 />
                 {item.locked ? (
                   <LockIcon className="absolute -right-1.5 -top-1 h-3 w-3 text-on-surface-variant" />
+                ) : item.attention ? (
+                  <WarningIcon className="absolute -right-2 -top-1.5 h-4 w-4 text-orange-600" />
                 ) : null}
               </span>
               <span
@@ -376,12 +412,20 @@ export function Sidebar({
           aria-expanded={moreOpen}
           className="flex flex-1 flex-col items-center gap-1 py-2.5"
         >
-          <MoreIcon
-            className={clsx(
-              "h-5 w-5 transition-colors duration-150",
-              overflowActive ? "text-primary" : "text-on-surface-variant",
-            )}
-          />
+          <span className="relative">
+            <MoreIcon
+              className={clsx(
+                "h-5 w-5 transition-colors duration-150",
+                overflowActive ? "text-primary" : "text-on-surface-variant",
+              )}
+            />
+            {overflowNeedsAttention ? (
+              <>
+                <WarningIcon className="absolute -right-2 -top-1.5 h-4 w-4 text-orange-600" />
+                <span className="sr-only">{t("needsAttention")}</span>
+              </>
+            ) : null}
+          </span>
           <span
             className={clsx(
               "text-[11px] font-medium transition-colors duration-150",

@@ -228,8 +228,19 @@ export function BusinessHoursCard({
     }
   }
 
+  // Live off the current (possibly unsaved) state, not the server-loaded
+  // rows -- the icon disappears the moment the merchant opens a day, even
+  // before they hit save, the same way the rest of this card is optimistic.
+  const hasAnyOpenDay = days.some((d) => d.open);
+
   return (
-    <SettingsSection id="business-hours" icon={ClockIcon} title={t("title")} subtitle={t("subtitle")}>
+    <SettingsSection
+      id="business-hours"
+      icon={ClockIcon}
+      title={t("title")}
+      subtitle={t("subtitle")}
+      warning={!hasAnyOpenDay}
+    >
       <div className="flex flex-col gap-4">
         {days.map((day) => {
           const dayName = t(`days.${day.key}`);

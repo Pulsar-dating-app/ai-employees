@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import { PackageIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 import { LockedPage } from "../locked-page";
@@ -92,6 +93,12 @@ export default async function ProductsPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader icon={PackageIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
+
+      {(count ?? 0) === 0 ? (
+        <Alert variant="warning" title={t("emptyAlert.title")}>
+          {t("emptyAlert.body")}
+        </Alert>
+      ) : null}
 
       {!canEdit ? (
         <p className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-on-surface-variant">

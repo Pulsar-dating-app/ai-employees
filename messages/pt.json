@@ -921,6 +921,7 @@
       "metrics": "Desempenho",
       "settings": "Configurações",
       "locked": "bloqueado",
+      "needsAttention": "precisa de atenção",
       "more": "Mais"
     },
     "locked": {
@@ -1047,6 +1048,15 @@
     "completeness": "{filled} de {total} seções preenchidas",
     "completenessHint": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
     "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "pastDueAlert": {
+      "title": "Pagamento falhou",
+      "body": "Toda a sua equipe está pausada e não responde a nenhum cliente até isso ser resolvido.",
+      "action": "Atualizar pagamento"
+    },
+    "lowCompletenessAlert": {
+      "title": "As informações do seu negócio estão quase vazias",
+      "body": "Só {filled} de {total} seções estão preenchidas. Preencha pelo menos {min} para sua equipe ter o que precisa para atender bem."
+    },
     "billingLink": {
       "title": "Plano e cobrança",
       "hint": "Sua assinatura, uso e forma de pagamento."
@@ -1368,6 +1378,10 @@
     "noCompany": "Contrate o primeiro integrante da sua equipe para começar a gerenciar seu catálogo de produtos.",
     "browseMarketplace": "Ver marketplace",
     "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "emptyAlert": {
+      "title": "Seu catálogo está vazio",
+      "body": "Sua equipe não consegue recomendar ou vender nada até você adicionar pelo menos um produto."
+    },
     "save": "Salvar",
     "saving": "Salvando…",
     "saved": "Salvo",
@@ -1498,6 +1512,10 @@
     "noCompany": "Contrate o primeiro integrante da sua equipe para começar a gerenciar seus serviços.",
     "browseMarketplace": "Ver marketplace",
     "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
+    "emptyAlert": {
+      "title": "Nenhum serviço cadastrado",
+      "body": "Enquanto você não cadastrar os serviços que realmente oferece, sua equipe só consegue marcar um atendimento genérico. Cadastre cada um com duração e preço."
+    },
     "default": {
       "title": "Serviço padrão",
       "description": "Um serviço coringa para pedidos que você não cadastrou como serviço próprio.",

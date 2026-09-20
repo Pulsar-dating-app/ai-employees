@@ -921,6 +921,7 @@
       "metrics": "Performance",
       "settings": "Settings",
       "locked": "locked",
+      "needsAttention": "needs attention",
       "more": "More"
     },
     "locked": {
@@ -1047,6 +1048,15 @@
     "completeness": "{filled} of {total} sections filled in",
     "completenessHint": "The more detail you add here, the better your team can help your customers — just like onboarding a new employee in person.",
     "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
+    "pastDueAlert": {
+      "title": "Payment failed",
+      "body": "Your whole team is paused and not replying to any customer until this is fixed.",
+      "action": "Update payment"
+    },
+    "lowCompletenessAlert": {
+      "title": "Your business info is almost empty",
+      "body": "Only {filled} of {total} sections are filled in. Fill in at least {min} so your team has enough to answer customers well."
+    },
     "billingLink": {
       "title": "Plan & billing",
       "hint": "Your subscription, usage, and payment method."
@@ -1368,6 +1378,10 @@
     "noCompany": "Hire your first team member to start managing your product catalog.",
     "browseMarketplace": "Browse the marketplace",
     "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
+    "emptyAlert": {
+      "title": "Your catalog is empty",
+      "body": "Your team can't recommend or sell anything until you add at least one product."
+    },
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved",
@@ -1498,6 +1512,10 @@
     "noCompany": "Hire your first team member to start managing your services.",
     "browseMarketplace": "Browse the marketplace",
     "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
+    "emptyAlert": {
+      "title": "No services yet",
+      "body": "Until you add the services you actually offer, your team can only book a generic appointment. Add each one with its duration and price."
+    },
     "default": {
       "title": "Default service",
       "description": "One catch-all for requests you haven't listed as their own service.",

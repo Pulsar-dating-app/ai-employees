@@ -2,25 +2,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  countFilledSections,
+  SETTINGS_MIN_SECTIONS,
+  SETTINGS_TOTAL_SECTIONS,
+} from "@/lib/companies/settings-completeness";
+import { isBillingPastDue } from "@/lib/billing/activation";
+import { Alert } from "@/components/ui/alert";
 import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
 import { CartIcon, ChevronRightIcon, SettingsIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
-
-function countFilledSections(company: {
-  description: string | null;
-  payment_policy: string | null;
-  additional_information: string | null;
-  faq: unknown[] | null;
-}): number {
-  return [
-    Boolean(company.description),
-    Boolean(company.payment_policy),
-    Array.isArray(company.faq) && company.faq.length > 0,
-    Boolean(company.additional_information),
-  ].filter(Boolean).length;
-}
 
 // Company-wide settings — the business knowledge every hired team member
 // draws on. Lives at the top level, not under a specific hired agent: it's
@@ -65,13 +58,41 @@ export default async function SettingsPage() {
     .eq("user_id", user!.id)
     .maybeSingle();
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
+  // Same predicate the shell's own past-due banners already use -- this is
+  // the on-page explanation for the sidebar's Settings warning icon when
+  // it's the billing reason, not the completeness one.
+  const pastDue = await isBillingPastDue(company.id, supabase);
 
-  const totalSections = 4;
+  const totalSections = SETTINGS_TOTAL_SECTIONS;
   const filledSections = countFilledSections(company);
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader icon={SettingsIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
+
+      {pastDue ? (
+        <Alert
+          variant="error"
+          title={t("pastDueAlert.title")}
+          action={
+            <Link href="/dashboard/settings/billing" className="text-sm font-semibold underline">
+              {t("pastDueAlert.action")}
+            </Link>
+          }
+        >
+          {t("pastDueAlert.body")}
+        </Alert>
+      ) : null}
+
+      {filledSections < SETTINGS_MIN_SECTIONS ? (
+        <Alert variant="warning" title={t("lowCompletenessAlert.title")}>
+          {t("lowCompletenessAlert.body", {
+            filled: filledSections,
+            total: totalSections,
+            min: SETTINGS_MIN_SECTIONS,
+          })}
+        </Alert>
+      ) : null}
 
       <div className="rounded-md bg-primary-fixed/40 px-4 py-3">
         <p className="text-sm font-semibold text-primary">
