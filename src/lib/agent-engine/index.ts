@@ -5,7 +5,14 @@ import { DEFAULT_MAX_TOOL_ITERATIONS, DEFAULT_MODEL, UNGROUNDED_FALLBACK_TEXT } 
 import { discardConversationItems, loadConversation, resolveOpenAiConversationId } from "./conversation";
 import { loadAgentConfig } from "./config";
 import { loadCustomer } from "./customer";
-import { loadBusinessName, loadCompanyTimezone, loadHumanHandoffEnabled, loadPolicies } from "./knowledge";
+import {
+  loadBusinessName,
+  loadCompanyTimezone,
+  loadHasBusinessHours,
+  loadHumanHandoffEnabled,
+  loadPolicies,
+  loadServiceChoice,
+} from "./knowledge";
 import { isValidTimeZone } from "@/lib/analytics/load";
 import { determineIntent } from "./stubs";
 import { buildInitialInput, buildSystemPrompt } from "./prompt";
@@ -85,6 +92,17 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     deps.tools ??
     resolveToolsForAgent(agentConfig.slug).filter((tool) => humanHandoffEnabled || tool.name !== "request_human");
 
+  // Only an agent that can list services needs to know whether there is just
+  // one. Read after the tool list is resolved (unlike the policies above) so
+  // Malu never pays for a query she has no use for.
+  const canSchedule = tools.some((tool) => tool.name === "find_available_slots");
+  const [serviceChoice, hasBusinessHours] = await Promise.all([
+    tools.some((tool) => tool.name === "list_services")
+      ? loadServiceChoice(supabase, input.companyId)
+      : null,
+    canSchedule ? loadHasBusinessHours(supabase, input.companyId) : true,
+  ]);
+
   // Step 2
   const openAiConversationId = await resolveOpenAiConversationId(openai, supabase, conversation);
 
@@ -106,6 +124,12 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     // them. A deps.tools override without the policy tool (the unit-test fake
     // tools) composes exactly the prompt it did before.
     policies: tools.some((tool) => tool.name === "get_policy_information") ? policies : null,
+    serviceChoice,
+    // Read off the resolved list like the ones above: the offer of "alguém do
+    // time" must match whether request_human actually survived the handoff filter.
+    noBusinessHours: hasBusinessHours
+      ? null
+      : { canOfferTeam: tools.some((tool) => tool.name === "request_human") },
     currentDate: formatCurrentDate(companyTimezone),
   });
   const initialInput = buildInitialInput(input.message);

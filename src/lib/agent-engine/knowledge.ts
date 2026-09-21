@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { CompanyRepository, type PolicyInformation } from "@/lib/companies/repository";
+import { AppointmentRepository } from "@/lib/appointments/repository";
+import { classifyServiceChoice, type ServiceChoice } from "./prompt";
 
 // Step 4 -- Trello C3 replaced this step's original stub (a full,
 // unfiltered read of every companies.* field, injected into every system
@@ -25,6 +27,22 @@ export async function loadBusinessName(supabase: SupabaseClient, companyId: stri
 // these four fields; the rest of `companies` still sits behind its tool.
 export async function loadPolicies(supabase: SupabaseClient, companyId: string): Promise<PolicyInformation[]> {
   return CompanyRepository.getAllPolicyInformation(companyId, supabase);
+}
+
+// Whether this business has exactly one thing to book, from the same read
+// list_services does (so the two can never disagree about what "one service"
+// means). One small `services` query; null for any other shape.
+export async function loadServiceChoice(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<ServiceChoice | null> {
+  return classifyServiceChoice(await AppointmentRepository.listServices(companyId, supabase));
+}
+
+// Whether the merchant has set any opening hours (one count query, the same one
+// find_available_slots uses to tell "no hours" from "no free slot").
+export async function loadHasBusinessHours(supabase: SupabaseClient, companyId: string): Promise<boolean> {
+  return AppointmentRepository.hasBusinessHours(companyId, supabase);
 }
 
 // Also loaded unconditionally, same "cheap and always relevant" rationale as

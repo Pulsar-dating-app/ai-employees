@@ -135,8 +135,16 @@ export type ListServicesResult = {
   defaultService: BookableService | null;
 };
 
+// The merchant never set opening hours (no active business_hours row). Distinct
+// from "closed" and from "no free slot": with no hours every date looks closed
+// and every window looks empty, which is what made Ana say the business was
+// closed and invite the customer to try later dates. Checked only after the
+// service resolved, so service_not_found keeps its precedence.
+export type NoBusinessHoursResult = { available: false; reason: "no_business_hours" };
+
 export type FindAvailableSlotsResult =
   | { available: false; reason: "service_not_found" }
+  | NoBusinessHoursResult
   | {
       available: true;
       timezone: string;
@@ -181,6 +189,7 @@ export type FindAvailableSlotsResult =
 // without a second round-trip.
 export type FindNextAvailableResult =
   | { available: false; reason: "service_not_found" }
+  | NoBusinessHoursResult
   | {
       available: true;
       found: false;
@@ -311,6 +320,20 @@ async function listServices(
   };
 }
 
+// True when the merchant has at least one active opening-hours window. Absence
+// means "not set up yet", never "always closed" -- callers must not report it
+// as a closure.
+async function hasBusinessHours(companyId: string, supabaseClient?: SupabaseClient): Promise<boolean> {
+  const client = supabaseClient ?? createServiceClient();
+  const { count, error } = await client
+    .from("business_hours")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("is_active", true);
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
 async function findAvailableSlots(
   {
     companyId,
@@ -335,6 +358,13 @@ async function findAvailableSlots(
       client.from("companies").select("timezone").eq("id", companyId).maybeSingle(),
       loadIntakeFields(client, companyId),
     ]);
+    // Nothing came back: either the window really is full/closed, or the merchant
+    // never set hours (then every day looks closed). Only the second needs telling
+    // apart, and only an empty result can be it.
+    if (slots.length === 0 && !(await hasBusinessHours(companyId, client))) {
+      return { available: false, reason: "no_business_hours" };
+    }
+
     const timezone =
       company?.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
 
@@ -403,7 +433,15 @@ async function findNextAvailable(
         from,
         to,
       });
-      if (slots.length === 0) continue;
+      if (slots.length === 0) {
+        // No slot in the first window and no hours at all: scanning the other
+        // ~80 days can only come back empty, and "nothing in 90 days" would be
+        // the wrong thing to tell the customer.
+        if (offset === 0 && !(await hasBusinessHours(companyId, client))) {
+          return { available: false, reason: "no_business_hours" };
+        }
+        continue;
+      }
 
       // computeAvailableSlots walks dates ascending, but a day with two
       // business-hours windows can emit its slots in DB order -- pick the
@@ -965,6 +1003,7 @@ async function reschedule(
 
 export const AppointmentRepository = {
   listServices,
+  hasBusinessHours,
   findAvailableSlots,
   findNextAvailable,
   book,

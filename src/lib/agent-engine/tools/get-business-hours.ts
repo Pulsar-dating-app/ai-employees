@@ -17,8 +17,8 @@ export const getBusinessHoursTool: AgentTool = {
     "this is the only place that answer exists, so never guess it and never infer it from " +
     "appointment availability. Returns `days`, each with `dayOfWeek` (0 = Sunday), `opensAt` and " +
     "`closesAt` as HH:MM. A day missing from the list is a day the business is closed, and an " +
-    "empty list means no hours are on file at all -- say so plainly rather than implying the " +
-    "business never opens. These are opening hours, not free slots: a day being open says " +
+    "empty list means the business hasn't set its hours yet -- say \"Ainda não temos horários " +
+    "definidos por aqui\" (in the customer's language), never that it is closed or never opens. These are opening hours, not free slots: a day being open says " +
     "nothing about whether a time is still bookable, which is what find_available_slots is for.",
   parameters: {
     type: "object",
