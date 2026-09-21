@@ -5,7 +5,7 @@ import { DEFAULT_MAX_TOOL_ITERATIONS, DEFAULT_MODEL, UNGROUNDED_FALLBACK_TEXT } 
 import { discardConversationItems, loadConversation, resolveOpenAiConversationId } from "./conversation";
 import { loadAgentConfig } from "./config";
 import { loadCustomer } from "./customer";
-import { loadBusinessName, loadCompanyTimezone, loadHumanHandoffEnabled } from "./knowledge";
+import { loadBusinessName, loadCompanyTimezone, loadHumanHandoffEnabled, loadPolicies } from "./knowledge";
 import { isValidTimeZone } from "@/lib/analytics/load";
 import { determineIntent } from "./stubs";
 import { buildInitialInput, buildSystemPrompt } from "./prompt";
@@ -57,12 +57,16 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   // "load customer context," and inventing a shape (e.g. "greet by name")
   // isn't this ticket's call to make. Available for the next ticket that
   // needs it.
-  const [agentConfig, , businessName, companyTimezone, humanHandoffEnabled] = await Promise.all([
+  const [agentConfig, , businessName, companyTimezone, humanHandoffEnabled, policies] = await Promise.all([
     loadAgentConfig(supabase, { companyId: input.companyId, agentId: conversation.agent_id! }),
     loadCustomer(supabase, { companyId: input.companyId, customerId: conversation.customer_id }),
     loadBusinessName(supabase, input.companyId),
     loadCompanyTimezone(supabase, input.companyId),
     loadHumanHandoffEnabled(supabase, input.companyId),
+    // Read for every agent because which tools this one gets isn't known until
+    // agentConfig resolves; only used below when it can actually answer policy
+    // questions. One small `companies` row read.
+    loadPolicies(supabase, input.companyId),
   ]);
 
   // Trello J2 -- resolved here, not at the top of run(), because it depends
@@ -98,6 +102,10 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     // honoured -- and so Ana, who has no catalogue tools, never gets told
     // her options are displayed for her.
     hasProductSearch: tools.some((tool) => tool.name === "search_products"),
+    // Same reasoning: only an agent that can be asked about policies carries
+    // them. A deps.tools override without the policy tool (the unit-test fake
+    // tools) composes exactly the prompt it did before.
+    policies: tools.some((tool) => tool.name === "get_policy_information") ? policies : null,
     currentDate: formatCurrentDate(companyTimezone),
   });
   const initialInput = buildInitialInput(input.message);

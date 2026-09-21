@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { CompanyRepository, type PolicyInformation } from "@/lib/companies/repository";
 
 // Step 4 -- Trello C3 replaced this step's original stub (a full,
 // unfiltered read of every companies.* field, injected into every system
@@ -16,6 +17,14 @@ export async function loadBusinessName(supabase: SupabaseClient, companyId: stri
   const { data, error } = await supabase.from("companies").select("name").eq("id", companyId).maybeSingle();
   if (error) throw error;
   return data?.name ?? null;
+}
+
+// Shipping/return/payment policy and FAQ, read in one query for
+// buildStoreInformationSection. This walks back part of C3's "policies only
+// on demand" split -- see decisions.md (2026-09-21) for why -- but only for
+// these four fields; the rest of `companies` still sits behind its tool.
+export async function loadPolicies(supabase: SupabaseClient, companyId: string): Promise<PolicyInformation[]> {
+  return CompanyRepository.getAllPolicyInformation(companyId, supabase);
 }
 
 // Also loaded unconditionally, same "cheap and always relevant" rationale as

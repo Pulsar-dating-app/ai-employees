@@ -63,6 +63,10 @@ export type PolicyInformation = {
   content: string | null;
 };
 
+// Payment first, FAQ last: the order the prompt lists them in (the FAQ is the
+// longest and the most likely to be cut for length, see prompt.ts).
+export const POLICY_TYPES: PolicyType[] = ["payment", "shipping", "return", "faq"];
+
 const POLICY_COLUMNS: Record<PolicyType, string> = {
   shipping: "shipping_policy",
   return: "return_policy",
@@ -91,6 +95,11 @@ function formatFaq(raw: unknown): string | null {
   return lines.length > 0 ? lines.join("\n\n") : null;
 }
 
+function toPolicyInformation(type: PolicyType, raw: unknown): PolicyInformation {
+  const content = type === "faq" ? formatFaq(raw) : typeof raw === "string" && raw.trim() ? raw : null;
+  return { type, available: content !== null, content };
+}
+
 async function getPolicyInformation(
   companyId: string,
   type: PolicyType,
@@ -108,10 +117,31 @@ async function getPolicyInformation(
 
   if (error) throw error;
 
-  const raw = (data as Record<string, unknown> | null)?.[column] ?? null;
-  const content = type === "faq" ? formatFaq(raw) : typeof raw === "string" && raw.trim() ? raw : null;
-
-  return { type, available: content !== null, content };
+  return toPolicyInformation(type, (data as Record<string, unknown> | null)?.[column] ?? null);
 }
 
-export const CompanyRepository = { getBusinessInformation, getPolicyInformation };
+// All four policies in one read, always in the same order. The system prompt
+// carries them on every turn (see buildStoreInformationSection) instead of
+// leaving it to the model to pick a `type` to look up -- which is how a
+// merchant who wrote "Card and PIX" in the FAQ but left payment_policy empty
+// got "I have no payment information" out of a model that only ever looked at
+// type="payment". Same shaping as getPolicyInformation, so the two can't
+// disagree about what counts as "on file".
+async function getAllPolicyInformation(
+  companyId: string,
+  supabaseClient?: SupabaseClient,
+): Promise<PolicyInformation[]> {
+  const serviceClient = supabaseClient ?? createServiceClient();
+  const { data, error } = await serviceClient
+    .from("companies")
+    .select(POLICY_TYPES.map((type) => POLICY_COLUMNS[type]).join(", "))
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const row = data as Record<string, unknown> | null;
+  return POLICY_TYPES.map((type) => toPolicyInformation(type, row?.[POLICY_COLUMNS[type]] ?? null));
+}
+
+export const CompanyRepository = { getBusinessInformation, getPolicyInformation, getAllPolicyInformation };
