@@ -360,6 +360,32 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("greetings, small talk, thank-yous");
   });
 
+  // Chat testing: "Você é uma pessoa ou um robô?" got an answer from Ana and a
+  // dodge from Malu. One rule now, for every agent, and it must not be
+  // contradicted by the older "what are you? keep it light and redirect" line.
+  it("gives every agent the same 'virtual assistant' answer to 'are you a person or a robot?'", () => {
+    for (const slug of ["ana", "malu"]) {
+      const agentConfig: AgentConfig = {
+        slug,
+        role: "Assistant",
+        description: null,
+        personality: null,
+        systemPrompt: null,
+        companyAgentStatus: "active",
+        displayName: null,
+      };
+
+      const prompt = buildSystemPrompt({ agentConfig, businessName: "Acme", intent: "unknown" });
+      expect(prompt).toContain('you are a virtual assistant -- "assistente virtual" in Portuguese');
+      expect(prompt).toContain("Never claim or imply that you are a human");
+      expect(prompt).toContain("never dodge the question");
+      expect(prompt).toContain("Do not call yourself an AI, a bot, a robot or a language model");
+      // The redirect-instead-of-answering line is now scoped to "how you work".
+      expect(prompt).toContain("If asked how you work, keep it light and redirect");
+      expect(prompt).not.toContain("If asked what you are or how you work");
+    }
+  });
+
   // Found chat-testing Ana on a clinic: a symptom got a full medical briefing
   // plus "não consigo avaliar sintomas" in the same message. SCOPE_GUARDRAIL's
   // "medical advice" line never fired because a symptom is on topic for a
