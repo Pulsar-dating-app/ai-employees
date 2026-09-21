@@ -33,7 +33,9 @@ export const getPolicyInformationTool: AgentTool = {
     "overrides whatever you'd otherwise guess. Never answer a shipping/return/payment/FAQ " +
     "question from memory, general assumptions, or what's \"typical\" for a store -- always " +
     "call this first. If it comes back unavailable, tell the customer honestly that you don't " +
-    "have that on file rather than guessing or inventing an answer.",
+    "have that on file rather than guessing or inventing an answer. The system prompt normally " +
+    "already carries this business's policies and FAQ (\"Store information on file\"); when it " +
+    "does, answer from there and only call this for a topic it says is too long to include.",
   parameters: {
     type: "object",
     properties: {

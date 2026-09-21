@@ -107,4 +107,59 @@ describe("CompanyRepository", () => {
       expect(policy).toEqual({ type: "faq", available: false, content: null });
     });
   });
+
+  // The system prompt carries these four on every turn (Malu's consistency
+  // ticket), so this read has to agree with getPolicyInformation about what
+  // counts as "on file" -- and a merchant who only filled in the FAQ (the real
+  // case that started it: payment_policy empty, "Card and PIX" in the FAQ)
+  // must still get the FAQ back.
+  describe("getAllPolicyInformation", () => {
+    it("returns all four topics in prompt order, with only the filled ones available", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "All Policies Co");
+
+      await api("PATCH", `/api/companies/${companyId}`, owner.cookieHeader, {
+        shipping_policy: "Ships in 3-5 business days",
+        faq: [{ question: "What payment methods do you accept?", answer: "Card and PIX." }],
+      });
+
+      const policies = await CompanyRepository.getAllPolicyInformation(companyId, getTestServiceClient());
+      expect(policies).toEqual([
+        { type: "payment", available: false, content: null },
+        { type: "shipping", available: true, content: "Ships in 3-5 business days" },
+        { type: "return", available: false, content: null },
+        {
+          type: "faq",
+          available: true,
+          content: "Q: What payment methods do you accept?\nA: Card and PIX.",
+        },
+      ]);
+    });
+
+    it("returns all four unavailable, not an error, for a company that set nothing", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Nothing Co");
+
+      const policies = await CompanyRepository.getAllPolicyInformation(companyId, getTestServiceClient());
+      expect(policies.map((p) => p.type)).toEqual(["payment", "shipping", "return", "faq"]);
+      expect(policies.every((p) => !p.available && p.content === null)).toBe(true);
+    });
+
+    it("agrees with getPolicyInformation for every topic", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Agreeing Co");
+
+      await api("PATCH", `/api/companies/${companyId}`, owner.cookieHeader, {
+        payment_policy: "Card only",
+        return_policy: "   ",
+        faq: [],
+      });
+
+      const client = getTestServiceClient();
+      const all = await CompanyRepository.getAllPolicyInformation(companyId, client);
+      for (const policy of all) {
+        expect(policy).toEqual(await CompanyRepository.getPolicyInformation(companyId, policy.type, client));
+      }
+    });
+  });
 });
