@@ -193,6 +193,23 @@ describe("add_to_waitlist", () => {
     expect(result).toEqual({ added: false, reason: "email_required" });
   });
 
+  // A waitlist promises "I'll tell you if something opens up"; with no opening
+  // hours at all nothing ever can, so it isn't offered (and no row is written).
+  it("refuses with no_business_hours, writing nothing, when the merchant never set hours", async () => {
+    const s = await seed("Waitlist No Hours Co");
+    const svc = getTestServiceClient();
+    await svc.from("business_hours").delete().eq("company_id", s.companyId);
+
+    const result = await addToWaitlistTool.execute(
+      { serviceId: s.serviceId, from: "2027-05-01", to: "2027-05-07", email: `w-${randomUUID()}@example.test` },
+      s.ctx,
+    );
+
+    expect(result).toMatchObject({ added: false, reason: "no_business_hours" });
+    const { data: rows } = await svc.from("appointment_waitlist").select("id").eq("company_id", s.companyId);
+    expect(rows).toHaveLength(0);
+  });
+
   it("rejects a malformed email and a backwards range", async () => {
     const s = await seed("Waitlist Bad Input Co");
     expect(

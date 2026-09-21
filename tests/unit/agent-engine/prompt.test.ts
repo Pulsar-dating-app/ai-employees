@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   buildInitialInput,
+  buildNoBusinessHoursSection,
+  buildServiceChoiceSection,
   buildStoreInformationSection,
   buildSystemPrompt,
+  classifyServiceChoice,
   MAX_STORE_INFORMATION_CHARS,
 } from "@/lib/agent-engine/prompt";
 import type { AgentConfig } from "@/lib/agent-engine/config";
@@ -360,6 +363,30 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("greetings, small talk, thank-yous");
   });
 
+  // Chat testing Ana with no Google Calendar: "o calendário ao vivo não pôde ser
+  // consultado", "não consigo garantir a disponibilidade" followed by a firm
+  // confirmation, and "Vou verificar…" with nothing after it.
+  it("always includes a guardrail: firm about returned slots, silent about calendars, no promises to check later", () => {
+    const agentConfig: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling Assistant",
+      description: null,
+      personality: null,
+      systemPrompt: null,
+      companyAgentStatus: "active",
+      displayName: null,
+    };
+
+    const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
+    expect(prompt).toContain("When your tools return a time as available, it is available");
+    expect(prompt).toContain("Never hedge a time your tools returned");
+    expect(prompt).toContain("Never mention a calendar, an agenda");
+    expect(prompt).toContain("You only ever speak when the customer writes to you");
+    expect(prompt).toContain('never promise to do something later: no "vou verificar"');
+    // Handing off is a completed action, not a promise to check.
+    expect(prompt).toContain("Having actually handed the conversation to the team is different");
+  });
+
   // Chat testing: "Você é uma pessoa ou um robô?" got an answer from Ana and a
   // dodge from Malu. One rule now, for every agent, and it must not be
   // contradicted by the older "what are you? keep it light and redirect" line.
@@ -690,6 +717,142 @@ describe("buildStoreInformationSection", () => {
       const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
       expect(prompt).not.toContain("Store information on file");
     });
+  });
+});
+
+// Ana's single-service ticket: with one thing to book she asked "É para
+// Oftalmo?" / "qual serviço?" before answering, and with only the default
+// service (14 of 14 availability questions on the generico account) the
+// customer could not get past the question at all.
+describe("classifyServiceChoice", () => {
+  const svc = (id: string) => ({ id, name: id });
+
+  it("is 'single-listed' when exactly one service is listed, catch-all or not", () => {
+    expect(classifyServiceChoice({ services: [svc("a")], defaultService: null })).toBe("single-listed");
+    expect(classifyServiceChoice({ services: [svc("a")], defaultService: svc("d") })).toBe("single-listed");
+  });
+
+  it("is 'only-default' when nothing is listed but the catch-all is active", () => {
+    expect(classifyServiceChoice({ services: [], defaultService: svc("d") })).toBe("only-default");
+  });
+
+  it("is null when there is a real choice, or nothing to book at all", () => {
+    expect(classifyServiceChoice({ services: [svc("a"), svc("b")], defaultService: null })).toBeNull();
+    expect(classifyServiceChoice({ services: [svc("a"), svc("b")], defaultService: svc("d") })).toBeNull();
+    expect(classifyServiceChoice({ services: [], defaultService: null })).toBeNull();
+  });
+});
+
+describe("buildServiceChoiceSection", () => {
+  it("returns null when there is no single-service situation", () => {
+    expect(buildServiceChoiceSection(null)).toBeNull();
+    expect(buildServiceChoiceSection(undefined)).toBeNull();
+  });
+
+  it.each(["single-listed", "only-default"] as const)(
+    "for %s: never asks which service, and answers availability in the same turn",
+    (choice) => {
+      const section = buildServiceChoiceSection(choice)!;
+      expect(section).toContain("nothing for the customer to");
+      expect(section).toContain('Never ask which service they want');
+      expect(section).toContain('no "é para X?", no "qual serviço?"');
+      expect(section).toContain("look it up in that same turn");
+      expect(section).toContain("don't say you will check: check, then answer");
+    },
+  );
+
+  it("keeps the usual handling for a request that doesn't fit the business", () => {
+    expect(buildServiceChoiceSection("single-listed")).toContain("keeps following your usual rule");
+    expect(buildServiceChoiceSection("only-default")).toContain("outside this business's line of work");
+  });
+
+  it("is added after the agent's own prompt (which tells it to help pick a service) and before the per-turn date", () => {
+    const agentConfig: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling Assistant",
+      description: null,
+      personality: null,
+      systemPrompt: "You are Ana. Help them pick a service.",
+      companyAgentStatus: "active",
+      displayName: null,
+    };
+    const prompt = buildSystemPrompt({
+      agentConfig,
+      businessName: "Acme",
+      intent: "unknown",
+      serviceChoice: "only-default",
+      currentDate: "Tuesday, September 22, 2026 (America/Sao_Paulo)",
+    });
+
+    expect(prompt.indexOf("This business has no listed services")).toBeGreaterThan(
+      prompt.indexOf("Help them pick a service."),
+    );
+    expect(prompt.indexOf("This business has no listed services")).toBeLessThan(prompt.indexOf("Current date:"));
+
+    const without = buildSystemPrompt({ agentConfig, businessName: "Acme", intent: "unknown" });
+    expect(without).not.toContain("nothing for the customer to");
+  });
+});
+
+// Ana's no-opening-hours ticket: with no hours every day read as closed and
+// every window as empty, so she told customers the business was "fechada" and
+// invited them to try dates that could never work.
+describe("buildNoBusinessHoursSection", () => {
+  it("returns null when the business has hours (nothing passed)", () => {
+    expect(buildNoBusinessHoursSection(null)).toBeNull();
+    expect(buildNoBusinessHoursSection(undefined)).toBeNull();
+  });
+
+  it("gives one fixed line with the team offer when the agent can hand off", () => {
+    const section = buildNoBusinessHoursSection({ canOfferTeam: true })!;
+    expect(section).toContain("Ainda não temos horários definidos por aqui. Posso chamar alguém do time?");
+    expect(section).toContain("exactly this one line");
+  });
+
+  it("drops the team offer when the agent can't actually bring anyone in", () => {
+    const section = buildNoBusinessHoursSection({ canOfferTeam: false })!;
+    expect(section).toContain("Ainda não temos horários definidos por aqui.");
+    expect(section).not.toContain("Posso chamar alguém do time");
+  });
+
+  it("forbids saying closed, suggesting other dates, the waitlist, and collecting booking details", () => {
+    const section = buildNoBusinessHoursSection({ canOfferTeam: true })!;
+    expect(section).toContain("Do not say the business is closed");
+    expect(section).toContain("Do not suggest trying other dates or weeks");
+    expect(section).toContain("do not offer a waitlist");
+    expect(section).toContain("do not ask for their name or email for a booking");
+    // Existing appointments don't depend on hours.
+    expect(section).toContain("Looking up or cancelling an existing appointment still works as usual");
+  });
+
+  it("is added after the service-choice section, so 'one fixed line' wins over 'answer availability in the same turn'", () => {
+    const agentConfig: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling Assistant",
+      description: null,
+      personality: null,
+      systemPrompt: "You are Ana.",
+      companyAgentStatus: "active",
+      displayName: null,
+    };
+    const prompt = buildSystemPrompt({
+      agentConfig,
+      businessName: "Acme",
+      intent: "unknown",
+      serviceChoice: "single-listed",
+      noBusinessHours: { canOfferTeam: true },
+      currentDate: "Tuesday, September 22, 2026 (America/Sao_Paulo)",
+    });
+
+    expect(prompt.indexOf("This business has not set its opening hours yet")).toBeGreaterThan(
+      prompt.indexOf("This business has exactly one service to book"),
+    );
+    expect(prompt.indexOf("This business has not set its opening hours yet")).toBeLessThan(
+      prompt.indexOf("Current date:"),
+    );
+
+    const without = buildSystemPrompt({ agentConfig, businessName: "Acme", intent: "unknown" });
+    expect(without).not.toContain("has not set its opening hours");
   });
 });
 

@@ -289,13 +289,15 @@ describe("find_available_slots", () => {
     )) as {
       available: true;
       timezone: string;
-      googleCalendarChecked: boolean;
       slots: { start: string; end: string; label: string }[];
     };
 
     expect(result.available).toBe(true);
     expect(result.timezone).toBe("UTC");
-    expect(result.googleCalendarChecked).toBe(false);
+    // Whether Google was consulted is the merchant's business, not something the
+    // model should ever see -- it used to surface to customers as "o calendário
+    // ao vivo não pôde ser consultado".
+    expect(result).not.toHaveProperty("googleCalendarChecked");
     expect(result.slots[0]).toEqual({
       start: `${BOOKING_DATE}T09:00:00.000Z`,
       end: `${BOOKING_DATE}T09:30:00.000Z`,
@@ -319,6 +321,46 @@ describe("find_available_slots", () => {
     );
 
     expect(result).toEqual({ available: false, reason: "service_not_found" });
+  });
+
+  // Found chat-testing Ana on an account with no opening hours: every date came
+  // back in `closedDates`, so she told customers the business was closed. "Not
+  // set up yet" is a different fact from "closed" and from "no free slot".
+  it("reports no_business_hours, not a list of closed dates, when the merchant never set hours", async () => {
+    const seed = await seedConversation(owner, "No Hours Slots Co");
+    const serviceId = await createService(owner, seed.companyId, {
+      name: "Consultation",
+      duration_minutes: 30,
+    });
+
+    const result = await findAvailableSlotsTool.execute(
+      { serviceId, from: BOOKING_DATE, to: BOOKING_DATE },
+      toolCtxFor(seed),
+    );
+
+    expect(result).toEqual({ available: false, reason: "no_business_hours" });
+  });
+
+  it("still reports the ordinary empty result when hours exist but the day is closed", async () => {
+    const seed = await seedConversation(owner, "Closed Day Co");
+    const serviceId = await createService(owner, seed.companyId, {
+      name: "Consultation",
+      duration_minutes: 30,
+    });
+    await setBusinessHours(owner, seed.companyId); // open on BOOKING_DOW only
+
+    const otherDay = new Date(`${BOOKING_DATE}T00:00:00Z`);
+    otherDay.setUTCDate(otherDay.getUTCDate() + 1);
+    const closedDate = otherDay.toISOString().slice(0, 10);
+
+    const result = (await findAvailableSlotsTool.execute(
+      { serviceId, from: closedDate, to: closedDate },
+      toolCtxFor(seed),
+    )) as { available: true; slots: unknown[]; closedDates: string[] };
+
+    expect(result.available).toBe(true);
+    expect(result.slots).toEqual([]);
+    expect(result.closedDates).toEqual([closedDate]);
   });
 });
 
@@ -351,17 +393,12 @@ describe("find_next_available", () => {
       available: true;
       found: true;
       timezone: string;
-      googleCalendarChecked: boolean;
       slot: { start: string; end: string; label: string };
       intakeQuestions: { key: string }[];
     };
 
-    expect(result).toMatchObject({
-      available: true,
-      found: true,
-      timezone: "UTC",
-      googleCalendarChecked: false,
-    });
+    expect(result).toMatchObject({ available: true, found: true, timezone: "UTC" });
+    expect(result).not.toHaveProperty("googleCalendarChecked");
     // A real future instant, 30 minutes long, aligned to the 09:00-17:00 grid.
     expect(new Date(result.slot.start).getTime()).toBeGreaterThan(Date.now());
     expect(new Date(result.slot.end).getTime() - new Date(result.slot.start).getTime()).toBe(
@@ -376,18 +413,41 @@ describe("find_next_available", () => {
     expect(result.intakeQuestions.map((q) => q.key)).toEqual(["email", "full_name"]);
   });
 
-  it("reports found:false with a horizon when nothing is open in range", async () => {
+  it("reports found:false with a horizon when hours exist but nothing is open in range", async () => {
     const seed = await seedConversation(owner, "Never Open Co");
     const serviceId = await createService(owner, seed.companyId, {
       name: "Consultation",
       duration_minutes: 30,
     });
-    // No business hours configured at all -> the engine has no window to
-    // place a slot in, all the way out to the horizon.
+    await setBusinessHoursAllWeek(seed.companyId);
+    // Time off across the whole scan horizon (and a margin): the business has
+    // hours, there is just nothing bookable in the next ~90 days.
+    const today = new Date();
+    const farOff = new Date(today.getTime() + 200 * 86_400_000);
+    await api("POST", `/api/companies/${seed.companyId}/time-off`, owner.cookieHeader, {
+      startDate: new Date(today.getTime() - 86_400_000).toISOString().slice(0, 10),
+      endDate: farOff.toISOString().slice(0, 10),
+    });
 
     const result = await findNextAvailableTool.execute({ serviceId }, toolCtxFor(seed));
 
     expect(result).toEqual({ available: true, found: false, horizonDays: 90 });
+  });
+
+  // No hours at all used to land in found:false above ("nothing in the next 90
+  // days"), which sent Ana inviting customers to try later dates that could
+  // never work. It is its own answer now, and returned from the first window
+  // instead of scanning ~90 empty days.
+  it("reports no_business_hours when the merchant never set hours", async () => {
+    const seed = await seedConversation(owner, "No Hours Next Co");
+    const serviceId = await createService(owner, seed.companyId, {
+      name: "Consultation",
+      duration_minutes: 30,
+    });
+
+    const result = await findNextAvailableTool.execute({ serviceId }, toolCtxFor(seed));
+
+    expect(result).toEqual({ available: false, reason: "no_business_hours" });
   });
 
   it("reports service_not_found for a service from another company", async () => {

@@ -18,6 +18,10 @@ export const DEFAULT_MAX_TOOL_ITERATIONS = 4;
 // Portuguese is the MVP's launch language (spec §19, WhatsApp Brazil);
 // `deps.ungroundedFallbackText` is the seam for D2 to localise it once real
 // routing knows who it's talking to.
+//
+// Worded as what is true now, not as a promise: an agent only ever speaks when
+// the customer writes, so "e já te falo" / "deixa eu confirmar" is a promise
+// nobody will keep (same rule as AVAILABILITY_GUARDRAIL in prompt.ts).
 export const UNGROUNDED_FALLBACK_TEXT =
-  "Deixa eu confirmar essa informação certinho pra não te passar nada errado, e já te falo 😊 " +
-  "Enquanto isso, posso te ajudar com mais alguma coisa?";
+  "Não consigo confirmar essa informação agora, e prefiro não te passar nada errado 😊 " +
+  "Posso te ajudar com mais alguma coisa?";

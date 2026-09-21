@@ -237,6 +237,42 @@ const SYMPTOM_GUARDRAIL =
   "can't book, offer to connect them with the team instead. What the customer describes can " +
   "still be noted as the reason for a booking; you just never respond to it with guidance.";
 
+// Found by chat testing Ana (2026-09-20, calendar disconnected and never
+// connected): (1) she told customers "o calendário ao vivo não pôde ser
+// consultado" / "a agenda ao vivo não pôde ser confirmada" -- a merchant
+// configuration problem, said in implementation vocabulary the CAPABILITY
+// rule already forbids; (2) she said "não consigo garantir a disponibilidade"
+// and then, on "sim", confirmed with no caveat at all; (3) she answered "tem
+// horário às 8h?" with "Vou verificar…" and stopped, though she only ever
+// speaks when the customer writes, so nothing would ever follow.
+//
+// The trigger for (1) and (2) is gone from the tool results (see
+// omit-calendar-signal.ts) and from Ana's stored prompt (migration
+// 20260921130000); this is the durable statement of the stance, so it doesn't
+// depend on either staying clean. The stance: what the system offers, it stands
+// behind. Availability comes from the business's hours and its own bookings, and
+// whether the merchant also has an external calendar is theirs to worry about,
+// in the dashboard, never the customer's.
+//
+// (3) is the same idea applied to time: with no way to message first, "I'll
+// check" is a promise nobody keeps. Do the lookup now and answer, or say plainly
+// you can't and offer the team. Handing off through the tool is different --
+// that has actually happened by the time the customer reads it -- so it stays
+// allowed, phrased as done, not as a future check.
+const AVAILABILITY_GUARDRAIL =
+  "When your tools return a time as available, it is available: offer it plainly and, once the " +
+  "customer picks it, confirm it firmly. Never hedge a time your tools returned -- no \"não consigo " +
+  "garantir\", \"pode mudar\", \"ainda precisa ser confirmado/validado\", \"I can't promise it's " +
+  "still free\". Never mention a calendar, an agenda, a schedule being live, synced, connected, " +
+  "checked or unavailable, or how availability is worked out: that is the business's own " +
+  "configuration, not something a customer needs to hear.\n\n" +
+  "You only ever speak when the customer writes to you -- you cannot follow up on your own. So " +
+  "never promise to do something later: no \"vou verificar\", \"deixa eu confirmar\", \"já te " +
+  "retorno\", \"I'll check\", \"let me look into it\", and never end a message on a check you " +
+  "haven't made. If you can look it up, do it now (call the tool) and answer in the same message; " +
+  "if you can't, say so plainly and offer to bring in the team. Having actually handed the " +
+  "conversation to the team is different from promising to check, and can be said as done.";
+
 // Found in production 2026-09-02, wiring up the first real Instagram DM: Ana's
 // replies were full of `*asterisks*` around service names and `- ` bullet
 // lists. Instagram (and web chat) render none of it, so it showed up as
@@ -383,6 +419,99 @@ export function buildStoreInformationSection(policies: readonly PolicyInformatio
   return `${STORE_INFORMATION_INTRO}\n\n${blocks.join("\n\n")}`;
 }
 
+// When a business has only one thing to book, there is nothing for the customer
+// to choose (2026-09-21). Found by chat testing Ana: with a single listed
+// service she asked "É para a consulta de Oftalmo?" before answering anything,
+// and on an account with only the default service every one of 14 availability
+// questions ("quais horários amanhã?", "tem às 17h?", "pode ser às 8?") got
+// "qual serviço você quer agendar?" -- and since there is no other service to
+// name, that customer could not get past it. Ana's own prompt tells her to pick
+// a service with the customer and even models "Which service is it for?" as the
+// desired tone, so this is the instruction the model was following.
+//
+// A fact about *this business*, so it is injected per company from what
+// list_services would return, not written into Ana's `agents.system_prompt`
+// (which is shared by every company and would need a whole-prompt migration).
+// Only the two unambiguous cases get a section; two or more listed services, or
+// none, leave the prompt exactly as it was. With one listed service the catch-all
+// (if active) stays for requests that don't fit -- Ana's existing rule for it is
+// untouched -- so "which service" is only settled for a plain time question.
+export type ServiceChoice = "single-listed" | "only-default";
+
+export function classifyServiceChoice(result: {
+  services: readonly unknown[];
+  defaultService: unknown | null;
+}): ServiceChoice | null {
+  if (result.services.length === 1) return "single-listed";
+  if (result.services.length === 0 && result.defaultService) return "only-default";
+  return null;
+}
+
+const SERVICE_CHOICE_RULES =
+  "Never ask which service they want, never ask them to confirm it (no \"é para X?\", no \"qual " +
+  "serviço?\"), and never list it back as an option to pick. Assume it. When they ask about " +
+  "times or availability -- \"quais horários amanhã?\", \"tem horário às 17h?\", \"primeiro " +
+  "horário da semana que vem?\" -- look it up in that same turn (list_services for its id if you " +
+  "don't have it yet, then find_available_slots or find_next_available) and answer with the real " +
+  "times, or say plainly that there are none. Don't answer with a question first, and don't say " +
+  "you will check: check, then answer.";
+
+export function buildServiceChoiceSection(choice: ServiceChoice | null | undefined): string | null {
+  if (choice === "single-listed") {
+    return (
+      "This business has exactly one service to book (the single entry in `services` from " +
+      "list_services), so there is nothing for the customer to choose. " +
+      SERVICE_CHOICE_RULES +
+      " A request that clearly isn't that service keeps following your usual rule for it."
+    );
+  }
+  if (choice === "only-default") {
+    return (
+      "This business has no listed services, only its general appointment (`defaultService` from " +
+      "list_services), so every booking is that one and there is nothing for the customer to " +
+      "choose. " +
+      SERVICE_CHOICE_RULES +
+      " A request that clearly falls outside this business's line of work keeps following your " +
+      "usual rule for it."
+    );
+  }
+  return null;
+}
+
+// A business that never set its opening hours (2026-09-21). Found by chat
+// testing Ana on an account with no hours: she told customers the business was
+// "fechada", and -- because "nothing in the next 90 days" is what an empty scan
+// looks like -- invited them to try other dates, when no date could ever work.
+// With no hours every day reads as closed and every window as empty, so the
+// model was reasoning correctly from a result that could not tell "closed" from
+// "not set up yet". The tools now return `no_business_hours` for that case; this
+// section is the same fact stated up front, so a customer who just says "quero
+// marcar" gets the one honest answer without a tool call, and so the answer
+// doesn't depend on which tool the model happens to reach for first.
+//
+// The wording is fixed on purpose (product decision): "Ainda não temos horários
+// definidos por aqui" says the true thing -- the merchant hasn't set them up --
+// without claiming a closure. The team offer is included only if the agent can
+// actually hand off; a merchant who turned handoff off must not get a promise
+// nobody will keep. Looking up or cancelling an existing appointment needs no
+// hours, so those keep working.
+export function buildNoBusinessHoursSection(options: { canOfferTeam: boolean } | null | undefined): string | null {
+  if (!options) return null;
+  const line = options.canOfferTeam
+    ? "Ainda não temos horários definidos por aqui. Posso chamar alguém do time?"
+    : "Ainda não temos horários definidos por aqui.";
+  return (
+    "This business has not set its opening hours yet, so there are no bookable times: nothing can be " +
+    "looked up, offered or booked. When the customer asks about opening hours, availability, a " +
+    "specific day or time, or wants to book or move a booking to a new time, reply with exactly " +
+    `this one line, in the customer's language (in Portuguese: "${line}") and nothing else. ` +
+    "Do not say the business is closed, that it does not open on some day, or that nothing is " +
+    "available. Do not suggest trying other dates or weeks, do not offer a waitlist, do not ask for " +
+    "their name or email for a booking, and do not call the availability tools to find out -- the " +
+    "answer is already known. Looking up or cancelling an existing appointment still works as usual."
+  );
+}
+
 // Step 7 -- pure logic, no I/O, the single best unit-test target in this
 // module. `agents.system_prompt` is NULL for Malu today (C2 hasn't run
 // yet), so this must fall back to composing something usable from
@@ -407,6 +536,8 @@ export function buildSystemPrompt({
   channel,
   hasProductSearch = false,
   policies,
+  serviceChoice,
+  noBusinessHours,
   currentDate,
 }: {
   agentConfig: AgentConfig;
@@ -427,6 +558,14 @@ export function buildSystemPrompt({
   // (index.ts does): an agent with no way to answer policy questions has no
   // use for the text. Omitted/null composes the prompt without the section.
   policies?: readonly PolicyInformation[] | null;
+  // Whether the business has only one thing to book (see classifyServiceChoice).
+  // Pass it only for an agent that has list_services; null/omitted composes the
+  // prompt without the section.
+  serviceChoice?: ServiceChoice | null;
+  // Set only when the business has no opening hours at all (and only for an
+  // agent that can look up availability). `canOfferTeam` is whether the agent
+  // can actually bring a person in. Null/omitted composes the prompt without it.
+  noBusinessHours?: { canOfferTeam: boolean } | null;
   // A preformatted human string like "Thursday, June 12, 2026
   // (America/Sao_Paulo)" -- real, non-inventable context (the same category
   // as businessName), not a guardrail. Optional so the pure unit tests can
@@ -459,6 +598,8 @@ export function buildSystemPrompt({
   const businessNameSection = businessName ? `Business name: ${businessName}` : null;
 
   const storeInformationSection = buildStoreInformationSection(policies);
+  const serviceChoiceSection = buildServiceChoiceSection(serviceChoice);
+  const noBusinessHoursSection = buildNoBusinessHoursSection(noBusinessHours);
 
   // Real context, phrased so it also fixes the failure mode it exists for:
   // an agent with a date anchor but no instruction still tends to make the
@@ -491,6 +632,7 @@ export function buildSystemPrompt({
     // After SCOPE_GUARDRAIL, whose "medical advice" line it makes concrete for
     // agents where a symptom is on topic (see its own comment).
     SYMPTOM_GUARDRAIL,
+    AVAILABILITY_GUARDRAIL,
     FORMATTING_GUARDRAIL,
     // Output-envelope contract, always on. After FORMATTING_GUARDRAIL
     // because it wraps what that produces; before the card guidance, which
@@ -506,6 +648,13 @@ export function buildSystemPrompt({
     // Before the date and intent: those change every turn, and everything
     // ahead of them stays byte-identical between turns for prompt caching.
     storeInformationSection,
+    // After `base`, which carries Ana's "help them pick a service" flow (and a
+    // "Which service is it for?" example) -- this is the per-company exception
+    // to it, so it has to read as the later, more specific word.
+    serviceChoiceSection,
+    // After the service-choice section: with no hours the rule is "one fixed
+    // line", which has to win over "answer availability in the same turn".
+    noBusinessHoursSection,
     currentDateSection,
     intentSection,
   ]

@@ -72,6 +72,20 @@ export const addToWaitlistTool: AgentTool = {
     // times below and would be reported as "closed" instead of reaching the
     // repository's own `invalid_range`.
     const openWeekdays = new Set((openRows ?? []).map((r) => r.day_of_week as number));
+
+    // No hours at all is "not set up yet", not "closed" -- but a waitlist for a
+    // business with no bookable times is just as unkeepable a promise.
+    if (openWeekdays.size === 0) {
+      return {
+        added: false,
+        reason: "no_business_hours",
+        message:
+          "The business hasn't set its opening hours yet, so no time can ever open up. Tell the " +
+          "customer \"Ainda não temos horários definidos por aqui\" (in their language) and offer " +
+          "the team if you can. Do not offer a waitlist or other dates.",
+      };
+    }
+
     if (openWeekdays.size > 0 && args.from <= args.to) {
       let anyOpen = false;
       for (let date = args.from; date <= args.to; date = addDays(date, 1)) {
