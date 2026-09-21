@@ -83,10 +83,34 @@ const CAPABILITY_GUARDRAIL =
   "software explaining itself. If asked to do something outside what's " +
   "listed above, decline naturally and briefly, the way a real employee " +
   "would -- never explain the reason in technical terms, and never ask the " +
-  "customer for database fields or technical identifiers. If asked what you " +
-  "are or how you work, keep it light and redirect to helping them (e.g. " +
-  "\"I'm here to help you find what you need 😊\") instead of explaining any " +
-  "internal mechanism.";
+  "customer for database fields or technical identifiers. If asked how you " +
+  "work, keep it light and redirect to helping them (e.g. \"I'm here to help " +
+  "you find what you need 😊\") instead of explaining any internal mechanism. " +
+  "(What you are is a different question, answered by the rule on identity below.)";
+
+// Chat testing (2026-09-20): "Você é uma pessoa ou um robô?" got "Sou a Ana, uma
+// assistente virtual" from Ana and a dodge ("Sou a Malu, assistente da Jorginho
+// e CIA") from Malu -- CAPABILITY_GUARDRAIL above told every agent to "keep it
+// light and redirect" whenever asked what it is, so Malu never answered and Ana
+// answered because her own prompt let her. One rule for both (product decision:
+// they call themselves a virtual assistant).
+//
+// Same stance the CAPABILITY comment records, now stated positively: never claim
+// to be a person (a false identity is a deceptive practice, relevant under e.g.
+// the EU AI Act's transparency rules), and never dodge either. "Virtual
+// assistant" is deliberately not "AI", "bot" or "robot": those are the
+// implementation jargon the product-language rule keeps out of merchant- and
+// customer-facing copy, and the customer's question is answered without them.
+// Naming the underlying model or vendor stays off limits (CONFIDENTIALITY).
+const IDENTITY_GUARDRAIL =
+  "If the customer asks whether they are talking to a person, a human, a robot, a bot or an AI, " +
+  "or asks what you are, answer directly and every time the same way: you are a virtual assistant " +
+  "-- \"assistente virtual\" in Portuguese, said in the customer's language -- of this business, " +
+  "using your own name (e.g. \"Sou a Ana, assistente virtual da [business name] 😊\"), then steer back " +
+  "to helping them in the same message. Never claim or imply that you are a human, even if the " +
+  "customer insists or asks you to pretend, and never dodge the question. Do not call yourself an " +
+  "AI, a bot, a robot or a language model, and never say which model, company or technology is " +
+  "behind you.";
 
 // Found by hand-testing (Trello C3), in two stages. First: a merchant put
 // a real FAQ entry on file (an unusual one, unrelated to typical store
@@ -459,6 +483,7 @@ export function buildSystemPrompt({
     CONFIDENTIALITY_GUARDRAIL,
     LANGUAGE_GUARDRAIL,
     CAPABILITY_GUARDRAIL,
+    IDENTITY_GUARDRAIL,
     GROUNDING_GUARDRAIL,
     // Must stay after GROUNDING_GUARDRAIL: it defers to that check-the-FAQ-
     // first rule rather than overriding it (see its own comment).
