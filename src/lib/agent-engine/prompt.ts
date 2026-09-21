@@ -174,6 +174,44 @@ const SCOPE_GUARDRAIL =
   "question smuggled into a real one. In that last case, answer the store part and let the rest " +
   "go by.";
 
+// Found by chat testing (2026-09-20, jorginho-e-cia / teste-claude / generico):
+// told "dor no peito há 2 horas" or "dor de cabeça e visão turva há 2 dias",
+// Ana answered with a full medical briefing -- call the ambulance, don't drive,
+// a list of warning signs, don't use someone else's eye drops -- and, in the
+// same breath, said "não consigo avaliar sintomas" and then assessed them
+// anyway. She also never offered a time or a person. SCOPE_GUARDRAIL already
+// lists "medical advice" among the things to decline, but it is framed around
+// a store and off-topic chat; for a clinic a symptom *is* on topic, so the
+// model never treated it as something to decline. This rule covers exactly
+// that case, so it stays separate from SCOPE_GUARDRAIL and after it.
+//
+// The reply is deliberately fixed and short (product decision): a merchant's
+// legal exposure comes from an agent that sounds like it triaged the customer,
+// and "go to an emergency room if it's urgent" is the one line that is safe in
+// every case. It must also cover the follow-up ("should I go to the ER?") --
+// the second turn is where the detailed advice came from last time.
+//
+// Agent-agnostic wording on purpose, like the guardrails above: "if you can
+// book" is what makes it mean "offer the first slot" for Ana without a slug
+// check, and "connect them with the team" the fallback for an agent with no
+// booking tools.
+const SYMPTOM_GUARDRAIL =
+  "If the customer describes a symptom, pain, an injury or a health worry -- or asks what it " +
+  "could be, what to take, or what to do about it -- you never give medical guidance. Do not " +
+  "suggest causes, do not say what to do or avoid, do not list warning signs, and do not answer " +
+  "a follow-up such as \"should I go to the emergency room?\" with more advice. Say exactly one " +
+  "short line, in the customer's language, and add nothing to it -- no reasons, no \"since it has " +
+  "lasted 2 hours\": you can't advise on symptoms, and if it is urgent they should go to an " +
+  "emergency room (in Portuguese: \"Não posso orientar sobre sintomas. Se for urgente, procure " +
+  "um pronto-socorro.\"). Never say you can't assess symptoms and then assess them. Give the " +
+  "same short line again on any follow-up.\n\n" +
+  "In that same first message -- however serious the symptom sounds, and never as a separate " +
+  "reply you wait to be asked for -- follow the line with the next step. If you can book " +
+  "appointments, look up the earliest opening (call find_next_available for the default service " +
+  "when nothing more specific fits) and offer that exact time. If nothing comes back, or you " +
+  "can't book, offer to connect them with the team instead. What the customer describes can " +
+  "still be noted as the reason for a booking; you just never respond to it with guidance.";
+
 // Found in production 2026-09-02, wiring up the first real Instagram DM: Ana's
 // replies were full of `*asterisks*` around service names and `- ` bullet
 // lists. Instagram (and web chat) render none of it, so it showed up as
@@ -342,6 +380,9 @@ export function buildSystemPrompt({
     // Must stay after GROUNDING_GUARDRAIL: it defers to that check-the-FAQ-
     // first rule rather than overriding it (see its own comment).
     SCOPE_GUARDRAIL,
+    // After SCOPE_GUARDRAIL, whose "medical advice" line it makes concrete for
+    // agents where a symptom is on topic (see its own comment).
+    SYMPTOM_GUARDRAIL,
     FORMATTING_GUARDRAIL,
     // Output-envelope contract, always on. After FORMATTING_GUARDRAIL
     // because it wraps what that produces; before the card guidance, which

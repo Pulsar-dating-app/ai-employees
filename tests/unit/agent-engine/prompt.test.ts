@@ -354,6 +354,37 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("greetings, small talk, thank-yous");
   });
 
+  // Found chat-testing Ana on a clinic: a symptom got a full medical briefing
+  // plus "não consigo avaliar sintomas" in the same message. SCOPE_GUARDRAIL's
+  // "medical advice" line never fired because a symptom is on topic for a
+  // clinic, so this rule is separate -- and it has to come after SCOPE.
+  it("always includes a guardrail that answers symptoms with one short line, then offers the earliest time or the team", () => {
+    const agentConfig: AgentConfig = {
+      slug: "ana",
+      role: "Scheduling Assistant",
+      description: null,
+      personality: null,
+      systemPrompt: null,
+      companyAgentStatus: "active",
+      displayName: null,
+    };
+
+    const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
+    expect(prompt).toContain("you never give medical guidance");
+    expect(prompt).toContain("Não posso orientar sobre sintomas. Se for urgente, procure um pronto-socorro.");
+    // The follow-up ("should I go to the ER?") is where the detailed advice
+    // came from last time.
+    expect(prompt).toContain("Give the same short line again on any follow-up");
+    // The offer belongs to the same first message, however serious the symptom
+    // sounds -- chat testing showed the model skipping it for chest pain.
+    expect(prompt).toContain("In that same first message");
+    expect(prompt).toContain("look up the earliest opening");
+    expect(prompt).toContain("offer to connect them with the team instead");
+    expect(prompt.indexOf("you never give medical guidance")).toBeGreaterThan(
+      prompt.indexOf("You are not a general assistant"),
+    );
+  });
+
   it("omits the intent line when intent is the determineIntent stub value ('unknown')", () => {
     const agentConfig: AgentConfig = {
       slug: "malu",
