@@ -181,6 +181,7 @@ export function ChannelsSection({
         config_id: metaConfigId,
         response_type: "code",
         override_default_response_type: true,
+        auth_type: "rerequest",
         // Trello D8 -- featureType tells Meta's popup to offer the merchant
         // an inline choice to connect the number they already use in the
         // WhatsApp Business app, instead of only offering a fresh
