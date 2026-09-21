@@ -21,7 +21,7 @@ const WHATSAPP_PRICING_URL = "https://developers.facebook.com/documentation/busi
 declare global {
   interface Window {
     FB?: {
-      init: (params: { appId: string; xfbml: boolean; version: string }) => void;
+      init: (params: { appId: string; xfbml: boolean; version: string; fedCM?: boolean }) => void;
       login: (
         callback: (response: { authResponse?: { code?: string } }) => void,
         params: Record<string, unknown>,
@@ -89,7 +89,7 @@ export function ChannelsSection({
       .catch(() => setView("idle"));
 
     window.fbAsyncInit = () => {
-      window.FB?.init({ appId: metaAppId, xfbml: false, version: "v21.0" });
+      window.FB?.init({ appId: metaAppId, xfbml: true, version: "v21.0", fedCM: false });
     };
 
     const scriptId = "facebook-jssdk";
