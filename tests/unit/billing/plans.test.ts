@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BILLING_PLANS,
+  findPlan,
   getPlan,
   getPlanByLookupKey,
   getSelfServePlans,
@@ -118,6 +119,15 @@ describe("billing plan catalog (Trello P1)", () => {
     expect(getPlan("pro").displayName).toBe("Pro");
     // @ts-expect-error -- exercising the runtime guard with a bad key
     expect(() => getPlan("gold")).toThrow(/Unknown billing plan key/);
+  });
+
+  // 2026-09-22 -- findPlan is getPlan's safe counterpart for a raw
+  // `plan_key` DB column value, used by the WhatsApp add-on gate.
+  it("findPlan resolves a known key and is undefined for null/unknown", () => {
+    expect(findPlan("pro_wpp")?.whatsappIncluded).toBe(true);
+    expect(findPlan("gold")).toBeUndefined();
+    expect(findPlan(null)).toBeUndefined();
+    expect(findPlan(undefined)).toBeUndefined();
   });
 
   it("reverse-resolves a plan from its Stripe lookup key", () => {

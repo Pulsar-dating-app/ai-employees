@@ -7,6 +7,8 @@ import { defaultAgentName } from "@/lib/agents/naming";
 import { agentDefaultPhotos, resolveAgentPhoto } from "@/lib/agents/media";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
+import { findPlan } from "@/lib/billing/plans";
+import { decideWhatsappPlanGate } from "@/lib/whatsapp/enforcement";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { ChannelTabsCard } from "./channel-tabs-card";
@@ -92,7 +94,7 @@ export default async function AgentConnectionsPage({
 
   // The caller's role gates the K6 pause/activate control and the Instagram
   // connect card (both admin-only). Fetched alongside the hire row.
-  const [{ data: companyAgent }, { data: membership }] = await Promise.all([
+  const [{ data: companyAgent }, { data: membership }, { data: billing }] = await Promise.all([
     supabase
       .from("company_agents")
       .select(
@@ -107,7 +109,21 @@ export default async function AgentConnectionsPage({
       .eq("company_id", company.id)
       .eq("user_id", user!.id)
       .maybeSingle(),
+    // Gates the WhatsApp tab below on the WhatsApp add-on (a `_wpp` plan
+    // variant, see decisions.md 2026-09-22) -- same entitlement check the
+    // connect route and the inbound webhook enforce server-side; this is
+    // the UI half so a merchant without the add-on sees an upsell instead
+    // of a connect flow that would just 403.
+    supabase
+      .from("company_billing")
+      .select("plan_key, subscription_status")
+      .eq("company_id", company.id)
+      .maybeSingle(),
   ]);
+  const whatsappEntitled = decideWhatsappPlanGate({
+    subscription_status: billing?.subscription_status ?? null,
+    whatsappIncluded: findPlan(billing?.plan_key)?.whatsappIncluded === true,
+  }).allow;
 
   if (!companyAgent) {
     return (
@@ -190,6 +206,7 @@ export default async function AgentConnectionsPage({
               agentName={name}
               agentPhotoSrc={photoSrc}
               canEdit={canEdit}
+              whatsappEntitled={whatsappEntitled}
               metaAppId={process.env.META_APP_ID ?? ""}
               metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
               chatUrl={chatUrl}

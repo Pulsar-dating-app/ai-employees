@@ -24,7 +24,10 @@ describe("company_whatsapp_connections RLS: access_token is column-locked for ev
     );
     const companyId = created.json.company.id;
 
-    await seedActivePlan(companyId);
+    // The WhatsApp add-on is required to connect (2026-09-22) -- this test
+    // is about access_token's RLS lockdown, not entitlement, so it just
+    // needs a plan the connect route will actually accept.
+    await seedActivePlan(companyId, { planKey: "starter_wpp" });
     await api("POST", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader);
 
     const unique = randomUUID().slice(0, 8);
@@ -71,5 +74,45 @@ describe("company_whatsapp_connections RLS: access_token is column-locked for ev
       .select();
     expect(tokenInsert.error).not.toBeNull();
     expect(tokenInsert.error?.code).toBe("42501");
+  });
+
+  // 2026-09-22 -- every write to this table (connect, disconnect, the D5
+  // payment-issue flip, the eligibility cron) already went through the
+  // service-role client, but the original migration still left insert/
+  // update/delete grants + "Company admins can ..." policies open to the
+  // regular authenticated client -- a company admin could reach this table
+  // directly via PostgREST/supabase-js, bypassing the Next.js connect
+  // route's WhatsApp add-on entitlement gate entirely, and write a row with
+  // status "connected" straight past it. Migration
+  // 20260922100000_lock_writes_to_whatsapp_connections.sql closed that --
+  // this proves it at the database level, on safe columns only (no
+  // access_token, which the test above already covers separately).
+  it("blocks a direct insert/update on safe columns too, not just access_token", async () => {
+    const owner = await signUpTestUser("owner");
+
+    const created = await api<{ company: { id: string } }>(
+      "POST",
+      "/api/companies",
+      owner.cookieHeader,
+      { name: "Direct Write Bypass Co" },
+    );
+    const companyId = created.json.company.id;
+    await seedActivePlan(companyId, { planKey: "starter" }); // deliberately no WhatsApp add-on
+    await api("POST", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader);
+
+    const fakeInsert = await owner.client
+      .from("company_whatsapp_connections")
+      .insert({ company_id: companyId, phone_number_id: "fake-bypass", waba_id: "fake-bypass", status: "connected" })
+      .select();
+    expect(fakeInsert.error).not.toBeNull();
+    expect(fakeInsert.error?.code).toBe("42501");
+
+    const fakeUpdate = await owner.client
+      .from("company_whatsapp_connections")
+      .update({ status: "connected" })
+      .eq("company_id", companyId)
+      .select();
+    expect(fakeUpdate.error).not.toBeNull();
+    expect(fakeUpdate.error?.code).toBe("42501");
   });
 });

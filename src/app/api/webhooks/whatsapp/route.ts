@@ -4,7 +4,8 @@ import { AgentEngine } from "@/lib/agent-engine";
 import { sendWhatsappMessage } from "@/lib/whatsapp/meta-graph-api";
 import { resolveWhatsappSession } from "@/lib/whatsapp/session";
 import { verifyWhatsappSignature } from "@/lib/whatsapp/webhook-signature";
-import { decideWhatsappSendGate } from "@/lib/whatsapp/enforcement";
+import { decideWhatsappSendGate, decideWhatsappPlanGate } from "@/lib/whatsapp/enforcement";
+import { findPlan } from "@/lib/billing/plans";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
 import { toStoredGrounding } from "@/lib/chat/grounding";
 
@@ -202,6 +203,26 @@ export async function POST(request: Request) {
       .eq("agent_id", connection.agent_id)
       .maybeSingle();
     if (!companyAgent || companyAgent.status !== "active") continue;
+
+    // 2026-09-22 -- WhatsApp is a paid add-on (see connect/route.ts's own
+    // comment). A number can stay `connected` here even after the company's
+    // plan stopped including WhatsApp (a Portal downgrade, or a lapsed
+    // subscription) -- the connect route only checks entitlement at connect
+    // time. Full skip, same shape as the companyAgent check just above:
+    // nothing is persisted, since an unentitled company shouldn't see this
+    // channel working at all, not even "silently not replying" (contrast
+    // with the billing/paused gates below, which persist the inbound
+    // message for dashboard visibility before going silent).
+    const { data: billing } = await supabase
+      .from("company_billing")
+      .select("plan_key, subscription_status")
+      .eq("company_id", connection.company_id)
+      .maybeSingle();
+    const planGate = decideWhatsappPlanGate({
+      subscription_status: (billing?.subscription_status as string | null) ?? null,
+      whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
+    });
+    if (!planGate.allow) continue;
 
     let session;
     try {

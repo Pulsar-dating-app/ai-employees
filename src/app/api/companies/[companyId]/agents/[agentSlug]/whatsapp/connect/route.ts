@@ -7,6 +7,8 @@ import {
   finishCoexistenceConnection,
   generateRegistrationPin,
 } from "@/lib/whatsapp/meta-graph-api";
+import { decideWhatsappPlanGate } from "@/lib/whatsapp/enforcement";
+import { findPlan } from "@/lib/billing/plans";
 
 // Trello D1 amendment (2026-09-04) -- finishes what Meta's Embedded Signup
 // starts, now nested under [agentSlug] since migration 20260905090000 made
@@ -142,6 +144,24 @@ export async function POST(
   }
 
   const serviceClient = createServiceClient();
+
+  // 2026-09-22 -- WhatsApp is a paid add-on (a `_wpp` plan variant,
+  // plans.ts), not something every subscriber gets. Checked here, after
+  // body validation (so a malformed request still 400s the same way
+  // regardless of plan) but before any Meta call is made -- connecting a
+  // number this company isn't entitled to costs nothing to reject early.
+  const { data: billing } = await serviceClient
+    .from("company_billing")
+    .select("plan_key, subscription_status")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  const planGate = decideWhatsappPlanGate({
+    subscription_status: (billing?.subscription_status as string | null) ?? null,
+    whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
+  });
+  if (!planGate.allow) {
+    return NextResponse.json({ error: "whatsapp_addon_required" }, { status: 403 });
+  }
 
   let accessToken = "";
   let resolvedPhoneNumberId = phoneNumberId;

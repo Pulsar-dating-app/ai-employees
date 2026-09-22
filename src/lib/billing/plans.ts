@@ -260,6 +260,13 @@ export function getPlan(key: PlanKey): BillingPlan {
   return plan;
 }
 
+/** Safe variant of `getPlan` for a `plan_key` read straight off a DB row --
+ * `undefined` instead of throwing on `null`/an unrecognised value, rather
+ * than every such call site needing its own try/catch. */
+export function findPlan(key: string | null | undefined): BillingPlan | undefined {
+  return key ? BILLING_PLANS.find((p) => p.key === key) : undefined;
+}
+
 /** The plans a merchant can buy without talking to sales (Checkout flow). */
 export function getSelfServePlans(): BillingPlan[] {
   return BILLING_PLANS.filter((p) => p.isSelfServe);

@@ -57,6 +57,7 @@ export function ChannelTabsCard({
   agentName,
   agentPhotoSrc,
   canEdit,
+  whatsappEntitled,
   metaAppId,
   metaConfigId,
   chatUrl,
@@ -70,6 +71,10 @@ export function ChannelTabsCard({
   agentName: string;
   agentPhotoSrc: string | null;
   canEdit: boolean;
+  // Trello 2026-09-22 -- whether the company's plan includes the WhatsApp
+  // add-on (see channels-section.tsx's own comment). Only the WhatsApp tab
+  // cares; every other channel is unaffected by this toggle.
+  whatsappEntitled: boolean;
   metaAppId: string;
   metaConfigId: string;
   chatUrl: string;
@@ -162,7 +167,7 @@ export function ChannelTabsCard({
         aria-labelledby="channel-tab-whatsapp"
         hidden={activeTab !== "whatsapp"}
       >
-        <ChannelsSection companyId={companyId} agentSlug={agentSlug} agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={CHANNEL_ACCENT.whatsapp} canEdit={canEdit} metaAppId={metaAppId} metaConfigId={metaConfigId} />
+        <ChannelsSection companyId={companyId} agentSlug={agentSlug} agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={CHANNEL_ACCENT.whatsapp} canEdit={canEdit} whatsappEntitled={whatsappEntitled} metaAppId={metaAppId} metaConfigId={metaConfigId} />
       </div>
 
       <div
