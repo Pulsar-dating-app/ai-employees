@@ -434,6 +434,73 @@ isn't confirmed from an authoritative source as of this writing. See
 decisions.md's 2026-09-05 entry for the full reasoning and what to update
 once the real rate is confirmed.
 
+### WhatsApp entitlement gate (WhatsApp add-on) — 2026-09-22
+
+Blocks WhatsApp connect/reply for a company whose plan doesn't include the
+WhatsApp add-on (a `_wpp` plan variant, `plans.ts`'s `whatsappIncluded` —
+2026-09-16), on top of D5's connection-health gate above. Three layers, all
+sharing one pure decision function:
+
+- **`decideWhatsappPlanGate(billing)`** (`src/lib/whatsapp/enforcement.ts`) —
+  `{ subscription_status, whatsappIncluded } | null → { allow: true } |
+  { allow: false, reason: "no_addon" }`. Entitled only when the status is
+  `active`/`trialing` **and** the plan's `whatsappIncluded` is `true` — a
+  `_wpp` plan with a lapsed subscription doesn't count, same as any other
+  billing gate. Pure and fed a freshly-read row by both call sites (like
+  billing's `decideReplyGate`, unlike D5's gate which reads the connection's
+  last-known state).
+- **Connect route**
+  (`.../agents/[agentSlug]/whatsapp/connect/route.ts`) — checked right
+  after body validation (so a malformed request still 400s regardless of
+  plan) and before any Meta call. Blocked → `403
+  { error: "whatsapp_addon_required" }`. `plan_key` → `whatsappIncluded` via
+  `findPlan` (`plans.ts`), the safe/`undefined`-on-unknown counterpart to
+  `getPlan` (which throws) — needed here because a raw DB column value
+  isn't a trusted `PlanKey` the way a catalog-driven call site's is.
+- **Inbound webhook** (`api/webhooks/whatsapp/route.ts`) — checked
+  immediately after the K6 paused-hire check, before session resolution or
+  persisting anything. This covers the number that stayed `connected` after
+  a Portal downgrade dropped the add-on (the connect route only checks at
+  connect time) — a **full skip**, not the billing/paused gates' "persist
+  the inbound message, stay silent" shape, since an unentitled company
+  shouldn't see the channel working in any capacity. Scoped to the
+  customer-message loop only; the D8 echo/history-backfill loops are
+  unaffected (out of scope — a merchant with a stale coexistence connection
+  syncing old messages isn't "using" the channel the way an AI-generated
+  reply is).
+- **UI** (`my-agents/[agentSlug]/page.tsx` → `channel-tabs-card.tsx` →
+  `channels-section.tsx`) — the page fetches `company_billing` and computes
+  `whatsappEntitled` the same way the connect route does; `false` renders a
+  locked upsell (`MyAgents.channels.addonRequired*`, linking to
+  `/dashboard/settings/billing`) instead of the connect flow, regardless of
+  `canEdit` or a stale `connected` row from before a downgrade. Defense in
+  depth only — the two server-side gates above are what actually enforce
+  this.
+
+Tests: `tests/unit/whatsapp/enforcement.test.ts` (the pure gate, every
+status/plan combination). `tests/integration/whatsapp-connection.test.ts` —
+blocks a connect attempt on a plan without the add-on, 403 with the right
+error code. `tests/integration/whatsapp-webhook.test.ts` — a number
+connected while entitled goes fully silent (nothing persisted) once
+`company_billing.plan_key` is downgraded off the add-on. Every existing
+WhatsApp connect fixture in these two files plus
+`company-whatsapp-connections-rls.test.ts` was moved from `seedActivePlan()`
+(defaults to `"starter"`, no add-on) to `{ planKey: "starter_wpp" }` — those
+tests are about hiring/RLS/idempotency, not entitlement, so they just need a
+plan the connect route will actually accept.
+
+**Direct-RLS bypass, closed same day.** The connect route's gate only
+covers requests through the Next.js API — `company_whatsapp_connections`
+originally still granted `insert`/`update` (and, via the schema-wide
+blanket grant, `delete`) to the regular `authenticated` client, with RLS
+policies allowing a company admin to write directly (bypassing the route,
+and with it this gate, entirely). Every real write in this codebase already
+went through the service-role client regardless, so migration
+`20260922100000_lock_writes_to_whatsapp_connections.sql` drops those
+policies and revokes the grants outright — same shape as `company_billing`'s
+lockdown. See decisions.md for the full reasoning (including why this
+couldn't have made WhatsApp actually functional even before being closed).
+
 ### Telegram channel (Trello O1) — 2026-09-06
 
 Added after the WhatsApp Embedded Signup ordeal (PIN mismatch, a brand-new

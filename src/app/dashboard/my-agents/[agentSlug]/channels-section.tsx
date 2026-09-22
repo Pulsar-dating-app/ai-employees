@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
-import { WhatsAppIcon, CheckIcon } from "@/components/ui/icons";
+import { WhatsAppIcon, CheckIcon, LockIcon } from "@/components/ui/icons";
 import { ChannelPanelHeader } from "./channel-panel-header";
 import { ChannelPreview } from "./channel-preview";
 
@@ -55,6 +56,7 @@ export function ChannelsSection({
   agentPhotoSrc,
   accent,
   canEdit,
+  whatsappEntitled,
   metaAppId,
   metaConfigId,
 }: {
@@ -64,6 +66,15 @@ export function ChannelsSection({
   agentPhotoSrc: string | null;
   accent: string;
   canEdit: boolean;
+  // 2026-09-22 -- whether the company's plan includes the WhatsApp add-on
+  // (a `_wpp` plan variant, plans.ts). `false` renders a locked upsell
+  // instead of the connect flow below, regardless of `canEdit` or any
+  // connection that might already exist from before a Portal downgrade --
+  // the server-side gates (connect route + inbound webhook,
+  // decideWhatsappPlanGate) are the real enforcement; this is the UI half
+  // so a merchant without the add-on isn't shown a connect button that
+  // would just 403, or led to believe a stale connection is still live.
+  whatsappEntitled: boolean;
   metaAppId: string;
   metaConfigId: string;
 }) {
@@ -80,6 +91,7 @@ export function ChannelsSection({
   const statusUrl = `/api/companies/${companyId}/agents/${agentSlug}/whatsapp`;
 
   useEffect(() => {
+    if (!whatsappEntitled) return;
     fetch(statusUrl)
       .then((res) => res.json())
       .then((data: { connection: Connection | null }) => {
@@ -212,6 +224,35 @@ export function ChannelsSection({
   // already completed Embedded Signup and needs a different fix (add a
   // payment method in Meta Business Manager), not to reconnect.
   const hasPaymentIssue = isConnected && connection?.has_payment_issue === true;
+
+  if (!whatsappEntitled) {
+    return (
+      <div className="relative">
+        <ChannelPanelHeader
+          icon={<WhatsAppIcon className="h-6 w-6" />}
+          tileClassName="bg-[#25D366] text-white"
+          title={t("title")}
+          description={t("description")}
+        />
+        <div className="mt-6 flex flex-col items-start gap-3 rounded-lg border border-outline-variant/60 bg-surface-container-low p-5">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-container text-on-surface-variant">
+            <LockIcon className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-on-surface">{t("addonRequiredTitle")}</h3>
+            <p className="mt-1 text-sm text-on-surface-variant">{t("addonRequiredDescription")}</p>
+          </div>
+          {canEdit ? (
+            <Link href="/dashboard/settings/billing">
+              <Button type="button" size="sm">
+                {t("addonRequiredCta")}
+              </Button>
+            </Link>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">

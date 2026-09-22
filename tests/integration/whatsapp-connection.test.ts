@@ -21,7 +21,12 @@ describe("WhatsApp connection (GET/DELETE .../whatsapp, POST .../whatsapp/connec
   }
 
   async function hireAgent(ownerCookie: string, companyId: string, agentSlug: string) {
-    await seedActivePlan(companyId); // P6: the hire POST needs an active plan
+    // P6 (active plan) + the WhatsApp add-on (2026-09-22): connecting a
+    // number is gated on `_wpp` plan variants, so every test in this file
+    // that exercises a real connect attempt needs one. The permission/
+    // validation-only tests below don't care which plan -- they 401/403/400
+    // before the route ever reads company_billing.
+    await seedActivePlan(companyId, { planKey: "starter_wpp" });
     await api("POST", `/api/companies/${companyId}/agents/${agentSlug}`, ownerCookie);
   }
 
@@ -111,6 +116,28 @@ describe("WhatsApp connection (GET/DELETE .../whatsapp, POST .../whatsapp/connec
       code: "only-code",
     });
     expect(result.status).toBe(400);
+  });
+
+  // 2026-09-22 -- WhatsApp is a paid add-on (`_wpp` plan variants,
+  // plans.ts), not something every subscriber gets. A company on a plain
+  // plan (or no plan at all) must be rejected before any Meta call is made.
+  it("blocks connecting without the WhatsApp add-on on the plan", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "No WPP Addon Co");
+    await seedActivePlan(companyId, { planKey: "starter" }); // active, but no WhatsApp add-on
+    await api("POST", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader);
+
+    const result = await api<{ error: string }>(
+      "POST",
+      connectPath(companyId, "malu"),
+      owner.cookieHeader,
+      connectBody(),
+    );
+    expect(result.status).toBe(403);
+    expect(result.json.error).toBe("whatsapp_addon_required");
+
+    const status = await api<{ connection: unknown }>("GET", statusPath(companyId, "malu"), owner.cookieHeader);
+    expect(status.json.connection).toBeNull();
   });
 
   it("connects, never returns the access token, and is idempotent on reconnect", async () => {

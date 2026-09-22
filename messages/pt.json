@@ -1171,7 +1171,10 @@
       "billingDisclosurePaymentMethod": "Você vai precisar adicionar uma forma de pagamento na sua conta do WhatsApp Business no Meta Business Manager — sem isso, as mensagens não são entregues mesmo depois de conectado.",
       "billingDisclosureBilling": "A Meta cobra você diretamente pelo uso do WhatsApp, separado da sua assinatura do Staffra, depois de um certo volume gratuito. Os valores mudam com o tempo, então confira sempre os atuais aqui:",
       "billingDisclosureLinkText": "tabela de preços oficial da Meta para WhatsApp",
-      "billingAcknowledgeLabel": "Entendo que a Meta cobra separadamente pelo uso do WhatsApp e que preciso adicionar uma forma de pagamento."
+      "billingAcknowledgeLabel": "Entendo que a Meta cobra separadamente pelo uso do WhatsApp e que preciso adicionar uma forma de pagamento.",
+      "addonRequiredTitle": "O WhatsApp não está incluído no seu plano atual",
+      "addonRequiredDescription": "Adicione o complemento de WhatsApp ao seu plano para conectar um número e deixar seu time responder os clientes por lá.",
+      "addonRequiredCta": "Adicionar WhatsApp ao meu plano"
     },
     "channelTabs": {
       "tablistLabel": "Formas de os clientes falarem com este funcionário",

@@ -21,3 +21,30 @@ export function decideWhatsappSendGate(connection: {
   if (connection.hasPaymentIssue) return { allow: false, reason: "payment_issue" };
   return { allow: true };
 }
+
+// 2026-09-22 -- the WhatsApp *entitlement* gate: is this company even paying
+// for the channel, distinct from D5's connection-health gate above. WhatsApp
+// is a per-plan add-on (`BillingPlan.whatsappIncluded`, the `_wpp` variants
+// in plans.ts) layered on a live subscription, not something every
+// subscriber gets -- a company on a plain (non-`_wpp`) plan, or with a
+// lapsed subscription, must not be able to connect a number or receive
+// AI-generated WhatsApp replies, regardless of what
+// `company_whatsapp_connections` says. Pure, fed a fresh `company_billing`
+// row by both call sites (the connect route, before it talks to Meta at
+// all; the inbound webhook, before it resolves a session or persists
+// anything) -- same "freshly read, not cached" shape as `decideReplyGate`,
+// unlike D5's gate above.
+const WHATSAPP_ENTITLED_STATUSES = new Set(["active", "trialing"]);
+
+export type WhatsappPlanGateDecision = { allow: true } | { allow: false; reason: "no_addon" };
+
+export function decideWhatsappPlanGate(billing: {
+  subscription_status: string | null;
+  whatsappIncluded: boolean;
+} | null): WhatsappPlanGateDecision {
+  const entitled =
+    !!billing &&
+    WHATSAPP_ENTITLED_STATUSES.has(billing.subscription_status ?? "") &&
+    billing.whatsappIncluded;
+  return entitled ? { allow: true } : { allow: false, reason: "no_addon" };
+}
