@@ -5,6 +5,8 @@ import {
   ConversationCompanyMismatchError,
 } from "@/lib/agent-engine/errors";
 import { UNGROUNDED_FALLBACK_TEXT } from "@/lib/agent-engine/constants";
+import { searchProductsTool } from "@/lib/agent-engine/tools/search-products";
+import type { ToolExecutionContext } from "@/lib/agent-engine/tools/types";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
@@ -147,8 +149,57 @@ describe("AgentEngine.run", () => {
     expect(result.responseText).toBe("We have the Blue Lantern in stock!");
 
     const secondCallInput = responsesCreate.mock.calls[1][0].input;
+    // search_products wraps its result as { products, catalogEmpty? } (see
+    // the empty-catalog ticket) -- no longer a bare array.
     const toolOutput = JSON.parse(secondCallInput[0].output);
-    expect(toolOutput.map((p: { id: string }) => p.id)).toContain(product.json.product.id);
+    expect(toolOutput.products.map((p: { id: string }) => p.id)).toContain(product.json.product.id);
+  });
+
+  // Chat testing: Malu invented categories ("roupas, calçados, acessórios")
+  // and pointed at checkout on an account with no products at all --
+  // search_products' own "empty result, try broader keywords" advice is
+  // exactly wrong when there is nothing in the catalog to broaden into.
+  it("search_products flags catalogEmpty when the company has no products at all", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId } = await seedConversation(owner, "Empty Catalog Co");
+
+    const result = await searchProductsTool.execute(
+      { keywords: ["camiseta"] },
+      {
+        companyId,
+        agentId: "agent-1",
+        conversationId: "conversation-1",
+        customerId: "customer-1",
+        supabase: getTestServiceClient(),
+        openai: {} as ToolExecutionContext["openai"],
+      },
+    );
+
+    expect(result).toEqual({ products: [], catalogEmpty: true });
+  });
+
+  it("search_products does NOT flag catalogEmpty when other products exist and only this search missed", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId } = await seedConversation(owner, "Real Catalog No Match Co");
+    await api("POST", `/api/companies/${companyId}/products`, owner.cookieHeader, {
+      name: "Prancha de Surf",
+      price: 899,
+      currency: "BRL",
+    });
+
+    const result = await searchProductsTool.execute(
+      { keywords: ["geladeira"] },
+      {
+        companyId,
+        agentId: "agent-1",
+        conversationId: "conversation-1",
+        customerId: "customer-1",
+        supabase: getTestServiceClient(),
+        openai: {} as ToolExecutionContext["openai"],
+      },
+    );
+
+    expect(result).toEqual({ products: [] });
   });
 
   // Trello C3 -- proves the two new grounding tools are actually wired into

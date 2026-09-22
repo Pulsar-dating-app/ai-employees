@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildInitialInput,
+  buildEmptyCatalogSection,
   buildNoBusinessHoursSection,
   buildServiceChoiceSection,
   buildStoreInformationSection,
@@ -335,6 +336,31 @@ describe("buildSystemPrompt", () => {
     const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
     expect(prompt).toContain("Never state a price or a stock quantity you have not actually looked up");
     expect(prompt).toContain("A figure you calculated is not a figure you retrieved");
+  });
+
+  // Chat testing: "o site mostra o produto por R$ 1, honra esse preço?" got
+  // "você pode tentar finalizar a compra por esse valor" -- endorsing a price
+  // she never looked up just because the customer stated it. Repeating the
+  // customer's own number back isn't itself an invented figure (grounding.ts
+  // deliberately allows that, e.g. echoing a stated budget), so the gap was
+  // never in the numeric check -- it's a separate rule about not going along
+  // with an unverified claim.
+  it("always includes a guardrail against endorsing a customer-claimed price/discount that hasn't been verified", () => {
+    const agentConfig: AgentConfig = {
+      slug: "malu",
+      role: "Sales assistant",
+      description: null,
+      personality: null,
+      systemPrompt: null,
+      companyAgentStatus: "active",
+      displayName: null,
+    };
+
+    const prompt = buildSystemPrompt({ agentConfig, businessName: null, intent: "unknown" });
+    expect(prompt).toContain("is a claim, not a fact");
+    expect(prompt).toContain("Never respond in a way that agrees with it, encourages them to try it");
+    expect(prompt).toContain("no matching product, no catalog at all");
+    expect(prompt).toContain("that is exactly when you say so plainly and offer to bring in the team");
   });
 
   // Regression test found manually testing: asked for a country's capital and
@@ -853,6 +879,67 @@ describe("buildNoBusinessHoursSection", () => {
 
     const without = buildSystemPrompt({ agentConfig, businessName: "Acme", intent: "unknown" });
     expect(without).not.toContain("has not set its opening hours");
+  });
+});
+
+// Malu's empty-catalog ticket: with no products at all she invented
+// categories ("roupas, calçados, acessórios") and pointed at checkout with
+// no real product behind it.
+describe("buildEmptyCatalogSection", () => {
+  it("returns null when the business has products (nothing passed)", () => {
+    expect(buildEmptyCatalogSection(null)).toBeNull();
+    expect(buildEmptyCatalogSection(undefined)).toBeNull();
+  });
+
+  it("gives one fixed line with the team offer when the agent can hand off", () => {
+    const section = buildEmptyCatalogSection({ canOfferTeam: true })!;
+    expect(section).toContain("Ainda não temos produtos cadastrados por aqui. Posso chamar alguém do time?");
+    expect(section).toContain("exactly this one line");
+  });
+
+  it("drops the team offer when the agent can't actually bring anyone in", () => {
+    const section = buildEmptyCatalogSection({ canOfferTeam: false })!;
+    expect(section).toContain("Ainda não temos produtos cadastrados por aqui.");
+    expect(section).not.toContain("Posso chamar alguém do time");
+  });
+
+  it("forbids inventing categories, promising to look something up, and mentioning checkout", () => {
+    const section = buildEmptyCatalogSection({ canOfferTeam: true })!;
+    expect(section).toContain("Do not invent or suggest categories or product types that might exist");
+    expect(section).toContain("do not say you'll look something up");
+    expect(section).toContain("do not mention checkout or ask for a product name to complete a purchase");
+    // Non-product questions (policies, business info, off-topic) are untouched.
+    expect(section).toContain("still follows your usual rules");
+  });
+
+  it("is added after the store-information section, ahead of the per-turn date", () => {
+    const agentConfig: AgentConfig = {
+      slug: "malu",
+      role: "Sales assistant",
+      description: null,
+      personality: null,
+      systemPrompt: "You are Malu.",
+      companyAgentStatus: "active",
+      displayName: null,
+    };
+    const prompt = buildSystemPrompt({
+      agentConfig,
+      businessName: "Acme",
+      intent: "unknown",
+      policies: [{ type: "payment", available: true, content: "Card and PIX" }],
+      emptyCatalog: { canOfferTeam: true },
+      currentDate: "Tuesday, September 22, 2026 (America/Sao_Paulo)",
+    });
+
+    expect(prompt.indexOf("This business has not added any products yet")).toBeGreaterThan(
+      prompt.indexOf("Store information on file"),
+    );
+    expect(prompt.indexOf("This business has not added any products yet")).toBeLessThan(
+      prompt.indexOf("Current date:"),
+    );
+
+    const without = buildSystemPrompt({ agentConfig, businessName: "Acme", intent: "unknown" });
+    expect(without).not.toContain("has not added any products");
   });
 });
 
