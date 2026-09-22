@@ -1,4 +1,5 @@
 import { AppointmentRepository } from "@/lib/appointments/repository";
+import { redactDefaultServiceName } from "./redact-default-service-name";
 import type { AgentTool } from "./types";
 
 // Trello J3, tool #1 -- the scheduling analog of search_products: the
@@ -20,22 +21,32 @@ export const listServicesTool: AgentTool = {
     "Use the exact `id` from a result when calling find_available_slots or book_appointment. " +
     "An empty `services` list means the business hasn't set up any bookable services yet.\n\n" +
     "`defaultService` (may be null): a catch-all the business turned on for requests it didn't " +
-    "list as their own service. When the customer wants something that isn't in `services` but " +
-    "plausibly fits what this business does (check get_business_information to know what kind of " +
+    "list as their own service. If it has a `description`, that is the merchant's own word on " +
+    "exactly what it covers -- trust it over a guess, and use it to decide whether a request " +
+    "fits: it does not fit just because it's in-domain in a loose sense (a dental clinic's " +
+    "default service still isn't a haircut). Without a `description`, fall back to judging by " +
+    "the business's line of work (check get_business_information if you're unsure what kind of " +
     "business it is -- e.g. a dental clinic covers a toothache, a cleaning, a check-up; it does " +
-    "not cover haircuts or ordering food), book it under `defaultService.id` and put what they " +
-    "actually asked for in book_appointment's `summary`, then tell them plainly what you booked. " +
-    "If `defaultService` is null, only the listed services can be booked -- say the thing they " +
-    "asked for isn't something you can book and offer the ones that are. Either way, if a " +
-    "request is strange or clearly outside this business's line of work, don't force it into the " +
-    "default -- ask a question to understand what they need, and offer a human if it's genuinely " +
-    "unrelated.",
+    "not cover haircuts or ordering food). When it fits, book it under `defaultService.id` and " +
+    "put what they actually asked for in book_appointment's `summary`, then tell them plainly " +
+    "what you booked. Never call it \"the default service\" or similar -- to the customer it's " +
+    "simply their appointment. `defaultService.name` is absent unless the merchant gave it a " +
+    "real name of their own; when it's absent, never invent or ask for one. If `defaultService` " +
+    "is null, only " +
+    "the listed services can be booked -- say the thing they asked for isn't something you can " +
+    "book and offer the ones that are. Either way, if a request doesn't fit, don't force it into " +
+    "the default -- ask a question to understand what they need, and offer a human if it's " +
+    "genuinely unrelated.",
   parameters: {
     type: "object",
     properties: {},
     additionalProperties: false,
   },
   async execute(_rawArgs, ctx) {
-    return AppointmentRepository.listServices(ctx.companyId, ctx.supabase);
+    const result = await AppointmentRepository.listServices(ctx.companyId, ctx.supabase);
+    return {
+      ...result,
+      defaultService: result.defaultService ? redactDefaultServiceName(result.defaultService, "name") : null,
+    };
   },
 };

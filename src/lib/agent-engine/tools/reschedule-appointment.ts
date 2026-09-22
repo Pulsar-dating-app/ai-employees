@@ -1,4 +1,5 @@
 import { AppointmentRepository } from "@/lib/appointments/repository";
+import { redactDefaultServiceName } from "./redact-default-service-name";
 import type { AgentTool } from "./types";
 
 type RescheduleAppointmentArgs = {
@@ -21,7 +22,9 @@ export const rescheduleAppointmentTool: AgentTool = {
     "`find_available_slots` call for that service -- never a time you chose yourself.\n\n" +
     "The service (and so the duration) stays the same; only the time changes. On success, " +
     "`rescheduled` is true with `startsAtLabel`/`endsAtLabel` (the new time in the business's " +
-    "timezone -- say these, don't recompute from the raw `startsAt`/`endsAt`). " +
+    "timezone -- say these, don't recompute from the raw `startsAt`/`endsAt`). If `serviceName` " +
+    "is absent, this is the business's general/default service: don't invent or ask for a " +
+    "service name, just confirm the new day and time. " +
     "If `rescheduled` is false, use `reason` to respond honestly and offer another time " +
     "(or a human handoff): \"not_found\" = you don't have a valid id for this customer's " +
     "booking; \"slot_unavailable\" = that new time was just taken; \"outside_business_hours\" " +
@@ -47,7 +50,7 @@ export const rescheduleAppointmentTool: AgentTool = {
   },
   async execute(rawArgs, ctx) {
     const args = rawArgs as RescheduleAppointmentArgs;
-    return AppointmentRepository.reschedule(
+    const result = await AppointmentRepository.reschedule(
       {
         companyId: ctx.companyId,
         appointmentId: args.appointmentId,
@@ -56,5 +59,6 @@ export const rescheduleAppointmentTool: AgentTool = {
       },
       ctx.supabase,
     );
+    return redactDefaultServiceName(result);
   },
 };

@@ -1527,6 +1527,8 @@
       "offLabel": "Desativado",
       "toggleAria": "Usar um serviço padrão para pedidos não cadastrados",
       "nameLabel": "Nome",
+      "descriptionLabel": "Descrição",
+      "descriptionHint": "O que esse atendimento realmente cobre, em uma ou duas frases — sua funcionária de IA usa isso para decidir se um pedido se encaixa (assim, o serviço padrão de um consultório odontológico não vira um corte de cabelo) e nunca repete isso para o cliente.",
       "durationLabel": "Duração (minutos)",
       "saved": "Salvo",
       "saveError": "Algo deu errado ao salvar. Tente novamente."

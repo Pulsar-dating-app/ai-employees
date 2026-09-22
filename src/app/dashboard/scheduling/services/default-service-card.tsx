@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Toggle } from "@/components/ui/toggle";
 import type { Service } from "./services-manager";
 
@@ -26,6 +27,8 @@ export function DefaultServiceCard({
   const [active, setActive] = useState(service.is_active);
   const [name, setName] = useState(service.name);
   const [savedName, setSavedName] = useState(service.name);
+  const [description, setDescription] = useState(service.description ?? "");
+  const [savedDescription, setSavedDescription] = useState(service.description ?? "");
   const [duration, setDuration] = useState(String(service.duration_minutes));
   const [savedDuration, setSavedDuration] = useState(service.duration_minutes);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -60,6 +63,17 @@ export function DefaultServiceCard({
     if (await patch({ name: trimmed })) {
       setName(trimmed);
       setSavedName(trimmed);
+    }
+  }
+
+  async function commitDescription() {
+    const trimmed = description.trim();
+    if (trimmed === savedDescription) return;
+    if (await patch({ description: trimmed || null })) {
+      setDescription(trimmed);
+      setSavedDescription(trimmed);
+    } else {
+      setDescription(savedDescription);
     }
   }
 
@@ -126,6 +140,18 @@ export function DefaultServiceCard({
               if (e.key === "Enter") e.currentTarget.blur();
             }}
           />
+        </div>
+
+        <div>
+          <Textarea
+            label={t("descriptionLabel")}
+            value={description}
+            disabled={!canEdit}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={commitDescription}
+            rows={3}
+          />
+          <p className="mt-1.5 text-xs text-on-surface-variant">{t("descriptionHint")}</p>
         </div>
 
         {canEdit && status === "error" ? (

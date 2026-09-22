@@ -230,11 +230,41 @@ describe("list_services", () => {
 
     const after = (await listServicesTool.execute({}, toolCtxFor(seed))) as {
       services: { name: string }[];
-      defaultService: { id: string; name: string } | null;
+      defaultService: { id: string; name?: string } | null;
     };
-    expect(after.defaultService).toMatchObject({ id: def!.id, name: def!.name });
+    expect(after.defaultService?.id).toBe(def!.id);
+    // Still seeded with the literal placeholder name ("Serviço padrão") --
+    // never handed to the model, so there's nothing for Ana to read back to
+    // the customer as if it were a real service name.
+    expect(after.defaultService).not.toHaveProperty("name");
     // Still not mixed into the pickable list.
     expect(after.services.map((s) => s.name)).toEqual(["Avaliação"]);
+  });
+
+  // Chat testing: Ana confirmed a booking as "Serviço padrão: amanhã..." --
+  // the literal seeded name, read straight back to the customer.
+  it("surfaces the default service's real name once the merchant renames it, and its description either way", async () => {
+    const seed = await seedConversation(owner, "Default Rename Co");
+    const svc = getTestServiceClient();
+    const { data: def } = await svc
+      .from("services")
+      .select("id")
+      .eq("company_id", seed.companyId)
+      .eq("is_default", true)
+      .single();
+    await api("PATCH", `/api/companies/${seed.companyId}/services/${def!.id}`, owner.cookieHeader, {
+      is_active: true,
+      name: "Consulta Geral",
+      description: "Cobre avaliações e queixas gerais; não cobre estética.",
+    });
+
+    const result = (await listServicesTool.execute({}, toolCtxFor(seed))) as {
+      defaultService: { name?: string; description: string | null } | null;
+    };
+    expect(result.defaultService).toMatchObject({
+      name: "Consulta Geral",
+      description: "Cobre avaliações e queixas gerais; não cobre estética.",
+    });
   });
 
   it("book_appointment accepts the default service's id and records what was asked in the summary", async () => {
@@ -271,6 +301,49 @@ describe("list_services", () => {
       service_id: def!.id,
       summary: "Customer asked to book for a chipped front tooth.",
     });
+  });
+
+  it("omits serviceName when booked under the still-placeholder-named default service", async () => {
+    const seed = await seedConversation(owner, "Default Placeholder Book Co");
+    await setBusinessHours(owner, seed.companyId);
+    const svc = getTestServiceClient();
+    const { data: def } = await svc
+      .from("services")
+      .select("id")
+      .eq("company_id", seed.companyId)
+      .eq("is_default", true)
+      .single();
+    await api("PATCH", `/api/companies/${seed.companyId}/services/${def!.id}`, owner.cookieHeader, {
+      is_active: true,
+    });
+
+    const booked = (await book({ serviceId: def!.id, startsAt: `${BOOKING_DATE}T09:00:00Z` }, toolCtxFor(seed))) as {
+      booked: boolean;
+      serviceName?: string;
+    };
+    expect(booked.booked).toBe(true);
+    expect(booked).not.toHaveProperty("serviceName");
+  });
+
+  it("includes the real serviceName once the merchant renames the default service", async () => {
+    const seed = await seedConversation(owner, "Default Renamed Book Co");
+    await setBusinessHours(owner, seed.companyId);
+    const svc = getTestServiceClient();
+    const { data: def } = await svc
+      .from("services")
+      .select("id")
+      .eq("company_id", seed.companyId)
+      .eq("is_default", true)
+      .single();
+    await api("PATCH", `/api/companies/${seed.companyId}/services/${def!.id}`, owner.cookieHeader, {
+      is_active: true,
+      name: "Consulta Geral",
+    });
+
+    const booked = (await book({ serviceId: def!.id, startsAt: `${BOOKING_DATE}T09:00:00Z` }, toolCtxFor(seed))) as {
+      serviceName?: string;
+    };
+    expect(booked.serviceName).toBe("Consulta Geral");
   });
 });
 
@@ -953,6 +1026,28 @@ describe("list_my_appointments", () => {
     expect(byEmail.appointments).toHaveLength(1);
     expect(byEmail.appointments[0].startsAt).toBe(`${BOOKING_DATE}T11:00:00+00:00`);
   });
+
+  it("omits serviceName for an appointment booked under the still-placeholder-named default service", async () => {
+    const seed = await seedConversation(owner, "List Mine Default Co");
+    await setBusinessHours(owner, seed.companyId);
+    const svc = getTestServiceClient();
+    const { data: def } = await svc
+      .from("services")
+      .select("id")
+      .eq("company_id", seed.companyId)
+      .eq("is_default", true)
+      .single();
+    await api("PATCH", `/api/companies/${seed.companyId}/services/${def!.id}`, owner.cookieHeader, {
+      is_active: true,
+    });
+    await book({ serviceId: def!.id, startsAt: `${BOOKING_DATE}T09:00:00Z` }, toolCtxFor(seed));
+
+    const result = (await listMyAppointmentsTool.execute({}, toolCtxFor(seed))) as {
+      appointments: { serviceName?: string }[];
+    };
+    expect(result.appointments).toHaveLength(1);
+    expect(result.appointments[0]).not.toHaveProperty("serviceName");
+  });
 });
 
 // Trello J6 -- move an appointment in one write.
@@ -968,6 +1063,33 @@ describe("reschedule_appointment", () => {
     )) as { appointmentId: string };
     return { seed, serviceId, ctx, appointmentId: booked.appointmentId };
   }
+
+  it("omits serviceName when rescheduling an appointment under the still-placeholder-named default service", async () => {
+    const seed = await seedConversation(owner, "Reschedule Default Co");
+    await setBusinessHours(owner, seed.companyId);
+    const svc = getTestServiceClient();
+    const { data: def } = await svc
+      .from("services")
+      .select("id")
+      .eq("company_id", seed.companyId)
+      .eq("is_default", true)
+      .single();
+    await api("PATCH", `/api/companies/${seed.companyId}/services/${def!.id}`, owner.cookieHeader, {
+      is_active: true,
+    });
+    const ctx = toolCtxFor(seed);
+    const booked = (await book(
+      { serviceId: def!.id, startsAt: `${BOOKING_DATE}T09:00:00Z` },
+      ctx,
+    )) as { appointmentId: string };
+
+    const result = (await rescheduleAppointmentTool.execute(
+      { appointmentId: booked.appointmentId, newStartsAt: `${BOOKING_DATE}T14:00:00Z` },
+      ctx,
+    )) as { rescheduled: boolean; serviceName?: string };
+    expect(result.rescheduled).toBe(true);
+    expect(result).not.toHaveProperty("serviceName");
+  });
 
   it("moves the appointment to a new time and recomputes ends_at", async () => {
     const { ctx, appointmentId } = await seededBooking();
