@@ -125,6 +125,51 @@ describe("evaluateReplyGate (Trello P7)", () => {
     });
   });
 
+  // 2026-09-21 -- a trialing company that reaches its trial quota gets
+  // converted to paid (endTrialNow) instead of blocked. `stripe-api-mock.ts`
+  // 200s a `trial_end=now` update for any sub id, and fails it for one
+  // containing "trigger-end-trial-failure" -- either way the reply gate
+  // itself must never block on trial usage alone, only ever via `lapsed`.
+  describe("trial quota reached -> auto-charge instead of blocking", () => {
+    it("allows (overPlan) a trialing company at its trial quota, with no grace band", async () => {
+      const owner = await signUpTestUser("owner");
+      const { id } = await createCompany(owner.cookieHeader, "P7 Trial At Limit Co");
+      const periodStart = new Date().toISOString();
+      await seedBilling(id, { status: "trialing", periodStart });
+      await svc
+        .from("company_billing")
+        .update({ stripe_subscription_id: `sub_mock_starter__co_${id}__trial` })
+        .eq("company_id", id);
+      await seedUsage(id, periodStart, 500, 500);
+
+      expect(await evaluateReplyGate(id, svc)).toEqual({ allow: true, overPlan: true });
+    });
+
+    it("still allows when the auto-charge attempt itself fails (best-effort, never throws)", async () => {
+      const owner = await signUpTestUser("owner");
+      const { id } = await createCompany(owner.cookieHeader, "P7 Trial Auto-Charge Fail Co");
+      const periodStart = new Date().toISOString();
+      await seedBilling(id, { status: "trialing", periodStart });
+      await svc
+        .from("company_billing")
+        .update({ stripe_subscription_id: "sub_mock_starter__trigger-end-trial-failure" })
+        .eq("company_id", id);
+      await seedUsage(id, periodStart, 500, 500);
+
+      await expect(evaluateReplyGate(id, svc)).resolves.toEqual({ allow: true, overPlan: true });
+    });
+
+    it("does not attempt a charge, and allows without overPlan, while still under the trial quota", async () => {
+      const owner = await signUpTestUser("owner");
+      const { id } = await createCompany(owner.cookieHeader, "P7 Trial Under Limit Co");
+      const periodStart = new Date().toISOString();
+      await seedBilling(id, { status: "trialing", periodStart });
+      await seedUsage(id, periodStart, 499, 500);
+
+      expect(await evaluateReplyGate(id, svc)).toEqual({ allow: true, overPlan: false });
+    });
+  });
+
   it("judges only the current period -- a maxed-out prior-period row does not block", async () => {
     const owner = await signUpTestUser("owner");
     const { id } = await createCompany(owner.cookieHeader, "P7 Period Rollover Co");

@@ -64,8 +64,11 @@ export type PlanKey =
 
 /** Length of the free trial (Trello P8), for every self-serve plan that
  * offers one. Not a per-plan field -- every plan that offers a trial uses
- * the same length; only the reduced quota differs. */
-export const TRIAL_DAYS = 15;
+ * the same length; only the reduced quota differs.
+ * 2026-09-21: cut from 15 to 7 days -- reaching the trial reply quota now
+ * converts to paid immediately (see enforcement.ts), so the trial no longer
+ * needs to run long enough on its own to prove the product. */
+export const TRIAL_DAYS = 7;
 
 export interface BillingPlan {
   key: PlanKey;
@@ -108,9 +111,11 @@ export interface BillingPlan {
    * checkout route only grants one when the chosen plan has a non-null
    * value here. Seeded the same way as `monthlyReplyLimit`, just for the
    * subscription's trialing period instead of a normal one. Every self-serve
-   * plan offers the same 1,000-reply trial regardless of billing period or
+   * plan offers the same 500-reply trial regardless of billing period or
    * WhatsApp add-on -- Enterprise never does (no self-serve Checkout to
-   * trial through).
+   * trial through). Reaching this quota does NOT get the normal plan's
+   * grace-band head-room (`limits.ts`) -- enforcement.ts converts to paid
+   * immediately instead (2026-09-21).
    */
   trialReplyLimit: number | null;
   /**
@@ -135,7 +140,9 @@ const BASE = {
 
 const ANNUAL_MULTIPLIER = 4;
 const WPP_MULTIPLIER = 2;
-const TRIAL_REPLY_LIMIT = 1_000;
+// Exported (unlike ANNUAL_MULTIPLIER/WPP_MULTIPLIER) so trial copy can quote
+// the exact number instead of duplicating it as a literal.
+export const TRIAL_REPLY_LIMIT = 500;
 
 interface TierPriceIds {
   monthly: string;
