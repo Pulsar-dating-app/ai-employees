@@ -26,7 +26,17 @@ type SearchProductsArgs = {
 // OR'd alternative, ranked by how well it matched overall.
 export const searchProductsTool: AgentTool = {
   name: "search_products",
-  description: "Search this company's product catalog by keyword, category, or price range.",
+  description:
+    "Search this company's product catalog by keyword, category, or price range. Returns " +
+    "`products` (0 to `limit` results) and, only when it's empty, a `catalogEmpty` flag.\n\n" +
+    "`catalogEmpty: true` means this business has not added ANY products yet -- a completely " +
+    "different fact from this one search just not matching anything. Don't broaden the search, " +
+    "don't try other keywords, and don't suggest categories or product types that might exist -- " +
+    "there is nothing to find. Say plainly that there are no products here yet and offer to " +
+    "bring in the team; never mention checkout or ask for a product name to complete a purchase.\n\n" +
+    "Without `catalogEmpty` (or with it false), an empty `products` list means only that THIS " +
+    "search didn't match -- broaden it (see `keywords`' own guidance) before telling the " +
+    "customer something isn't available.",
   parameters: {
     type: "object",
     properties: {
@@ -106,6 +116,10 @@ export const searchProductsTool: AgentTool = {
     // real caller that's meant to get it; ProductRepository.search's own
     // file comment explains why it isn't defaulted the way ctx.supabase is.
     const products = await ProductRepository.search({ ...args, companyId: ctx.companyId }, ctx.supabase, ctx.openai);
-    return products;
+    if (products.length > 0) return { products };
+    // Only queried when this search came back empty -- a company with real
+    // results never pays for it.
+    const hasAny = await ProductRepository.hasProducts(ctx.companyId, ctx.supabase);
+    return hasAny ? { products } : { products, catalogEmpty: true };
   },
 };

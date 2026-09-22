@@ -22,13 +22,40 @@ function product(overrides: Record<string, unknown> & { id: string; name: string
   };
 }
 
-function searchCall(rows: unknown[]) {
-  return { name: "search_products", args: {}, result: rows };
+// Matches the real search_products tool's own result shape (see
+// search-products.ts): `{ products, catalogEmpty? }`, not a bare array.
+function searchCall(rows: unknown[], catalogEmpty?: boolean) {
+  return {
+    name: "search_products",
+    args: {},
+    result: catalogEmpty ? { products: rows, catalogEmpty: true } : { products: rows },
+  };
 }
 
 const ids = (rows: { id: string }[]) => rows.map((r) => r.id);
 
 describe("collectSearchedProducts", () => {
+  // The empty-catalog ticket wrapped search_products' result as
+  // { products, catalogEmpty? } instead of a bare array -- this is the real
+  // shape every other test in this file already exercises via searchCall();
+  // these two pin the wrapping itself and the two edge shapes around it.
+  it("reads products from the wrapped { products } shape", () => {
+    const calls = [searchCall([product({ id: "a", name: "The Hidden Snowboard" })])];
+    expect(calls[0].result).toEqual({ products: [product({ id: "a", name: "The Hidden Snowboard" })] });
+    expect(ids(collectSearchedProducts(calls))).toEqual(["a"]);
+  });
+
+  it("finds no products in a catalogEmpty result, same as any other empty products list", () => {
+    const calls = [searchCall([], true)];
+    expect(calls[0].result).toEqual({ products: [], catalogEmpty: true });
+    expect(collectSearchedProducts(calls)).toEqual([]);
+  });
+
+  it("still reads a bare array, for a caller that never wraps its result", () => {
+    const calls = [{ name: "search_products", args: {}, result: [product({ id: "a", name: "Bare Array Co" })] }];
+    expect(ids(collectSearchedProducts(calls))).toEqual(["a"]);
+  });
+
   it("ignores tool calls that are not product searches", () => {
     const calls = [
       { name: "get_business_information", args: {}, result: { hours: "9-18" } },

@@ -9,6 +9,7 @@ import {
   loadBusinessName,
   loadCompanyTimezone,
   loadHasBusinessHours,
+  loadHasProducts,
   loadHumanHandoffEnabled,
   loadPolicies,
   loadServiceChoice,
@@ -96,11 +97,15 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   // one. Read after the tool list is resolved (unlike the policies above) so
   // Malu never pays for a query she has no use for.
   const canSchedule = tools.some((tool) => tool.name === "find_available_slots");
-  const [serviceChoice, hasBusinessHours] = await Promise.all([
+  // Same reasoning for search_products: only an agent that can search a
+  // catalog needs to know whether it's empty.
+  const canSearchProducts = tools.some((tool) => tool.name === "search_products");
+  const [serviceChoice, hasBusinessHours, hasProducts] = await Promise.all([
     tools.some((tool) => tool.name === "list_services")
       ? loadServiceChoice(supabase, input.companyId)
       : null,
     canSchedule ? loadHasBusinessHours(supabase, input.companyId) : true,
+    canSearchProducts ? loadHasProducts(supabase, input.companyId) : true,
   ]);
 
   // Step 2
@@ -128,6 +133,9 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     // Read off the resolved list like the ones above: the offer of "alguém do
     // time" must match whether request_human actually survived the handoff filter.
     noBusinessHours: hasBusinessHours
+      ? null
+      : { canOfferTeam: tools.some((tool) => tool.name === "request_human") },
+    emptyCatalog: hasProducts
       ? null
       : { canOfferTeam: tools.some((tool) => tool.name === "request_human") },
     currentDate: formatCurrentDate(companyTimezone),

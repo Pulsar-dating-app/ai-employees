@@ -119,12 +119,25 @@ function mentions(haystack: string, productName: string): boolean {
 
 // Every product this turn's searches returned, de-duplicated by id and in
 // first-seen order.
+// search_products' own result (search-products.ts) is `{ products, catalogEmpty? }`,
+// not a bare array -- wrapped so it can also carry the empty-catalog ticket's
+// `catalogEmpty` flag for the model. `Array.isArray(call.result)` is kept as a
+// fallback purely for a hand-built `ToolCallLike` fixture in a test; no real
+// tool call takes that shape.
+function rowsFromSearchResult(result: unknown): unknown[] {
+  if (Array.isArray(result)) return result;
+  if (result && typeof result === "object" && Array.isArray((result as { products?: unknown }).products)) {
+    return (result as { products: unknown[] }).products;
+  }
+  return [];
+}
+
 export function collectSearchedProducts(toolCalls: readonly ToolCallLike[]): SearchedProduct[] {
   const seen = new Map<string, SearchedProduct>();
 
   for (const call of toolCalls) {
-    if (call.name !== "search_products" || !Array.isArray(call.result)) continue;
-    for (const row of call.result) {
+    if (call.name !== "search_products") continue;
+    for (const row of rowsFromSearchResult(call.result)) {
       if (!isSearchedProduct(row) || seen.has(row.id)) continue;
       const record = row as Record<string, unknown>;
       seen.set(row.id, {

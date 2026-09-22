@@ -326,4 +326,21 @@ async function get(
   return (data as Product | null) ?? null;
 }
 
-export const ProductRepository = { search, get };
+// Whether this company has ANY active product at all, regardless of what a
+// specific search matched -- distinct from search() returning [] the same
+// way business_hours' "not set up yet" is distinct from "no slot in this
+// window" (see the scheduling repository's hasBusinessHours). Conflating the
+// two is what sent Malu inventing categories to broaden a search that could
+// never succeed on a genuinely empty catalog.
+async function hasProducts(companyId: string, supabaseClient?: SupabaseClient): Promise<boolean> {
+  const client = supabaseClient ?? createServiceClient();
+  const { count, error } = await client
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("is_active", true);
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
+export const ProductRepository = { search, get, hasProducts };

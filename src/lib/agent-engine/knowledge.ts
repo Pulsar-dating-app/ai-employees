@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { CompanyRepository, type PolicyInformation } from "@/lib/companies/repository";
 import { AppointmentRepository } from "@/lib/appointments/repository";
+import { ProductRepository } from "@/lib/products/repository";
 import { classifyServiceChoice, type ServiceChoice } from "./prompt";
 
 // Step 4 -- Trello C3 replaced this step's original stub (a full,
@@ -37,6 +38,13 @@ export async function loadServiceChoice(
   companyId: string,
 ): Promise<ServiceChoice | null> {
   return classifyServiceChoice(await AppointmentRepository.listServices(companyId, supabase));
+}
+
+// Whether this company has any product at all, from the same count
+// ProductRepository.hasProducts uses (so search_products' own catalogEmpty
+// signal and this can never disagree).
+export async function loadHasProducts(supabase: SupabaseClient, companyId: string): Promise<boolean> {
+  return ProductRepository.hasProducts(companyId, supabase);
 }
 
 // Whether the merchant has set any opening hours (one count query, the same one

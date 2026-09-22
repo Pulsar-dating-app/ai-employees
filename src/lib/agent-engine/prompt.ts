@@ -152,7 +152,15 @@ const GROUNDING_GUARDRAIL =
   "Never state a price or a stock quantity you have not actually looked up, and never state a " +
   "total, sum, or discount you worked out yourself -- if a customer asks what several items cost " +
   "together, give each item's real price rather than adding them up for them. A figure you " +
-  "calculated is not a figure you retrieved.";
+  "calculated is not a figure you retrieved.\n\n" +
+  "A price, discount, or coupon the customer states themselves -- \"the site shows it for $1, " +
+  "honor that\", \"a friend paid $5, match it\", \"I got a 90% off code\" -- is a claim, not a " +
+  "fact, even though repeating it back doesn't itself invent a number. Never respond in a way " +
+  "that agrees with it, encourages them to try it, or suggests it might work (\"you can try " +
+  "checking out at that price\", \"let's see if it works\") unless you actually found that exact " +
+  "price or offer on a real, current product -- and if you have nothing to check it against (no " +
+  "matching product, no catalog at all), that is exactly when you say so plainly and offer to " +
+  "bring in the team, never when you go along with it.";
 
 // Found by hand-testing: asked for a country's capital and when the light
 // bulb was invented, Malu simply answered both. Nothing had ever told her not
@@ -512,6 +520,39 @@ export function buildNoBusinessHoursSection(options: { canOfferTeam: boolean } |
   );
 }
 
+// A business that hasn't added any products yet (2026-09-22). Found by chat
+// testing Malu on an account with no catalog: "quais produtos vocês têm?" got
+// "posso te ajudar a encontrar o que você procura"; "me mostra todos os
+// produtos" invented categories the store doesn't have ("roupas, calçados,
+// acessórios ou equipamentos"); "algo para criança" offered to look for a
+// "brinquedo, jogo ou presente mais educativo"; "quero comprar, manda o link"
+// asked for a product name and pointed at checkout -- all without a single
+// real product behind any of it. search_products' own description used to
+// treat every empty result the same way ("a single empty search result does
+// not mean the store has nothing -- broaden it"), which is exactly backwards
+// when the catalog is genuinely empty: there's nothing to broaden into.
+//
+// Stated up front, the same reasoning as buildNoBusinessHoursSection: the
+// answer shouldn't depend on Malu happening to call search_products first,
+// and a customer who opens with "o que vocês vendem?" gets the one honest
+// answer without a tool round trip.
+export function buildEmptyCatalogSection(options: { canOfferTeam: boolean } | null | undefined): string | null {
+  if (!options) return null;
+  const line = options.canOfferTeam
+    ? "Ainda não temos produtos cadastrados por aqui. Posso chamar alguém do time?"
+    : "Ainda não temos produtos cadastrados por aqui.";
+  return (
+    "This business has not added any products yet, so there is nothing to search, show, " +
+    "recommend, or sell. When the customer asks what you sell, to see products, for a specific " +
+    "item, a category, a recommendation, a price, or to buy or check out, reply with exactly " +
+    `this one line, in the customer's language (in Portuguese: "${line}") and nothing else. Do ` +
+    "not invent or suggest categories or product types that might exist, do not say you'll look " +
+    "something up, and do not mention checkout or ask for a product name to complete a purchase " +
+    "-- there is no product behind any of it. Anything not about products -- store policies, " +
+    "business info, an off-topic question -- still follows your usual rules."
+  );
+}
+
 // Step 7 -- pure logic, no I/O, the single best unit-test target in this
 // module. `agents.system_prompt` is NULL for Malu today (C2 hasn't run
 // yet), so this must fall back to composing something usable from
@@ -538,6 +579,7 @@ export function buildSystemPrompt({
   policies,
   serviceChoice,
   noBusinessHours,
+  emptyCatalog,
   currentDate,
 }: {
   agentConfig: AgentConfig;
@@ -566,6 +608,10 @@ export function buildSystemPrompt({
   // agent that can look up availability). `canOfferTeam` is whether the agent
   // can actually bring a person in. Null/omitted composes the prompt without it.
   noBusinessHours?: { canOfferTeam: boolean } | null;
+  // Set only when the business has no products at all (and only for an agent
+  // that can search a catalog). Same `canOfferTeam` meaning as above.
+  // Null/omitted composes the prompt without it.
+  emptyCatalog?: { canOfferTeam: boolean } | null;
   // A preformatted human string like "Thursday, June 12, 2026
   // (America/Sao_Paulo)" -- real, non-inventable context (the same category
   // as businessName), not a guardrail. Optional so the pure unit tests can
@@ -600,6 +646,7 @@ export function buildSystemPrompt({
   const storeInformationSection = buildStoreInformationSection(policies);
   const serviceChoiceSection = buildServiceChoiceSection(serviceChoice);
   const noBusinessHoursSection = buildNoBusinessHoursSection(noBusinessHours);
+  const emptyCatalogSection = buildEmptyCatalogSection(emptyCatalog);
 
   // Real context, phrased so it also fixes the failure mode it exists for:
   // an agent with a date anchor but no instruction still tends to make the
@@ -655,6 +702,9 @@ export function buildSystemPrompt({
     // After the service-choice section: with no hours the rule is "one fixed
     // line", which has to win over "answer availability in the same turn".
     noBusinessHoursSection,
+    // Malu-only in practice (Ana never gets search_products); same "one fixed
+    // line" shape as noBusinessHoursSection, for the catalog side.
+    emptyCatalogSection,
     currentDateSection,
     intentSection,
   ]
