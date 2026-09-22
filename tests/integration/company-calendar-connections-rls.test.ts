@@ -67,4 +67,32 @@ describe("company_calendar_connections RLS: access_token/refresh_token are colum
     expect(insert.error).not.toBeNull();
     expect(insert.error?.code).toBe("42501");
   });
+
+  // 2026-09-22 -- proves the direct-RLS bypass is closed on safe columns
+  // too, not just the token columns (see decisions.md).
+  it("blocks a direct insert/update on safe columns too, not just the token columns", async () => {
+    const owner = await signUpTestUser("owner");
+    const created = await api<{ company: { id: string } }>(
+      "POST",
+      "/api/companies",
+      owner.cookieHeader,
+      { name: "Calendar Direct Write Bypass Co" },
+    );
+    const companyId = created.json.company.id;
+
+    const fakeInsert = await owner.client
+      .from("company_calendar_connections")
+      .insert({ company_id: companyId, provider: "google", status: "connected" })
+      .select();
+    expect(fakeInsert.error).not.toBeNull();
+    expect(fakeInsert.error?.code).toBe("42501");
+
+    const fakeUpdate = await owner.client
+      .from("company_calendar_connections")
+      .update({ status: "connected" })
+      .eq("company_id", companyId)
+      .select();
+    expect(fakeUpdate.error).not.toBeNull();
+    expect(fakeUpdate.error?.code).toBe("42501");
+  });
 });

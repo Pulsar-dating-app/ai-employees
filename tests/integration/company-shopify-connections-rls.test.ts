@@ -1,29 +1,54 @@
+import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
+import { signedShopifyCallbackQuery } from "./helpers/shopify";
 
-// Drives PostgREST directly (bypassing the Next.js app) to pin the two
-// guarantees the connect routes assume: access_token is column-locked to
-// the service role, and a store resolves to exactly one company. Same style
-// as company-instagram-connections-rls.test.ts.
-describe("company_shopify_connections", () => {
+// company_shopify_connections.access_token/refresh_token are column-locked
+// (migration 20260908100200), and (2026-09-22) insert/update/delete are
+// locked to the service role entirely -- every real write goes through the
+// connect/disconnect routes' service-role client, so the row here is created
+// through the real connect endpoint, then probed directly via supabase-js.
+// Same style as company-whatsapp-connections-rls.test.ts and
+// company-calendar-connections-rls.test.ts.
+//
+// The unique-index business rules this file used to prove via raw inserts
+// (one store per company, one store claimed platform-wide, freed on
+// disconnect) predate the real connect route and are now exercised
+// end-to-end through it instead -- shopify-connection.test.ts's "refuses to
+// connect a store already held by another company" covers the same
+// underlying constraint via the only path that can reach it in production.
+describe("company_shopify_connections RLS: token columns are column-locked, writes are service-role-only", () => {
   async function createCompany(ownerCookie: string, name: string) {
     const created = await api<{ company: { id: string } }>("POST", "/api/companies", ownerCookie, { name });
     return created.json.company.id;
   }
 
-  function connectionRow(companyId: string, shop: string) {
-    return { company_id: companyId, shop_domain: shop, status: "connected" as const };
+  function uniqueShop(prefix: string) {
+    return `${prefix}-${randomUUID().slice(0, 8)}.myshopify.com`;
+  }
+
+  function connectBody(shop: string, code: string) {
+    const query = signedShopifyCallbackQuery({
+      shop,
+      code,
+      timestamp: String(Math.floor(Date.now() / 1000)),
+      state: "irrelevant-here",
+    });
+    return { query };
   }
 
   it("blocks even the company owner from selecting, inserting, or updating access_token / refresh_token directly", async () => {
     const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Shopify Lock Co");
+    const companyId = await createCompany(owner.cookieHeader, "Shopify Connections RLS Co");
 
-    const insert = await owner.client
-      .from("company_shopify_connections")
-      .insert(connectionRow(companyId, "lock-co.myshopify.com"));
-    expect(insert.error).toBeNull();
+    const connected = await api(
+      "POST",
+      `/api/companies/${companyId}/shopify/connect`,
+      owner.cookieHeader,
+      connectBody(uniqueShop("rls-lock"), "good-code"),
+    );
+    expect(connected.status).toBe(200);
 
     // Every other column stays readable -- only the two token columns are
     // locked; token_expires_at (non-secret) is not.
@@ -51,19 +76,41 @@ describe("company_shopify_connections", () => {
 
     const tokenInsert = await owner.client
       .from("company_shopify_connections")
-      .insert({ ...connectionRow(companyId, "lock-co-2.myshopify.com"), access_token: "hijacked" })
+      .insert({ company_id: companyId, shop_domain: uniqueShop("rls-lock-2"), access_token: "hijacked" })
       .select();
     expect(tokenInsert.error?.code).toBe("42501");
   });
 
-  it("denies a non-member from reading or connecting for another company", async () => {
+  // 2026-09-22 -- proves the direct-RLS bypass is closed on safe columns
+  // too, not just the token columns (see decisions.md).
+  it("blocks a direct insert/update on safe columns too, not just the token columns", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Shopify Direct Write Bypass Co");
+
+    const fakeInsert = await owner.client
+      .from("company_shopify_connections")
+      .insert({ company_id: companyId, shop_domain: uniqueShop("fake-bypass"), status: "connected" })
+      .select();
+    expect(fakeInsert.error?.code).toBe("42501");
+
+    const fakeUpdate = await owner.client
+      .from("company_shopify_connections")
+      .update({ status: "connected" })
+      .eq("company_id", companyId)
+      .select();
+    expect(fakeUpdate.error?.code).toBe("42501");
+  });
+
+  it("denies a non-member from reading another company's connection", async () => {
     const owner = await signUpTestUser("owner");
     const outsider = await signUpTestUser("outsider");
     const companyId = await createCompany(owner.cookieHeader, "Shopify Private Co");
-
-    await owner.client
-      .from("company_shopify_connections")
-      .insert(connectionRow(companyId, "private-co.myshopify.com"));
+    await api(
+      "POST",
+      `/api/companies/${companyId}/shopify/connect`,
+      owner.cookieHeader,
+      connectBody(uniqueShop("rls-private"), "good-code"),
+    );
 
     const read = await outsider.client
       .from("company_shopify_connections")
@@ -71,55 +118,5 @@ describe("company_shopify_connections", () => {
       .eq("company_id", companyId);
     expect(read.error).toBeNull();
     expect(read.data).toEqual([]); // RLS SELECT denial = empty set, not an error
-
-    const insert = await outsider.client
-      .from("company_shopify_connections")
-      .insert(connectionRow(companyId, "private-co-2.myshopify.com"));
-    expect(insert.error?.code).toBe("42501");
-  });
-
-  it("allows only one connection row per company", async () => {
-    const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner.cookieHeader, "Shopify One Per Company Co");
-
-    const first = await owner.client
-      .from("company_shopify_connections")
-      .insert(connectionRow(companyId, "one-a.myshopify.com"));
-    expect(first.error).toBeNull();
-
-    const second = await owner.client
-      .from("company_shopify_connections")
-      .insert(connectionRow(companyId, "one-b.myshopify.com"));
-    expect(second.error?.code).toBe("23505");
-  });
-
-  it("refuses to attach one store to two different companies", async () => {
-    const first = await signUpTestUser("first");
-    const second = await signUpTestUser("second");
-    const firstCompany = await createCompany(first.cookieHeader, "Shopify Claim Co A");
-    const secondCompany = await createCompany(second.cookieHeader, "Shopify Claim Co B");
-
-    const claimed = await first.client
-      .from("company_shopify_connections")
-      .insert(connectionRow(firstCompany, "contested.myshopify.com"));
-    expect(claimed.error).toBeNull();
-
-    const contested = await second.client
-      .from("company_shopify_connections")
-      .insert(connectionRow(secondCompany, "contested.myshopify.com"));
-    expect(contested.error?.code).toBe("23505");
-
-    // Once the first company disconnects, the store frees up (partial index
-    // excludes 'disconnected').
-    const released = await first.client
-      .from("company_shopify_connections")
-      .update({ status: "disconnected" })
-      .eq("company_id", firstCompany);
-    expect(released.error).toBeNull();
-
-    const reclaimed = await second.client
-      .from("company_shopify_connections")
-      .insert(connectionRow(secondCompany, "contested.myshopify.com"));
-    expect(reclaimed.error).toBeNull();
   });
 });
