@@ -1,4 +1,5 @@
 import { AppointmentRepository } from "@/lib/appointments/repository";
+import { redactDefaultServiceName } from "./redact-default-service-name";
 import type { AgentTool } from "./types";
 
 type ListMyAppointmentsArgs = {
@@ -23,7 +24,9 @@ export const listMyAppointmentsTool: AgentTool = {
     "`endsAtLabel` (the time already written out in the business's timezone -- say these, " +
     "translated as needed; `startsAt`/`endsAt` are raw UTC ISO instants, don't recompute from " +
     "them), status, and the appointment `id` used by cancel_appointment / " +
-    "reschedule_appointment. Call this when the customer asks about an existing booking (\"what time is mine?\", " +
+    "reschedule_appointment. An appointment with no `serviceName` is under the business's " +
+    "general/default service -- don't invent or ask for a name, just refer to it by day and " +
+    "time. Call this when the customer asks about an existing booking (\"what time is mine?\", " +
     "\"did it go through?\", \"I need to move/cancel my appointment\") -- especially if it was " +
     "made earlier and you don't have its id in view.\n\n" +
     "By default it finds appointments tied to this conversation's customer. If that returns " +
@@ -55,6 +58,6 @@ export const listMyAppointmentsTool: AgentTool = {
       },
       ctx.supabase,
     );
-    return { appointments };
+    return { appointments: appointments.map((a) => redactDefaultServiceName(a)) };
   },
 };

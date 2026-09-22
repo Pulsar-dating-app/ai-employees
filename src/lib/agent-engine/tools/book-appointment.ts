@@ -1,4 +1,5 @@
 import { AppointmentRepository } from "@/lib/appointments/repository";
+import { redactDefaultServiceName } from "./redact-default-service-name";
 import type { AgentTool } from "./types";
 
 type BookAppointmentArgs = {
@@ -41,7 +42,10 @@ export const bookAppointmentTool: AgentTool = {
     "On success, `status` is either \"confirmed\" (the booking is set) or \"requested\" (the " +
     "business needs to review and confirm it) -- tell the customer which one happened, in your " +
     "own natural words, and confirm the time using `startsAtLabel` (already in the business's " +
-    "timezone -- don't recompute from the raw `startsAt`). If `booked` is false, use `reason` to explain honestly (\"slot_unavailable\" " +
+    "timezone -- don't recompute from the raw `startsAt`). If `serviceName` is absent, this was " +
+    "booked under the business's general/default service: don't invent or ask for a service " +
+    "name, just confirm the appointment by day and time (e.g. \"Agendamento confirmado: amanhã, " +
+    "das 10h às 10h30\"). If `booked` is false, use `reason` to explain honestly (\"slot_unavailable\" " +
     "= someone just took that time, \"outside_business_hours\" = the business is closed then, " +
     "\"service_not_found\" = not something they offer, \"too_soon\" = the start is sooner than " +
     "the business accepts a booking (offer a later time), \"daily_limit_reached\" = this " +
@@ -124,6 +128,6 @@ export const bookAppointmentTool: AgentTool = {
       throw err;
     }
     if (turn && !result.booked) turn.bookingClaimed = false;
-    return result;
+    return redactDefaultServiceName(result);
   },
 };

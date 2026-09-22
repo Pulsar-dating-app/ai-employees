@@ -1527,6 +1527,8 @@
       "offLabel": "Off",
       "toggleAria": "Use a default service for unlisted requests",
       "nameLabel": "Name",
+      "descriptionLabel": "Description",
+      "descriptionHint": "What this actually covers, in a sentence or two — your AI employee reads this to decide whether a request fits (so a dental clinic's default service still won't get booked for a haircut) and never repeats it back to the customer.",
       "durationLabel": "Duration (minutes)",
       "saved": "Saved",
       "saveError": "Something went wrong saving that. Please try again."
