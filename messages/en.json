@@ -221,7 +221,7 @@
       "title": "Put {name} to work",
       "subtitle": "She's set up and you've seen her answer. Choose a plan and she starts taking your customers.",
       "groupLabel": "Choose a plan",
-      "trialNote": "Your first {days} days are free. No charge until then, and you can cancel any time.",
+      "trialNote": "Your first {days} days are free, up to {limit, number} replies. Whichever comes first activates your subscription automatically — and you can cancel any time.",
       "cancelled": "No problem — nothing was charged. Pick a plan whenever you're ready.",
       "perMonth": "{price}/month",
       "perYear": "{price}/year",
@@ -256,17 +256,17 @@
       "navChannels": "Channels & WhatsApp",
       "navPricing": "Plans & Pricing",
       "navDemo": "Demo",
-      "trial": "Start 15-Day Trial",
+      "trial": "Start 7-Day Trial",
       "login": "Log in"
     },
     "hero": {
       "badgeMain": "✨ AI Workforce & Official WhatsApp Platform",
-      "badgeSub": "• 15-day free trial",
+      "badgeSub": "• 7-day free trial",
       "headlinePre": "Hire",
       "headlineHighlight": "AI employees",
       "headlinePost": "that sell, support and book 24/7",
       "sub": "Hire intelligent agents trained on your documents, catalogues and processes. Connect to Official WhatsApp, Instagram, Telegram and your website under 15 minutes — no code.",
-      "ctaPrimary": "Start 15-Day Free Trial",
+      "ctaPrimary": "Start 7-Day Free Trial",
       "ctaSecondary": "Watch Live Demo",
       "ctaTertiary": "Talk to a Specialist",
       "trust1": "Official WhatsApp API (Meta)",
@@ -332,7 +332,7 @@
       "heading": "One AI employee, every channel",
       "sub": "Connect your AI employee to Official WhatsApp, Instagram, Telegram and your website. 24/7 sales and support with your business context — one shared memory.",
       "tablistLabel": "Select channel",
-      "cta": "Start 15-day free trial",
+      "cta": "Start 7-day free trial",
       "items": [
         {
           "key": "whatsapp",
@@ -557,7 +557,7 @@
     "pricing": {
       "eyebrow": "Transparent Plans",
       "heading": "Choose the right size for your intelligence team",
-      "sub": "Start right now with a 15-day unconditional guarantee. No hidden setup fee or mandatory lock-in.",
+      "sub": "Start right now with a 7-day unconditional guarantee. No hidden setup fee or mandatory lock-in.",
       "featuredBadge": "Most Chosen by Companies",
       "showMore": "See more",
       "showLess": "See less",
@@ -612,9 +612,9 @@
             "Unlimited teammates (owner, admin, member roles)",
             "English and Portuguese interface",
             "Per-reply usage shown in your dashboard",
-            "15-day free trial"
+            "7-day free trial"
           ],
-          "cta": "Start 15-Day Free Trial"
+          "cta": "Start 7-Day Free Trial"
         },
         {
           "tier": "Intermediate",
@@ -656,9 +656,9 @@
             "Unlimited teammates (owner, admin, member roles)",
             "English and Portuguese interface",
             "Per-reply usage shown in your dashboard",
-            "15-day free trial"
+            "7-day free trial"
           ],
-          "cta": "Start 15-Day Free Trial"
+          "cta": "Start 7-Day Free Trial"
         },
         {
           "tier": "Pro",
@@ -700,9 +700,9 @@
             "Unlimited teammates (owner, admin, member roles)",
             "English and Portuguese interface",
             "Per-reply usage shown in your dashboard",
-            "15-day free trial"
+            "7-day free trial"
           ],
-          "cta": "Start 15-Day Free Trial"
+          "cta": "Start 7-Day Free Trial"
         },
         {
           "tier": "Enterprise",
@@ -746,7 +746,7 @@
             "Unlimited teammates (owner, admin, member roles)",
             "English and Portuguese interface",
             "Per-reply usage shown in your dashboard",
-            "15-day free trial"
+            "7-day free trial"
           ],
           "cta": "Talk to an Account Engineer"
         }
@@ -848,7 +848,7 @@
       "eyebrow": "Start Today",
       "heading": "Ready to multiply your sales and support capacity?",
       "sub": "Create your first AI agent in under 15 minutes and experience the power of a team that works without breaks for your business.",
-      "ctaPrimary": "Start 15-Day Trial",
+      "ctaPrimary": "Start 7-Day Trial",
       "fine": "No lock-in • Cancel any time with one click"
     },
     "footer": {
@@ -2175,8 +2175,8 @@
       },
       "trialOverLimit": {
         "title": "You've used all your free trial replies",
-        "body": "Pay now to unlock the plan's full limit — no need to wait out the rest of your 15 days.",
-        "action": "Pay now"
+        "body": "We're activating your subscription automatically so service doesn't stop. If the charge doesn't go through, you can activate it manually.",
+        "action": "Activate now"
       },
       "nearLimit": {
         "title": "You're almost out of replies",
@@ -2208,8 +2208,8 @@
       "repliesAnnual": "{limit, number} replies per year",
       "teammates": "Unlimited teammates on your account",
       "custom": "Custom pricing",
-      "trialBadge": "15 days free",
-      "trialNote": "First 15 days: up to {limit, number} replies, no charge"
+      "trialBadge": "{days} days free",
+      "trialNote": "First {days} days or {limit, number} replies — whichever comes first. Reaching the limit activates your subscription automatically."
     },
     "picker": {
       "period": {

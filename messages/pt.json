@@ -221,7 +221,7 @@
       "title": "Coloque a {name} para trabalhar",
       "subtitle": "Ela está configurada e você já viu ela responder. Escolha um plano e ela começa a atender seus clientes.",
       "groupLabel": "Escolha um plano",
-      "trialNote": "Seus primeiros {days} dias são grátis. Nada é cobrado até lá, e dá para cancelar quando quiser.",
+      "trialNote": "Seus primeiros {days} dias são grátis, até {limit, number} respostas. Ao atingir o que vier primeiro, sua assinatura é ativada automaticamente — e dá para cancelar quando quiser.",
       "cancelled": "Sem problema — nada foi cobrado. Escolha um plano quando quiser.",
       "perMonth": "{price}/mês",
       "perYear": "{price}/ano",
@@ -256,17 +256,17 @@
       "navChannels": "Canais & WhatsApp",
       "navPricing": "Planos & Preços",
       "navDemo": "Demonstração",
-      "trial": "Testar 15 Dias",
+      "trial": "Testar 7 Dias",
       "login": "Entrar"
     },
     "hero": {
       "badgeMain": "✨ Plataforma de AI Workforce & WhatsApp Oficial",
-      "badgeSub": "• Teste 15 dias grátis",
+      "badgeSub": "• Teste 7 dias grátis",
       "headlinePre": "Contrate",
       "headlineHighlight": "funcionários de IA",
       "headlinePost": "que vendem, atendem e agendam 24/7",
       "sub": "Contrate agentes inteligentes treinados com seus documentos, catálogos e processos. Conecte no WhatsApp Oficial, Instagram, Telegram e em seu site em menos de 15 minutos sem programar.",
-      "ctaPrimary": "Testar 15 Dias Grátis",
+      "ctaPrimary": "Testar 7 Dias Grátis",
       "ctaSecondary": "Ver Demonstração Ao Vivo",
       "ctaTertiary": "Falar com Especialista",
       "trust1": "API WhatsApp Oficial (Meta)",
@@ -332,7 +332,7 @@
       "heading": "Um funcionário de IA, em todos os canais",
       "sub": "Conecte seu funcionário de IA ao WhatsApp Oficial, Instagram, Telegram e ao seu site. Vendas e atendimento 24/7 com o contexto do seu negócio — uma só memória.",
       "tablistLabel": "Selecionar canal",
-      "cta": "Testar 15 dias grátis",
+      "cta": "Testar 7 dias grátis",
       "items": [
         {
           "key": "whatsapp",
@@ -557,7 +557,7 @@
     "pricing": {
       "eyebrow": "Planos Transparentes",
       "heading": "Escolha o tamanho ideal da sua equipe de inteligência",
-      "sub": "Comece agora mesmo com 15 dias de garantia incondicional. Sem taxa oculta de setup ou fidelidade obrigatória.",
+      "sub": "Comece agora mesmo com 7 dias de garantia incondicional. Sem taxa oculta de setup ou fidelidade obrigatória.",
       "featuredBadge": "Mais Escolhido por Empresas",
       "showMore": "Ver mais",
       "showLess": "Ver menos",
@@ -612,9 +612,9 @@
             "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
             "Interface em português e inglês",
             "Uso por resposta exibido no painel",
-            "15 dias de teste grátis"
+            "7 dias de teste grátis"
           ],
-          "cta": "Testar 15 Dias Grátis"
+          "cta": "Testar 7 Dias Grátis"
         },
         {
           "tier": "Intermediate",
@@ -656,9 +656,9 @@
             "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
             "Interface em português e inglês",
             "Uso por resposta exibido no painel",
-            "15 dias de teste grátis"
+            "7 dias de teste grátis"
           ],
-          "cta": "Testar 15 Dias Grátis"
+          "cta": "Testar 7 Dias Grátis"
         },
         {
           "tier": "Pro",
@@ -700,9 +700,9 @@
             "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
             "Interface em português e inglês",
             "Uso por resposta exibido no painel",
-            "15 dias de teste grátis"
+            "7 dias de teste grátis"
           ],
-          "cta": "Testar 15 Dias Grátis"
+          "cta": "Testar 7 Dias Grátis"
         },
         {
           "tier": "Enterprise",
@@ -746,7 +746,7 @@
             "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
             "Interface em português e inglês",
             "Uso por resposta exibido no painel",
-            "15 dias de teste grátis"
+            "7 dias de teste grátis"
           ],
           "cta": "Falar com Engenheiro de Contas"
         }
@@ -848,7 +848,7 @@
       "eyebrow": "Comece Hoje Mesmo",
       "heading": "Pronto para multiplicar sua capacidade de vendas e atendimento?",
       "sub": "Crie seu primeiro agente de IA em menos de 15 minutos e experimente o poder de uma equipe trabalhando sem pausas para o seu negócio.",
-      "ctaPrimary": "Começar Teste de 15 Dias",
+      "ctaPrimary": "Começar Teste de 7 Dias",
       "fine": "Sem fidelidade • Cancele a qualquer momento com 1 clique"
     },
     "footer": {
@@ -2175,8 +2175,8 @@
       },
       "trialOverLimit": {
         "title": "Você usou todas as respostas do seu teste grátis",
-        "body": "Pague agora para desbloquear o limite completo do plano — sem esperar o fim dos 15 dias.",
-        "action": "Pagar agora"
+        "body": "Estamos ativando sua assinatura automaticamente para não interromper o atendimento. Se a cobrança não passar, ative manualmente.",
+        "action": "Ativar agora"
       },
       "nearLimit": {
         "title": "Suas respostas estão acabando",
@@ -2208,8 +2208,8 @@
       "repliesAnnual": "{limit, number} respostas por ano",
       "teammates": "Membros ilimitados na sua conta",
       "custom": "Preço personalizado",
-      "trialBadge": "15 dias grátis",
-      "trialNote": "Nos primeiros 15 dias: até {limit, number} respostas, sem cobrança"
+      "trialBadge": "{days} dias grátis",
+      "trialNote": "Nos primeiros {days} dias ou até {limit, number} respostas — o que vier primeiro. Ao atingir o limite, sua assinatura é ativada automaticamente."
     },
     "picker": {
       "period": {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
-import { getSelfServePlansForVariant, type BillingPeriod, type PlanKey } from "@/lib/billing/plans";
+import { getSelfServePlansForVariant, TRIAL_DAYS, type BillingPeriod, type PlanKey } from "@/lib/billing/plans";
 import { CheckIcon } from "@/components/ui/icons";
 import { CheckoutButton } from "./billing-actions";
 
@@ -120,7 +120,7 @@ export function PlanPicker({
                 <h3 className="text-label-md font-bold text-on-surface">{p.displayName}</h3>
                 {offersTrial ? (
                   <span className="inline-flex items-center rounded-full bg-tertiary/15 px-2.5 py-1 text-xs font-semibold text-tertiary">
-                    {t("plan.trialBadge")}
+                    {t("plan.trialBadge", { days: TRIAL_DAYS })}
                   </span>
                 ) : null}
               </div>
@@ -153,7 +153,7 @@ export function PlanPicker({
                 {offersTrial ? (
                   <li className="flex items-start gap-2 text-sm font-medium text-tertiary">
                     <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-tertiary" />
-                    {t("plan.trialNote", { limit: p.trialReplyLimit! })}
+                    {t("plan.trialNote", { days: TRIAL_DAYS, limit: p.trialReplyLimit! })}
                   </li>
                 ) : null}
               </ul>

@@ -70,4 +70,34 @@ describe("decideReplyGate (Trello P7)", () => {
       ),
     ).toEqual({ allow: false, reason: "grace_exceeded" });
   });
+
+  // 2026-09-21 -- the trial quota gets no grace head-room and never blocks
+  // on usage: hitting it converts to paid instead (evaluateReplyGate fires
+  // the Stripe side effect; this pure function only has to never return
+  // `grace_exceeded` for a trialing company).
+  const trialing = { subscription_status: "trialing", current_period_start: "2026-09-01T00:00:00Z" };
+
+  it("allows a trialing company under its trial quota, not over plan", () => {
+    expect(decideReplyGate(trialing, { replies_used: 499, reply_limit: 500 })).toEqual({
+      allow: true,
+      overPlan: false,
+    });
+  });
+
+  it("never blocks a trialing company at or past its trial quota, even with the hard stop armed", () => {
+    expect(
+      decideReplyGate(trialing, { replies_used: 500, reply_limit: 500 }, { hardStopEnabled: true }),
+    ).toEqual({ allow: true, overPlan: true });
+    expect(
+      decideReplyGate(trialing, { replies_used: 5000, reply_limit: 500 }, { hardStopEnabled: true }),
+    ).toEqual({ allow: true, overPlan: true });
+  });
+
+  it("ignores a paid-plan grace multiplier passed in options while trialing", () => {
+    // A grace multiplier that would still be "over_plan" for a paid plan
+    // must not create a grace band for a trial -- grace is forced to 1.
+    expect(
+      decideReplyGate(trialing, { replies_used: 500, reply_limit: 500 }, { graceMultiplier: 1.2 }),
+    ).toEqual({ allow: true, overPlan: true });
+  });
 });

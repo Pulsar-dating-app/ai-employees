@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
+import { endTrialNow } from "@/lib/stripe/billing";
 import { classifyUsage, getFreeReplyAllowance, isHardStopEnabled } from "./limits";
 
 // Trello P7 -- the single pre-run decision every inbound channel makes
@@ -88,6 +89,14 @@ export type ReplyGateOptions = {
  *  - limit <= used < limit*grace -> allow + `overPlan` (P5 banner escalates)
  *  - used >= limit*grace         -> block `grace_exceeded` if the hard stop
  *                                   is armed, else allow + `overPlan`
+ *
+ * `trialing` is the one exception to the last two rows (2026-09-21): the
+ * trial quota gets no grace head-room at all (grace=1, so "at the limit"
+ * and "past grace" are the same instant), and hitting it never blocks --
+ * `evaluateReplyGate` fires the auto-charge (`endTrialNow`) instead of
+ * stretching the free ride. A trialing company only ever gets blocked via
+ * the `lapsed` branch above, on a later call once a genuine payment failure
+ * has flipped `subscription_status` away from `trialing`.
  */
 export function decideReplyGate(
   billing: BillingFacts,
@@ -101,9 +110,12 @@ export function decideReplyGate(
   }
   if (!usage) return { allow: true, overPlan: false };
 
-  const standing = classifyUsage(usage.replies_used, usage.reply_limit, options.graceMultiplier);
+  const isTrialing = billing.subscription_status === "trialing";
+  const graceMultiplier = isTrialing ? 1 : options.graceMultiplier;
+  const standing = classifyUsage(usage.replies_used, usage.reply_limit, graceMultiplier);
   if (standing === "within") return { allow: true, overPlan: false };
   if (standing === "over_plan") return { allow: true, overPlan: true };
+  if (isTrialing) return { allow: true, overPlan: true };
 
   const hardStop = options.hardStopEnabled ?? isHardStopEnabled();
   return hardStop ? { allow: false, reason: "grace_exceeded" } : { allow: true, overPlan: true };
@@ -123,7 +135,7 @@ export async function evaluateReplyGate(
 
   const { data: billing } = await supabase
     .from("company_billing")
-    .select("subscription_status, current_period_start")
+    .select("subscription_status, current_period_start, stripe_subscription_id")
     .eq("company_id", companyId)
     .maybeSingle();
 
@@ -163,16 +175,44 @@ export async function evaluateReplyGate(
     .eq("period_start", billing.current_period_start as string)
     .maybeSingle();
 
-  return decideReplyGate(
+  const usageFacts = usage
+    ? { replies_used: usage.replies_used as number, reply_limit: usage.reply_limit as number }
+    : null;
+
+  const decision = decideReplyGate(
     {
       subscription_status: billing.subscription_status as string,
       current_period_start: billing.current_period_start as string | null,
     },
-    usage
-      ? { replies_used: usage.replies_used as number, reply_limit: usage.reply_limit as number }
-      : null,
+    usageFacts,
     options,
   );
+
+  // The side effect decideReplyGate can't own (it's pure): a trialing
+  // company that has reached its trial quota gets converted to paid right
+  // now instead of just being waved through with `overPlan`. Best-effort,
+  // same shape as recordAiReply -- a failed or duplicate attempt (this can
+  // fire more than once per company while the row still reads "trialing",
+  // until P4's webhook syncs the real outcome) never throws and never
+  // changes `decision`; a genuine decline surfaces as `lapsed` on a later
+  // call once the webhook flips the status.
+  if (
+    billing.subscription_status === "trialing" &&
+    usageFacts &&
+    usageFacts.replies_used >= usageFacts.reply_limit &&
+    billing.stripe_subscription_id
+  ) {
+    try {
+      await endTrialNow(billing.stripe_subscription_id as string);
+    } catch (err) {
+      console.error("[billing] trial auto-charge failed", {
+        companyId,
+        error: err instanceof Error ? err.message : err,
+      });
+    }
+  }
+
+  return decision;
 }
 
 /**

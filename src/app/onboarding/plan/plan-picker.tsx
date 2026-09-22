@@ -78,9 +78,9 @@ export function PlanPicker({
 
   return (
     <div className="flex flex-col gap-7">
-      {trialAvailable ? (
+      {trialAvailable && plans[0]?.trialReplyLimit != null ? (
         <p className="rounded-lg bg-tertiary-container/15 px-4 py-3 text-body-md text-tertiary">
-          {t("trialNote", { days: trialDays })}
+          {t("trialNote", { days: trialDays, limit: plans[0].trialReplyLimit })}
         </p>
       ) : null}
 
