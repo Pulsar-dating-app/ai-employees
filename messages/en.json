@@ -1666,7 +1666,6 @@
         "rangeStartAria": "{day} time range {position} — opens at",
         "rangeEndAria": "{day} time range {position} — closes at",
         "addRange": "Add hours",
-        "removeRange": "Remove this time range",
         "save": "Save business hours",
         "saving": "Saving…",
         "saved": "Business hours saved.",
@@ -1681,7 +1680,10 @@
           "friday": "Friday",
           "saturday": "Saturday",
           "sunday": "Sunday"
-        }
+        },
+        "unsaved": "Unsaved changes",
+        "addRangeAria": "Add hours to {day}",
+        "removeRangeAria": "Remove {day} time range {position}"
       },
       "approval": {
         "title": "Appointment controls",
@@ -1694,7 +1696,9 @@
         "cancelCutoffHelp": "Once the appointment is this many hours away, the customer can't cancel it themselves — your team asks them to contact you instead. Example: 24 means self-cancelling closes a day before the start. Set 0 to allow it any time.",
         "minutesUnit": "minutes",
         "hoursUnit": "hours",
-        "saveError": "Something went wrong saving that setting. Please try again."
+        "saveError": "Something went wrong saving that setting. Please try again.",
+        "saving": "Saving…",
+        "saved": "Changes saved"
       },
       "timeOff": {
         "title": "Time off & closures",
@@ -1712,14 +1716,15 @@
         "missingDates": "Pick a start and end date.",
         "invalidRange": "The end date can't be before the start date.",
         "overlap": "Those dates overlap an entry you already have ({range}). Remove it first, or pick dates outside it.",
-        "saveError": "Something went wrong. Please try again."
+        "saveError": "Something went wrong. Please try again.",
+        "dayCount": "{count, plural, one {# day} other {# days}}",
+        "addHeading": "Add a closure"
       },
       "googleCalendar": {
         "title": "Google Calendar",
         "subtitle": "Connect a Google Calendar so your team checks it for conflicts before booking.",
         "loading": "Loading…",
         "notConfigured": "Google Calendar isn't set up for this workspace yet.",
-        "connectedBadge": "Connected",
         "connectedSince": "Connected on {date}",
         "notConnected": "No calendar connected yet.",
         "adminOnly": "Ask an owner or admin to connect a calendar.",
@@ -1769,6 +1774,21 @@
         "unsaved": "Unsaved changes",
         "blankLabel": "Give every question a name, or remove the empty ones.",
         "saveError": "Something went wrong saving your questions. Please try again."
+      },
+      "nav": {
+        "label": "Scheduling settings sections",
+        "needsAttention": "Needs attention",
+        "hoursOpen": "{count, plural, one {Open # day a week} other {Open # days a week}}",
+        "hoursClosed": "No open days yet",
+        "approvalOn": "You approve each booking",
+        "approvalOff": "Bookings confirm right away",
+        "timeOffNone": "Nothing scheduled",
+        "timeOffCount": "{count, plural, one {# upcoming closure} other {# upcoming closures}}",
+        "intakeCount": "{count, plural, one {# question asked} other {# questions asked}}",
+        "calendarConnected": "Connected",
+        "calendarNotConnected": "Not connected",
+        "calendarUnavailable": "Not available",
+        "readOnlyTitle": "View only"
       }
     },
     "appointments": {

@@ -1,30 +1,16 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { PREDEFINED_INTAKE_FIELDS, PREDEFINED_INTAKE_KEYS } from "@/lib/appointments/intake-fields";
 import { Button } from "@/components/ui/button";
+import { StatusBanner } from "@/components/ui/status-banner";
 import { BusinessHoursCard, type BusinessHourRow } from "./business-hours-card";
 import { AppointmentControlsCard } from "./appointment-controls-card";
 import { TimeOffCard, type TimeOffEntry } from "./time-off-card";
 import { GoogleCalendarCard } from "./google-calendar-card";
 import { IntakeQuestionsCard, type IntakeField } from "./intake-questions-card";
+import { SchedulingSettingsShell } from "./settings-shell";
 
-// The Scheduling area's settings screen (K5 sub-tab). Company-wide
-// scheduling config, one collapsible section per concern (K8 — the screen
-// grew past a plain stack, so each section now opens on demand; see
-// settings-section.tsx):
-//  - Business hours (K3, H2) — the weekly template, split shifts supported
-//  - Appointment controls (K3, H3) — requires_appointment_approval
-//  - Time off (K3 extension) — company_time_off one-off closures
-//  - Google Calendar (K2, I1) — connect for live free/busy checks
-//  - Intake questions (K8) — appointment_intake_fields the agent collects
-//    from the customer before booking
-// Reproduces the Stitch "Scheduling Settings" screen's main column; its
-// right-hand rail ("Current Services" preview + persona card) is dropped as
-// duplication / K4's territory (see decisions.md).
-//
-// No new API or schema here: every card sits on an already-shipped route
-// (H2's business-hours PUT, B2's company PATCH, K3's time-off routes, I1's
-// calendar connect/disconnect).
 export default async function SchedulingSettingsPage() {
   const supabase = await createClient();
   const t = await getTranslations("Scheduling.settings");
@@ -40,9 +26,7 @@ export default async function SchedulingSettingsPage() {
   if (!company) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-          {t("pageTitle")}
-        </h1>
+        <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">{t("pageTitle")}</h1>
         <p className="text-body-md text-on-surface-variant">{t("noCompany")}</p>
         <Link href="/dashboard">
           <Button type="button" className="self-start">
@@ -54,84 +38,88 @@ export default async function SchedulingSettingsPage() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const [{ data: membership }, { data: businessHours }, { data: timeOff }, { data: intakeFields }] =
-    await Promise.all([
-      supabase
-        .from("company_users")
-        .select("role")
-        .eq("company_id", company.id)
-        .eq("user_id", user!.id)
-        .maybeSingle(),
-      supabase
-        .from("business_hours")
-        .select("day_of_week, start_time, end_time, is_active")
-        .eq("company_id", company.id)
-        .order("day_of_week", { ascending: true })
-        .order("start_time", { ascending: true }),
-      supabase
-        .from("company_time_off")
-        .select("id, start_date, end_date, reason")
-        .eq("company_id", company.id)
-        .gte("end_date", today)
-        .order("start_date", { ascending: true }),
-      supabase
-        .from("appointment_intake_fields")
-        .select("id, key, label, field_type, is_required, is_enabled, position")
-        .eq("company_id", company.id)
-        .order("position", { ascending: true }),
-    ]);
+  const [
+    { data: membership },
+    { data: businessHours },
+    { data: timeOff },
+    { data: intakeFields },
+    { data: calendarConnection },
+  ] = await Promise.all([
+    supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle(),
+    supabase
+      .from("business_hours")
+      .select("day_of_week, start_time, end_time, is_active")
+      .eq("company_id", company.id)
+      .order("day_of_week", { ascending: true })
+      .order("start_time", { ascending: true }),
+    supabase
+      .from("company_time_off")
+      .select("id, start_date, end_date, reason")
+      .eq("company_id", company.id)
+      .gte("end_date", today)
+      .order("start_date", { ascending: true }),
+    supabase
+      .from("appointment_intake_fields")
+      .select("id, key, label, field_type, is_required, is_enabled, position")
+      .eq("company_id", company.id)
+      .order("position", { ascending: true }),
+    supabase.from("company_calendar_connections").select("status").eq("company_id", company.id).maybeSingle(),
+  ]);
 
-  // H2's routes only ever call requireMember, so — like Services (K1) —
-  // gating the UI on admin would invent a restriction the API doesn't have.
   const canEdit = membership !== null;
-  // I1's calendar connect/disconnect routes are admin-only, so the K2 card
-  // gates on this instead.
   const isAdmin = ["owner", "admin"].includes(membership?.role ?? "");
+  const googleClientId = process.env.GOOGLE_CLIENT_ID ?? null;
+
+  const hourRows = (businessHours as BusinessHourRow[] | null) ?? [];
+  const timeOffRows = (timeOff as TimeOffEntry[] | null) ?? [];
+  const intakeRows = (intakeFields as IntakeField[] | null) ?? [];
+  const openDays = new Set(hourRows.filter((r) => r.is_active).map((r) => r.day_of_week)).size;
+  const requiresApproval = Boolean(company.requires_appointment_approval);
+  const intakeByKey = new Map(intakeRows.map((f) => [f.key, f]));
+  const intakeCount =
+    PREDEFINED_INTAKE_FIELDS.filter((f) => intakeByKey.get(f.key)?.is_enabled ?? f.defaultEnabled).length +
+    intakeRows.filter((f) => !PREDEFINED_INTAKE_KEYS.has(f.key)).length;
+  const calendarConnected = (calendarConnection as { status?: string } | null)?.status === "connected";
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-          {t("pageTitle")}
-        </h1>
-        <p className="mt-1 max-w-2xl text-body-md text-on-surface-variant">{t("pageSubtitle")}</p>
-      </div>
-
-      {!canEdit ? (
-        <p className="rounded-md border border-outline-variant bg-surface-container px-3 py-2 text-sm text-on-surface-variant">
-          {t("readOnlyBanner")}
-        </p>
-      ) : null}
-
-      <div className="flex max-w-3xl flex-col gap-4">
-        <BusinessHoursCard
-          companyId={company.id}
-          canEdit={canEdit}
-          initialRows={(businessHours as BusinessHourRow[] | null) ?? []}
-        />
+    <div className="flex flex-col gap-6">
+      <h1 className="sr-only">{t("pageTitle")}</h1>
+      <SchedulingSettingsShell
+        banner={canEdit ? null : <StatusBanner tone="info" title={t("nav.readOnlyTitle")} body={t("readOnlyBanner")} />}
+        initialStatuses={{
+          "business-hours": {
+            summary: openDays > 0 ? t("nav.hoursOpen", { count: openDays }) : t("nav.hoursClosed"),
+            warn: openDays === 0,
+          },
+          "appointment-rules": { summary: requiresApproval ? t("nav.approvalOn") : t("nav.approvalOff"), warn: false },
+          "time-off": {
+            summary:
+              timeOffRows.length === 0 ? t("nav.timeOffNone") : t("nav.timeOffCount", { count: timeOffRows.length }),
+            warn: false,
+          },
+          "intake-questions": { summary: t("nav.intakeCount", { count: intakeCount }), warn: false },
+          "google-calendar": {
+            summary: !googleClientId
+              ? t("nav.calendarUnavailable")
+              : calendarConnected
+                ? t("nav.calendarConnected")
+                : t("nav.calendarNotConnected"),
+            warn: Boolean(googleClientId) && !calendarConnected,
+          },
+        }}
+      >
+        <BusinessHoursCard companyId={company.id} canEdit={canEdit} initialRows={hourRows} />
         <AppointmentControlsCard
           companyId={company.id}
           canEdit={canEdit}
-          initialRequiresApproval={Boolean(company.requires_appointment_approval)}
+          initialRequiresApproval={requiresApproval}
           initialMinLeadTimeMinutes={Number(company.min_lead_time_minutes) || 0}
           initialCancellationCutoffHours={Number(company.cancellation_cutoff_hours) || 0}
         />
-        <TimeOffCard
-          companyId={company.id}
-          canEdit={canEdit}
-          initialEntries={(timeOff as TimeOffEntry[] | null) ?? []}
-        />
-        <IntakeQuestionsCard
-          companyId={company.id}
-          canEdit={canEdit}
-          initialFields={(intakeFields as IntakeField[] | null) ?? []}
-        />
-        <GoogleCalendarCard
-          companyId={company.id}
-          isAdmin={isAdmin}
-          googleClientId={process.env.GOOGLE_CLIENT_ID ?? null}
-        />
-      </div>
+        <TimeOffCard companyId={company.id} canEdit={canEdit} initialEntries={timeOffRows} />
+        <IntakeQuestionsCard companyId={company.id} canEdit={canEdit} initialFields={intakeRows} />
+        <GoogleCalendarCard companyId={company.id} isAdmin={isAdmin} googleClientId={googleClientId} />
+      </SchedulingSettingsShell>
     </div>
   );
 }

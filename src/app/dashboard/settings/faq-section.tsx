@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { CheckIcon, ChevronRightIcon, PlusIcon, XIcon } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SettingsBlock } from "./settings-block";
+import { SettingsBlock } from "@/components/ui/settings-block";
 import { useReportFilled } from "./settings-shell";
 
 type FaqEntry = { key: number; question: string; answer: string };

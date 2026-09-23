@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Textarea } from "@/components/ui/textarea";
 import { useCompanyAutosave, SaveStatusLine } from "./company-autosave";
-import { SettingsBlock } from "./settings-block";
+import { SettingsBlock } from "@/components/ui/settings-block";
 import { useReportFilled } from "./settings-shell";
 
 type PolicyField = "shipping_policy" | "return_policy" | "payment_policy" | "additional_information";

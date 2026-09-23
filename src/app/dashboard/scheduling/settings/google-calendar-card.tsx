@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import { useTranslations } from "next-intl";
-import { LinkIcon, CheckIcon } from "@/components/ui/icons";
+import clsx from "clsx";
+import { CheckIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
-import { SettingsSection } from "./settings-section";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SettingsBlock } from "@/components/ui/settings-block";
+import { useSectionStatus } from "./settings-shell";
 
-// Google Identity Services popup code client. Keep this shape identical to
-// the one dev-scheduling-test/calendar-section.tsx declares — TypeScript
-// merges the two `declare global` augmentations and a mismatch would error.
 type GoogleCodeClient = { requestCode: () => void };
 declare global {
   interface Window {
@@ -40,12 +40,6 @@ type View = "loading" | "idle" | "connecting" | "disconnecting" | "confirmingDis
 
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
 
-// Trello K2 — the real "Connect Google Calendar" card over I1's backend
-// (GET / POST connect / DELETE /api/companies/[id]/calendar), in the same
-// shape as My Team's WhatsApp channels-section.tsx: a two-step guide with
-// loading / not-connected / connected / disconnect-confirm / error states.
-// Connect and disconnect are admin-only, matching I1's routes — unlike K3's
-// other settings cards, which are member-level.
 export function GoogleCalendarCard({
   companyId,
   isAdmin,
@@ -56,12 +50,12 @@ export function GoogleCalendarCard({
   googleClientId: string | null;
 }) {
   const t = useTranslations("Scheduling.settings.googleCalendar");
+  const tn = useTranslations("Scheduling.settings.nav");
   const [connection, setConnection] = useState<Connection>(null);
   const [view, setView] = useState<View>("loading");
   const [scriptReady, setScriptReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const codeClient = useRef<GoogleCodeClient | null>(null);
-  const didScrollToAnchor = useRef(false);
 
   useEffect(() => {
     fetch(`/api/companies/${companyId}/calendar`)
@@ -72,19 +66,6 @@ export function GoogleCalendarCard({
       })
       .catch(() => setView("idle"));
   }, [companyId]);
-
-  // This card is last on a long page, so the Appointments rail links here
-  // with #google-calendar. The App Router's native hash scroll fires against
-  // the loading.tsx skeleton (before this content mounts) and misses, so do
-  // it in JS once the card has rendered its real state.
-  useEffect(() => {
-    if (didScrollToAnchor.current || view === "loading") return;
-    if (window.location.hash !== "#google-calendar") return;
-    didScrollToAnchor.current = true;
-    document
-      .getElementById("google-calendar")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [view]);
 
   function startConnect() {
     if (!googleClientId || !window.google || !scriptReady) {
@@ -99,12 +80,9 @@ export function GoogleCalendarCard({
         client_id: googleClientId,
         scope: CALENDAR_SCOPE,
         ux_mode: "popup",
-        // Closing the popup fires this, not `callback` — without it `view`
-        // would stay "connecting" and the button stuck on its spinner.
         error_callback: () => setView("idle"),
         callback: async (response) => {
           if (!response.code) {
-            // Popup dismissed or denied — back to idle, no error banner.
             setView("idle");
             return;
           }
@@ -151,49 +129,76 @@ export function GoogleCalendarCard({
   }
 
   const isConnected = connection?.status === "connected";
+  const loading = view === "loading";
+  const available = Boolean(googleClientId);
+
+  useSectionStatus(
+    "google-calendar",
+    loading
+      ? null
+      : {
+          summary: !available
+            ? tn("calendarUnavailable")
+            : isConnected
+              ? tn("calendarConnected")
+              : tn("calendarNotConnected"),
+          warn: available && !isConnected,
+        },
+  );
 
   return (
-    <SettingsSection
+    <SettingsBlock
       id="google-calendar"
-      icon={LinkIcon}
-      iconTone="secondary"
       title={t("title")}
-      subtitle={t("subtitle")}
-      // Only once we actually know it's not connected -- not during the
-      // initial fetch, and not when Google Calendar isn't even configured
-      // for this workspace (nothing to connect, so nothing to warn about).
-      warning={Boolean(googleClientId) && view !== "loading" && !isConnected}
+      description={t("subtitle")}
+      aside={
+        loading || !available ? null : (
+          <span
+            className={clsx(
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold",
+              isConnected ? "bg-success-100 text-success-500" : "bg-surface-container text-on-surface-variant",
+            )}
+          >
+            <span
+              aria-hidden="true"
+              className={clsx("h-1.5 w-1.5 rounded-full", isConnected ? "bg-success-500" : "bg-outline")}
+            />
+            {isConnected ? tn("calendarConnected") : tn("calendarNotConnected")}
+          </span>
+        )
+      }
     >
-      {/* `onReady`, not `onLoad`: onLoad only fires the first time the script
-          loads, so after a disconnect + remount (script already cached) the
-          button would stay disabled. onReady fires on every mount. */}
       <Script src="https://accounts.google.com/gsi/client" onReady={() => setScriptReady(true)} />
 
-      {view === "loading" ? (
-        <p className="text-sm text-on-surface-variant">{t("loading")}</p>
-      ) : !googleClientId ? (
+      {loading ? (
+        <div aria-busy="true" className="flex min-h-44 flex-col gap-5">
+          <span className="sr-only">{t("loading")}</span>
+          {[0, 1].map((i) => (
+            <div key={i} className="flex gap-4">
+              <Skeleton className="h-7 w-7 rounded-full" />
+              <div className="flex flex-1 flex-col gap-2 pt-1">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-72 max-w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : !available ? (
         <p className="text-sm text-on-surface-variant">{t("notConfigured")}</p>
       ) : (
-        <div className="flex flex-col gap-6">
+        <ol className="flex flex-col gap-5">
           <Step index={1} done={isConnected} title={t("stepOneTitle")}>
             {isConnected ? (
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-3 rounded-md border border-outline-variant/40 p-3">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary-container/40 px-2.5 py-1 text-xs font-semibold text-on-secondary-container">
-                    {t("connectedBadge")}
-                  </span>
-                  {connection?.connected_at ? (
-                    <span className="text-sm text-on-surface-variant">
-                      {t("connectedSince", {
-                        date: new Date(connection.connected_at).toLocaleDateString(),
-                      })}
-                    </span>
-                  ) : null}
-                </div>
+              <div className="flex flex-col items-start gap-3">
+                {connection?.connected_at ? (
+                  <p className="text-sm text-on-surface-variant">
+                    {t("connectedSince", { date: new Date(connection.connected_at).toLocaleDateString() })}
+                  </p>
+                ) : null}
                 {isAdmin ? (
                   view === "confirmingDisconnect" || view === "disconnecting" ? (
-                    <div className="flex flex-wrap items-center gap-3">
-                      <p className="text-sm text-on-surface-variant">{t("disconnectConfirm")}</p>
+                    <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-surface-container-low px-4 py-3">
+                      <p className="text-sm text-on-surface">{t("disconnectConfirm")}</p>
                       <Button
                         type="button"
                         variant="secondary"
@@ -214,24 +219,17 @@ export function GoogleCalendarCard({
                       </Button>
                     </div>
                   ) : (
-                    <div>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setView("confirmingDisconnect")}
-                      >
-                        {t("disconnectButton")}
-                      </Button>
-                    </div>
+                    <Button type="button" variant="secondary" size="sm" onClick={() => setView("confirmingDisconnect")}>
+                      {t("disconnectButton")}
+                    </Button>
                   )
                 ) : null}
               </div>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col items-start gap-3">
                 <p className="text-sm text-on-surface-variant">{t("notConnected")}</p>
                 {isAdmin ? (
-                  <div className="flex flex-col items-start gap-2">
+                  <>
                     <Button
                       type="button"
                       isLoading={view === "connecting"}
@@ -240,13 +238,13 @@ export function GoogleCalendarCard({
                     >
                       {view === "connecting" ? t("connecting") : t("connectButton")}
                     </Button>
-                    <p className="text-xs text-on-surface-variant">
+                    <p className="text-[13px] text-on-surface-variant">
                       {t("privacyNotice")}{" "}
                       <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">
                         {t("privacyNoticeLink")}
                       </Link>
                     </p>
-                  </div>
+                  </>
                 ) : (
                   <p className="text-sm text-on-surface-variant">{t("adminOnly")}</p>
                 )}
@@ -257,15 +255,15 @@ export function GoogleCalendarCard({
           <Step index={2} done={isConnected} muted={!isConnected} title={t("stepTwoTitle")}>
             <p className="text-sm text-on-surface-variant">{t("stepTwoDescription")}</p>
           </Step>
-
-          {errorMessage ? (
-            <p role="alert" className="text-sm text-error">
-              {errorMessage}
-            </p>
-          ) : null}
-        </div>
+        </ol>
       )}
-    </SettingsSection>
+
+      {errorMessage ? (
+        <p role="alert" className="text-sm text-error">
+          {errorMessage}
+        </p>
+      ) : null}
+    </SettingsBlock>
   );
 }
 
@@ -283,20 +281,19 @@ function Step({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`flex gap-4 ${muted ? "opacity-50" : ""}`}>
+    <li className={clsx("flex gap-4 transition-opacity", muted && "opacity-55")}>
       <span
-        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-label-sm font-semibold ${
-          done
-            ? "bg-tertiary-container text-on-tertiary-container"
-            : "bg-primary-fixed text-on-primary-fixed"
-        }`}
+        className={clsx(
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold transition-colors",
+          done ? "bg-success-100 text-success-500" : "bg-primary-fixed text-primary",
+        )}
       >
-        {done ? <CheckIcon className="h-4 w-4" /> : index}
+        {done ? <CheckIcon className="h-3.5 w-3.5" /> : index}
       </span>
-      <div className="flex-1">
-        <h3 className="mb-1 text-sm font-semibold text-on-surface">{title}</h3>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <h3 className="mb-1.5 text-sm font-semibold text-on-surface">{title}</h3>
         {children}
       </div>
-    </div>
+    </li>
   );
 }

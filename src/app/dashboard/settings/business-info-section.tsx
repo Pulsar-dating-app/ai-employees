@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { COUNTRY_CODES, countryName } from "@/lib/geo/countries";
 import { useCompanyAutosave, SaveStatusLine } from "./company-autosave";
-import { SettingsBlock } from "./settings-block";
+import { SettingsBlock } from "@/components/ui/settings-block";
 import { useReportFilled } from "./settings-shell";
 const CURRENCY_CODES = ["USD", "BRL", "EUR"] as const;
 const TIMEZONES = [

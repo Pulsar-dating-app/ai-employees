@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useScrollSpy } from "@/components/ui/use-scroll-spy";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -20,47 +21,6 @@ const FilledContext = createContext<(key: SectionKey, filled: boolean) => void>(
 
 export function useReportFilled() {
   return useContext(FilledContext);
-}
-
-function useActiveSection(): [SectionKey, (key: SectionKey) => void] {
-  const [active, setActive] = useState<SectionKey>("about");
-  const lockUntil = useRef(0);
-
-  useEffect(() => {
-    function update() {
-      if (Date.now() < lockUntil.current) return;
-      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
-      if (atBottom) {
-        let lastVisible: SectionKey = SECTIONS[0];
-        for (const key of SECTIONS) {
-          const node = document.querySelector(`[data-settings-section="${key}"]`);
-          if (node && node.getBoundingClientRect().top < window.innerHeight - 120) lastVisible = key;
-        }
-        setActive(lastVisible);
-        return;
-      }
-      let current: SectionKey = SECTIONS[0];
-      for (const key of SECTIONS) {
-        const node = document.querySelector(`[data-settings-section="${key}"]`);
-        if (node && node.getBoundingClientRect().top <= Math.max(140, window.innerHeight * 0.5)) current = key;
-      }
-      setActive(current);
-    }
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, []);
-
-  function select(key: SectionKey) {
-    lockUntil.current = Date.now() + 900;
-    setActive(key);
-  }
-
-  return [active, select];
 }
 
 function SectionNav({
@@ -227,7 +187,7 @@ export function SettingsShell({
   const t = useTranslations("Settings");
   const router = useRouter();
   const [filled, setFilled] = useState<FilledState>(initialFilled);
-  const [active, selectSection] = useActiveSection();
+  const [active, selectSection] = useScrollSpy(SECTIONS);
   const done = COUNTED.filter((k) => filled[k]).length;
 
   function report(key: SectionKey, value: boolean) {

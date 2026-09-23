@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
-import { SettingsIcon } from "@/components/ui/icons";
+import clsx from "clsx";
 import { Toggle } from "@/components/ui/toggle";
-import { SettingsSection } from "./settings-section";
+import { SettingsBlock } from "@/components/ui/settings-block";
+import { useSectionStatus } from "./settings-shell";
 
-// Trello K3 / J7 — the "Appointment Controls" card. Settings, all on B2's
-// existing PATCH /api/companies/[companyId] (no dedicated endpoint — same as
-// every other flat company setting):
-//  - requires_appointment_approval (K3): toggle, saves on change.
-//  - min_lead_time_minutes / cancellation_cutoff_hours (J7): whole numbers,
-//    0 = no restriction, save on blur, revert on failure.
+type SaveState = "idle" | "saving" | "saved" | "error";
+
 export function AppointmentControlsCard({
   companyId,
   canEdit,
@@ -26,29 +23,28 @@ export function AppointmentControlsCard({
   initialCancellationCutoffHours: number;
 }) {
   const t = useTranslations("Scheduling.settings.approval");
+  const tn = useTranslations("Scheduling.settings.nav");
   const [value, setValue] = useState(initialRequiresApproval);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+
+  useSectionStatus("appointment-rules", {
+    summary: value ? tn("approvalOn") : tn("approvalOff"),
+    warn: false,
+  });
 
   async function patch(payload: Record<string, unknown>): Promise<boolean> {
-    setError(null);
-    setSaving(true);
+    setSaveState("saving");
     try {
       const res = await fetch(`/api/companies/${companyId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) {
-        setError(t("saveError"));
-        return false;
-      }
-      return true;
+      setSaveState(res.ok ? "saved" : "error");
+      return res.ok;
     } catch {
-      setError(t("saveError"));
+      setSaveState("error");
       return false;
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -57,36 +53,42 @@ export function AppointmentControlsCard({
     if (!(await patch({ requires_appointment_approval: next }))) setValue(!next);
   }
 
-  return (
-    <SettingsSection
-      icon={SettingsIcon}
-      iconTone="secondary"
-      title={t("title")}
-      subtitle={t("subtitle")}
-    >
-      <div className="flex flex-col gap-4">
-        <div className="flex items-start gap-4 rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
-          <div className="mt-0.5">
-            <Toggle
-              checked={value}
-              disabled={!canEdit || saving}
-              label={t("toggleLabel")}
-              onChange={change}
-            />
-          </div>
-          <div>
-            <button
-              type="button"
-              disabled={!canEdit || saving}
-              onClick={() => change(!value)}
-              className="block text-left text-body-md font-medium text-on-surface disabled:cursor-not-allowed"
-            >
-              {t("toggleLabel")}
-            </button>
-            <p className="mt-1 text-label-md text-on-surface-variant">{t("toggleHelp")}</p>
-          </div>
-        </div>
+  const saving = saveState === "saving";
 
+  return (
+    <SettingsBlock
+      id="appointment-rules"
+      title={t("title")}
+      description={t("subtitle")}
+      aside={
+        saveState === "idle" ? null : (
+          <p
+            role={saveState === "error" ? "alert" : "status"}
+            className={clsx(
+              "text-[13px] font-medium",
+              saveState === "error"
+                ? "text-error"
+                : saveState === "saved"
+                  ? "text-success-500"
+                  : "text-on-surface-variant",
+            )}
+          >
+            {saveState === "error" ? t("saveError") : saveState === "saved" ? t("saved") : t("saving")}
+          </p>
+        )
+      }
+    >
+      <div className="flex items-start justify-between gap-6 rounded-2xl bg-surface-container-low px-4 py-4 sm:px-5">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-on-surface">{t("toggleLabel")}</p>
+          <p className="mt-1 max-w-lg text-sm text-on-surface-variant">{t("toggleHelp")}</p>
+        </div>
+        <div className="pt-0.5">
+          <Toggle checked={value} disabled={!canEdit || saving} label={t("toggleLabel")} onChange={change} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 pt-2 md:grid-cols-2">
         <PolicyNumberField
           label={t("leadTimeLabel")}
           help={t("leadTimeHelp")}
@@ -105,20 +107,11 @@ export function AppointmentControlsCard({
           disabled={!canEdit || saving}
           onCommit={(n) => patch({ cancellation_cutoff_hours: n })}
         />
-
-        {error ? (
-          <p role="alert" className="text-sm text-error">
-            {error}
-          </p>
-        ) : null}
       </div>
-    </SettingsSection>
+    </SettingsBlock>
   );
 }
 
-// A single whole-number policy field. Commits on blur only when the value
-// actually changed and is a valid non-negative integer; reverts on a failed
-// save so the input never drifts from what's stored.
 function PolicyNumberField({
   label,
   help,
@@ -138,6 +131,8 @@ function PolicyNumberField({
 }) {
   const [text, setText] = useState(String(initial));
   const [committed, setCommitted] = useState(initial);
+  const inputId = useId();
+  const helpId = useId();
 
   async function commit() {
     const n = Number(text);
@@ -154,16 +149,19 @@ function PolicyNumberField({
   }
 
   return (
-    <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
-      <label className="block text-body-md font-medium text-on-surface">{label}</label>
-      <p className="mt-1 text-label-md text-on-surface-variant">{help}</p>
-      <div className="mt-2 flex items-center gap-2">
+    <div className="flex flex-col">
+      <label htmlFor={inputId} className="text-sm font-semibold text-on-surface">
+        {label}
+      </label>
+      <div className="mt-2 flex h-11 w-44 items-center rounded-xl border border-outline-variant/70 bg-surface-container-lowest transition-[border-color,box-shadow] focus-within:border-primary focus-within:shadow-[0_0_0_4px_rgba(53,37,205,0.12)] hover:border-outline">
         <input
+          id={inputId}
           type="number"
           min={0}
           max={max}
           step={1}
           inputMode="numeric"
+          aria-describedby={helpId}
           value={text}
           disabled={disabled}
           onChange={(e) => setText(e.target.value)}
@@ -171,10 +169,13 @@ function PolicyNumberField({
           onKeyDown={(e) => {
             if (e.key === "Enter") e.currentTarget.blur();
           }}
-          className="w-24 rounded-md border border-outline-variant bg-surface px-2 py-1 text-body-md text-on-surface disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-full min-w-0 flex-1 bg-transparent pl-3.5 text-base font-semibold tabular-nums text-on-surface outline-none [appearance:textfield] disabled:cursor-not-allowed disabled:opacity-60 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
-        <span className="text-label-md text-on-surface-variant">{unit}</span>
+        <span className="pr-3.5 text-sm text-on-surface-variant">{unit}</span>
       </div>
+      <p id={helpId} className="mt-2 text-[13px] leading-5 text-on-surface-variant">
+        {help}
+      </p>
     </div>
   );
 }

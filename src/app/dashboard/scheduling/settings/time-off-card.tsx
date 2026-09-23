@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { CalendarIcon, PlusIcon, XIcon } from "@/components/ui/icons";
+import { PlusIcon, XIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
-import { SettingsSection } from "./settings-section";
+import { SettingsBlock } from "@/components/ui/settings-block";
+import { useSectionStatus } from "./settings-shell";
 
 export type TimeOffEntry = {
   id: string;
@@ -13,17 +14,21 @@ export type TimeOffEntry = {
   reason: string | null;
 };
 
-const DATE_INPUT_CLASSES =
-  "h-10 rounded-md border border-outline-variant/60 bg-surface-container-lowest px-3 text-sm text-on-surface outline-none transition-colors focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60";
+const FIELD_CLASSES =
+  "h-11 w-full rounded-xl border border-outline-variant/70 bg-surface-container-lowest px-3.5 text-sm text-on-surface outline-none transition-[border-color,box-shadow] hover:border-outline focus:border-primary focus:shadow-[0_0_0_4px_rgba(53,37,205,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
+
+const DAY_MS = 86_400_000;
 
 function byStartDate(a: TimeOffEntry, b: TimeOffEntry) {
   return a.start_date.localeCompare(b.start_date);
 }
 
-// Trello K3 (time-off extension) — merchant-registered closures. Backed by
-// `company_time_off` + /api/companies/[id]/time-off; the availability engine
-// folds these date ranges into the same `busy` list as appointments and
-// Google free/busy, so Ana stops offering and booking them.
+function dayCount(entry: TimeOffEntry) {
+  return (
+    Math.round((Date.parse(`${entry.end_date}T00:00:00Z`) - Date.parse(`${entry.start_date}T00:00:00Z`)) / DAY_MS) + 1
+  );
+}
+
 export function TimeOffCard({
   companyId,
   canEdit,
@@ -34,6 +39,7 @@ export function TimeOffCard({
   initialEntries: TimeOffEntry[];
 }) {
   const t = useTranslations("Scheduling.settings.timeOff");
+  const tn = useTranslations("Scheduling.settings.nav");
   const locale = useLocale();
   const [entries, setEntries] = useState<TimeOffEntry[]>(() => [...initialEntries].sort(byStartDate));
   const [startDate, setStartDate] = useState("");
@@ -42,13 +48,20 @@ export function TimeOffCard({
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useSectionStatus("time-off", {
+    summary: entries.length === 0 ? tn("timeOffNone") : tn("timeOffCount", { count: entries.length }),
+    warn: false,
+  });
+
   const fmt = new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" });
+  const dayFmt = new Intl.DateTimeFormat(locale, { day: "2-digit" });
+  const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
+  const asDate = (d: string) => new Date(`${d}T00:00:00`);
+
   function formatRange(entry: TimeOffEntry) {
-    // Parse as local wall-clock — the value is a plain calendar date, no zone.
-    const start = fmt.format(new Date(`${entry.start_date}T00:00:00`));
+    const start = fmt.format(asDate(entry.start_date));
     if (entry.start_date === entry.end_date) return start;
-    const end = fmt.format(new Date(`${entry.end_date}T00:00:00`));
-    return `${start} ${t("rangeSeparator")} ${end}`;
+    return `${start} ${t("rangeSeparator")} ${fmt.format(asDate(entry.end_date))}`;
   }
 
   async function add() {
@@ -60,9 +73,6 @@ export function TimeOffCard({
       setError(t("invalidRange"));
       return;
     }
-    // No calendar-level date disabling with a native <input type="date">, so
-    // guard here: inclusive ranges overlap when each starts on or before the
-    // other ends.
     const clash = entries.find((e) => startDate <= e.end_date && endDate >= e.start_date);
     if (clash) {
       setError(t("overlap", { range: formatRange(clash) }));
@@ -110,84 +120,94 @@ export function TimeOffCard({
   }
 
   return (
-    <SettingsSection icon={CalendarIcon} title={t("title")} subtitle={t("subtitle")}>
-      <div className="flex flex-col gap-3">
-        {entries.length === 0 ? (
-          <p className="text-sm text-on-surface-variant">{t("empty")}</p>
-        ) : (
-          entries.map((entry) => (
-            <div
-              key={entry.id}
-              className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant/40 bg-surface-container-low p-3"
-            >
-              <div className="min-w-0">
-                <p className="text-body-md font-medium text-on-surface">{formatRange(entry)}</p>
-                {entry.reason ? (
-                  <p className="truncate text-label-md text-on-surface-variant">{entry.reason}</p>
-                ) : null}
+    <SettingsBlock id="time-off" title={t("title")} description={t("subtitle")}>
+      {entries.length === 0 ? (
+        <p className="rounded-2xl bg-surface-container-low px-4 py-5 text-sm text-on-surface-variant">{t("empty")}</p>
+      ) : (
+        <ul className="flex flex-col divide-y divide-outline-variant/40 border-y border-outline-variant/40">
+          {entries.map((entry) => (
+            <li key={entry.id} className="inbox-pane-in flex items-center gap-4 py-3">
+              <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-primary-fixed text-primary">
+                <span className="text-base font-semibold leading-none tabular-nums">
+                  {dayFmt.format(asDate(entry.start_date))}
+                </span>
+                <span className="mt-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide">
+                  {monthFmt.format(asDate(entry.start_date)).replace(".", "")}
+                </span>
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-on-surface">{formatRange(entry)}</p>
+                <p className="truncate text-[13px] text-on-surface-variant">
+                  {t("dayCount", { count: dayCount(entry) })}
+                  {entry.reason ? ` · ${entry.reason}` : ""}
+                </p>
               </div>
               {canEdit ? (
                 <button
                   type="button"
                   aria-label={t("removeLabel")}
                   onClick={() => remove(entry.id)}
-                  className="shrink-0 rounded-md p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+                  className="shrink-0 rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
                 >
                   <XIcon className="h-4 w-4" />
                 </button>
               ) : null}
-            </div>
-          ))
-        )}
-      </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {canEdit ? (
-        <>
-        <div className="mt-6 flex flex-col gap-3 border-t border-outline-variant/40 pt-4 sm:flex-row sm:flex-wrap sm:items-end">
-          <label className="flex flex-col gap-1 text-xs font-semibold text-on-surface-variant">
-            {t("startLabel")}
-            <input
-              type="date"
-              className={DATE_INPUT_CLASSES}
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-xs font-semibold text-on-surface-variant">
-            {t("endLabel")}
-            <input
-              type="date"
-              className={DATE_INPUT_CLASSES}
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </label>
-          <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-xs font-semibold text-on-surface-variant">
-            {t("reasonLabel")}
-            <input
-              type="text"
-              className={DATE_INPUT_CLASSES}
-              placeholder={t("reasonPlaceholder")}
-              value={reason}
-              maxLength={500}
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </label>
-          <Button type="button" size="sm" onClick={add} isLoading={adding} className="sm:mb-0.5">
-            <PlusIcon className="h-4 w-4" />
-            {adding ? t("adding") : t("addButton")}
-          </Button>
+        <div className="flex flex-col gap-3 pt-2">
+          <h3 className="text-sm font-semibold text-on-surface">{t("addHeading")}</h3>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)_auto] md:items-end">
+            <label className="flex flex-col gap-1.5 text-[13px] font-medium text-on-surface-variant">
+              {t("startLabel")}
+              <input
+                type="date"
+                className={FIELD_CLASSES}
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  if (!endDate || endDate < e.target.value) setEndDate(e.target.value);
+                }}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 text-[13px] font-medium text-on-surface-variant">
+              {t("endLabel")}
+              <input
+                type="date"
+                className={FIELD_CLASSES}
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </label>
+            <label className="col-span-2 flex flex-col gap-1.5 text-[13px] font-medium text-on-surface-variant md:col-span-1">
+              {t("reasonLabel")}
+              <input
+                type="text"
+                className={FIELD_CLASSES}
+                placeholder={t("reasonPlaceholder")}
+                value={reason}
+                maxLength={500}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            </label>
+            <Button type="button" onClick={add} isLoading={adding} className="col-span-2 h-11 md:col-span-1">
+              <PlusIcon className="h-4 w-4" />
+              {adding ? t("adding") : t("addButton")}
+            </Button>
+          </div>
+          <p className="text-[13px] text-on-surface-variant">{t("reasonHint")}</p>
         </div>
-        <p className="mt-2 text-label-sm text-on-surface-variant">{t("reasonHint")}</p>
-        </>
       ) : null}
 
       {error ? (
-        <p role="alert" className="mt-3 text-sm text-error">
+        <p role="alert" className="text-sm text-error">
           {error}
         </p>
       ) : null}
-    </SettingsSection>
+    </SettingsBlock>
   );
 }

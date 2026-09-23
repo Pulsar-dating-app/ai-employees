@@ -2,22 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronRightIcon, ListIcon, PlusIcon, XIcon } from "@/components/ui/icons";
+import clsx from "clsx";
+import { ChevronRightIcon, PlusIcon, XIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import {
-  PREDEFINED_INTAKE_FIELDS,
-  PREDEFINED_INTAKE_KEYS,
-  LOCKED_INTAKE_KEYS,
-} from "@/lib/appointments/intake-fields";
-import { SettingsSection } from "./settings-section";
-
-// Trello K8 / R2 — the "Intake questions" section. Two parts:
-//   * Standard fields: the fixed predefined set (email / name / phone /
-//     cpf / date of birth). Merchant toggles enable + required. Email is
-//     locked on+required.
-//   * Extra questions: free-text custom questions, add/reorder/remove.
-// Backed by appointment_intake_fields + GET/PUT /api/companies/[id]/intake-fields.
+import { PREDEFINED_INTAKE_FIELDS, PREDEFINED_INTAKE_KEYS, LOCKED_INTAKE_KEYS } from "@/lib/appointments/intake-fields";
+import { SettingsBlock } from "@/components/ui/settings-block";
+import { useSectionStatus } from "./settings-shell";
 
 export type IntakeField = {
   id: string;
@@ -33,7 +24,7 @@ const MAX_CUSTOM_FIELDS = 25;
 const MAX_LABEL_LENGTH = 120;
 
 const LABEL_INPUT_CLASSES =
-  "h-10 w-full min-w-0 flex-1 rounded-md border border-outline-variant/60 bg-surface-container-lowest px-3 text-sm text-on-surface outline-none transition-colors focus:ring-2 focus:ring-primary/40 read-only:cursor-not-allowed read-only:opacity-60";
+  "h-10 w-full min-w-0 flex-1 rounded-xl border border-outline-variant/70 bg-surface-container-lowest px-3.5 text-sm text-on-surface outline-none transition-[border-color,box-shadow] hover:border-outline focus:border-primary focus:shadow-[0_0_0_4px_rgba(53,37,205,0.12)] read-only:cursor-not-allowed read-only:opacity-60";
 
 type PredefinedState = Record<string, { enabled: boolean; required: boolean }>;
 type CustomRow = { rowKey: string; label: string; required: boolean };
@@ -68,6 +59,7 @@ export function IntakeQuestionsCard({
   initialFields: IntakeField[];
 }) {
   const t = useTranslations("Scheduling.settings.intake");
+  const tn = useTranslations("Scheduling.settings.nav");
   const initial = useMemo(() => splitFields(initialFields), [initialFields]);
   const [predefined, setPredefined] = useState<PredefinedState>(initial.predefined);
   const [custom, setCustom] = useState<CustomRow[]>(initial.custom);
@@ -78,19 +70,22 @@ export function IntakeQuestionsCard({
 
   const current = JSON.stringify({ predefined, custom: custom.map(({ label, required }) => ({ label, required })) });
   const baselineNorm = JSON.stringify({
-    predefined: initial.predefined,
+    predefined: JSON.parse(baseline).predefined,
     custom: JSON.parse(baseline).custom.map((c: CustomRow) => ({ label: c.label, required: c.required })),
   });
   const dirty = current !== baselineNorm;
+
+  const [savedCount, setSavedCount] = useState(
+    () => PREDEFINED_INTAKE_FIELDS.filter((f) => initial.predefined[f.key].enabled).length + initial.custom.length,
+  );
+
+  useSectionStatus("intake-questions", { summary: tn("intakeCount", { count: savedCount }), warn: false });
 
   function touch() {
     setSavedOk(false);
     setError(null);
   }
 
-  // Standard fields are one switch now: "Required". A merchant only turns a
-  // field on because they want it answered, so "collect but optional" was a
-  // distinction without a purpose — required and enabled move together.
   function setPreRequired(key: string, required: boolean) {
     if (LOCKED_INTAKE_KEYS.has(key)) return;
     touch();
@@ -126,7 +121,7 @@ export function IntakeQuestionsCard({
   }
 
   function cancel() {
-    setPredefined(initial.predefined);
+    setPredefined(JSON.parse(baseline).predefined);
     setCustom(JSON.parse(baseline).custom);
     setSavedOk(false);
     setError(null);
@@ -164,6 +159,9 @@ export function IntakeQuestionsCard({
       setPredefined(split.predefined);
       setCustom(split.custom);
       setBaseline(JSON.stringify(split));
+      setSavedCount(
+        PREDEFINED_INTAKE_FIELDS.filter((f) => split.predefined[f.key].enabled).length + split.custom.length,
+      );
       setSaving(false);
       setSavedOk(true);
     } catch {
@@ -173,131 +171,131 @@ export function IntakeQuestionsCard({
   }
 
   return (
-    <SettingsSection id="intake-questions" icon={ListIcon} title={t("title")} subtitle={t("subtitle")}>
-      <p className="mb-4 rounded-lg bg-surface-container-low px-3 py-2 text-label-md text-on-surface-variant">
-        {t("hint")}
-      </p>
+    <SettingsBlock id="intake-questions" title={t("title")} description={t("subtitle")}>
+      <p className="max-w-2xl text-[13px] leading-5 text-on-surface-variant">{t("hint")}</p>
 
-      {/* Standard fields */}
-      <h3 className="mb-2 text-label-lg font-medium text-on-surface">{t("standardHeading")}</h3>
-      <div className="mb-6 flex flex-col gap-2">
-        {PREDEFINED_INTAKE_FIELDS.map((f) => {
-          const state = predefined[f.key];
-          const locked = f.locked || !canEdit;
-          return (
-            <div
-              key={f.key}
-              className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-outline-variant/40 bg-surface-container-low p-3"
-            >
-              <span className="min-w-32 flex-1 text-sm font-medium text-on-surface">
-                {t(`standardLabels.${f.key}`)}
-                {f.locked ? (
-                  <span className="ml-2 text-label-md font-normal text-on-surface-variant">{t("alwaysOn")}</span>
-                ) : null}
-              </span>
-              <label className="flex items-center gap-2">
-                <span className="text-label-md text-on-surface-variant">{t("required")}</span>
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-semibold text-on-surface">{t("standardHeading")}</h3>
+        <ul className="flex flex-col divide-y divide-outline-variant/40 border-y border-outline-variant/40">
+          {PREDEFINED_INTAKE_FIELDS.map((f) => {
+            const state = predefined[f.key];
+            const locked = f.locked || !canEdit;
+            return (
+              <li key={f.key} className="flex items-center gap-4 py-3">
+                <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm font-medium text-on-surface">
+                  {t(`standardLabels.${f.key}`)}
+                  {f.locked ? (
+                    <span className="rounded-full bg-surface-container px-2 py-0.5 text-[12px] font-medium text-on-surface-variant">
+                      {t("alwaysOn")}
+                    </span>
+                  ) : null}
+                </span>
+                <span className={clsx("text-[13px]", state.required ? "text-on-surface" : "text-outline")}>
+                  {t("required")}
+                </span>
                 <Toggle
                   checked={state.required}
                   disabled={locked}
                   label={t("requiredAria", { label: t(`standardLabels.${f.key}`) })}
                   onChange={() => setPreRequired(f.key, !state.required)}
                 />
-              </label>
-            </div>
-          );
-        })}
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
-      {/* Extra questions */}
-      <h3 className="mb-2 text-label-lg font-medium text-on-surface">{t("extraHeading")}</h3>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 pt-2">
+        <h3 className="text-sm font-semibold text-on-surface">{t("extraHeading")}</h3>
         {custom.length === 0 ? (
-          <p className="text-sm text-on-surface-variant">{t("empty")}</p>
+          <p className="rounded-2xl bg-surface-container-low px-4 py-4 text-sm text-on-surface-variant">{t("empty")}</p>
         ) : (
-          custom.map((row, i) => (
-            <div
-              key={row.rowKey}
-              className="flex items-center gap-2 rounded-lg border border-outline-variant/40 bg-surface-container-low p-2"
-            >
-              {canEdit ? (
-                <div className="flex shrink-0 flex-col">
-                  <button
-                    type="button"
-                    aria-label={t("moveUp")}
-                    disabled={i === 0}
-                    onClick={() => moveCustom(i, -1)}
-                    className="rounded p-0.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface disabled:pointer-events-none disabled:opacity-30"
-                  >
-                    <ChevronRightIcon className="h-4 w-4 -rotate-90" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={t("moveDown")}
-                    disabled={i === custom.length - 1}
-                    onClick={() => moveCustom(i, 1)}
-                    className="rounded p-0.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface disabled:pointer-events-none disabled:opacity-30"
-                  >
-                    <ChevronRightIcon className="h-4 w-4 rotate-90" />
-                  </button>
-                </div>
-              ) : null}
-              <input
-                type="text"
-                className={LABEL_INPUT_CLASSES}
-                value={row.label}
-                readOnly={!canEdit}
-                maxLength={MAX_LABEL_LENGTH}
-                placeholder={t("labelPlaceholder")}
-                aria-label={t("labelAria", { position: i + 1 })}
-                onChange={(e) => updateCustomLabel(row.rowKey, e.target.value)}
-              />
-              <label className="flex shrink-0 items-center gap-2 px-1">
-                <span className="text-label-md text-on-surface-variant">{t("required")}</span>
+          <ul className="flex flex-col gap-2">
+            {custom.map((row, i) => (
+              <li key={row.rowKey} className="inbox-pane-in flex items-center gap-2">
+                {canEdit ? (
+                  <div className="flex shrink-0 flex-col">
+                    <button
+                      type="button"
+                      aria-label={t("moveUp")}
+                      disabled={i === 0}
+                      onClick={() => moveCustom(i, -1)}
+                      className="rounded p-0.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface disabled:pointer-events-none disabled:opacity-30"
+                    >
+                      <ChevronRightIcon className="h-4 w-4 -rotate-90" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t("moveDown")}
+                      disabled={i === custom.length - 1}
+                      onClick={() => moveCustom(i, 1)}
+                      className="rounded p-0.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface disabled:pointer-events-none disabled:opacity-30"
+                    >
+                      <ChevronRightIcon className="h-4 w-4 rotate-90" />
+                    </button>
+                  </div>
+                ) : null}
+                <input
+                  type="text"
+                  className={LABEL_INPUT_CLASSES}
+                  value={row.label}
+                  readOnly={!canEdit}
+                  maxLength={MAX_LABEL_LENGTH}
+                  placeholder={t("labelPlaceholder")}
+                  aria-label={t("labelAria", { position: i + 1 })}
+                  onChange={(e) => updateCustomLabel(row.rowKey, e.target.value)}
+                />
+                <span
+                  className={clsx(
+                    "hidden shrink-0 pl-2 text-[13px] sm:inline",
+                    row.required ? "text-on-surface" : "text-outline",
+                  )}
+                >
+                  {t("required")}
+                </span>
                 <Toggle
                   checked={row.required}
                   disabled={!canEdit}
                   label={t("requiredAria", { label: row.label.trim() || t("thisQuestion") })}
                   onChange={() => toggleCustomRequired(row.rowKey)}
                 />
-              </label>
-              {canEdit ? (
-                <button
-                  type="button"
-                  aria-label={t("removeLabel")}
-                  onClick={() => removeCustom(row.rowKey)}
-                  className="shrink-0 rounded-md p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
-                >
-                  <XIcon className="h-4 w-4" />
-                </button>
-              ) : null}
-            </div>
-          ))
+                {canEdit ? (
+                  <button
+                    type="button"
+                    aria-label={t("removeLabel")}
+                    onClick={() => removeCustom(row.rowKey)}
+                    className="shrink-0 rounded-lg p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+                  >
+                    <XIcon className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
         )}
-
         {canEdit && custom.length < MAX_CUSTOM_FIELDS ? (
           <button
             type="button"
             onClick={addCustom}
-            className="mt-1 inline-flex items-center gap-1 self-start text-label-md font-medium text-primary transition-colors hover:text-primary-container"
+            className="mt-1 inline-flex items-center gap-1 self-start rounded-lg px-1 text-[13px] font-semibold text-primary transition-colors hover:text-primary-container"
           >
-            <PlusIcon className="h-4 w-4" />
+            <PlusIcon className="h-3.5 w-3.5" />
             {t("add")}
           </button>
         ) : null}
       </div>
 
       {canEdit ? (
-        <div className="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-outline-variant/40 pt-4">
-          {error ? (
-            <p role="alert" className="mr-auto text-sm text-error">
-              {error}
-            </p>
-          ) : savedOk ? (
-            <p className="mr-auto text-sm text-tertiary">{t("saved")}</p>
-          ) : dirty ? (
-            <p className="mr-auto text-sm italic text-on-surface-variant">{t("unsaved")}</p>
-          ) : null}
+        <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+          <p
+            role={error ? "alert" : "status"}
+            className={clsx(
+              "mr-auto text-sm",
+              error ? "text-error" : savedOk ? "text-success-500" : "text-on-surface-variant",
+            )}
+          >
+            {error ?? (savedOk ? t("saved") : dirty ? t("unsaved") : "")}
+          </p>
           {dirty ? (
             <Button type="button" variant="ghost" onClick={cancel} disabled={saving}>
               {t("cancel")}
@@ -308,6 +306,6 @@ export function IntakeQuestionsCard({
           </Button>
         </div>
       ) : null}
-    </SettingsSection>
+    </SettingsBlock>
   );
 }

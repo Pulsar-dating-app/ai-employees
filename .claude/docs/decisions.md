@@ -12,6 +12,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-23 — Scheduling settings adopt the general settings side index
+
+**Decision:** `/dashboard/scheduling/settings` drops the collapsible sections. It now uses the same layout as general Settings: a sticky index beside always-open blocks, with each index item showing a live summary of that section's saved state and a warning where something blocks bookings. `SettingsBlock` and the scroll spy moved to `src/components/ui/` so both screens share them. Business hours become one-line rows with a 00–24h timeline per day. The user picked this over a summary grid with drawers and over a refined accordion.
+
+**Why:** Collapsed rows hid every section's state except the calendar's, and opening them all made one very long page. The index shows what's configured and what's missing without opening anything. Using the same pattern as general Settings means the merchant learns it once. The summaries reflect **saved** state rather than unsaved edits, so the index, the Scheduling tab and the sidebar warning always agree with what customers actually get.
+
+---
+
 ## 2026-09-23 — Performance becomes a chart with a funnel, compared with the previous period
 
 **Decision:** `/dashboard/metrics` now centers on one hero conversations chart with a 48px total. It compares against the previous period of the same length, loaded from the database, and is not mocked. Beside it, a funnel shows step rates. The grid of equal metric cards with sparklines is gone. At 90 days, the chart sums daily data into full 7-day buckets anchored at today. Ana's funnel is Appointments → Completed, with no conversations step. The user picked this layout over the other options.

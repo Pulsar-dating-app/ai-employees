@@ -1666,7 +1666,6 @@
         "rangeStartAria": "{day} intervalo {position} — abre às",
         "rangeEndAria": "{day} intervalo {position} — fecha às",
         "addRange": "Adicionar horário",
-        "removeRange": "Remover este intervalo",
         "save": "Salvar horários",
         "saving": "Salvando…",
         "saved": "Horários salvos.",
@@ -1681,7 +1680,10 @@
           "friday": "Sexta",
           "saturday": "Sábado",
           "sunday": "Domingo"
-        }
+        },
+        "unsaved": "Alterações não salvas",
+        "addRangeAria": "Adicionar horário em {day}",
+        "removeRangeAria": "Remover o intervalo {position} de {day}"
       },
       "approval": {
         "title": "Controles de agendamento",
@@ -1694,7 +1696,9 @@
         "cancelCutoffHelp": "Quando faltar esta quantidade de horas para o agendamento, o cliente não consegue mais cancelar sozinho — a equipe pede que ele entre em contato com você. Ex.: 24 significa que o cancelamento por conta própria fecha um dia antes do início. Use 0 para permitir a qualquer momento.",
         "minutesUnit": "minutos",
         "hoursUnit": "horas",
-        "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
+        "saveError": "Algo deu errado ao salvar essa opção. Tente novamente.",
+        "saving": "Salvando…",
+        "saved": "Alterações salvas"
       },
       "timeOff": {
         "title": "Ausências e feriados",
@@ -1712,14 +1716,15 @@
         "missingDates": "Escolha uma data inicial e final.",
         "invalidRange": "A data final não pode ser antes da inicial.",
         "overlap": "Essas datas se sobrepõem a uma ausência que você já tem ({range}). Remova ela antes ou escolha datas fora dela.",
-        "saveError": "Algo deu errado. Tente novamente."
+        "saveError": "Algo deu errado. Tente novamente.",
+        "dayCount": "{count, plural, one {# dia} other {# dias}}",
+        "addHeading": "Adicionar fechamento"
       },
       "googleCalendar": {
         "title": "Google Calendar",
         "subtitle": "Conecte um Google Calendar para sua equipe checar conflitos antes de agendar.",
         "loading": "Carregando…",
         "notConfigured": "O Google Calendar ainda não está configurado para este espaço de trabalho.",
-        "connectedBadge": "Conectado",
         "connectedSince": "Conectado em {date}",
         "notConnected": "Nenhum calendário conectado ainda.",
         "adminOnly": "Peça a um proprietário ou administrador para conectar um calendário.",
@@ -1769,6 +1774,21 @@
         "unsaved": "Alterações não salvas",
         "blankLabel": "Dê um nome a cada pergunta, ou remova as vazias.",
         "saveError": "Algo deu errado ao salvar suas perguntas. Tente novamente."
+      },
+      "nav": {
+        "label": "Seções das configurações de agendamento",
+        "needsAttention": "Precisa de atenção",
+        "hoursOpen": "{count, plural, one {Aberto # dia por semana} other {Aberto # dias por semana}}",
+        "hoursClosed": "Nenhum dia aberto ainda",
+        "approvalOn": "Você aprova cada agendamento",
+        "approvalOff": "Agendamentos confirmam na hora",
+        "timeOffNone": "Nada programado",
+        "timeOffCount": "{count, plural, one {# fechamento previsto} other {# fechamentos previstos}}",
+        "intakeCount": "{count, plural, one {# pergunta feita} other {# perguntas feitas}}",
+        "calendarConnected": "Conectado",
+        "calendarNotConnected": "Não conectado",
+        "calendarUnavailable": "Indisponível",
+        "readOnlyTitle": "Somente leitura"
       }
     },
     "appointments": {

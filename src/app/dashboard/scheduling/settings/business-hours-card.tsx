@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
-import { ClockIcon, PlusIcon, XIcon } from "@/components/ui/icons";
+import { PlusIcon, XIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { CHEVRON } from "@/components/ui/select";
-import { SettingsSection } from "./settings-section";
 import { Toggle } from "@/components/ui/toggle";
+import { SettingsBlock } from "@/components/ui/settings-block";
+import { useSectionStatus } from "./settings-shell";
 
 export type BusinessHourRow = {
   day_of_week: number;
@@ -16,9 +17,6 @@ export type BusinessHourRow = {
   is_active: boolean;
 };
 
-// Display order is Monday-first (the Stitch screen's order); the DB's
-// day_of_week is 0 = Sunday (I2's documented convention), hence the explicit
-// `dow` on each entry rather than the array index.
 const DISPLAY_DAYS = [
   { key: "monday", dow: 1 },
   { key: "tuesday", dow: 2 },
@@ -31,9 +29,11 @@ const DISPLAY_DAYS = [
 
 const DEFAULT_START = "09:00";
 const DEFAULT_END = "17:00";
+const DAY_MINUTES = 24 * 60;
+const HOUR_MARKS = [0, 6, 12, 18, 24];
 
 const TIME_SELECT_CLASSES =
-  "h-10 rounded-md border border-outline-variant bg-surface-container-lowest pl-3 text-sm text-on-surface outline-none transition-colors focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60";
+  "h-10 rounded-xl border border-outline-variant/70 bg-surface-container-lowest pl-3 text-sm tabular-nums text-on-surface outline-none transition-[border-color,box-shadow] hover:border-outline focus:border-primary focus:shadow-[0_0_0_4px_rgba(53,37,205,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
 
 type TimeRange = { start: string; end: string };
 type DayState = { key: string; dow: number; open: boolean; ranges: TimeRange[] };
@@ -48,13 +48,9 @@ function toHhMm(total: number): string {
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
 
-// A 15-minute grid in unambiguous 24-hour "HH:MM". A native <input type="time">
-// renders AM/PM for en-US browsers and is a fiddly spinner; a plain list of
-// preset times is faster to pick from and reads the same everywhere. The
-// trailing 23:59 lets a business express "open until midnight".
 const TIME_OPTIONS: string[] = (() => {
   const out: string[] = [];
-  for (let m = 0; m < 24 * 60; m += 15) out.push(toHhMm(m));
+  for (let m = 0; m < DAY_MINUTES; m += 15) out.push(toHhMm(m));
   out.push("23:59");
   return out;
 })();
@@ -78,7 +74,6 @@ function TimeSelect({
       disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
     >
-      {/* A value saved before this grid existed (e.g. 08:45) still shows. */}
       {TIME_OPTIONS.includes(value) ? null : <option value={value}>{value}</option>}
       {TIME_OPTIONS.map((opt) => (
         <option key={opt} value={opt}>
@@ -89,12 +84,6 @@ function TimeSelect({
   );
 }
 
-// After one range is edited, push every later range that now starts before
-// the previous one ends forward to sit right after it, keeping its own
-// length (or a 60-min fallback if it had none). Stops at the first range
-// that no longer collides — the rest are already clear. So dragging
-// 14:00–15:00 out to 14:00–16:00 slides a following 15:00–16:00 to
-// 16:00–17:00, and cascades on if that one now overlaps the next.
 function cascadeForward(ranges: TimeRange[], fromIndex: number): TimeRange[] {
   const next = ranges.slice();
   for (let i = fromIndex + 1; i < next.length; i += 1) {
@@ -108,10 +97,6 @@ function cascadeForward(ranges: TimeRange[], fromIndex: number): TimeRange[] {
 
 function buildInitialState(rows: BusinessHourRow[]): DayState[] {
   return DISPLAY_DAYS.map(({ key, dow }) => {
-    // Every active row for the day becomes one editable range — split
-    // shifts (a lunch break, an evening block) are two/three rows on the
-    // same day, which the schema allows via
-    // UNIQUE(company_id, day_of_week, start_time).
     const ranges = rows
       .filter((r) => r.day_of_week === dow && r.is_active)
       .sort((a, b) => a.start_time.localeCompare(b.start_time))
@@ -125,6 +110,26 @@ function buildInitialState(rows: BusinessHourRow[]): DayState[] {
   });
 }
 
+function DayTimeline({ day }: { day: DayState }) {
+  return (
+    <div aria-hidden="true" className="relative h-2 rounded-full bg-surface-container">
+      {day.open
+        ? day.ranges.map((range, i) => {
+            const start = toMinutes(range.start);
+            const end = Math.max(start, toMinutes(range.end));
+            return (
+              <span
+                key={i}
+                className="absolute inset-y-0 rounded-full bg-primary-container transition-[left,width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                style={{ left: `${(start / DAY_MINUTES) * 100}%`, width: `${((end - start) / DAY_MINUTES) * 100}%` }}
+              />
+            );
+          })
+        : null}
+    </div>
+  );
+}
+
 export function BusinessHoursCard({
   companyId,
   canEdit,
@@ -135,13 +140,22 @@ export function BusinessHoursCard({
   initialRows: BusinessHourRow[];
 }) {
   const t = useTranslations("Scheduling.settings.businessHours");
+  const tn = useTranslations("Scheduling.settings.nav");
   const [days, setDays] = useState<DayState[]>(() => buildInitialState(initialRows));
+  const [savedOpenDays, setSavedOpenDays] = useState(() => buildInitialState(initialRows).filter((d) => d.open).length);
+  const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useSectionStatus("business-hours", {
+    summary: savedOpenDays > 0 ? tn("hoursOpen", { count: savedOpenDays }) : tn("hoursClosed"),
+    warn: savedOpenDays === 0,
+  });
+
   function mutate(key: string, fn: (day: DayState) => DayState) {
     setDays((prev) => prev.map((d) => (d.key === key ? fn(d) : d)));
+    setDirty(true);
     setSavedOk(false);
     setError(null);
   }
@@ -150,11 +164,6 @@ export function BusinessHoursCard({
     mutate(key, (d) => {
       const current = d.ranges[index];
       let edited = { ...current, ...patch };
-      // Moving the start to/past the end carries the end forward by the
-      // range's previous length (08:00–12:00 dragged to start 15:00 becomes
-      // 15:00–19:00) — the same courtesy addRange and the downstream cascade
-      // already do, so a start edit can then collide with (and push) the
-      // ranges after it instead of quietly going invalid.
       if ("start" in patch && toMinutes(edited.start) >= toMinutes(edited.end)) {
         const length = Math.max(toMinutes(current.end) - toMinutes(current.start), 60);
         edited = { ...edited, end: toHhMm(toMinutes(edited.start) + length) };
@@ -176,9 +185,6 @@ export function BusinessHoursCard({
     mutate(key, (d) => ({ ...d, ranges: d.ranges.filter((_, i) => i !== index) }));
   }
 
-  // First problem found, as a ready-to-show message. Covers what the API
-  // 400s on (end <= start) and what its UNIQUE(day, start_time) constraint
-  // would 500 on (two ranges sharing a start — a subset of "overlap").
   function firstProblem(): string | null {
     for (const d of days) {
       if (!d.open) continue;
@@ -207,132 +213,141 @@ export function BusinessHoursCard({
     try {
       const businessHours = days
         .filter((d) => d.open)
-        .flatMap((d) =>
-          d.ranges.map((r) => ({ day_of_week: d.dow, start_time: r.start, end_time: r.end })),
-        );
+        .flatMap((d) => d.ranges.map((r) => ({ day_of_week: d.dow, start_time: r.start, end_time: r.end })));
       const res = await fetch(`/api/companies/${companyId}/business-hours`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ businessHours }),
       });
+      setSaving(false);
       if (!res.ok) {
         setError(t("saveError"));
-        setSaving(false);
         return;
       }
-      setSaving(false);
       setSavedOk(true);
+      setDirty(false);
+      setSavedOpenDays(days.filter((d) => d.open).length);
     } catch {
       setError(t("saveError"));
       setSaving(false);
     }
   }
 
-  // Live off the current (possibly unsaved) state, not the server-loaded
-  // rows -- the icon disappears the moment the merchant opens a day, even
-  // before they hit save, the same way the rest of this card is optimistic.
-  const hasAnyOpenDay = days.some((d) => d.open);
-
   return (
-    <SettingsSection
-      id="business-hours"
-      icon={ClockIcon}
-      title={t("title")}
-      subtitle={t("subtitle")}
-      warning={!hasAnyOpenDay}
-    >
-      <div className="flex flex-col gap-4">
-        {days.map((day) => {
-          const dayName = t(`days.${day.key}`);
-          return (
-            <div
-              key={day.key}
-              className={clsx(
-                "flex flex-col gap-3 rounded-lg border border-outline-variant/40 bg-surface-container-low p-4 transition-colors sm:flex-row sm:items-start sm:justify-between",
-                day.open && "hover:border-outline-variant",
-              )}
-            >
-              <div className="flex items-center gap-4 pt-1 sm:w-40">
-                <Toggle
-                  checked={day.open}
-                  disabled={!canEdit}
-                  label={t("openLabel", { day: dayName })}
-                  onChange={(next) => mutate(day.key, (d) => ({ ...d, open: next }))}
-                />
-                <span
-                  className={clsx(
-                    "text-body-md font-medium",
-                    day.open ? "text-on-surface" : "text-on-surface-variant",
-                  )}
-                >
-                  {dayName}
-                </span>
-              </div>
-
-              {day.open ? (
-                <div className="flex flex-col items-stretch gap-2 sm:items-end">
-                  {day.ranges.map((range, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <TimeSelect
-                        value={range.start}
-                        disabled={!canEdit}
-                        ariaLabel={t("rangeStartAria", { day: dayName, position: i + 1 })}
-                        onChange={(v) => setRange(day.key, i, { start: v })}
-                      />
-                      <span className="text-on-surface-variant">{t("to")}</span>
-                      <TimeSelect
-                        value={range.end}
-                        disabled={!canEdit}
-                        ariaLabel={t("rangeEndAria", { day: dayName, position: i + 1 })}
-                        onChange={(v) => setRange(day.key, i, { end: v })}
-                      />
-                      {canEdit && day.ranges.length > 1 ? (
-                        <button
-                          type="button"
-                          aria-label={t("removeRange")}
-                          onClick={() => removeRange(day.key, i)}
-                          className="rounded-md p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
-                        >
-                          <XIcon className="h-4 w-4" />
-                        </button>
-                      ) : null}
-                    </div>
-                  ))}
-                  {canEdit ? (
-                    <button
-                      type="button"
-                      onClick={() => addRange(day.key)}
-                      className="inline-flex items-center gap-1 self-start text-label-md font-medium text-primary transition-colors hover:text-primary-container sm:self-end"
-                    >
-                      <PlusIcon className="h-4 w-4" />
-                      {t("addRange")}
-                    </button>
-                  ) : null}
+    <SettingsBlock id="business-hours" title={t("title")} description={t("subtitle")}>
+      <div className="flex flex-col">
+        <div aria-hidden="true" className="hidden grid-cols-[168px_minmax(0,1fr)_296px] gap-x-6 pb-2 md:grid">
+          <span />
+          <div className="relative h-4 text-[11px] tabular-nums text-outline">
+            {HOUR_MARKS.map((h) => (
+              <span
+                key={h}
+                className={clsx("absolute top-0", h === 0 ? "left-0" : h === 24 ? "right-0" : "-translate-x-1/2")}
+                style={h > 0 && h < 24 ? { left: `${(h / 24) * 100}%` } : undefined}
+              >
+                {String(h).padStart(2, "0")}h
+              </span>
+            ))}
+          </div>
+          <span />
+        </div>
+        <ul className="flex flex-col divide-y divide-outline-variant/40 border-y border-outline-variant/40">
+          {days.map((day) => {
+            const dayName = t(`days.${day.key}`);
+            return (
+              <li
+                key={day.key}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-3 py-3.5 md:grid-cols-[168px_minmax(0,1fr)_296px]"
+              >
+                <div className="flex items-center gap-3">
+                  <Toggle
+                    checked={day.open}
+                    disabled={!canEdit}
+                    label={t("openLabel", { day: dayName })}
+                    onChange={(next) => mutate(day.key, (d) => ({ ...d, open: next }))}
+                  />
+                  <span
+                    className={clsx(
+                      "text-sm font-medium transition-colors",
+                      day.open ? "text-on-surface" : "text-on-surface-variant",
+                    )}
+                  >
+                    {dayName}
+                  </span>
                 </div>
-              ) : (
-                <span className="rounded-md bg-surface-container px-3 py-1.5 text-label-md font-medium text-on-surface-variant">
-                  {t("closed")}
-                </span>
-              )}
-            </div>
-          );
-        })}
+
+                <div className="hidden md:block">
+                  <DayTimeline day={day} />
+                </div>
+
+                {day.open ? (
+                  <div className="col-span-2 flex flex-col items-start gap-2 md:col-span-1 md:items-end">
+                    {day.ranges.map((range, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <TimeSelect
+                          value={range.start}
+                          disabled={!canEdit}
+                          ariaLabel={t("rangeStartAria", { day: dayName, position: i + 1 })}
+                          onChange={(v) => setRange(day.key, i, { start: v })}
+                        />
+                        <span className="text-sm text-on-surface-variant">{t("to")}</span>
+                        <TimeSelect
+                          value={range.end}
+                          disabled={!canEdit}
+                          ariaLabel={t("rangeEndAria", { day: dayName, position: i + 1 })}
+                          onChange={(v) => setRange(day.key, i, { end: v })}
+                        />
+                        {canEdit ? (
+                          <>
+                            <button
+                              type="button"
+                              aria-label={t("removeRangeAria", { day: dayName, position: i + 1 })}
+                              disabled={day.ranges.length < 2}
+                              onClick={() => removeRange(day.key, i)}
+                              className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface disabled:invisible md:h-8 md:w-8"
+                            >
+                              <XIcon className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={t("addRangeAria", { day: dayName })}
+                              title={t("addRange")}
+                              disabled={i !== day.ranges.length - 1}
+                              onClick={() => addRange(day.key)}
+                              className="flex h-10 w-10 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary-fixed disabled:invisible md:h-8 md:w-8"
+                            >
+                              <PlusIcon className="h-4 w-4" />
+                            </button>
+                          </>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="justify-self-end text-sm text-outline md:pr-[80px]">{t("closed")}</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
       {canEdit ? (
-        <div className="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-outline-variant/40 pt-4">
-          {error ? (
-            <p role="alert" className="mr-auto text-sm text-error">
-              {error}
-            </p>
-          ) : savedOk ? (
-            <p className="mr-auto text-sm text-tertiary">{t("saved")}</p>
-          ) : null}
-          <Button type="button" onClick={save} isLoading={saving}>
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <p
+            role={error ? "alert" : "status"}
+            className={clsx(
+              "mr-auto text-sm",
+              error ? "text-error" : savedOk ? "text-success-500" : "text-on-surface-variant",
+            )}
+          >
+            {error ?? (savedOk ? t("saved") : dirty ? t("unsaved") : "")}
+          </p>
+          <Button type="button" onClick={save} isLoading={saving} disabled={!dirty && !error}>
             {saving ? t("saving") : t("save")}
           </Button>
         </div>
       ) : null}
-    </SettingsSection>
+    </SettingsBlock>
   );
 }
