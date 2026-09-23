@@ -2177,7 +2177,7 @@
     "manageBilling": "Manage billing",
     "choosePlan": "Choose {plan}",
     "startTrial": "Try {plan} free",
-    "endTrialNow": "Pay now and unlock everything",
+    "endTrialNow": "End trial and start {plan}",
     "actionError": "Something went wrong. Please try again.",
     "status": {
       "active": "Active",
@@ -2224,21 +2224,11 @@
       "resetsIn": "{days, plural, one {Resets in # day} other {Resets in # days}}",
       "overNote": "Over the plan limit — answering on a grace allowance."
     },
-    "activate": {
-      "title": "Activate your team",
-      "body": "Choose a plan so your team can start answering customers."
-    },
-    "reactivate": {
-      "title": "Reactivate your team",
-      "body": "Choose a plan to bring your team back online."
-    },
     "plan": {
       "replies": "{limit, number} replies per month",
       "repliesAnnual": "{limit, number} replies per year",
       "teammates": "Unlimited teammates on your account",
-      "custom": "Custom pricing",
-      "trialBadge": "{days} days free",
-      "trialNote": "First {days} days or {limit, number} replies — whichever comes first. Reaching the limit activates your subscription automatically."
+      "custom": "Custom pricing"
     },
     "picker": {
       "period": {
@@ -2248,22 +2238,43 @@
       "wppToggleLabel": "Include WhatsApp in the plan",
       "wppToggleNote": "Without this, Meta charges WhatsApp usage separately, straight to your card — see the channels page for details.",
       "wppBadge": "WhatsApp included",
-      "recommended": "Most popular"
+      "recommended": "Recommended"
     },
     "enterprise": {
       "title": "Need higher volume or custom terms?",
       "body": "Enterprise plans are arranged with our team.",
       "cta": "Contact us"
     },
-    "summary": {
-      "title": "Billing summary",
-      "plan": "Plan",
-      "status": "Status",
-      "none": "No plan",
-      "nextRenewal": "Next renewal",
-      "endsOn": "Ends on",
-      "manageInStripe": "Manage billing in Stripe",
-      "support": "Questions about billing? Contact support."
+    "hero": {
+      "title": "Put your team to work",
+      "reactivateTitle": "Bring your team back",
+      "body": "Choose how much your team answers each month. You can switch plans any time.",
+      "reactivateBody": "Pick a plan and your team starts answering customers again.",
+      "readyOne": "{name} is ready to start",
+      "readyMany": "{names} are ready to start"
+    },
+    "trial": {
+      "days": "{days} days free",
+      "replies": "Up to {limit, number} replies while you try",
+      "converts": "Turns into your plan when the trial ends or the replies run out"
+    },
+    "tiers": {
+      "monthlyEquivalent": "≈ {price} per month",
+      "whatsappIncluded": "WhatsApp costs included",
+      "whatsappSeparate": "WhatsApp billed separately by Meta",
+      "current": "Your plan",
+      "switchTitle": "Switch plans",
+      "switchBody": "Pick another plan. You'll confirm the change on Stripe before anything is charged."
+    },
+    "panel": {
+      "dayOf": "Day {day} of {total}",
+      "usedPct": "{pct}% used",
+      "of": "of {limit, number}",
+      "replies": "replies",
+      "noUsage": "No replies counted yet this period.",
+      "trialEndsOn": "Trial ends on {date}",
+      "paymentPending": "Waiting for a successful payment",
+      "teamReplies": "Replies your team sent this period"
     }
   }
 }

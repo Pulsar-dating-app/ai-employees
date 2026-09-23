@@ -12,6 +12,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-23 — Billing page: staffing hero for no plan, plan panel + in-page tier switch for subscribers
+
+**Decision:** `/dashboard/settings/billing` drops the 8/4 grid and "Billing summary" aside. Without a plan it leads with a full-width "put your team to work" hero (team faces, trial terms once) above the three tiers; with a plan it shows one panel (plan, status, dates, usage ring) followed by the current variant's three tiers with the current one marked. The user picked both layouts from structured options. The "Most popular" badge became "Recommended" in Billing.
+
+**Why:** The user found the page generic. The old layout squeezed the plan cards into two-thirds of the width, repeated the trial terms in every card, and repeated the plan in a summary card. "Most popular" claimed subscriber data that doesn't exist yet. The subscriber tier switcher stays on the current period/WhatsApp variant because a toggled variant can't mark "your plan" and blurs what changes. Period or WhatsApp changes still happen in the Stripe Portal.
+
+---
+
 ## 2026-09-23 — Conversations becomes a split-view triage inbox
 
 **Decision:** The Conversations screen is one split view (list + thread side by side, open thread in `?c=`), with the list grouped by urgency — *Needs you* (paused or awaiting confirmation), *Ready to buy* (checkout click / buying intent), *Everything else* — and customer details in a drawer from the thread header. The old `/dashboard/conversations/[id]` route redirects into it. The user picked this layout over a permanent three-pane workspace and a flat two-pane list.

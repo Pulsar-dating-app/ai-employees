@@ -1,51 +1,16 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
 import { CartIcon, ClockIcon, SearchIcon, XIcon } from "@/components/ui/icons";
 import type { ConversationRow } from "@/lib/conversations/list";
+import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 import { CustomerAvatar } from "./customer-avatar";
 import { formatListTime, groupRows } from "./inbox-format";
 import type { InboxFilters } from "./conversations-inbox";
 
 const STATUS_TABS = ["all", "paused", "active", "closed"] as const;
-
-function useIndicator<T extends HTMLElement>(activeKey: string | null, version: unknown, axis: "x" | "y") {
-  const itemRefs = useRef(new Map<string, T>());
-  const indicatorRef = useRef<HTMLSpanElement>(null);
-  const placedRef = useRef(false);
-
-  useLayoutEffect(() => {
-    const indicator = indicatorRef.current;
-    const el = activeKey ? itemRefs.current.get(activeKey) : undefined;
-    if (!indicator || !el) {
-      if (indicator) indicator.style.opacity = "0";
-      placedRef.current = false;
-      return;
-    }
-    indicator.style.transition = placedRef.current ? "" : "none";
-    indicator.style.opacity = "1";
-    indicator.style.height = `${el.offsetHeight}px`;
-    if (axis === "x") {
-      indicator.style.top = `${el.offsetTop}px`;
-      indicator.style.width = `${el.offsetWidth}px`;
-      indicator.style.transform = `translateX(${el.offsetLeft}px)`;
-    } else {
-      indicator.style.transform = `translateY(${el.offsetTop}px)`;
-    }
-    placedRef.current = true;
-  }, [activeKey, version, axis]);
-
-  function register(key: string) {
-    return (el: T | null) => {
-      if (el) itemRefs.current.set(key, el);
-      else itemRefs.current.delete(key);
-    };
-  }
-
-  return { indicatorRef, register };
-}
 
 function StatusTabs({
   value,
@@ -55,7 +20,7 @@ function StatusTabs({
   onChange: (s: InboxFilters["status"]) => void;
 }) {
   const t = useTranslations("Conversations.inbox.tabs");
-  const { indicatorRef, register } = useIndicator<HTMLButtonElement>(value, null, "x");
+  const { indicatorRef, register } = useSlidingIndicator<HTMLButtonElement>(value, null, "x");
 
   return (
     <div role="tablist" className="relative flex rounded-xl bg-surface-container p-1">
@@ -274,7 +239,7 @@ export function InboxList({
 }) {
   const t = useTranslations("Conversations.inbox");
   const groups = groupRows(rows);
-  const { indicatorRef, register } = useIndicator<HTMLButtonElement>(selectedId, rows, "y");
+  const { indicatorRef, register } = useSlidingIndicator<HTMLButtonElement>(selectedId, rows, "y");
   const isFiltered = filters.status !== "all" || filters.search !== "" || filters.pendingOnly;
   let rowIndex = 0;
 

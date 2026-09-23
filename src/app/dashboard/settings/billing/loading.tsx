@@ -10,14 +10,14 @@ export default function Loading() {
           <Skeleton className="h-5 w-64" />
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        <div className="flex flex-col gap-6 lg:col-span-8">
-          <Skeleton className="h-40 rounded-xl" />
-          <Skeleton className="h-32 rounded-xl" />
-        </div>
-        <div className="lg:col-span-4">
-          <Skeleton className="h-56 rounded-xl" />
-        </div>
+      <Skeleton className="h-64 w-full rounded-[28px]" />
+      <div className="flex justify-center">
+        <Skeleton className="h-12 w-80 rounded-full" />
+      </div>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        <Skeleton className="h-96 rounded-[24px]" />
+        <Skeleton className="h-96 rounded-[24px]" />
+        <Skeleton className="h-96 rounded-[24px]" />
       </div>
     </div>
   );

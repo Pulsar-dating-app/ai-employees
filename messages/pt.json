@@ -2177,7 +2177,7 @@
     "manageBilling": "Gerenciar cobrança",
     "choosePlan": "Escolher {plan}",
     "startTrial": "Testar {plan} grátis",
-    "endTrialNow": "Pagar agora e ativar tudo",
+    "endTrialNow": "Encerrar teste e começar o {plan}",
     "actionError": "Algo deu errado. Tente de novo.",
     "status": {
       "active": "Ativo",
@@ -2224,21 +2224,11 @@
       "resetsIn": "{days, plural, one {Renova em # dia} other {Renova em # dias}}",
       "overNote": "Acima do limite do plano — respondendo com a tolerância."
     },
-    "activate": {
-      "title": "Ative sua equipe",
-      "body": "Escolha um plano para sua equipe começar a responder clientes."
-    },
-    "reactivate": {
-      "title": "Reative sua equipe",
-      "body": "Escolha um plano para trazer sua equipe de volta."
-    },
     "plan": {
       "replies": "{limit, number} respostas por mês",
       "repliesAnnual": "{limit, number} respostas por ano",
       "teammates": "Membros ilimitados na sua conta",
-      "custom": "Preço personalizado",
-      "trialBadge": "{days} dias grátis",
-      "trialNote": "Nos primeiros {days} dias ou até {limit, number} respostas — o que vier primeiro. Ao atingir o limite, sua assinatura é ativada automaticamente."
+      "custom": "Preço personalizado"
     },
     "picker": {
       "period": {
@@ -2248,22 +2238,43 @@
       "wppToggleLabel": "Incluir WhatsApp no plano",
       "wppToggleNote": "Sem essa opção, a Meta cobra o uso do WhatsApp separadamente, direto no seu cartão — veja mais na tela de canais.",
       "wppBadge": "WhatsApp incluso",
-      "recommended": "Mais popular"
+      "recommended": "Recomendado"
     },
     "enterprise": {
       "title": "Precisa de mais volume ou condições sob medida?",
       "body": "Planos Enterprise são combinados com nosso time.",
       "cta": "Fale com a gente"
     },
-    "summary": {
-      "title": "Resumo da cobrança",
-      "plan": "Plano",
-      "status": "Status",
-      "none": "Sem plano",
-      "nextRenewal": "Próxima renovação",
-      "endsOn": "Encerra em",
-      "manageInStripe": "Gerenciar cobrança na Stripe",
-      "support": "Dúvidas sobre cobrança? Fale com o suporte."
+    "hero": {
+      "title": "Coloque sua equipe para trabalhar",
+      "reactivateTitle": "Traga sua equipe de volta",
+      "body": "Escolha quanto sua equipe responde por mês. Você pode trocar de plano quando quiser.",
+      "reactivateBody": "Escolha um plano e sua equipe volta a responder seus clientes.",
+      "readyOne": "{name} já pode começar",
+      "readyMany": "{names} já podem começar"
+    },
+    "trial": {
+      "days": "{days} dias grátis",
+      "replies": "Até {limit, number} respostas no teste",
+      "converts": "Vira seu plano quando o teste acaba ou as respostas terminam"
+    },
+    "tiers": {
+      "monthlyEquivalent": "≈ {price} por mês",
+      "whatsappIncluded": "Custos do WhatsApp inclusos",
+      "whatsappSeparate": "WhatsApp cobrado à parte pela Meta",
+      "current": "Seu plano",
+      "switchTitle": "Trocar de plano",
+      "switchBody": "Escolha outro plano. Você confirma a mudança na Stripe antes de qualquer cobrança."
+    },
+    "panel": {
+      "dayOf": "Dia {day} de {total}",
+      "usedPct": "{pct}% usado",
+      "of": "de {limit, number}",
+      "replies": "respostas",
+      "noUsage": "Nenhuma resposta contada neste período ainda.",
+      "trialEndsOn": "O teste acaba em {date}",
+      "paymentPending": "Aguardando um pagamento aprovado",
+      "teamReplies": "Respostas enviadas pela sua equipe neste período"
     }
   }
 }

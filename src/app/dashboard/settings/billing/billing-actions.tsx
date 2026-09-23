@@ -23,11 +23,11 @@ type Variant = "primary" | "secondary" | "link" | "danger";
 // only grows for a wrapped label, instead of cutting it off.
 const VARIANT_CLASSES: Record<Variant, string> = {
   primary:
-    "min-h-11 rounded-lg bg-primary px-5 py-2 text-label-md font-semibold text-on-primary transition-all hover:brightness-90",
+    "min-h-11 rounded-xl bg-primary px-5 py-2 text-label-md font-semibold text-on-primary shadow-[0_8px_20px_-10px_rgba(53,37,205,0.7)] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98]",
   secondary:
-    "min-h-11 rounded-lg border border-outline-variant bg-surface-container px-5 py-2 text-label-md font-semibold text-on-surface transition-colors hover:bg-surface-container-high",
+    "min-h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-5 py-2 text-label-md font-semibold text-on-surface transition-[border-color,color,transform] duration-150 hover:border-primary/40 hover:text-primary active:scale-[0.98]",
   danger:
-    "min-h-11 rounded-lg bg-error px-5 py-2 text-label-md font-semibold text-on-error transition-colors hover:brightness-95",
+    "min-h-11 rounded-xl bg-error px-5 py-2 text-label-md font-semibold text-on-error transition-[filter,transform] duration-150 hover:brightness-95 active:scale-[0.98]",
   link: "text-label-md font-medium text-primary transition-colors hover:text-primary-container hover:underline",
 };
 

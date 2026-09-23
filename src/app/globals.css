@@ -700,6 +700,66 @@ select:not(:disabled) {
   animation: inbox-glow-breathe 9s ease-in-out infinite;
 }
 
+@keyframes billing-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.billing-card-in {
+  animation: billing-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+
+@keyframes billing-price-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+.billing-price-in {
+  animation: billing-price-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes billing-ring-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: var(--ring-offset, 100);
+  }
+}
+.billing-ring-draw {
+  stroke-dashoffset: var(--ring-offset, 100);
+  animation: billing-ring-draw 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+@keyframes billing-bar-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+.billing-bar-in {
+  animation: billing-bar-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.billing-hero-glow {
+  background: radial-gradient(closest-side, rgba(195, 192, 255, 0.55), rgba(226, 223, 255, 0.2) 55%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .inbox-indicator {
     transition: opacity 0.2s ease-out;
@@ -718,8 +778,15 @@ select:not(:disabled) {
     animation: none;
   }
   .inbox-live-dot,
-  .inbox-overview-glow {
+  .inbox-overview-glow,
+  .billing-ring-draw,
+  .billing-bar-in {
     animation: none;
+  }
+  .billing-card-in,
+  .billing-price-in {
+    animation: inbox-pane-in 0.2s ease-out both;
+    animation-delay: 0s;
   }
 }
 
