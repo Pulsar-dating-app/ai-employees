@@ -12,6 +12,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-23 — Conversations becomes a split-view triage inbox
+
+**Decision:** The Conversations screen is one split view (list + thread side by side, open thread in `?c=`), with the list grouped by urgency — *Needs you* (paused or awaiting confirmation), *Ready to buy* (checkout click / buying intent), *Everything else* — and customer details in a drawer from the thread header. The old `/dashboard/conversations/[id]` route redirects into it. The user picked this layout over a permanent three-pane workspace and a flat two-pane list.
+
+**Why:** The user found the table + separate detail page ugly and disliked losing the list while reading a thread. Grouping answers the merchant's real question ("who needs me now?") instead of making them scan status pills. Grouping stays client-side over loaded rows so the list API's filters and pagination didn't change. The redesign also removed "AI" from merchant copy ("Let the AI reply again" → "Hand back to {name}"), which the product-language rule already required.
+
+---
+
 ## 2026-09-22 — CRITICAL: fixed a company_users RLS hole letting any user self-join any company as owner, and locked down 3 more connection tables
 
 **Decision:** Found during a full RLS/policy audit of the remote project (requested after the WhatsApp direct-write bypass below). Two fixes, both applied to remote immediately (production) and mirrored in migrations:

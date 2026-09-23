@@ -47,10 +47,9 @@ describe("channelLabel", () => {
 // "Conversations.channel.whatsapp" to merchants.
 describe("channel message coverage", () => {
   for (const [locale, messages] of Object.entries({ en, pt })) {
-    it(`${locale} translates every channel in both the list and the detail view`, () => {
+    it(`${locale} translates every channel`, () => {
       for (const channel of CHANNELS) {
         expect(messages.Conversations.channel).toHaveProperty(channel);
-        expect(messages.Conversations.detail.channel).toHaveProperty(channel);
       }
     });
   }

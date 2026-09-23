@@ -1808,7 +1808,6 @@
     "pageSubtitle": "See what your team is telling customers, and step in when needed.",
     "noCompany": "Hire your first team member to start seeing conversations.",
     "browseMarketplace": "Browse the marketplace",
-    "backToConversations": "Back to conversations",
     "channel": {
       "whatsapp": "WhatsApp",
       "web_chat": "Website chat",
@@ -1822,51 +1821,10 @@
         "active": "Active",
         "closed": "Resolved"
       },
-      "searchLabel": "Search",
-      "searchPlaceholder": "Search by customer name or phone…",
-      "searchButton": "Search",
-      "searchHint": "Search only matches a customer's name or phone — most customers haven't shared either yet, so this won't find much until they do.",
-      "emptyState": "No conversations yet.",
-      "previousPage": "Previous",
-      "nextPage": "Next",
-      "pageOf": "Page {page} of {totalPages}"
-    },
-    "list": {
-      "customerColumn": "Customer & message preview",
-      "statusColumn": "Status",
-      "agentColumn": "Agent",
-      "updatedColumn": "Last updated",
-      "noAgent": "—"
+      "searchHint": "Search only matches a customer's name or phone — most customers haven't shared either yet, so this won't find much until they do."
     },
     "detail": {
       "withAgent": "Chatting with {name}",
-      "status": {
-        "paused": "Needs attention",
-        "active": "AI managing",
-        "closed": "Resolved"
-      },
-      "resumeButton": "Let the AI reply again",
-      "pausedNoticeTitle": "You're handling this conversation",
-      "pausedNoticeBody": "The AI has stepped back and won't reply to the customer while you're here. When you're done, use the button below to let it take over again.",
-      "emptyState": "No messages yet.",
-      "teamLabel": "Team",
-      "aiLabel": "AI",
-      "inputPlaceholder": "Write a reply…",
-      "sendButton": "Send",
-      "sendError": "Something went wrong sending that. Please try again.",
-      "deliveryFailed": "Your reply was saved, but we couldn't deliver it to the customer — this can happen if it's been more than 24 hours since they last messaged.",
-      "detailsTitle": "Details",
-      "detailsCustomer": "Customer",
-      "detailsChannel": "Channel",
-      "detailsAgent": "Agent",
-      "detailsMessageCount": "Messages",
-      "detailsNoAgent": "None",
-      "channel": {
-        "whatsapp": "WhatsApp",
-        "web_chat": "Website chat",
-        "instagram": "Instagram",
-        "telegram": "Telegram"
-      },
       "grounding": {
         "regeneratedTitle": "Corrected before sending",
         "regeneratedBody": "This reply quoted a figure that hadn't been checked against your catalogue, so it was rewritten. The customer only ever saw the corrected version.",
@@ -1877,15 +1835,81 @@
       }
     },
     "pending": {
-      "bannerTitle": "{count, plural, =1 {# customer is waiting on a confirmation} other {# customers are waiting on a confirmation}}",
-      "bannerBody": "Your team promised to check something and get back to them. Nobody has replied yet.",
-      "showPending": "Show these",
-      "showAll": "Show all conversations",
       "rowBadge": "Awaiting confirmation"
     },
     "hot": {
       "rowBadgeClick": "Clicked the link",
       "rowBadgeIntent": "Wants to buy"
+    },
+    "inbox": {
+      "groups": {
+        "needsYou": "Needs you",
+        "hot": "Ready to buy",
+        "rest": "Everything else"
+      },
+      "tabs": {
+        "all": "All",
+        "paused": "With you",
+        "active": "Active",
+        "closed": "Resolved"
+      },
+      "search": {
+        "placeholder": "Search customers",
+        "clear": "Clear search"
+      },
+      "awaiting": "Awaiting confirmation · {count}",
+      "loadMore": "Load more",
+      "you": "You",
+      "yesterday": "Yesterday",
+      "today": "Today",
+      "empty": {
+        "title": "No conversations yet",
+        "body": "When a customer messages your team on any connected channel, the conversation shows up here as it happens.",
+        "filteredTitle": "Nothing matches these filters",
+        "clearFilters": "Clear filters"
+      },
+      "overview": {
+        "needsYou": "{count, plural, =1 {# conversation needs you} other {# conversations need you}}",
+        "needsYouBody": "Customers waiting on you are pinned to the top of the list.",
+        "hot": "{count, plural, =1 {# customer is ready to buy} other {# customers are ready to buy}}",
+        "caughtUp": "You're all caught up",
+        "caughtUpBody": "Your team is handling every conversation. Pick one to see what they're telling customers.",
+        "openFirst": "Open the first one",
+        "keyboard": "Use ↑ and ↓ to move between conversations"
+      },
+      "thread": {
+        "back": "Back to conversations",
+        "status": {
+          "active": "{name} is replying",
+          "paused": "You're handling this",
+          "closed": "Resolved"
+        },
+        "handbackBody": "{name} won't reply while you're handling this conversation.",
+        "handbackButton": "Hand back to {name}",
+        "composerHint": "Sending a reply pauses {name} here until you hand it back.",
+        "teamFallback": "your team",
+        "placeholder": "Write a reply…",
+        "send": "Send",
+        "sendError": "Something went wrong sending that. Please try again.",
+        "deliveryFailed": "Your reply was saved, but we couldn't deliver it to the customer. This can happen if it's been more than 24 hours since they last messaged.",
+        "empty": "No messages yet.",
+        "loadError": "We couldn't load this conversation.",
+        "retry": "Try again"
+      },
+      "details": {
+        "open": "Conversation details",
+        "close": "Close details",
+        "title": "Details",
+        "channel": "Channel",
+        "handledBy": "Handled by",
+        "status": "Status",
+        "started": "Started",
+        "lastActivity": "Last activity",
+        "messages": "Messages",
+        "signals": "Signals",
+        "noSignals": "No buying signals yet",
+        "noAgent": "Nobody assigned"
+      }
     }
   },
   "Chat": {

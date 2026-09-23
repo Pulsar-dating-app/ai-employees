@@ -574,6 +574,155 @@ select:not(:disabled) {
   }
 }
 
+.inbox-indicator {
+  transition:
+    transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease-out;
+}
+
+@keyframes inbox-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.inbox-row-in {
+  animation: inbox-row-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes inbox-pane-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+.inbox-pane-in {
+  animation: inbox-pane-in 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes inbox-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.inbox-bubble-in {
+  animation: inbox-bubble-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms + 60ms);
+}
+
+@keyframes inbox-sheet-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+.inbox-sheet {
+  animation: inbox-sheet-in 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-shadow: -20px 0 60px -20px rgba(25, 28, 29, 0.3);
+}
+
+@keyframes inbox-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.inbox-drawer-in {
+  animation: inbox-drawer-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.inbox-scrim-in {
+  animation: nav-sheet-backdrop-in 0.2s ease-out both;
+}
+
+@keyframes inbox-live {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 112, 48, 0.45);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px rgba(0, 112, 48, 0);
+  }
+}
+.inbox-live-dot {
+  animation: inbox-live 2s ease-out infinite;
+}
+
+@keyframes inbox-face-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.inbox-face-in {
+  animation: inbox-face-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+@keyframes inbox-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+.inbox-overview-glow {
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(195, 192, 255, 0.45), rgba(226, 223, 255, 0.18) 55%, transparent);
+  animation: inbox-glow-breathe 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inbox-indicator {
+    transition: opacity 0.2s ease-out;
+  }
+  .inbox-row-in,
+  .inbox-bubble-in,
+  .inbox-face-in,
+  .inbox-drawer-in {
+    animation: inbox-pane-in 0.2s ease-out both;
+    animation-delay: 0s;
+  }
+  .inbox-pane-in {
+    animation-duration: 0.2s;
+  }
+  .inbox-sheet {
+    animation: none;
+  }
+  .inbox-live-dot,
+  .inbox-overview-glow {
+    animation: none;
+  }
+}
+
 /* ============================================================
    Public landing v2 (src/components/landing/landing-page-2.tsx)
 
