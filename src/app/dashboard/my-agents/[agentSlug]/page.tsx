@@ -209,6 +209,9 @@ export default async function AgentConnectionsPage({
               whatsappEntitled={whatsappEntitled}
               metaAppId={process.env.META_APP_ID ?? ""}
               metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
+              whatsappProvider={process.env.WHATSAPP_PROVIDER === "twilio" ? "twilio" : "meta"}
+              twilioConfigId={process.env.META_WHATSAPP_TWILIO_CONFIG_ID ?? ""}
+              partnerSolutionId={process.env.TWILIO_PARTNER_SOLUTION_ID ?? ""}
               chatUrl={chatUrl}
               embedSnippet={embedSnippet}
               telegramLink={telegramLink}

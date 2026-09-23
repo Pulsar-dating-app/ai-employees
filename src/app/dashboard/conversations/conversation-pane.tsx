@@ -240,7 +240,9 @@ export function ConversationPane({
     );
     onReplySent(message);
     if (delivery && delivery.ok === false) {
-      setErrorMessage(t("thread.deliveryFailed"));
+      // WhatsApp closes a conversation to free-form messages 24h after the
+      // customer's last message -- say so, instead of a generic failure.
+      setErrorMessage(delivery.reason === "outside_window" ? t("thread.deliveryOutsideWindow") : t("thread.deliveryFailed"));
     }
   }
 

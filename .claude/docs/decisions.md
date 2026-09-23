@@ -12,6 +12,22 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-23 — WhatsApp moves from Meta's Cloud API to Twilio (reverses 2026-08-26)
+
+**Decision:** WhatsApp is served through Twilio as a Meta Tech Provider / ISV, replacing the direct Meta Cloud API integration. The merchant still completes Meta's Embedded Signup (creating their own WhatsApp Business Account and verifying the number), but Twilio then sends and receives, and Twilio's credit line pays Meta — the merchant adds no card on Meta's side, and the cost is absorbed by the plan. Choices made with it:
+- **One Twilio subaccount per company** (`company_twilio_accounts`), because Twilio binds one WABA to one (sub)account; the per-agent numbers remain rows of `company_whatsapp_connections` (senders), now with a `provider` column (`meta` | `twilio`).
+- **Expand, then contract.** The Meta code and columns stay until the cutover is confirmed; `WHATSAPP_PROVIDER=twilio` switches only the dashboard connect UI. Then the Meta code, the coexistence code (D8) and the D5 payment-issue machinery are deleted.
+- **Coexistence (D8) is dropped.** Twilio documents no coexistence and its migration guide requires the number to leave the WhatsApp app. The connect UI warns the merchant and recommends a dedicated number.
+- **Merchants bring their own number** for now; Staffra-provisioned Twilio numbers are deferred (regulatory registration, OTP handling).
+- **Webhook per company** (`/api/webhooks/twilio/whatsapp/<companyId>`), signature-validated with that subaccount's Auth Token against the exact registered URL (built from `STAFFRA_CHECKOUT_BASE_URL`). It acknowledges at once and runs the reply pipeline in `after()`, since Twilio times a webhook out after ~15s and the Agent Engine can take longer.
+- **Subaccount tokens are stored AES-256-GCM encrypted** (`TWILIO_CREDENTIALS_KEY`) on top of a service-role-only table.
+- **Sender status is polled** (`sync-senders` cron, every 15 min, plus on-demand while the merchant watches a pending connection), because Twilio doesn't push sender-status changes to the message webhooks.
+- Proactive/template messages stay out of scope: replies are free-form inside the 24h window; a human reply after 24h fails with `outside_window`, and the inbox says why.
+
+**Why:** Meta billed the merchant's own card separately, which was the main adoption friction and a support burden (D5's payment-issue gate and recheck cron existed only to manage it). Only 3 WhatsApp connections ever existed, all Meta test numbers, so there is no merchant data to migrate — a provider swap, not a data migration. The catch: Tech Provider approval + Twilio Partner Solution take 3–4 weeks (the same external gate as Trello D7), so the code ships behind the provider flag and the cutover waits on that.
+
+---
+
 ## 2026-09-23 — Scheduling settings adopt the general settings side index
 
 **Decision:** `/dashboard/scheduling/settings` drops the collapsible sections. It now uses the same layout as general Settings: a sticky index beside always-open blocks, with each index item showing a live summary of that section's saved state and a warning where something blocks bookings. `SettingsBlock` and the scroll spy moved to `src/components/ui/` so both screens share them. Business hours become one-line rows with a 00–24h timeline per day. The user picked this over a summary grid with drawers and over a refined accordion.

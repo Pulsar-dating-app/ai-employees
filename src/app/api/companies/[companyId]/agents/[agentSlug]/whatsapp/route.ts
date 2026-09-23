@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { deleteSender, fetchSender } from "@/lib/whatsapp/twilio/api";
+import { getCompanyTwilioAccount } from "@/lib/whatsapp/twilio/accounts";
+import { syncTwilioSender } from "@/lib/whatsapp/twilio/sync";
 
 // Trello D1 amendment (2026-09-04) -- WhatsApp connection status/lifecycle
 // for one hired agent. The actual "connect" action lives in
@@ -17,7 +20,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 // column-privilege-locked -- every select below lists safe columns
 // explicitly and must never include them for a regular (non-service) client.
 const SAFE_COLUMNS =
-  "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at, has_payment_issue, payment_issue_detected_at";
+  "provider, phone_number_id, phone_e164, waba_id, display_phone_number, status, connected_at, token_expires_at, has_payment_issue, payment_issue_detected_at, sender_status, quality_rating, messaging_limit, last_synced_at";
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -125,18 +128,54 @@ export async function GET(
   const agentCheck = await resolveAgentId(supabase, companyId, agentSlug);
   if (agentCheck.error) return agentCheck.error;
 
-  const { data, error } = await supabase
-    .from("company_whatsapp_connections")
-    .select(SAFE_COLUMNS)
-    .eq("company_id", companyId)
-    .eq("agent_id", agentCheck.agentId)
-    .maybeSingle();
+  const readConnection = () =>
+    supabase
+      .from("company_whatsapp_connections")
+      .select(SAFE_COLUMNS)
+      .eq("company_id", companyId)
+      .eq("agent_id", agentCheck.agentId)
+      .maybeSingle();
+
+  let { data, error } = await readConnection();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // A Twilio sender is registered asynchronously (Meta reviews the display
+  // name for minutes to hours). While the merchant is looking at a pending
+  // connection, refresh it from Twilio on demand instead of waiting for the
+  // 15-minute sync cron. Best-effort: a Twilio hiccup must not turn a status
+  // read into a 500.
+  const row = data as unknown as { provider?: string; status?: string } | null;
+  if (row?.provider === "twilio" && row.status === "pending") {
+    try {
+      if (await refreshPendingTwilioSender(companyId, agentCheck.agentId)) {
+        ({ data, error } = await readConnection());
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+    } catch (err) {
+      console.error("WhatsApp status: Twilio sender refresh failed", err);
+    }
+  }
+
   return NextResponse.json({ connection: data ?? null });
+}
+
+async function refreshPendingTwilioSender(companyId: string, agentId: string) {
+  const service = createServiceClient();
+  const { data: conn } = await service
+    .from("company_whatsapp_connections")
+    .select("id, twilio_sender_sid")
+    .eq("company_id", companyId)
+    .eq("agent_id", agentId)
+    .maybeSingle();
+  if (!conn?.twilio_sender_sid) return false;
+  const account = await getCompanyTwilioAccount(service, companyId);
+  if (!account) return false;
+  const sender = await fetchSender(account, conn.twilio_sender_sid as string);
+  await syncTwilioSender(service, conn.id as string, sender);
+  return true;
 }
 
 // DELETE: admin-only disconnect. Flips status and clears the token
@@ -166,9 +205,37 @@ export async function DELETE(
   if (agentCheck.error) return agentCheck.error;
 
   const serviceClient = createServiceClient();
+
+  // A Twilio connection must give the sender back to Twilio too -- otherwise
+  // it keeps receiving messages and the WABA stays bound to this subaccount.
+  // Done first and NOT best-effort: if Twilio can't delete it, telling the
+  // merchant "disconnected" while the number still answers is worse than an
+  // error they can retry.
+  const { data: existing } = await serviceClient
+    .from("company_whatsapp_connections")
+    .select("provider, status, twilio_sender_sid")
+    .eq("company_id", companyId)
+    .eq("agent_id", agentCheck.agentId)
+    .maybeSingle();
+  if (existing?.provider === "twilio" && existing.status !== "disconnected" && existing.twilio_sender_sid) {
+    try {
+      const account = await getCompanyTwilioAccount(serviceClient, companyId);
+      if (account) await deleteSender(account, existing.twilio_sender_sid as string);
+    } catch (err) {
+      console.error("WhatsApp disconnect: Twilio sender delete failed", err);
+      return NextResponse.json({ error: "Failed to disconnect WhatsApp" }, { status: 502 });
+    }
+  }
+
   const { data, error } = await serviceClient
     .from("company_whatsapp_connections")
-    .update({ status: "disconnected", access_token: null, token_expires_at: null })
+    .update({
+      status: "disconnected",
+      access_token: null,
+      token_expires_at: null,
+      twilio_sender_sid: null,
+      sender_status: null,
+    })
     .eq("company_id", companyId)
     .eq("agent_id", agentCheck.agentId)
     .select(SAFE_COLUMNS)

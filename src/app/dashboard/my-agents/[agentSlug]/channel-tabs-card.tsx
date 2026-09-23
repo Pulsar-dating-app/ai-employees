@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/card";
 import { ChannelsSection } from "./channels-section";
+import { WhatsappTwilioSection } from "./whatsapp-twilio-section";
 import { InstagramConnectCard } from "./instagram-connect-card";
 import { WidgetCustomizeCard } from "./widget-customize-card";
 import { EmbedSnippetSection } from "./embed-snippet-section";
@@ -60,6 +61,9 @@ export function ChannelTabsCard({
   whatsappEntitled,
   metaAppId,
   metaConfigId,
+  whatsappProvider,
+  twilioConfigId,
+  partnerSolutionId,
   chatUrl,
   embedSnippet,
   telegramLink,
@@ -77,6 +81,13 @@ export function ChannelTabsCard({
   whatsappEntitled: boolean;
   metaAppId: string;
   metaConfigId: string;
+  // 2026-09-23 -- which provider the WhatsApp tab connects through (env
+  // WHATSAPP_PROVIDER, read in page.tsx). "meta" is the original Cloud API
+  // flow; "twilio" is its replacement -- both stay until the cutover is
+  // confirmed, then the Meta one is deleted.
+  whatsappProvider: "meta" | "twilio";
+  twilioConfigId: string;
+  partnerSolutionId: string;
   chatUrl: string;
   embedSnippet: string;
   telegramLink: string;
@@ -167,7 +178,11 @@ export function ChannelTabsCard({
         aria-labelledby="channel-tab-whatsapp"
         hidden={activeTab !== "whatsapp"}
       >
-        <ChannelsSection companyId={companyId} agentSlug={agentSlug} agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={CHANNEL_ACCENT.whatsapp} canEdit={canEdit} whatsappEntitled={whatsappEntitled} metaAppId={metaAppId} metaConfigId={metaConfigId} />
+        {whatsappProvider === "twilio" ? (
+          <WhatsappTwilioSection companyId={companyId} agentSlug={agentSlug} agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={CHANNEL_ACCENT.whatsapp} canEdit={canEdit} whatsappEntitled={whatsappEntitled} metaAppId={metaAppId} twilioConfigId={twilioConfigId} partnerSolutionId={partnerSolutionId} />
+        ) : (
+          <ChannelsSection companyId={companyId} agentSlug={agentSlug} agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={CHANNEL_ACCENT.whatsapp} canEdit={canEdit} whatsappEntitled={whatsappEntitled} metaAppId={metaAppId} metaConfigId={metaConfigId} />
+        )}
       </div>
 
       <div

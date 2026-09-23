@@ -27,6 +27,16 @@ describe("decideWhatsappSendGate (Trello D5)", () => {
     });
   });
 
+  it("blocks 'sender_offline' for a connected Twilio sender whose last synced status isn't ONLINE", () => {
+    expect(decideWhatsappSendGate({ status: "connected", hasPaymentIssue: false, senderOffline: true })).toEqual({
+      allow: false,
+      reason: "sender_offline",
+    });
+    expect(decideWhatsappSendGate({ status: "connected", hasPaymentIssue: false, senderOffline: false })).toEqual({
+      allow: true,
+    });
+  });
+
   it("disconnected status takes priority over a stale payment-issue flag", () => {
     expect(decideWhatsappSendGate({ status: "disconnected", hasPaymentIssue: true })).toEqual({
       allow: false,

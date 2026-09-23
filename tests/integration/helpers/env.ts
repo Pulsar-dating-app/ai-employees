@@ -14,6 +14,7 @@ export interface TestEnv {
   anonKey: string;
   serviceRoleKey: string;
   emailMockUrl: string;
+  twilioApiMockUrl: string;
   googleCalendarMockUrl: string;
   shopifyApiMockUrl: string;
   stripeApiMockUrl: string;

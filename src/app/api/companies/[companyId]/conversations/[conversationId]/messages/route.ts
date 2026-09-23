@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
 import { sendWhatsappMessage } from "@/lib/whatsapp/meta-graph-api";
+import { sendWhatsappMessage as sendTwilioWhatsappMessage } from "@/lib/whatsapp/twilio/api";
+import { getCompanyTwilioAccount } from "@/lib/whatsapp/twilio/accounts";
+import { twilioStatusCallbackUrl } from "@/lib/whatsapp/twilio/urls";
 
 // Trello F5 / N10 -- a merchant's manual reply. Sending one *is* taking
 // over: this always flips the conversation to 'paused' (unless already
@@ -137,25 +140,50 @@ async function deliverOverWhatsapp(
   agentId: string | null,
   customerId: string,
   text: string,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; reason?: "outside_window" }> {
   if (!agentId) return { ok: false };
   const service = createServiceClient();
 
   const [{ data: connection }, { data: customer }] = await Promise.all([
     service
       .from("company_whatsapp_connections")
-      .select("access_token, phone_number_id, status")
+      .select("provider, access_token, phone_number_id, phone_e164, status")
       .eq("company_id", companyId)
       .eq("agent_id", agentId)
       .maybeSingle(),
     service.from("customers").select("phone").eq("id", customerId).maybeSingle(),
   ]);
 
-  if (!connection || connection.status !== "connected" || !connection.access_token || !customer?.phone) {
+  if (!connection || connection.status !== "connected" || !customer?.phone) {
     return { ok: false };
   }
 
-  const result = await sendWhatsappMessage(connection.access_token, connection.phone_number_id, customer.phone, text);
+  if (connection.provider === "twilio") {
+    if (!connection.phone_e164) return { ok: false };
+    try {
+      const account = await getCompanyTwilioAccount(service, companyId);
+      if (!account) return { ok: false };
+      const twilioResult = await sendTwilioWhatsappMessage(account, {
+        fromE164: connection.phone_e164 as string,
+        toPhone: customer.phone,
+        text,
+        statusCallbackUrl: twilioStatusCallbackUrl(companyId),
+      });
+      if (twilioResult.ok) return { ok: true };
+      // The customer hasn't written in 24h: only an approved template could
+      // go out now. Surfaced so the inbox can say why instead of a generic
+      // failure.
+      if (twilioResult.kind === "outside_window") return { ok: false, reason: "outside_window" };
+      console.error("WhatsApp human reply: Twilio delivery failed", { companyId, kind: twilioResult.kind });
+    } catch (err) {
+      console.error("WhatsApp human reply: Twilio delivery threw", err);
+    }
+    return { ok: false };
+  }
+
+  if (!connection.access_token) return { ok: false };
+
+  const result = await sendWhatsappMessage(connection.access_token, connection.phone_number_id as string, customer.phone, text);
 
   if (!result.ok) {
     try {
@@ -243,7 +271,7 @@ export async function POST(
 
   // Deliver on the channel. Web chat: nothing to do, the widget polls.
   // Instagram and WhatsApp: an actual outbound send.
-  let delivery: { ok: boolean } | null = null;
+  let delivery: { ok: boolean; reason?: "outside_window" } | null = null;
   if (conversation.channel === "instagram") {
     delivery = await deliverOverInstagram(
       companyId,

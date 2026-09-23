@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { writeFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { startGraphApiMock } from "./helpers/graph-api-mock";
+import { startTwilioApiMock } from "./helpers/twilio-api-mock";
 import { startInstagramApiMock } from "./helpers/instagram-api-mock";
 import { startTelegramApiMock } from "./helpers/telegram-api-mock";
 import { startEmailMock } from "./helpers/email-mock";
@@ -64,6 +65,9 @@ export default async function setup() {
   // Stands in for the real Meta Graph API (Trello D1's WhatsApp connect
   // route) -- see graph-api-mock.ts for why this can't just be a fetch spy.
   const graphApiMock = await startGraphApiMock();
+  // Same reasoning, for the Twilio WhatsApp channel (subaccounts, Senders
+  // API v2, Messages) -- see twilio-api-mock.ts.
+  const twilioApiMock = await startTwilioApiMock();
   // Same reasoning, for Trello N2's Instagram connect flow.
   const instagramApiMock = await startInstagramApiMock();
   // Same reasoning, for Trello O1's Telegram send/webhook flow.
@@ -109,6 +113,15 @@ export default async function setup() {
         INSTAGRAM_APP_ID: "test-instagram-app-id",
         INSTAGRAM_APP_SECRET: "test-instagram-app-secret",
         META_GRAPH_API_BASE_URL: graphApiMock.url,
+        // Twilio WhatsApp channel. Parent-account credentials are only used to
+        // create subaccounts (the mock accepts anything); the 32-byte key
+        // encrypts the stored subaccount tokens; both API hosts point at the
+        // one mock. Webhook signature URLs resolve off STAFFRA_CHECKOUT_BASE_URL.
+        TWILIO_ACCOUNT_SID: "ACtestparentaccount",
+        TWILIO_AUTH_TOKEN: "test-parent-auth-token",
+        TWILIO_CREDENTIALS_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+        TWILIO_API_BASE_URL: twilioApiMock.url,
+        TWILIO_MESSAGING_BASE_URL: twilioApiMock.url,
         INSTAGRAM_API_BASE_URL: instagramApiMock.url,
         INSTAGRAM_GRAPH_BASE_URL: instagramApiMock.url,
         TELEGRAM_BOT_TOKEN: "test-telegram-bot-token",
@@ -176,6 +189,7 @@ export default async function setup() {
   } catch (err) {
     killProcessTree(nextProcess);
     await graphApiMock.stop();
+    await twilioApiMock.stop();
     await instagramApiMock.stop();
     await telegramApiMock.stop();
     await googleOAuthMock.stop();
@@ -200,6 +214,7 @@ export default async function setup() {
         anonKey: status.PUBLISHABLE_KEY,
         serviceRoleKey,
         emailMockUrl: emailMock.url,
+        twilioApiMockUrl: twilioApiMock.url,
         googleCalendarMockUrl: googleCalendarMock.url,
         shopifyApiMockUrl: shopifyApiMock.url,
         stripeApiMockUrl: stripeApiMock.url,
@@ -212,6 +227,7 @@ export default async function setup() {
   return async () => {
     killProcessTree(nextProcess);
     await graphApiMock.stop();
+    await twilioApiMock.stop();
     await instagramApiMock.stop();
     await telegramApiMock.stop();
     await googleOAuthMock.stop();

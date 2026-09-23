@@ -11,14 +11,19 @@
 
 export type WhatsappSendGateDecision =
   | { allow: true }
-  | { allow: false; reason: "disconnected" | "payment_issue" };
+  | { allow: false; reason: "disconnected" | "payment_issue" | "sender_offline" };
 
 export function decideWhatsappSendGate(connection: {
   status: "pending" | "connected" | "disconnected";
   hasPaymentIssue: boolean;
+  // Twilio connections only (2026-09-23): the last synced sender status is
+  // known and isn't ONLINE -- nothing can be delivered until it recovers.
+  // Absent/false for Meta connections, which have no such signal.
+  senderOffline?: boolean;
 }): WhatsappSendGateDecision {
   if (connection.status !== "connected") return { allow: false, reason: "disconnected" };
   if (connection.hasPaymentIssue) return { allow: false, reason: "payment_issue" };
+  if (connection.senderOffline) return { allow: false, reason: "sender_offline" };
   return { allow: true };
 }
 
