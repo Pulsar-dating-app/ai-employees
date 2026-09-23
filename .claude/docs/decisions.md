@@ -12,6 +12,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-23 — Services becomes a menu grouped by category
+
+**Decision:** The Services tab lists services the way a salon prints its price list: grouped by category, with instant search and category chips. Adding and editing happen in a side drawer, deactivated services are folded away, and the default service is a compact row at the end. The page loads the whole catalog (no pagination) and filters on the client. The user picked this over a card grid and a refined table.
+
+**Why:** Service catalogs are small, typically dozens of rows. The old layout put a large, rarely touched default-service form at the top, used an "Add service" card that was only a button, and required a Search button press plus pagination to find a row. Loading everything once makes search instant and makes the category grouping possible.
+
+---
+
 ## 2026-09-23 — Appointments becomes a day agenda
 
 **Decision:** The Appointments screen now opens on today:

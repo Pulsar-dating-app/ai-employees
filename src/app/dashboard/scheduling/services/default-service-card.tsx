@@ -2,17 +2,11 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Toggle } from "@/components/ui/toggle";
 import type { Service } from "./services-manager";
 
-// The per-company catch-all service (services.is_default). Merchant flips it
-// on/off and can rename it / set its duration; it's never listed among the
-// normal services or offered to a customer as a pickable option. When on,
-// Ana books an in-domain request that matches no listed service under this
-// one (see list_services' tool description + Ana's prompt).
 export function DefaultServiceCard({
   companyId,
   service,
@@ -23,6 +17,8 @@ export function DefaultServiceCard({
   canEdit: boolean;
 }) {
   const t = useTranslations("Services.default");
+  const tMenu = useTranslations("Services.menu");
+  const [open, setOpen] = useState(false);
 
   const [active, setActive] = useState(service.is_active);
   const [name, setName] = useState(service.name);
@@ -92,76 +88,79 @@ export function DefaultServiceCard({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle>{t("title")}</CardTitle>
-            <CardDescription>{t("description")}</CardDescription>
-          </div>
+    <section className="rounded-[24px] border border-outline-variant/60 bg-surface-container-lowest p-5 sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-[15px] font-semibold text-on-surface">{t("title")}</h2>
+          <p className="mt-0.5 text-sm text-on-surface-variant">{t("description")}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
           {canEdit ? (
-            <label className="flex shrink-0 items-center gap-2 pt-1">
-              <span className="text-label-md text-on-surface-variant">
-                {active ? t("onLabel") : t("offLabel")}
-              </span>
+            <label className="flex items-center gap-2">
+              <span className="text-label-md text-on-surface-variant">{active ? t("onLabel") : t("offLabel")}</span>
               <Toggle checked={active} onChange={toggleActive} label={t("toggleAria")} />
             </label>
           ) : (
-            <span className="pt-1 text-label-md text-on-surface-variant">
-              {active ? t("onLabel") : t("offLabel")}
-            </span>
+            <span className="text-label-md text-on-surface-variant">{active ? t("onLabel") : t("offLabel")}</span>
           )}
+          <button
+            type="button"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 text-label-sm font-semibold text-on-surface transition-[border-color,color] hover:border-primary/40 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            {open ? tMenu("defaultClose") : tMenu("defaultEdit")}
+          </button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <p className="rounded-md bg-surface-container-low px-3 py-2 text-label-md text-on-surface-variant">
-          {t("explainer")}
+      </div>
+
+      {open ? (
+        <div className="inbox-pane-in mt-5 flex flex-col gap-4 border-t border-outline-variant/50 pt-5">
+          <p className="text-sm leading-6 text-on-surface-variant">{t("explainer")}</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label={t("nameLabel")}
+              value={name}
+              maxLength={255}
+              disabled={!canEdit}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={commitName}
+            />
+            <Input
+              label={t("durationLabel")}
+              type="number"
+              min={1}
+              inputMode="numeric"
+              value={duration}
+              disabled={!canEdit}
+              onChange={(e) => setDuration(e.target.value)}
+              onBlur={commitDuration}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
+            />
+          </div>
+          <div>
+            <Textarea
+              label={t("descriptionLabel")}
+              value={description}
+              disabled={!canEdit}
+              onChange={(e) => setDescription(e.target.value)}
+              onBlur={commitDescription}
+              rows={3}
+            />
+            <p className="mt-1.5 text-xs text-on-surface-variant">{t("descriptionHint")}</p>
+          </div>
+        </div>
+      ) : null}
+
+      {canEdit && status === "error" ? (
+        <p role="alert" className="mt-3 text-sm text-error">
+          {t("saveError")}
         </p>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input
-            label={t("nameLabel")}
-            value={name}
-            maxLength={255}
-            disabled={!canEdit}
-            onChange={(e) => setName(e.target.value)}
-            onBlur={commitName}
-          />
-          <Input
-            label={t("durationLabel")}
-            type="number"
-            min={1}
-            inputMode="numeric"
-            value={duration}
-            disabled={!canEdit}
-            onChange={(e) => setDuration(e.target.value)}
-            onBlur={commitDuration}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") e.currentTarget.blur();
-            }}
-          />
-        </div>
-
-        <div>
-          <Textarea
-            label={t("descriptionLabel")}
-            value={description}
-            disabled={!canEdit}
-            onChange={(e) => setDescription(e.target.value)}
-            onBlur={commitDescription}
-            rows={3}
-          />
-          <p className="mt-1.5 text-xs text-on-surface-variant">{t("descriptionHint")}</p>
-        </div>
-
-        {canEdit && status === "error" ? (
-          <p role="alert" className="text-sm text-error">
-            {t("saveError")}
-          </p>
-        ) : canEdit && status === "saved" ? (
-          <p className="text-sm text-tertiary">{t("saved")}</p>
-        ) : null}
-      </CardContent>
-    </Card>
+      ) : canEdit && status === "saved" ? (
+        <p className="mt-3 text-sm text-success-500">{t("saved")}</p>
+      ) : null}
+    </section>
   );
 }

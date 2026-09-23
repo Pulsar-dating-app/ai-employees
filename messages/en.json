@@ -1540,7 +1540,7 @@
       "toggleAria": "Use a default service for unlisted requests",
       "nameLabel": "Name",
       "descriptionLabel": "Description",
-      "descriptionHint": "What this actually covers, in a sentence or two — your AI employee reads this to decide whether a request fits (so a dental clinic's default service still won't get booked for a haircut) and never repeats it back to the customer.",
+      "descriptionHint": "What this actually covers, in a sentence or two. Your team reads this to decide whether a request fits (so a dental clinic's default service still won't get booked for a haircut) and never repeats it back to the customer.",
       "durationLabel": "Duration (minutes)",
       "saved": "Saved",
       "saveError": "Something went wrong saving that. Please try again."
@@ -1549,18 +1549,6 @@
     "saving": "Saving…",
     "saveError": "Something went wrong. Please try again.",
     "closeDialogLabel": "Close",
-    "filters": {
-      "searchLabel": "Search by name",
-      "searchPlaceholder": "Search services…",
-      "searchButton": "Search",
-      "categoryLabel": "Category",
-      "categoryPlaceholder": "Filter by category…",
-      "includeInactiveLabel": "Show deactivated services",
-      "previousPage": "Previous",
-      "nextPage": "Next",
-      "pageOf": "Page {page} of {totalPages}",
-      "emptyState": "No services match your filters yet."
-    },
     "form": {
       "addButton": "Add service",
       "editButton": "Edit",
@@ -1578,37 +1566,43 @@
       "pricePlaceholder": "Leave blank if it varies",
       "currencyLabel": "Currency",
       "currencyPlaceholder": "Select a currency",
-      "currencyOptions": {
-        "USD": "USD — US Dollar",
-        "BRL": "BRL — Brazilian Real",
-        "EUR": "EUR — Euro"
-      },
       "categoryLabel": "Category",
       "categoryPlaceholder": "e.g. Hair",
       "nameRequired": "Name is required.",
       "durationRequired": "Duration is required and must be a whole number of minutes greater than zero.",
       "bufferInvalid": "Buffer must be a whole number of minutes, or blank.",
       "priceInvalid": "Price must be a number of zero or more.",
-      "currencyRequiredWithPrice": "Pick a currency to go with the price."
+      "currencyRequiredWithPrice": "Pick a currency to go with the price.",
+      "currencyOptions": {
+        "USD": "USD — US Dollar",
+        "BRL": "BRL — Brazilian Real",
+        "EUR": "EUR — Euro"
+      }
     },
-    "list": {
-      "nameColumn": "Name",
-      "durationColumn": "Duration",
-      "priceColumn": "Price",
-      "categoryColumn": "Category",
-      "statusColumn": "Status",
-      "actionsColumn": "Actions",
-      "durationValue": "{minutes} min",
-      "bufferValue": "+{minutes} min buffer",
-      "activeLabel": "Active",
-      "inactiveLabel": "Inactive",
-      "empty": "—"
-    },
-    "delete": {
-      "deactivateButton": "Deactivate",
-      "confirmButton": "Click again to deactivate — hides it from customers, keeps existing bookings",
-      "cancelButton": "Cancel",
-      "reactivateButton": "Reactivate"
+    "menu": {
+      "search": "Search services",
+      "clearSearch": "Clear search",
+      "all": "All",
+      "uncategorized": "Other",
+      "count": "{count, plural, one {# service} other {# services}}",
+      "add": "Add service",
+      "addTitle": "New service",
+      "editTitle": "Edit {name}",
+      "edit": "Edit {name}",
+      "deactivate": "Deactivate {name}",
+      "deactivatePrompt": "Customers won't be able to book it. Existing bookings stay.",
+      "deactivateConfirm": "Deactivate",
+      "cancel": "Cancel",
+      "reactivate": "Reactivate",
+      "deactivated": "Deactivated ({count})",
+      "priceVaries": "Price varies",
+      "duration": "{minutes} min",
+      "buffer": "+{minutes} min after",
+      "noMatch": "No services match “{query}”.",
+      "emptyTitle": "Your menu is empty",
+      "defaultEdit": "Edit",
+      "defaultClose": "Done",
+      "actionError": "That didn't go through. Please try again."
     }
   },
   "Scheduling": {

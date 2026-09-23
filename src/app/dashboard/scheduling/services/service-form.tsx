@@ -8,7 +8,6 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { Service } from "./services-manager";
 
-// Same curated list as ProductForm / business-info-section.
 const CURRENCY_CODES = ["USD", "BRL", "EUR"] as const;
 
 type FormValues = {
@@ -38,19 +37,20 @@ type ServiceFormProps = {
   mode: "create" | "edit";
   companyCurrency: string | null;
   service?: Service;
+  categories: string[];
   onSaved: (service: Service) => void;
   onCancel: () => void;
 };
 
-// Shared create/edit form, same contract as ProductForm: always sends the
-// full field set, since PATCH's merge semantics tolerate resending unchanged
-// values and there's no diffing layer to maintain.
-//
-// Two rules are validated here rather than left to a generic save error,
-// because both are easy to trip and the API's message isn't merchant-facing:
-// duration is required and must be a positive whole number, and a price
-// can't be saved without a currency (H1 enforces both, returning 400).
-export function ServiceForm({ companyId, mode, companyCurrency, service, onSaved, onCancel }: ServiceFormProps) {
+export function ServiceForm({
+  companyId,
+  mode,
+  companyCurrency,
+  service,
+  categories,
+  onSaved,
+  onCancel,
+}: ServiceFormProps) {
   const t = useTranslations("Services.form");
   const tCommon = useTranslations("Services");
 
@@ -77,8 +77,6 @@ export function ServiceForm({ companyId, mode, companyCurrency, service, onSaved
       return;
     }
 
-    // buffer_minutes is never null on the wire: PATCH validates it strictly
-    // whenever the key is present, and blank means "no buffer" = 0.
     const buffer = values.buffer_minutes.trim() ? Number(values.buffer_minutes) : 0;
     if (!Number.isInteger(buffer) || buffer < 0) {
       setError(t("bufferInvalid"));
@@ -131,6 +129,7 @@ export function ServiceForm({ companyId, mode, companyCurrency, service, onSaved
   return (
     <div className="flex flex-col gap-3">
       <Input
+        id="service-name"
         label={t("nameLabel")}
         placeholder={t("namePlaceholder")}
         value={values.name}
@@ -138,6 +137,7 @@ export function ServiceForm({ companyId, mode, companyCurrency, service, onSaved
         maxLength={255}
       />
       <Textarea
+        id="service-description"
         label={t("descriptionLabel")}
         value={values.description}
         onChange={(e) => update("description", e.target.value)}
@@ -146,6 +146,7 @@ export function ServiceForm({ companyId, mode, companyCurrency, service, onSaved
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="min-w-0 flex-1">
           <Input
+            id="service-duration"
             label={t("durationLabel")}
             type="number"
             min="1"
@@ -157,6 +158,7 @@ export function ServiceForm({ companyId, mode, companyCurrency, service, onSaved
         </div>
         <div className="min-w-0 flex-1">
           <Input
+            id="service-buffer"
             label={t("bufferLabel")}
             type="number"
             min="0"
@@ -169,38 +171,41 @@ export function ServiceForm({ companyId, mode, companyCurrency, service, onSaved
       </div>
       <p className="-mt-1 text-xs text-on-surface-variant">{t("bufferHint")}</p>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="min-w-0 flex-1">
-          <Input
-            label={t("priceLabel")}
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder={t("pricePlaceholder")}
-            value={values.price}
-            onChange={(e) => update("price", e.target.value)}
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <Select
-            label={t("currencyLabel")}
-            value={values.currency}
-            onChange={(e) => update("currency", e.target.value)}
-            options={[
-              { value: "", label: t("currencyPlaceholder") },
-              ...CURRENCY_CODES.map((code) => ({ value: code, label: t(`currencyOptions.${code}`) })),
-            ]}
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <Input
-            label={t("categoryLabel")}
-            placeholder={t("categoryPlaceholder")}
-            value={values.category}
-            onChange={(e) => update("category", e.target.value)}
-          />
-        </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Input
+          id="service-price"
+          label={t("priceLabel")}
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder={t("pricePlaceholder")}
+          value={values.price}
+          onChange={(e) => update("price", e.target.value)}
+        />
+        <Select
+          id="service-currency"
+          label={t("currencyLabel")}
+          value={values.currency}
+          onChange={(e) => update("currency", e.target.value)}
+          options={[
+            { value: "", label: t("currencyPlaceholder") },
+            ...CURRENCY_CODES.map((code) => ({ value: code, label: t(`currencyOptions.${code}`) })),
+          ]}
+        />
       </div>
+      <Input
+        id="service-category"
+        label={t("categoryLabel")}
+        placeholder={t("categoryPlaceholder")}
+        value={values.category}
+        list="service-category-options"
+        onChange={(e) => update("category", e.target.value)}
+      />
+      <datalist id="service-category-options">
+        {categories.map((category) => (
+          <option key={category} value={category} />
+        ))}
+      </datalist>
 
       {error ? (
         <p role="alert" className="text-sm text-error">

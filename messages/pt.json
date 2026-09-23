@@ -1540,7 +1540,7 @@
       "toggleAria": "Usar um serviço padrão para pedidos não cadastrados",
       "nameLabel": "Nome",
       "descriptionLabel": "Descrição",
-      "descriptionHint": "O que esse atendimento realmente cobre, em uma ou duas frases — sua funcionária de IA usa isso para decidir se um pedido se encaixa (assim, o serviço padrão de um consultório odontológico não vira um corte de cabelo) e nunca repete isso para o cliente.",
+      "descriptionHint": "O que esse atendimento realmente cobre, em uma ou duas frases. Sua equipe usa isso para decidir se um pedido se encaixa (assim, o serviço padrão de um consultório odontológico não vira um corte de cabelo) e nunca repete isso para o cliente.",
       "durationLabel": "Duração (minutos)",
       "saved": "Salvo",
       "saveError": "Algo deu errado ao salvar. Tente novamente."
@@ -1549,18 +1549,6 @@
     "saving": "Salvando…",
     "saveError": "Algo deu errado. Tente novamente.",
     "closeDialogLabel": "Fechar",
-    "filters": {
-      "searchLabel": "Buscar por nome",
-      "searchPlaceholder": "Buscar serviços…",
-      "searchButton": "Buscar",
-      "categoryLabel": "Categoria",
-      "categoryPlaceholder": "Filtrar por categoria…",
-      "includeInactiveLabel": "Mostrar serviços desativados",
-      "previousPage": "Anterior",
-      "nextPage": "Próxima",
-      "pageOf": "Página {page} de {totalPages}",
-      "emptyState": "Nenhum serviço corresponde aos seus filtros ainda."
-    },
     "form": {
       "addButton": "Adicionar serviço",
       "editButton": "Editar",
@@ -1578,37 +1566,43 @@
       "pricePlaceholder": "Deixe em branco se varia",
       "currencyLabel": "Moeda",
       "currencyPlaceholder": "Selecione uma moeda",
-      "currencyOptions": {
-        "USD": "USD — Dólar americano",
-        "BRL": "BRL — Real brasileiro",
-        "EUR": "EUR — Euro"
-      },
       "categoryLabel": "Categoria",
       "categoryPlaceholder": "ex.: Cabelo",
       "nameRequired": "O nome é obrigatório.",
       "durationRequired": "A duração é obrigatória e deve ser um número inteiro de minutos maior que zero.",
       "bufferInvalid": "O intervalo deve ser um número inteiro de minutos, ou ficar em branco.",
       "priceInvalid": "O preço deve ser um número maior ou igual a zero.",
-      "currencyRequiredWithPrice": "Escolha uma moeda para acompanhar o preço."
+      "currencyRequiredWithPrice": "Escolha uma moeda para acompanhar o preço.",
+      "currencyOptions": {
+        "USD": "USD — Dólar americano",
+        "BRL": "BRL — Real brasileiro",
+        "EUR": "EUR — Euro"
+      }
     },
-    "list": {
-      "nameColumn": "Nome",
-      "durationColumn": "Duração",
-      "priceColumn": "Preço",
-      "categoryColumn": "Categoria",
-      "statusColumn": "Status",
-      "actionsColumn": "Ações",
-      "durationValue": "{minutes} min",
-      "bufferValue": "+{minutes} min de intervalo",
-      "activeLabel": "Ativo",
-      "inactiveLabel": "Inativo",
-      "empty": "—"
-    },
-    "delete": {
-      "deactivateButton": "Desativar",
-      "confirmButton": "Clique novamente para desativar — esconde dos clientes, mantém os agendamentos existentes",
-      "cancelButton": "Cancelar",
-      "reactivateButton": "Reativar"
+    "menu": {
+      "search": "Buscar serviços",
+      "clearSearch": "Limpar busca",
+      "all": "Todos",
+      "uncategorized": "Outros",
+      "count": "{count, plural, one {# serviço} other {# serviços}}",
+      "add": "Adicionar serviço",
+      "addTitle": "Novo serviço",
+      "editTitle": "Editar {name}",
+      "edit": "Editar {name}",
+      "deactivate": "Desativar {name}",
+      "deactivatePrompt": "Os clientes não vão conseguir agendar. Os agendamentos existentes continuam.",
+      "deactivateConfirm": "Desativar",
+      "cancel": "Cancelar",
+      "reactivate": "Reativar",
+      "deactivated": "Desativados ({count})",
+      "priceVaries": "Preço variável",
+      "duration": "{minutes} min",
+      "buffer": "+{minutes} min depois",
+      "noMatch": "Nenhum serviço corresponde a “{query}”.",
+      "emptyTitle": "Seu cardápio está vazio",
+      "defaultEdit": "Editar",
+      "defaultClose": "Concluir",
+      "actionError": "Não deu certo. Tente novamente."
     }
   },
   "Scheduling": {

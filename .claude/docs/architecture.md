@@ -864,6 +864,16 @@ Lets a merchant pull their Shopify catalogue into `products` via OAuth + a manua
 
 #### Services catalog (K1)
 
+**Superseded 2026-09-23: service menu redesign.** The filters, table, edit dialog and pager are gone, and `service-filters.tsx` is deleted.
+
+- **Data.** `page.tsx` loads every non-default service, active and deactivated, with no pagination (capped at 1000). The manager filters on the client: instant search over name, description and category, plus category chips. After a save it reloads through the list API, using `includeInactive=true` and pages of 100.
+- **Grouping.** Services are grouped by category, with "Other" for uncategorised ones. Rows (`ServiceRow` in `service-list.tsx`) show duration, the buffer as "+N min after", and the price formatted with `Intl` currency (null → "Price varies").
+- **Add/edit.** Both open `service-drawer.tsx`, a right-side panel portalled to `document.body`. The form fields carry explicit ids, so their labels are associated. They weren't before, because `Input` only links a label when given an `id` or `name`.
+- **Deactivate.** Deactivating uses an inline confirmation inside the row. Deactivated services sit in a collapsed section.
+- **Default service.** `default-service-card.tsx` is a compact row (toggle plus Edit) that expands its fields. Its autosave logic is unchanged.
+- **Copy.** The default-service hint no longer says "AI employee".
+
+
 Built as a deliberate close relative of F3's Products page (same `page.tsx` Server-Component fetch → `ServicesManager` hydrate shape, the same filters/table/edit-dialog trio, the same `Dialog`/`Card`/`Input`/`Select` primitives, a `Services` i18n namespace mirroring `Products`' nesting).
 
 - **No import panel**, unlike Products — H1 has no CSV/XLSX counterpart to B4, and services are typed in a handful at a time rather than synced from a store.
