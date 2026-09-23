@@ -3,11 +3,6 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CheckIcon } from "@/components/ui/icons";
-
-// Save-on-blur for the company settings cards: no per-card Save button. A
-// field commits (PATCH /api/companies/:id with just its own key) when it
-// loses focus and its value actually changed; selects/comboboxes commit on
-// change. One status line per card reflects the most recent write.
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 export function useCompanyAutosave(companyId: string) {
@@ -29,8 +24,6 @@ export function useCompanyAutosave(companyId: string) {
           setStatus("error");
           return false;
         }
-        // Only announce "saved" once nothing else is still in flight, so a
-        // burst of quick edits settles on one final state.
         if (pending.current === 0) setStatus("saved");
         return true;
       } catch {
@@ -56,11 +49,8 @@ export function SaveStatusLine({ status }: { status: SaveStatus }) {
     );
   }
   return (
-    <p
-      className="flex items-center gap-1.5 text-sm text-on-surface-variant"
-      aria-live="polite"
-    >
-      {status === "saved" ? <CheckIcon className="h-4 w-4 text-tertiary" /> : null}
+    <p className="flex items-center gap-1.5 text-sm text-on-surface-variant" aria-live="polite">
+      {status === "saved" ? <CheckIcon className="h-4 w-4 text-success-500" /> : null}
       {status === "saving" ? t("saving") : t("autosaveSaved")}
     </p>
   );

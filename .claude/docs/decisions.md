@@ -12,6 +12,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-23 — Business settings get a side index with live completeness
+
+**Decision:** `/dashboard/settings` is a two-column document: a sticky index of sections on the left, with a ✓ per filled section and an "N of 4" bar, and calm blocks on the right with paired fields. Business info is split into "About the business" and "Contact & location". The FAQ becomes expandable questions. The "almost empty" warning and the sidebar warning now update as soon as a section is saved. The user picked this over a single column with chips and over tabs.
+
+**Why:** The page was one long column of heavy cards, and the completeness meter sat apart from the sections it measured. The index answers "what's missing and where is it" at a glance, and makes the page navigable as it grows. Completeness keeps the existing 4-section rule (`countFilledSections`), so the index, the banner and the sidebar all agree.
+
+---
+
 ## 2026-09-23 — Services becomes a menu grouped by category
 
 **Decision:** The Services tab lists services the way a salon prints its price list: grouped by category, with instant search and category chips. Adding and editing happen in a side drawer, deactivated services are folded away, and the default service is a compact row at the end. The page loads the whole catalog (no pagination) and filters on the client. The user picked this over a card grid and a refined table.

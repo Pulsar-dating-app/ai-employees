@@ -1044,9 +1044,6 @@
   },
   "Settings": {
     "pageTitle": "Business settings",
-    "pageSubtitle": "What your team knows when they talk to your customers.",
-    "completeness": "{filled} of {total} sections filled in",
-    "completenessHint": "The more detail you add here, the better your team can help your customers — just like onboarding a new employee in person.",
     "readOnlyBanner": "You have view-only access — ask an owner or admin to make changes.",
     "pastDueAlert": {
       "title": "Payment failed",
@@ -1055,11 +1052,32 @@
     },
     "lowCompletenessAlert": {
       "title": "Your business info is almost empty",
-      "body": "Only {filled} of {total} sections are filled in. Fill in at least {min} so your team has enough to answer customers well."
+      "body": "{filled, plural, =0 {None of the {total} sections are filled in yet.} other {Only # of {total} sections are filled in.}} Fill in at least {min} so your team has enough to answer customers well."
     },
-    "billingLink": {
-      "title": "Plan & billing",
-      "hint": "Your subscription, usage, and payment method."
+    "nav": {
+      "label": "Settings sections",
+      "progress": "{filled} of {total} filled in",
+      "about": "About the business",
+      "contact": "Contact & location",
+      "payments": "Payments",
+      "faq": "FAQ",
+      "other": "Other information",
+      "billing": "Plan & billing",
+      "filled": "Filled in",
+      "missing": "Missing",
+      "notCounted": "Optional"
+    },
+    "blocks": {
+      "aboutTitle": "About the business",
+      "aboutDescription": "What you sell and how you work. Your team uses this to introduce your business to customers.",
+      "contactTitle": "Contact & location",
+      "contactDescription": "How and where customers can reach you."
+    },
+    "faq": {
+      "untitled": "New question",
+      "saveChanges": "Save questions",
+      "unsaved": "Unsaved changes",
+      "count": "{count, plural, =0 {No questions yet} one {# question} other {# questions}}"
     }
   },
   "MyAgents": {

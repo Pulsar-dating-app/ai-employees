@@ -2,38 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import {
-  countFilledSections,
-  SETTINGS_MIN_SECTIONS,
-  SETTINGS_TOTAL_SECTIONS,
-} from "@/lib/companies/settings-completeness";
+import { SETTINGS_MIN_SECTIONS } from "@/lib/companies/settings-completeness";
 import { isBillingPastDue } from "@/lib/billing/activation";
-import { Alert } from "@/components/ui/alert";
+import { StatusBanner } from "@/components/ui/status-banner";
 import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
-import { CartIcon, ChevronRightIcon, SettingsIcon } from "@/components/ui/icons";
-import { PageHeader } from "../page-header";
-
-// Company-wide settings — the business knowledge every hired team member
-// draws on. Lives at the top level, not under a specific hired agent: it's
-// a fact about the company, not about who's hired.
-//
-// Exception: Shipping and Returns policy moved to Malu's own Connections
-// page (my-agents/[agentSlug]/page.tsx) — user-driven, since that content
-// is only ever relevant to her sales conversations, never Ana's scheduling
-// ones. Still the same `companies.shipping_policy`/`return_policy` columns,
-// same `PolicySection` component, just mounted somewhere else; nothing
-// moved at the data layer. Payment/Other stayed here — genuinely
-// company-wide, not tied to one agent's own conversations the way
-// shipping/returns are.
-//
-// Second exception (2026-09-10): the embed domain allowlist (M7,
-// `allowed_embed_domains`) also moved to every hire's Connections page —
-// user-driven again, since it was hard to find here while the widget it
-// actually gates is configured entirely on that page's Embed tab. Same
-// column, same PATCH endpoint, just mounted next to `EmbedSnippetSection`
-// now instead of down here.
+import { SettingsShell } from "./settings-shell";
 export default async function SettingsPage() {
   const supabase = await createClient();
   const t = await getTranslations("Settings");
@@ -45,10 +20,6 @@ export default async function SettingsPage() {
     { data: companies },
   ] = await Promise.all([supabase.auth.getUser(), supabase.from("companies").select("*")]);
   const company = companies?.[0] ?? null;
-
-  // Every account has a company by the time it reaches /dashboard (the shell
-  // layout redirects to /onboarding otherwise). This is just belt-and-braces
-  // for a direct hit mid-signup.
   if (!company) redirect("/onboarding");
 
   const { data: membership } = await supabase
@@ -58,76 +29,46 @@ export default async function SettingsPage() {
     .eq("user_id", user!.id)
     .maybeSingle();
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
-  // Same predicate the shell's own past-due banners already use -- this is
-  // the on-page explanation for the sidebar's Settings warning icon when
-  // it's the billing reason, not the completeness one.
   const pastDue = await isBillingPastDue(company.id, supabase);
 
-  const totalSections = SETTINGS_TOTAL_SECTIONS;
-  const filledSections = countFilledSections(company);
+  const faq = Array.isArray(company.faq) ? (company.faq as { question: string; answer: string }[]) : null;
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader icon={SettingsIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
+    <div className="flex flex-col gap-6">
+      <h1 className="sr-only">{t("pageTitle")}</h1>
 
       {pastDue ? (
-        <Alert
-          variant="error"
+        <StatusBanner
+          tone="error"
           title={t("pastDueAlert.title")}
+          body={t("pastDueAlert.body")}
           action={
-            <Link href="/dashboard/settings/billing" className="text-sm font-semibold underline">
+            <Link
+              href="/dashboard/settings/billing"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-error px-5 text-label-md font-semibold text-on-error transition-[filter] hover:brightness-95"
+            >
               {t("pastDueAlert.action")}
             </Link>
           }
-        >
-          {t("pastDueAlert.body")}
-        </Alert>
+        />
       ) : null}
-
-      {filledSections < SETTINGS_MIN_SECTIONS ? (
-        <Alert variant="warning" title={t("lowCompletenessAlert.title")}>
-          {t("lowCompletenessAlert.body", {
-            filled: filledSections,
-            total: totalSections,
-            min: SETTINGS_MIN_SECTIONS,
-          })}
-        </Alert>
-      ) : null}
-
-      <div className="rounded-md bg-primary-fixed/40 px-4 py-3">
-        <p className="text-sm font-semibold text-primary">
-          {t("completeness", { filled: filledSections, total: totalSections })}
-        </p>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-primary-fixed">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-500"
-            style={{ width: `${(filledSections / totalSections) * 100}%` }}
-          />
-        </div>
-        <p className="mt-2 text-sm text-on-surface-variant">{t("completenessHint")}</p>
-      </div>
 
       {!canEdit ? (
-        <p className="rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-sm text-on-surface-variant">
+        <p className="rounded-2xl bg-surface-container px-4 py-3 text-sm text-on-surface-variant">
           {t("readOnlyBanner")}
         </p>
       ) : null}
 
-      <Link
-        href="/dashboard/settings/billing"
-        className="flex max-w-4xl items-center gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 shadow-level1 transition-colors hover:bg-surface-container-low"
+      <SettingsShell
+        minSections={SETTINGS_MIN_SECTIONS}
+        initialFilled={{
+          about: Boolean(company.description),
+          contact: false,
+          payments: Boolean(company.payment_policy),
+          faq: Boolean(faq && faq.length > 0),
+          other: Boolean(company.additional_information),
+        }}
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-fixed text-primary">
-          <CartIcon className="h-5 w-5" />
-        </span>
-        <span className="flex flex-col">
-          <span className="text-label-md font-semibold text-on-surface">{t("billingLink.title")}</span>
-          <span className="text-sm text-on-surface-variant">{t("billingLink.hint")}</span>
-        </span>
-        <ChevronRightIcon className="ml-auto h-5 w-5 shrink-0 text-on-surface-variant" />
-      </Link>
-
-      <div className="flex max-w-4xl flex-col gap-6">
         <BusinessInfoSection
           companyId={company.id}
           canEdit={canEdit}
@@ -144,30 +85,22 @@ export default async function SettingsPage() {
             timezone: company.timezone ?? null,
           }}
         />
-
-        {/* The two remaining single-field policy sections read as a
-            monotonous form stack one-per-row; a grid gives the page real
-            structure. (Shipping/Returns used to sit here too — moved to
-            Malu's own Connections page, see this page's own top comment.) */}
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <PolicySection
-            companyId={company.id}
-            fieldName="payment_policy"
-            sectionKey="payments"
-            initialValue={company.payment_policy}
-            canEdit={canEdit}
-          />
-          <PolicySection
-            companyId={company.id}
-            fieldName="additional_information"
-            sectionKey="other"
-            initialValue={company.additional_information}
-            canEdit={canEdit}
-          />
-        </div>
-
-        <FaqSection companyId={company.id} canEdit={canEdit} initialFaq={company.faq} />
-      </div>
+        <PolicySection
+          companyId={company.id}
+          fieldName="payment_policy"
+          sectionKey="payments"
+          initialValue={company.payment_policy}
+          canEdit={canEdit}
+        />
+        <FaqSection companyId={company.id} canEdit={canEdit} initialFaq={faq} />
+        <PolicySection
+          companyId={company.id}
+          fieldName="additional_information"
+          sectionKey="other"
+          initialValue={company.additional_information}
+          canEdit={canEdit}
+        />
+      </SettingsShell>
     </div>
   );
 }

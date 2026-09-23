@@ -1044,9 +1044,6 @@
   },
   "Settings": {
     "pageTitle": "Configurações do negócio",
-    "pageSubtitle": "O que sua equipe sabe ao conversar com os clientes.",
-    "completeness": "{filled} de {total} seções preenchidas",
-    "completenessHint": "Quanto mais detalhes você adicionar aqui, melhor sua equipe vai conseguir ajudar seus clientes — assim como ao integrar um novo funcionário pessoalmente.",
     "readOnlyBanner": "Você tem acesso somente leitura — peça a um proprietário ou administrador para fazer alterações.",
     "pastDueAlert": {
       "title": "Pagamento falhou",
@@ -1055,11 +1052,32 @@
     },
     "lowCompletenessAlert": {
       "title": "As informações do seu negócio estão quase vazias",
-      "body": "Só {filled} de {total} seções estão preenchidas. Preencha pelo menos {min} para sua equipe ter o que precisa para atender bem."
+      "body": "{filled, plural, =0 {Nenhuma das {total} seções foi preenchida ainda.} one {Só # de {total} seções está preenchida.} other {Só # de {total} seções estão preenchidas.}} Preencha pelo menos {min} para sua equipe ter o suficiente para atender bem os clientes."
     },
-    "billingLink": {
-      "title": "Plano e cobrança",
-      "hint": "Sua assinatura, uso e forma de pagamento."
+    "nav": {
+      "label": "Seções das configurações",
+      "progress": "{filled} de {total} preenchidas",
+      "about": "Sobre o negócio",
+      "contact": "Contato e localização",
+      "payments": "Pagamentos",
+      "faq": "Perguntas frequentes",
+      "other": "Outras informações",
+      "billing": "Plano e cobrança",
+      "filled": "Preenchida",
+      "missing": "Faltando",
+      "notCounted": "Opcional"
+    },
+    "blocks": {
+      "aboutTitle": "Sobre o negócio",
+      "aboutDescription": "O que você vende e como trabalha. Sua equipe usa isso para apresentar seu negócio aos clientes.",
+      "contactTitle": "Contato e localização",
+      "contactDescription": "Como e onde os clientes podem falar com você."
+    },
+    "faq": {
+      "untitled": "Nova pergunta",
+      "saveChanges": "Salvar perguntas",
+      "unsaved": "Alterações não salvas",
+      "count": "{count, plural, =0 {Nenhuma pergunta ainda} one {# pergunta} other {# perguntas}}"
     }
   },
   "MyAgents": {
