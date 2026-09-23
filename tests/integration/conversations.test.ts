@@ -503,6 +503,28 @@ describe("Conversations API", () => {
     expect(res.json.conversations.find((c) => c.id === conversationId)?.hotSignal).toBeNull();
   });
 
+  it("reports who sent the latest message and the team member's photo on each row", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Conv Last Role Co");
+    await hireMalu(owner.cookieHeader, company.id);
+    const conversationId = await seedConversation(company.id);
+
+    await api("POST", `/api/companies/${company.id}/conversations/${conversationId}/messages`, owner.cookieHeader, {
+      message: "Oi! Aqui é da equipe.",
+    });
+
+    const res = await api<{
+      conversations: {
+        id: string;
+        agentPhotoSrc: string | null;
+        lastMessage: { content: string; role: string } | null;
+      }[];
+    }>("GET", `/api/companies/${company.id}/conversations`, owner.cookieHeader);
+    const row = res.json.conversations.find((c) => c.id === conversationId);
+    expect(row?.lastMessage).toMatchObject({ role: "merchant", content: "Oi! Aqui é da equipe." });
+    expect(row?.agentPhotoSrc).toEqual(expect.any(String));
+  });
+
   it("keeps one company's buying signals out of another's inbox", async () => {
     const owner = await signUpTestUser("owner");
     const company = await createCompany(owner.cookieHeader, "Conv Hot Mine Co");

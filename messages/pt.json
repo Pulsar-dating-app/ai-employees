@@ -1808,7 +1808,6 @@
     "pageSubtitle": "Veja o que sua equipe está dizendo aos clientes e intervenha quando precisar.",
     "noCompany": "Contrate o primeiro integrante da sua equipe para começar a ver conversas.",
     "browseMarketplace": "Ver marketplace",
-    "backToConversations": "Voltar para conversas",
     "channel": {
       "whatsapp": "WhatsApp",
       "web_chat": "Chat do site",
@@ -1822,51 +1821,10 @@
         "active": "Ativa",
         "closed": "Resolvida"
       },
-      "searchLabel": "Buscar",
-      "searchPlaceholder": "Buscar por nome ou telefone do cliente…",
-      "searchButton": "Buscar",
-      "searchHint": "A busca encontra apenas nome ou telefone do cliente — a maioria dos clientes ainda não compartilhou nenhum dos dois, então isso não vai encontrar muita coisa por enquanto.",
-      "emptyState": "Nenhuma conversa ainda.",
-      "previousPage": "Anterior",
-      "nextPage": "Próxima",
-      "pageOf": "Página {page} de {totalPages}"
-    },
-    "list": {
-      "customerColumn": "Cliente e prévia da mensagem",
-      "statusColumn": "Status",
-      "agentColumn": "Agente",
-      "updatedColumn": "Última atualização",
-      "noAgent": "—"
+      "searchHint": "A busca encontra apenas nome ou telefone do cliente — a maioria dos clientes ainda não compartilhou nenhum dos dois, então isso não vai encontrar muita coisa por enquanto."
     },
     "detail": {
       "withAgent": "Conversando com {name}",
-      "status": {
-        "paused": "Precisa de atenção",
-        "active": "IA gerenciando",
-        "closed": "Resolvida"
-      },
-      "resumeButton": "Deixar a IA responder de novo",
-      "pausedNoticeTitle": "Você está cuidando desta conversa",
-      "pausedNoticeBody": "A IA saiu de cena e não vai responder ao cliente enquanto você estiver aqui. Quando terminar, use o botão abaixo para ela voltar a responder.",
-      "emptyState": "Nenhuma mensagem ainda.",
-      "teamLabel": "Equipe",
-      "aiLabel": "IA",
-      "inputPlaceholder": "Escreva uma resposta…",
-      "sendButton": "Enviar",
-      "sendError": "Algo deu errado ao enviar. Tente novamente.",
-      "deliveryFailed": "Sua resposta foi salva, mas não conseguimos entregá-la ao cliente — isso pode acontecer se já passaram mais de 24 horas desde a última mensagem dele.",
-      "detailsTitle": "Detalhes",
-      "detailsCustomer": "Cliente",
-      "detailsChannel": "Canal",
-      "detailsAgent": "Agente",
-      "detailsMessageCount": "Mensagens",
-      "detailsNoAgent": "Nenhum",
-      "channel": {
-        "whatsapp": "WhatsApp",
-        "web_chat": "Chat do site",
-        "instagram": "Instagram",
-        "telegram": "Telegram"
-      },
       "grounding": {
         "regeneratedTitle": "Corrigido antes de enviar",
         "regeneratedBody": "Esta resposta citava um valor que não tinha sido conferido no seu catálogo, então foi reescrita. O cliente só viu a versão correta.",
@@ -1877,15 +1835,81 @@
       }
     },
     "pending": {
-      "bannerTitle": "{count, plural, =1 {# cliente está esperando uma confirmação} other {# clientes estão esperando uma confirmação}}",
-      "bannerBody": "Sua equipe prometeu conferir uma informação e voltar. Ninguém respondeu ainda.",
-      "showPending": "Ver essas",
-      "showAll": "Ver todas as conversas",
       "rowBadge": "Aguardando confirmação"
     },
     "hot": {
       "rowBadgeClick": "Clicou no link",
       "rowBadgeIntent": "Quer comprar"
+    },
+    "inbox": {
+      "groups": {
+        "needsYou": "Precisam de você",
+        "hot": "Prontos para comprar",
+        "rest": "Demais conversas"
+      },
+      "tabs": {
+        "all": "Todas",
+        "paused": "Com você",
+        "active": "Ativas",
+        "closed": "Resolvidas"
+      },
+      "search": {
+        "placeholder": "Buscar clientes",
+        "clear": "Limpar busca"
+      },
+      "awaiting": "Aguardando confirmação · {count}",
+      "loadMore": "Carregar mais",
+      "you": "Você",
+      "yesterday": "Ontem",
+      "today": "Hoje",
+      "empty": {
+        "title": "Nenhuma conversa ainda",
+        "body": "Quando um cliente mandar mensagem para sua equipe em qualquer canal conectado, a conversa aparece aqui na hora.",
+        "filteredTitle": "Nada corresponde a esses filtros",
+        "clearFilters": "Limpar filtros"
+      },
+      "overview": {
+        "needsYou": "{count, plural, =1 {# conversa precisa de você} other {# conversas precisam de você}}",
+        "needsYouBody": "Clientes esperando por você ficam fixados no topo da lista.",
+        "hot": "{count, plural, =1 {# cliente está pronto para comprar} other {# clientes estão prontos para comprar}}",
+        "caughtUp": "Tudo em dia",
+        "caughtUpBody": "Sua equipe está cuidando de todas as conversas. Escolha uma para ver o que estão dizendo aos clientes.",
+        "openFirst": "Abrir a primeira",
+        "keyboard": "Use ↑ e ↓ para navegar entre as conversas"
+      },
+      "thread": {
+        "back": "Voltar para conversas",
+        "status": {
+          "active": "{name} está atendendo",
+          "paused": "Você está atendendo",
+          "closed": "Resolvida"
+        },
+        "handbackBody": "{name} não vai responder enquanto você estiver atendendo esta conversa.",
+        "handbackButton": "Devolver para {name}",
+        "composerHint": "Ao enviar uma resposta, {name} pausa nesta conversa até você devolver.",
+        "teamFallback": "sua equipe",
+        "placeholder": "Escreva uma resposta…",
+        "send": "Enviar",
+        "sendError": "Algo deu errado ao enviar. Tente novamente.",
+        "deliveryFailed": "Sua resposta foi salva, mas não conseguimos entregá-la ao cliente. Isso pode acontecer se já passaram mais de 24 horas desde a última mensagem dele.",
+        "empty": "Nenhuma mensagem ainda.",
+        "loadError": "Não foi possível carregar esta conversa.",
+        "retry": "Tentar novamente"
+      },
+      "details": {
+        "open": "Detalhes da conversa",
+        "close": "Fechar detalhes",
+        "title": "Detalhes",
+        "channel": "Canal",
+        "handledBy": "Atendido por",
+        "status": "Status",
+        "started": "Início",
+        "lastActivity": "Última atividade",
+        "messages": "Mensagens",
+        "signals": "Sinais",
+        "noSignals": "Nenhum sinal de compra ainda",
+        "noAgent": "Ninguém atribuído"
+      }
     }
   },
   "Chat": {

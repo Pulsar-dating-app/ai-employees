@@ -2,24 +2,26 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { listConversations } from "@/lib/conversations/list";
+import { getConversationDetail } from "@/lib/conversations/detail";
 import { findUnconfirmedConversationIds } from "@/lib/conversations/pending";
 import { Button } from "@/components/ui/button";
 import { ChatIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
-import { ConversationsManager } from "./conversations-manager";
+import { ConversationsInbox } from "./conversations-inbox";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 30;
 
-// Trello F5 -- same server-fetches-page-1 / client-owns-filters-and-refetch
-// split as Products (products/page.tsx + products-manager.tsx).
-export default async function ConversationsPage() {
+export default async function ConversationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ c?: string | string[] }>;
+}) {
   const supabase = await createClient();
-  const t = await getTranslations("Conversations");
-
-  // No explicit membership check needed here (unlike the detail page) --
-  // RLS already scopes this select to companies the signed-in user is a
-  // member of, and this page has no canEdit-gated UI the way Products does.
-  const { data: companies } = await supabase.from("companies").select("*");
+  const [t, { c }, { data: companies }] = await Promise.all([
+    getTranslations("Conversations"),
+    searchParams,
+    supabase.from("companies").select("*"),
+  ]);
   const company = companies?.[0] ?? null;
 
   if (!company) {
@@ -34,21 +36,25 @@ export default async function ConversationsPage() {
     );
   }
 
-  const [result, pendingIds] = await Promise.all([
+  const selectedId = typeof c === "string" && c ? c : null;
+
+  const [result, pendingIds, selected] = await Promise.all([
     listConversations(supabase, company.id, { page: 1, pageSize: PAGE_SIZE }),
     findUnconfirmedConversationIds(supabase, company.id),
+    selectedId ? getConversationDetail(supabase, company.id, selectedId) : Promise.resolve(null),
   ]);
   const { rows: conversations, total } = "error" in result ? { rows: [], total: 0 } : result;
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader icon={ChatIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
+    <div className="flex flex-col gap-4">
+      <h1 className="text-headline-md font-semibold tracking-tight text-on-surface sm:sr-only">{t("pageTitle")}</h1>
 
-      <ConversationsManager
+      <ConversationsInbox
         companyId={company.id}
-        initialConversations={conversations}
+        initialRows={conversations}
         initialTotal={total}
         initialPendingTotal={pendingIds.length}
+        initialSelected={selected && !("error" in selected) ? selected : null}
         pageSize={PAGE_SIZE}
       />
     </div>

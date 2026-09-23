@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { defaultAgentName } from "@/lib/agents/naming";
+import { resolveAgentPhoto } from "@/lib/agents/media";
 import { readGrounding } from "@/lib/chat/grounding";
 import { findUnconfirmedConversationIds } from "./pending";
 
@@ -25,7 +26,8 @@ export type ConversationRow = {
   updatedAt: string;
   customer: { id: string; displayName: string };
   agentName: string | null;
-  lastMessage: { content: string; created_at: string } | null;
+  agentPhotoSrc: string | null;
+  lastMessage: { content: string; created_at: string; role: string } | null;
   pendingConfirmation: boolean;
   hotSignal: HotSignal;
 };
@@ -100,10 +102,18 @@ export async function listConversations(
     agentIds.length > 0
       ? supabase
           .from("company_agents")
-          .select("agent_id, name, agents(slug)")
+          .select("agent_id, name, photo_type, photo_asset_url, agents(slug)")
           .eq("company_id", companyId)
           .in("agent_id", agentIds)
-      : Promise.resolve({ data: [] as { agent_id: string; name: string | null; agents: unknown }[] }),
+      : Promise.resolve({
+          data: [] as {
+            agent_id: string;
+            name: string | null;
+            photo_type: string | null;
+            photo_asset_url: string | null;
+            agents: unknown;
+          }[],
+        }),
     // Same events table Metrics' buying-intent/checkout-click totals already
     // aggregate from (src/lib/analytics/aggregate.ts) -- read here per row
     // instead of only ever summed on another page the merchant has to think
@@ -120,11 +130,11 @@ export async function listConversations(
 
   // Sorted desc above, so the first row seen per conversation_id is its
   // most recent message -- no per-row subquery needed.
-  const latestByConversation = new Map<string, { content: string; created_at: string }>();
+  const latestByConversation = new Map<string, { content: string; created_at: string; role: string }>();
   const pendingByConversation = new Map<string, boolean>();
   for (const m of (latestMessages ?? []) as LatestMessageRow[]) {
     if (!latestByConversation.has(m.conversation_id)) {
-      latestByConversation.set(m.conversation_id, { content: m.content, created_at: m.created_at });
+      latestByConversation.set(m.conversation_id, { content: m.content, created_at: m.created_at, role: m.role });
     }
     if (pendingByConversation.has(m.conversation_id)) continue;
     if (m.role === "merchant") {
@@ -145,9 +155,12 @@ export async function listConversations(
   }
 
   const agentNameById = new Map<string, string>();
+  const agentPhotoById = new Map<string, string | null>();
   for (const ca of companyAgents ?? []) {
     const slug = (ca.agents as unknown as { slug: string } | null)?.slug;
-    if (slug) agentNameById.set(ca.agent_id, ca.name ?? defaultAgentName(slug));
+    if (!slug) continue;
+    agentNameById.set(ca.agent_id, ca.name ?? defaultAgentName(slug));
+    agentPhotoById.set(ca.agent_id, resolveAgentPhoto(slug, ca.photo_type ?? null, ca.photo_asset_url ?? null));
   }
 
   const rows: ConversationRow[] = (conversations ?? []).map((c) => {
@@ -164,6 +177,7 @@ export async function listConversations(
         displayName: customer.name ?? customer.phone ?? `Visitor ${customer.id.slice(0, 8)}`,
       },
       agentName: c.agent_id ? (agentNameById.get(c.agent_id) ?? null) : null,
+      agentPhotoSrc: c.agent_id ? (agentPhotoById.get(c.agent_id) ?? null) : null,
       lastMessage: latestByConversation.get(c.id) ?? null,
       pendingConfirmation: c.status !== "closed" && (pendingByConversation.get(c.id) ?? false),
       hotSignal: hotSignalByConversation.get(c.id) ?? null,
