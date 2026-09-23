@@ -12,6 +12,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-23 — My Team shows hired members as badges with real weekly activity
+
+**Decision:** `/dashboard` splits the roster into "Your team" (large portrait badges with live status, conversations in the last 7 days, and how many conversations need the merchant) and "Available to hire" (compact rows). The status tabs and search are removed. The user picked this over a refined single list.
+
+**Why:** Hired and unhired members looked identical in a half-width list, behind filters built for a catalog of two. The activity lines answer the merchant's real question ("are they working, and do they need me?"), and each figure comes straight from `conversations`. An earlier mocked "conversations today" stat was removed on purpose, so no number here may be invented or animated away from its real value. That's why the count-up was dropped: it showed 0 until scrolled into view.
+
+---
+
 ## 2026-09-23 — Billing page: staffing hero for no plan, plan panel + in-page tier switch for subscribers
 
 **Decision:** `/dashboard/settings/billing` drops the 8/4 grid and "Billing summary" aside. Without a plan it leads with a full-width "put your team to work" hero (team faces, trial terms once) above the three tiers; with a plan it shows one panel (plan, status, dates, usage ring) followed by the current variant's three tiers with the current one marked. The user picked both layouts from structured options. The "Most popular" badge became "Recommended" in Billing.

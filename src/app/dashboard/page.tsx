@@ -3,28 +3,20 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { resolveAgentDescription } from "@/lib/agents/copy";
-import { isBillingActive, isBillingPastDue } from "@/lib/billing/activation";
+import { isBillingActive, isBillingPastDue, isSilentForNoPlan } from "@/lib/billing/activation";
 import { getUsageSummary } from "@/lib/billing/usage-summary";
 import { agentPhoto, resolveAgentPhoto } from "@/lib/agents/media";
-import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
-import { TeamGrid } from "./team-grid";
-import type { TeamAgent, TeamAgentStatus } from "./agent-card";
-import { PageHeader } from "./page-header";
-import { UsersIcon } from "@/components/ui/icons";
+import { StatusBanner } from "@/components/ui/status-banner";
+import { getTeamActivity, type TeamActivity } from "@/lib/agents/team-activity";
+import { HireCard, TeamBadge, type TeamMember } from "./team-badge";
 
-// Trello P6 removed per-agent pricing (every hired agent is covered by one
-// company-wide plan, a shared reply quota) -- once price stopped being a
-// reason to browse agents separately from managing them, having two
-// top-level destinations (Marketplace to browse/hire, My Team to manage)
-// for what's really one list stopped making sense. Merged here (2026-09-10):
-// this single page shows every catalog agent -- active, paused, or
-// available (never hired) -- see the 2026-09-10 decisions.md entry.
-//
-// Kept at `/dashboard` specifically: it's already what a brand-new
-// company's onboarding redirects to, and what Metrics' LockedPage CTA links
-// to when zero agents are hired -- keeping the URL here means neither needs
-// to change.
+const BANNER_ACTION = {
+  primary:
+    "inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 text-label-md font-semibold text-on-primary shadow-[0_8px_20px_-10px_rgba(53,37,205,0.7)] transition-[filter] duration-150 hover:brightness-110",
+  danger:
+    "inline-flex min-h-11 items-center justify-center rounded-xl bg-error px-5 text-label-md font-semibold text-on-error transition-[filter] duration-150 hover:brightness-95",
+};
+
 type HiredAgentRow = {
   agent_id: string;
   status: string;
@@ -39,23 +31,21 @@ export default async function MyTeamPage() {
 
   const [{ data: companies }, { data: agents }] = await Promise.all([
     supabase.from("companies").select("id"),
-    supabase
-      .from("agents")
-      .select("id, slug, role, description")
-      .eq("is_active", true)
-      .order("created_at"),
+    supabase.from("agents").select("id, slug, role, description").eq("is_active", true).order("created_at"),
   ]);
   const company = companies?.[0] ?? null;
 
   let hiredByAgentId = new Map<string, HiredAgentRow>();
+  let activityByAgentId = new Map<string, TeamActivity>();
   let billingActive = false;
   let pastDue = false;
+  let silentForNoPlan = false;
   let overLimit = false;
   let nearLimit = false;
   let repliesLeft = 0;
 
   if (company) {
-    const [{ data: companyAgents }, active, lapsed, usage] = await Promise.all([
+    const [{ data: companyAgents }, active, lapsed, usage, activity, noPlanSilence] = await Promise.all([
       supabase
         .from("company_agents")
         .select("agent_id, status, name, photo_type, photo_asset_url")
@@ -63,10 +53,12 @@ export default async function MyTeamPage() {
       isBillingActive(company.id, supabase),
       isBillingPastDue(company.id, supabase),
       getUsageSummary(company.id, supabase),
+      getTeamActivity(supabase, company.id),
+      isSilentForNoPlan(company.id, supabase),
     ]);
-    hiredByAgentId = new Map(
-      ((companyAgents as HiredAgentRow[] | null) ?? []).map((ca) => [ca.agent_id, ca]),
-    );
+    silentForNoPlan = noPlanSilence;
+    activityByAgentId = activity;
+    hiredByAgentId = new Map(((companyAgents as HiredAgentRow[] | null) ?? []).map((ca) => [ca.agent_id, ca]));
     billingActive = active;
     pastDue = lapsed;
 
@@ -78,19 +70,16 @@ export default async function MyTeamPage() {
     }
   }
 
-  const cards: TeamAgent[] = await Promise.all(
+  const members: (TeamMember & { agentId: string })[] = await Promise.all(
     (agents ?? []).map(async (agent) => {
       const hired = hiredByAgentId.get(agent.id);
-      const status: TeamAgentStatus = !hired ? "available" : hired.status === "active" ? "active" : "paused";
+      const status: TeamMember["status"] = !hired ? "available" : hired.status === "active" ? "active" : "paused";
       return {
+        agentId: agent.id,
         slug: agent.slug,
         name: hired?.name ?? defaultAgentName(agent.slug),
         role: agent.role ?? "",
-        description: await resolveAgentDescription(
-          agent.slug,
-          agent.description,
-          defaultAgentName(agent.slug),
-        ),
+        description: await resolveAgentDescription(agent.slug, agent.description, defaultAgentName(agent.slug)),
         photoSrc: hired
           ? resolveAgentPhoto(agent.slug, hired.photo_type, hired.photo_asset_url)
           : agentPhoto(agent.slug),
@@ -98,58 +87,87 @@ export default async function MyTeamPage() {
       };
     }),
   );
+  const hiredMembers = members.filter((m) => m.status !== "available");
+  const availableMembers = members.filter((m) => m.status === "available");
+  const noActivity: TeamActivity = { conversations: 0, needsYou: 0 };
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader icon={UsersIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
+      <h1 className="sr-only">{t("pageTitle")}</h1>
 
-      {/* Same three-way banner My Team's own page used to show, ported
-          verbatim -- real billing-health UI, must not be lost in the merge. */}
       {pastDue ? (
-        <Alert
-          variant="error"
+        <StatusBanner
+          tone="error"
           title={t("pastDueBanner.title")}
+          body={t("pastDueBanner.body")}
           action={
-            <Link href="/dashboard/settings/billing">
-              <Button type="button" variant="danger" size="sm">
-                {t("pastDueBanner.action")}
-              </Button>
+            <Link href="/dashboard/settings/billing" className={BANNER_ACTION.danger}>
+              {t("pastDueBanner.action")}
             </Link>
           }
-        >
-          {t("pastDueBanner.body")}
-        </Alert>
+        />
       ) : overLimit ? (
-        <Alert
-          variant="error"
+        <StatusBanner
+          tone="error"
           title={t("overLimitBanner.title")}
+          body={t("overLimitBanner.body")}
           action={
-            <Link href="/dashboard/settings/billing">
-              <Button type="button" variant="danger" size="sm">
-                {t("overLimitBanner.action")}
-              </Button>
+            <Link href="/dashboard/settings/billing" className={BANNER_ACTION.danger}>
+              {t("overLimitBanner.action")}
             </Link>
           }
-        >
-          {t("overLimitBanner.body")}
-        </Alert>
+        />
       ) : nearLimit ? (
-        <Alert
-          variant="warning"
+        <StatusBanner
+          tone="warn"
           title={t("nearLimitBanner.title")}
+          body={t("nearLimitBanner.body", { left: repliesLeft })}
           action={
-            <Link href="/dashboard/settings/billing">
-              <Button type="button" variant="primary" size="sm">
-                {t("nearLimitBanner.action")}
-              </Button>
+            <Link href="/dashboard/settings/billing" className={BANNER_ACTION.primary}>
+              {t("nearLimitBanner.action")}
             </Link>
           }
-        >
-          {t("nearLimitBanner.body", { left: repliesLeft })}
-        </Alert>
+        />
       ) : null}
 
-      <TeamGrid agents={cards} billingActive={billingActive} />
+      <section className="flex flex-col gap-4">
+        <h2 className="text-headline-md font-semibold tracking-tight text-on-surface">{t("team.title")}</h2>
+        {hiredMembers.length > 0 ? (
+          <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2">
+            {hiredMembers.map((member, index) => (
+              <TeamBadge
+                key={member.slug}
+                member={member}
+                activity={activityByAgentId.get(member.agentId) ?? noActivity}
+                index={index}
+                silenced={pastDue || silentForNoPlan}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[28px] border border-dashed border-outline-variant px-6 py-10 text-center">
+            <p className="text-base font-semibold text-on-surface">{t("team.emptyTitle")}</p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-on-surface-variant">{t("team.emptyBody")}</p>
+          </div>
+        )}
+      </section>
+
+      {availableMembers.length > 0 ? (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold tracking-tight text-on-surface">{t("team.hireTitle")}</h2>
+          <div className="flex flex-col gap-4">
+            {availableMembers.map((member, index) => (
+              <HireCard
+                key={member.slug}
+                member={member}
+                billingActive={billingActive}
+                pastDue={pastDue}
+                index={hiredMembers.length + index}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

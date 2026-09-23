@@ -1064,7 +1064,7 @@
   },
   "MyAgents": {
     "pageTitle": "Minha equipe",
-    "pageSubtitle": "Todos que podem entrar no seu negócio — contratados ou não.",
+    "pageSubtitle": "Quem trabalha para o seu negócio e o que está esperando por você.",
     "pastDueBanner": {
       "title": "Pagamento falhou",
       "body": "Sua equipe inteira está pausada e não responde nenhum cliente, em nenhum canal, até isso ser resolvido.",
@@ -1084,9 +1084,6 @@
     "backToMyAgents": "Voltar para minha equipe",
     "availableBadge": "Disponível",
     "viewDetails": "Ver detalhes",
-    "searchPlaceholder": "Buscar por nome ou cargo…",
-    "noResults": "Nenhum integrante corresponde a “{query}”.",
-    "noFilterResults": "Nenhum integrante nesta visualização.",
     "includedInPlan": "Incluído no seu plano",
     "needsPlan": "Precisa de um plano",
     "filterAll": "Todos",
@@ -1295,6 +1292,21 @@
       "title": "Perfil",
       "description": "O nome e a foto que os clientes veem para este integrante da equipe — no seu painel, na página de conversa e em todo lugar em que ele aparece.",
       "photoLabel": "Foto"
+    },
+    "team": {
+      "title": "Sua equipe",
+      "answering": "Atendendo clientes",
+      "paused": "Em pausa",
+      "conversations": "{count, plural, one {conversa} other {conversas}} nos últimos 7 dias",
+      "needsYou": "{count, plural, one {# conversa precisa de você} other {# conversas precisam de você}}",
+      "allClear": "Nada esperando por você",
+      "manage": "Gerenciar {name}",
+      "emptyTitle": "Ninguém na sua equipe ainda",
+      "emptyBody": "Contrate alguém abaixo. A pessoa começa a atender seus clientes assim que estiver configurada.",
+      "hireTitle": "Disponíveis para contratar",
+      "hireCta": "Conhecer {name}",
+      "silenced": "Sem atender — veja a cobrança",
+      "billingIssue": "Seu pagamento precisa de atenção"
     }
   },
   "Teach": {
