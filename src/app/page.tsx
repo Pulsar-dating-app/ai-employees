@@ -47,15 +47,7 @@ export default async function Home({
       {/* Staffra's own chat widget, dogfooded on the landing. `lazyOnload`
           keeps this third-party script off the critical path so it never
           costs LCP/TBT on the most SEO-important page. */}
-      <Script
-        src="https://www.staffra.io/widget.js"
-        strategy="lazyOnload"
-        data-company="jorginho-e-cia"
-        data-agent="ana"
-        data-greeting="Procurando por algo especifico???"
-        data-launcher-src="https://www.staffra.io/agents/ana-classic-launcher.webm"
-        data-offset-bottom="40"
-      />
+<script src="https://www.staffra.io/widget.js" defer data-company="staffra-2" data-agent="malu" data-greeting="Oi! 👋 Posso ajudar a encontrar o que você procura?" data-launcher-src="https://www.staffra.io/widget-launcher.webm" data-offset-bottom="40"></script>
     </>
   );
 }
