@@ -1755,10 +1755,6 @@
       "nextMonth": "Next month",
       "statusFilterLabel": "Status",
       "statusFilterAll": "All statuses",
-      "pendingApproval": "awaiting approval",
-      "previousPage": "Previous",
-      "nextPage": "Next",
-      "pageOf": "Page {page} of {totalPages}",
       "emptyState": "Nothing booked in this range yet.",
       "emptyHint": "New bookings land here the moment your team takes them.",
       "loading": "Loading…",
@@ -1768,16 +1764,6 @@
         "cancelled": "Cancelled",
         "completed": "Completed",
         "no_show": "No-show"
-      },
-      "summary": {
-        "todayTitle": "Today's Overview",
-        "bookedToday": "Total appointments",
-        "completedToday": "Completed",
-        "teamTitle": "On duty",
-        "verified": "Verified team member",
-        "currentStatus": "Current status",
-        "statusActive": "Taking bookings",
-        "statusPaused": "Paused"
       },
       "alerts": {
         "businessHoursTitle": "No business hours set",
@@ -1809,6 +1795,28 @@
         "cancelPrompt": "Cancel this booking? The customer's slot is freed up.",
         "confirmCancel": "Yes, cancel",
         "keep": "Keep it"
+      },
+      "board": {
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "todayCount": "{count, plural, =0 {Nothing booked today} one {# appointment today} other {# appointments today}}",
+        "completedCount": "{count, plural, one {# completed} other {# completed}}",
+        "next": "Next",
+        "now": "Happening now",
+        "noneLeft": "Nothing else booked for today",
+        "teamTaking": "{name} is taking bookings",
+        "teamPaused": "{name} is paused",
+        "pendingTitle": "Waiting for your approval",
+        "agendaTitle": "Agenda",
+        "loadMore": "Load more",
+        "details": "Details",
+        "hideDetails": "Hide details",
+        "viewLabel": "View",
+        "list": "List",
+        "calendar": "Calendar",
+        "timelineLabel": "Today's timeline",
+        "teamNoHours": "{name} can't offer times yet",
+        "noHoursTimeline": "Set business hours to see today's timeline."
       }
     }
   },

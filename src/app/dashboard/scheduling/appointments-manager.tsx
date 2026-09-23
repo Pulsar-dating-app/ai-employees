@@ -4,60 +4,27 @@ import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
-import { Button } from "@/components/ui/button";
-import { CHEVRON } from "@/components/ui/select";
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, ListIcon } from "@/components/ui/icons";
+import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 import { zonedTimeToUtc } from "@/lib/availability/engine";
-import { AppointmentList } from "./appointment-list";
+import { AgendaRow } from "./agenda-row";
 import { AppointmentCalendar } from "./appointment-calendar";
 import { APPOINTMENT_STATUSES, type Appointment, type AppointmentStatus } from "./appointment-types";
+import { dayHeading, localDateOf } from "./agenda-format";
+import { PendingApprovals } from "./pending-approvals";
+import { TodayPanel, type SchedulingTeamMember } from "./today-panel";
 
 type Scope = "upcoming" | "past";
 type View = "list" | "calendar";
 
-type AppointmentsManagerProps = {
-  companyId: string;
-  timezone: string;
-  /** Company-local "today", as YYYY-MM-DD — the calendar's month cursor and
-   * its today-highlight both start from the business's day, not the
-   * viewer's. */
-  today: string;
-  canEdit: boolean;
-  /** Bookings still in `requested` (approval toggle on). 0 hides the chip. */
-  pendingCount: number;
-  initialAppointments: Appointment[];
-  initialTotal: number;
-  pageSize: number;
-  /** The Server-Component summary rail, rendered into the mock's right-hand
-   * column. Passed down rather than rendered by the page so the header's
-   * controls — client state — can sit where the design puts them, above the
-   * whole 12-column grid. */
-  summary: ReactNode;
-  /** Missing-config warning/info banners (business hours, intake questions,
-   * Google Calendar) — Server-Component-built for the same reason `summary`
-   * is, rendered full-width between the header and the grid. */
-  alerts?: ReactNode;
-};
-
-// The list endpoint's own ceiling (MAX_PAGE_SIZE in H3's route). A month
-// view has no pagination to fall back on, so it pages until it has the whole
-// month — capped, so a pathological company can't spin here forever.
 const CALENDAR_PAGE_SIZE = 100;
 const CALENDAR_MAX_PAGES = 5;
 
-// The UTC instants bounding a company-local month. Same DST-aware helper the
-// server uses for its today-counters — the month a booking belongs to is a
-// fact about the business's calendar, not the viewer's.
 function monthWindow(month: string, timezone: string): { from: string; to: string } {
   const [year, monthIndex] = month.split("-").map(Number);
-  const nextMonth =
-    monthIndex === 12
-      ? `${year + 1}-01`
-      : `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
+  const nextMonth = monthIndex === 12 ? `${year + 1}-01` : `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
   const start = zonedTimeToUtc(`${month}-01`, "00:00", timezone);
   const end = zonedTimeToUtc(`${nextMonth}-01`, "00:00", timezone);
-  // The route filters `to` with `lte`, so step back a millisecond rather
-  // than pulling in a booking that starts exactly at next month's midnight.
   return { from: start.toISOString(), to: new Date(end.getTime() - 1).toISOString() };
 }
 
@@ -67,18 +34,80 @@ function shiftMonth(month: string, delta: number): string {
   return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
+function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+  disabled,
+}: {
+  value: T;
+  options: { value: T; label: string; icon?: ReactNode }[];
+  onChange: (value: T) => void;
+  label: string;
+  disabled?: boolean;
+}) {
+  const { indicatorRef, register } = useSlidingIndicator<HTMLButtonElement>(value, options.length, "x");
+  return (
+    <div role="group" aria-label={label} className="relative inline-flex rounded-full bg-surface-container p-1">
+      <span
+        ref={indicatorRef}
+        aria-hidden="true"
+        className="inbox-indicator absolute left-0 rounded-full bg-surface-container-lowest opacity-0 shadow-[0_1px_3px_rgba(25,28,29,0.14)]"
+      />
+      {options.map((option) => (
+        <button
+          key={option.value}
+          ref={register(option.value)}
+          type="button"
+          aria-pressed={value === option.value}
+          disabled={disabled}
+          onClick={() => onChange(option.value)}
+          className={clsx(
+            "relative z-10 inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-label-md font-semibold transition-colors duration-200",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed",
+            value === option.value ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface",
+          )}
+        >
+          {option.icon}
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function AppointmentsManager({
   companyId,
   timezone,
   today,
   canEdit,
-  pendingCount,
   initialAppointments,
   initialTotal,
   pageSize,
-  summary,
-  alerts,
-}: AppointmentsManagerProps) {
+  todayAppointments,
+  pendingAppointments,
+  pendingTotal,
+  hours,
+  hoursConfigured,
+  dayStart,
+  teamMember,
+}: {
+  companyId: string;
+  timezone: string;
+  today: string;
+  canEdit: boolean;
+  initialAppointments: Appointment[];
+  initialTotal: number;
+  pageSize: number;
+  todayAppointments: Appointment[];
+  pendingAppointments: Appointment[];
+  pendingTotal: number;
+  hours: { start: number; end: number } | null;
+  hoursConfigured: boolean;
+  dayStart: string;
+  teamMember: SchedulingTeamMember | null;
+}) {
   const t = useTranslations("Scheduling.appointments");
   const locale = useLocale();
   const router = useRouter();
@@ -89,60 +118,58 @@ export function AppointmentsManager({
   const [status, setStatus] = useState<"" | AppointmentStatus>("");
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [view, setView] = useState<View>("list");
   const [month, setMonth] = useState(() => today.slice(0, 7));
   const [monthAppointments, setMonthAppointments] = useState<Appointment[]>([]);
 
-  async function refetch(next: { scope: Scope; status: "" | AppointmentStatus; page: number }) {
-    setIsLoading(true);
+  async function fetchPage(next: { scope: Scope; status: "" | AppointmentStatus; page: number }) {
     const params = new URLSearchParams();
-    // "Upcoming" and "past" are the same endpoint with the starts_at window
-    // flipped — and past reads latest-first, which is why K4 taught the
-    // route an `order` param.
-    const nowIso = new Date().toISOString();
     if (next.scope === "upcoming") {
-      params.set("from", nowIso);
+      params.set("from", dayStart);
     } else {
-      params.set("to", nowIso);
+      params.set("to", new Date(new Date(dayStart).getTime() - 1).toISOString());
       params.set("order", "desc");
     }
     if (next.status) params.set("status", next.status);
     params.set("page", String(next.page));
     params.set("pageSize", String(pageSize));
+    const res = await fetch(`/api/companies/${companyId}/appointments?${params.toString()}`).catch(() => null);
+    if (!res?.ok) return null;
+    return (await res.json()) as { appointments: Appointment[]; total: number };
+  }
 
-    const res = await fetch(`/api/companies/${companyId}/appointments?${params.toString()}`);
-    if (res.ok) {
-      const json = await res.json();
-      setAppointments(json.appointments ?? []);
-      setTotal(json.total ?? 0);
+  async function reload(next: { scope: Scope; status: "" | AppointmentStatus }) {
+    setIsLoading(true);
+    const pages = Math.max(1, page);
+    const collected: Appointment[] = [];
+    let latestTotal = 0;
+    for (let p = 1; p <= pages; p++) {
+      const json = await fetchPage({ ...next, page: p });
+      if (!json) break;
+      collected.push(...(json.appointments ?? []));
+      latestTotal = json.total ?? 0;
+      if (collected.length >= latestTotal) break;
     }
+    setAppointments(collected);
+    setTotal(latestTotal);
     setIsLoading(false);
   }
 
-  // The calendar wants a whole month at once, not a page of it — the same
-  // endpoint, windowed by the month instead of by now.
   async function refetchMonth(next: { month: string; status: "" | AppointmentStatus }) {
     setIsLoading(true);
     const { from, to } = monthWindow(next.month, timezone);
     const collected: Appointment[] = [];
-
     for (let pageIndex = 1; pageIndex <= CALENDAR_MAX_PAGES; pageIndex++) {
-      const params = new URLSearchParams({
-        from,
-        to,
-        page: String(pageIndex),
-        pageSize: String(CALENDAR_PAGE_SIZE),
-      });
+      const params = new URLSearchParams({ from, to, page: String(pageIndex), pageSize: String(CALENDAR_PAGE_SIZE) });
       if (next.status) params.set("status", next.status);
-
-      const res = await fetch(`/api/companies/${companyId}/appointments?${params.toString()}`);
-      if (!res.ok) break;
+      const res = await fetch(`/api/companies/${companyId}/appointments?${params.toString()}`).catch(() => null);
+      if (!res?.ok) break;
       const json = await res.json();
       collected.push(...((json.appointments ?? []) as Appointment[]));
       if (collected.length >= (json.total ?? 0)) break;
     }
-
     setMonthAppointments(collected);
     setIsLoading(false);
   }
@@ -158,248 +185,234 @@ export function AppointmentsManager({
     refetchMonth({ month: nextMonth, status });
   }
 
-  function changeScope(nextScope: Scope) {
+  async function changeScope(nextScope: Scope) {
     setScope(nextScope);
     setPage(1);
-    refetch({ scope: nextScope, status, page: 1 });
+    setIsLoading(true);
+    const json = await fetchPage({ scope: nextScope, status, page: 1 });
+    if (json) {
+      setAppointments(json.appointments ?? []);
+      setTotal(json.total ?? 0);
+    }
+    setIsLoading(false);
   }
 
-  function changeStatus(nextStatus: "" | AppointmentStatus) {
+  async function changeStatus(nextStatus: "" | AppointmentStatus) {
     setStatus(nextStatus);
     setPage(1);
-    if (view === "calendar") refetchMonth({ month, status: nextStatus });
-    else refetch({ scope, status: nextStatus, page: 1 });
+    if (view === "calendar") {
+      refetchMonth({ month, status: nextStatus });
+      return;
+    }
+    setIsLoading(true);
+    const json = await fetchPage({ scope, status: nextStatus, page: 1 });
+    if (json) {
+      setAppointments(json.appointments ?? []);
+      setTotal(json.total ?? 0);
+    }
+    setIsLoading(false);
   }
 
-  function changePage(nextPage: number) {
-    setPage(nextPage);
-    refetch({ scope, status, page: nextPage });
+  async function loadMore() {
+    const nextPage = page + 1;
+    setIsLoadingMore(true);
+    const json = await fetchPage({ scope, status, page: nextPage });
+    if (json) {
+      setAppointments((prev) => {
+        const seen = new Set(prev.map((a) => a.id));
+        return [...prev, ...(json.appointments ?? []).filter((a) => !seen.has(a.id))];
+      });
+      setTotal(json.total ?? 0);
+      setPage(nextPage);
+    }
+    setIsLoadingMore(false);
   }
 
-  // A status change can move a row out of the current filter, so re-fetch
-  // rather than patching in place — otherwise "show only confirmed" keeps
-  // displaying the one you just cancelled. router.refresh() re-runs the
-  // Server Component alongside it, so the summary rail's counts move with
-  // the list instead of going stale.
   function handlePatched() {
-    refetch({ scope, status, page });
+    if (view === "calendar") refetchMonth({ month, status });
+    else reload({ scope, status });
     router.refresh();
   }
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const monthLabel = new Intl.DateTimeFormat(locale, {
-    timeZone: "UTC",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(`${month}-01T12:00:00Z`));
+  const groups: { date: string; items: Appointment[] }[] = [];
+  for (const appointment of appointments) {
+    const date = localDateOf(new Date(appointment.starts_at), timezone);
+    const last = groups[groups.length - 1];
+    if (last && last.date === date) last.items.push(appointment);
+    else groups.push({ date, items: [appointment] });
+  }
+
+  const monthLabel = new Intl.DateTimeFormat(locale, { timeZone: "UTC", month: "long", year: "numeric" }).format(
+    new Date(`${month}-01T12:00:00Z`),
+  );
 
   return (
-    <div>
-      {/* Page header, per the Stitch screen: title + subtitle left, controls
-          right. No icon tile — that screen doesn't draw one. */}
-      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          {/* Weight and tracking come from the type token itself (globals.css
-              carries the Stitch scale), so no font-/tracking- utility here. */}
-          <h1 className="text-headline-lg text-on-surface">{t("pageTitle")}</h1>
-          <p className="mt-1 text-body-md text-on-surface-variant">{t("pageSubtitle")}</p>
-        </div>
+    <div className="flex flex-col gap-6">
+      <TodayPanel
+        appointments={todayAppointments}
+        timezone={timezone}
+        today={today}
+        hours={hours}
+        hoursConfigured={hoursConfigured}
+        teamMember={teamMember}
+      />
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* K7: a live count of bookings awaiting approval, one tap to the
-              filter. Hidden when the approval toggle is off (pendingCount is
-              forced to 0) or once the filter is already on `requested`. */}
-          {pendingCount > 0 && status !== "requested" ? (
-            <button
-              type="button"
-              onClick={() => changeStatus("requested")}
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-primary/30 bg-primary-fixed/60 px-3 text-label-md font-semibold text-primary shadow-level1 transition-colors hover:bg-primary-fixed"
-            >
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">
-                {pendingCount}
-              </span>
-              {t("pendingApproval")}
-            </button>
-          ) : null}
+      <PendingApprovals
+        companyId={companyId}
+        timezone={timezone}
+        today={today}
+        appointments={pendingAppointments}
+        total={pendingTotal}
+        canEdit={canEdit}
+        onPatched={handlePatched}
+      />
 
-          {/* Not in the mock, which has no status filter at all — but K4
-              ships one, so it takes that screen's control chrome (h-10,
-              rounded-lg, hairline border) rather than this app's taller
-              form-field chrome. */}
-          <select
-            aria-label={t("statusFilterLabel")}
-            value={status}
-            disabled={isLoading}
-            onChange={(e) => changeStatus(e.target.value as "" | AppointmentStatus)}
-            className={clsx(
-              "h-10 rounded-lg border border-outline-variant/30 bg-surface-container-low px-3 text-label-md text-on-surface shadow-level1 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60",
-              CHEVRON,
-            )}
-          >
-            <option value="">{t("statusFilterAll")}</option>
-            {APPOINTMENT_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {t(`status.${s}`)}
-              </option>
-            ))}
-          </select>
-
-          {view === "list" ? (
-            <div
-              role="group"
-              aria-label={t("scopeLabel")}
-              className={clsx(
-                "inline-flex rounded-lg border border-outline-variant/30 bg-surface-container-low p-1 shadow-level1 transition-opacity",
-                isLoading && "opacity-70",
-              )}
-            >
-              {(["upcoming", "past"] as const).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={scope === value}
-                  disabled={isLoading}
-                  onClick={() => changeScope(value)}
-                  className={clsx(
-                    "rounded px-4 py-2 text-label-md transition-all disabled:cursor-not-allowed",
-                    scope === value
-                      ? "bg-surface font-bold text-primary shadow-sm"
-                      : "text-on-surface-variant hover:text-on-surface",
-                  )}
-                >
-                  {t(`scope.${value}`)}
-                </button>
-              ))}
-            </div>
-          ) : (
-            // The month cursor takes the segmented control's slot: "upcoming
-            // vs past" has no meaning once you're looking at a month grid.
-            <div
-              className={clsx(
-                "inline-flex items-center rounded-lg border border-outline-variant/30 bg-surface-container-low p-1 shadow-level1 transition-opacity",
-                isLoading && "opacity-70",
-              )}
-            >
-              <button
-                type="button"
-                aria-label={t("previousMonth")}
-                disabled={isLoading}
-                onClick={() => changeMonth(-1)}
-                className="flex h-8 w-8 items-center justify-center rounded text-on-surface-variant transition-colors hover:text-on-surface disabled:cursor-not-allowed"
-              >
-                <ChevronLeftIcon className="h-4 w-4" />
-              </button>
-              <span className="min-w-[9.5rem] px-2 text-center text-label-md font-bold text-on-surface first-letter:uppercase">
-                {monthLabel}
-              </span>
-              <button
-                type="button"
-                aria-label={t("nextMonth")}
-                disabled={isLoading}
-                onClick={() => changeMonth(1)}
-                className="flex h-8 w-8 items-center justify-center rounded text-on-surface-variant transition-colors hover:text-on-surface disabled:cursor-not-allowed"
-              >
-                <ChevronRightIcon className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-
-          {/* The mock's square button, and what it's for: it swaps the list
-              for a month grid. Its icon is the view you'd get by pressing
-              it, so it never sits next to a grid showing a calendar. */}
-          <button
-            type="button"
-            aria-pressed={view === "calendar"}
-            title={view === "list" ? t("calendarView") : t("listView")}
-            aria-label={view === "list" ? t("calendarView") : t("listView")}
-            onClick={() => changeView(view === "list" ? "calendar" : "list")}
-            className={clsx(
-              "card-hover flex h-10 w-10 items-center justify-center rounded-lg border shadow-level1 transition-all",
-              view === "calendar"
-                ? "border-primary/50 bg-primary-fixed text-primary"
-                : "border-outline-variant/50 bg-surface text-on-surface-variant hover:border-primary/50 hover:text-primary",
-            )}
-          >
-            {view === "list" ? (
-              <CalendarIcon className="h-5 w-5" />
-            ) : (
-              <ListIcon className="h-5 w-5" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {alerts}
-
-      <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Indeterminate sweep over the content column while it re-fetches —
-            the same signal the metrics grid gives when its range changes, so
-            "the screen is working" reads the same everywhere. */}
-        <div
-          aria-hidden
-          className={clsx(
-            "pointer-events-none absolute -top-3 left-0 right-0 h-0.5 overflow-hidden rounded-full transition-opacity duration-200 lg:right-1/3",
-            isLoading ? "opacity-100" : "opacity-0",
-          )}
-        >
-          <div className="animate-progress-sweep h-full w-1/3 rounded-full bg-gradient-to-r from-transparent via-primary to-transparent" />
-        </div>
-
-        <div className="flex flex-col gap-4 lg:col-span-8">
-          {!canEdit ? (
-            <p className="rounded-xl border border-outline-variant/30 bg-surface-container px-4 py-3 text-label-md text-on-surface-variant">
-              {t("readOnlyBanner")}
-            </p>
-          ) : null}
-
-          {view === "calendar" ? (
-            <AppointmentCalendar
-              appointments={monthAppointments}
-              timezone={timezone}
-              today={today}
-              month={month}
-              isLoading={isLoading}
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <h2 className="text-headline-md font-semibold tracking-tight text-on-surface">{t("board.agendaTitle")}</h2>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Segmented
+              value={view}
+              label={t("board.viewLabel")}
+              onChange={changeView}
+              options={[
+                { value: "list", label: t("board.list"), icon: <ListIcon className="h-4 w-4" /> },
+                { value: "calendar", label: t("board.calendar"), icon: <CalendarIcon className="h-4 w-4" /> },
+              ]}
             />
-          ) : (
-            <>
-              <AppointmentList
-                companyId={companyId}
-                timezone={timezone}
-                canEdit={canEdit}
-                appointments={appointments}
-                isLoading={isLoading}
-                onPatched={handlePatched}
+            {view === "list" ? (
+              <Segmented
+                value={scope}
+                label={t("scopeLabel")}
+                disabled={isLoading}
+                onChange={changeScope}
+                options={[
+                  { value: "upcoming", label: t("scope.upcoming") },
+                  { value: "past", label: t("scope.past") },
+                ]}
               />
-
-              {totalPages > 1 ? (
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={page <= 1 || isLoading}
-                    onClick={() => changePage(page - 1)}
-                  >
-                    {t("previousPage")}
-                  </Button>
-                  <span className="text-label-md text-on-surface-variant">
-                    {t("pageOf", { page, totalPages })}
-                  </span>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={page * pageSize >= total || isLoading}
-                    onClick={() => changePage(page + 1)}
-                  >
-                    {t("nextPage")}
-                  </Button>
-                </div>
-              ) : null}
-            </>
-          )}
+            ) : (
+              <div className="inline-flex items-center rounded-full bg-surface-container p-1">
+                <button
+                  type="button"
+                  aria-label={t("previousMonth")}
+                  disabled={isLoading}
+                  onClick={() => changeMonth(-1)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container-lowest hover:text-on-surface disabled:cursor-not-allowed"
+                >
+                  <ChevronLeftIcon className="h-4 w-4" />
+                </button>
+                <span className="min-w-[9.5rem] px-2 text-center text-label-md font-semibold text-on-surface first-letter:uppercase">
+                  {monthLabel}
+                </span>
+                <button
+                  type="button"
+                  aria-label={t("nextMonth")}
+                  disabled={isLoading}
+                  onClick={() => changeMonth(1)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container-lowest hover:text-on-surface disabled:cursor-not-allowed"
+                >
+                  <ChevronRightIcon className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            <span className="relative inline-flex">
+              <select
+                aria-label={t("statusFilterLabel")}
+                value={status}
+                disabled={isLoading}
+                onChange={(e) => changeStatus(e.target.value as "" | AppointmentStatus)}
+                className="h-10 appearance-none rounded-full border-0 bg-surface-container pl-4 pr-10 text-label-md font-semibold text-on-surface outline-none transition-shadow focus:shadow-[0_0_0_4px_rgba(53,37,205,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="">{t("statusFilterAll")}</option>
+                {APPOINTMENT_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {t(`status.${s}`)}
+                  </option>
+                ))}
+              </select>
+              <ChevronRightIcon className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-on-surface-variant" />
+            </span>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-6 lg:col-span-4">{summary}</div>
-      </div>
+        {!canEdit ? (
+          <p className="rounded-2xl bg-surface-container px-4 py-3 text-sm text-on-surface-variant">
+            {t("readOnlyBanner")}
+          </p>
+        ) : null}
+
+        <div className="relative h-0.5 overflow-hidden rounded-full">
+          {isLoading ? (
+            <div className="animate-progress-sweep absolute inset-y-0 w-1/4 rounded-full bg-primary/60" />
+          ) : null}
+        </div>
+
+        {view === "calendar" ? (
+          <AppointmentCalendar
+            appointments={monthAppointments}
+            timezone={timezone}
+            today={today}
+            month={month}
+            isLoading={isLoading}
+          />
+        ) : appointments.length === 0 && !isLoading ? (
+          <div className="flex flex-col items-center gap-2 rounded-[24px] border border-dashed border-outline-variant px-6 py-12 text-center">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-container text-on-surface-variant">
+              <CalendarIcon className="h-5 w-5" />
+            </span>
+            <p className="mt-1 text-base font-semibold text-on-surface">{t("emptyState")}</p>
+            <p className="max-w-xs text-sm text-on-surface-variant">{t("emptyHint")}</p>
+          </div>
+        ) : (
+          <div className={clsx("flex flex-col gap-4 transition-opacity duration-200", isLoading && "opacity-60")}>
+            {groups.map((group, index) => {
+              const heading = dayHeading(group.date, today, locale, {
+                today: t("board.today"),
+                tomorrow: t("board.tomorrow"),
+              });
+              return (
+                <div
+                  key={group.date}
+                  className="billing-card-in rounded-[24px] border border-outline-variant/60 bg-surface-container-lowest p-2 shadow-[0_1px_2px_rgba(25,28,29,0.04)] sm:p-3"
+                  style={{ "--i": Math.min(index, 6) } as React.CSSProperties}
+                >
+                  <h3 className="flex items-baseline gap-2 px-3 pb-1 pt-2 sm:px-4">
+                    <span className="text-[15px] font-semibold text-on-surface first-letter:uppercase">
+                      {heading.primary}
+                    </span>
+                    <span className="text-[13px] text-on-surface-variant">{heading.secondary}</span>
+                    <span className="ml-auto text-[12px] tabular-nums text-outline">{group.items.length}</span>
+                  </h3>
+                  <ul className="flex flex-col">
+                    {group.items.map((appointment) => (
+                      <AgendaRow
+                        key={appointment.id}
+                        companyId={companyId}
+                        timezone={timezone}
+                        canEdit={canEdit}
+                        appointment={appointment}
+                        isPast={scope === "past"}
+                        onPatched={handlePatched}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+            {appointments.length < total ? (
+              <button
+                type="button"
+                disabled={isLoadingMore}
+                onClick={loadMore}
+                className="h-11 self-center rounded-full px-6 text-label-md font-semibold text-primary transition-colors hover:bg-primary-fixed/50 disabled:opacity-60"
+              >
+                {isLoadingMore ? <span className="onboarding-loader align-middle" /> : t("board.loadMore")}
+              </button>
+            ) : null}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

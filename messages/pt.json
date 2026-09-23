@@ -1755,10 +1755,6 @@
       "nextMonth": "Próximo mês",
       "statusFilterLabel": "Status",
       "statusFilterAll": "Todos os status",
-      "pendingApproval": "aguardando aprovação",
-      "previousPage": "Anterior",
-      "nextPage": "Próxima",
-      "pageOf": "Página {page} de {totalPages}",
       "emptyState": "Nada marcado nesse período ainda.",
       "emptyHint": "Novos agendamentos aparecem aqui assim que sua equipe os marca.",
       "loading": "Carregando…",
@@ -1768,16 +1764,6 @@
         "cancelled": "Cancelado",
         "completed": "Concluído",
         "no_show": "Não compareceu"
-      },
-      "summary": {
-        "todayTitle": "Resumo de hoje",
-        "bookedToday": "Total de agendamentos",
-        "completedToday": "Concluídos",
-        "teamTitle": "Em atividade",
-        "verified": "Integrante verificado",
-        "currentStatus": "Status atual",
-        "statusActive": "Recebendo agendamentos",
-        "statusPaused": "Pausado"
       },
       "alerts": {
         "businessHoursTitle": "Nenhum horário de funcionamento definido",
@@ -1809,6 +1795,28 @@
         "cancelPrompt": "Cancelar este agendamento? O horário do cliente fica livre.",
         "confirmCancel": "Sim, cancelar",
         "keep": "Manter"
+      },
+      "board": {
+        "today": "Hoje",
+        "tomorrow": "Amanhã",
+        "todayCount": "{count, plural, =0 {Nada agendado para hoje} one {# atendimento hoje} other {# atendimentos hoje}}",
+        "completedCount": "{count, plural, one {# concluído} other {# concluídos}}",
+        "next": "Próximo",
+        "now": "Acontecendo agora",
+        "noneLeft": "Nada mais agendado para hoje",
+        "teamTaking": "{name} está recebendo agendamentos",
+        "teamPaused": "{name} está em pausa",
+        "pendingTitle": "Aguardando sua aprovação",
+        "agendaTitle": "Agenda",
+        "loadMore": "Carregar mais",
+        "details": "Detalhes",
+        "hideDetails": "Ocultar detalhes",
+        "viewLabel": "Visualização",
+        "list": "Lista",
+        "calendar": "Calendário",
+        "timelineLabel": "Linha do tempo de hoje",
+        "teamNoHours": "{name} ainda não pode oferecer horários",
+        "noHoursTimeline": "Defina o horário de funcionamento para ver a linha do tempo de hoje."
       }
     }
   },

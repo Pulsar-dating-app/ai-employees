@@ -878,6 +878,26 @@ Built as a deliberate close relative of F3's Products page (same `page.tsx` Serv
 
 #### Appointments view (K4)
 
+**Superseded 2026-09-23: day agenda redesign.** The Stitch 1:1 layout described below (booking cards, the 8/4 grid, the `appointments-summary.tsx` rail, `appointment-list.tsx`) is gone. The data rules still hold: business-timezone "today", the PATCH-driven actions, and the approval flow.
+
+The page now has five parts:
+- **Config banners** render in the server page with the shared `StatusBanner`, which has an `info` tone for Calendar.
+- **`today-panel.tsx`**:
+  - Today's heading and counts, from today's rows.
+  - The team member chip. It says "can't offer times yet" when there are no business hours.
+  - A Next/Happening-now block with a live countdown. It uses a `useSyncExternalStore` minute clock, so the server renders no time and there's no hydration mismatch.
+  - A timeline spanning today's business hours plus any bookings outside them, with a now marker. It's hidden when there are neither hours nor bookings.
+- **`pending-approvals.tsx`**: every `requested` row, with Approve/Decline in place. Rendered only when `requires_appointment_approval` is on.
+- **The agenda**, grouped by local day. Each row (`agenda-row.tsx`) expands to Ana's summary, the intake answers and the cancellation reason.
+- **The month calendar** (`appointment-calendar.tsx`).
+
+Status colours live in one `STATUS_TONE` map, shared by the rows, the timeline and the calendar.
+
+"Upcoming" starts at the business day's start and "Past" ends there. That way today's earlier and in-progress bookings stay actionable instead of dropping into Past.
+
+Server-built elements must not be passed into the client manager as props. That triggered a React missing-key warning, so the banners render in the server page instead.
+
+
 - **This screen is a deliberate 1:1 of the Stitch "Bookings & Appointments Dashboard"** (project `16467959335975114559`, screen `daf8d53d18954a54a22b1047a7529abb`) — the brief was "identical down to the smallest detail", so it does *not* use `PageHeader`/`Card`/`Button` the way its sibling screens do. Structure: header (title + subtitle left, controls right, **no icon tile** — that screen doesn't draw one), then `grid-cols-1 lg:grid-cols-12 gap-6` with booking cards at `lg:col-span-8` and the two-card rail at `lg:col-span-4`.
   - **The header lives in `appointments-manager.tsx`, not `page.tsx`**, because the scope toggle is client state and the design puts it above the whole grid. The Server-Component rail is rendered in `page.tsx` and passed *into* the client component as the `summary` prop — a Server Component as a prop, which is what keeps those counters server-rendered without dragging the rail into client code.
   - **The mock's classes are reproduced literally**, including its lighter chrome (`border-outline-variant/30` hairlines, `/20` on nested elements, `h-8` secondary actions, `rounded-lg` primary, `p-5` cards). They sit in `CARD_CLASSES`/`SECONDARY_ACTION_CLASSES`/`RAIL_CARD_CLASSES` constants at the top of each file rather than scattered inline. **Don't "fix" these back to the shared primitives** — the divergence is the point here; if the design system ever absorbs it, do it deliberately and everywhere at once.

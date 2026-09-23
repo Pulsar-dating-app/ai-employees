@@ -12,6 +12,19 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-23 — Appointments becomes a day agenda
+
+**Decision:** The Appointments screen now opens on today:
+- The next or in-progress booking, with a countdown, and a timeline across business hours.
+- Then the requests waiting for approval, with the actions in place.
+- Then the agenda, as compact rows grouped by day that expand for details.
+
+The stat-tile rail and the Stitch card clone are gone. "Upcoming" now starts at the start of the business day, not at the current instant. The user picked this layout over a list-plus-detail split and a week calendar.
+
+**Why:** A service business checks the schedule to answer "what's next today and what needs me". The old page buried that under full-size cards that repeated the date tile on every booking. An appointment already under way at page load used to vanish from "Upcoming" (its `starts_at` was before now), so the merchant couldn't mark it complete from the default view.
+
+---
+
 ## 2026-09-23 — My Team shows hired members as badges with real weekly activity
 
 **Decision:** `/dashboard` splits the roster into "Your team" (large portrait badges with live status, conversations in the last 7 days, and how many conversations need the merchant) and "Available to hire" (compact rows). The status tabs and search are removed. The user picked this over a refined single list.
