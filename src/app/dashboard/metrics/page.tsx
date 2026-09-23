@@ -1,37 +1,35 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { addDays, loadCompanyAnalytics, localToday } from "@/lib/analytics/load";
 import { loadGroundingCounts, localDayRangeUtc } from "@/lib/analytics/grounding";
-import {
-  agentMetricRole,
-  loadSchedulingAnalytics,
-  SALES_METRIC_ORDER,
-  SCHEDULING_METRIC_ORDER,
-} from "@/lib/analytics/scheduling";
+import { agentMetricRole, loadSchedulingAnalytics } from "@/lib/analytics/scheduling";
 import { Button } from "@/components/ui/button";
 import { BarChartIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 import { LockedPage } from "../locked-page";
-import { MetricsClient, type MetricCardData } from "./metrics-client";
-import type { HealthState } from "./agent-health-card";
+import { PerformanceView, type HealthState } from "./performance-view";
+import type { ChartPoint } from "./conversations-chart";
 import { DEFAULT_RANGE_DAYS } from "./constants";
 
-// Trello F6 — "Measure" (spec §27): a merchant needs to see their team is
-// actually working. Renders one hired team member's metrics + a small trend
-// line each, plus one honest "how is X doing" read (paused / waiting /
-// working). No revenue, no conversion-to-sale — out of MVP scope, and a
-// checkout click is never presented as a sale (spec §14/§15).
-//
-// Which metrics show depends on the selected team member's role: Malu (and
-// any future sales agent) gets the spec §15 sales set; Ana gets a scheduling
-// set derived from `appointments` (see src/lib/analytics/scheduling.ts). If
-// nothing is hired the page is locked, with the tab still visible.
-//
-// This Server Component does all the data work; MetricsClient owns the
-// period toggle, the team-member selector, and the loading transition.
+type SeriesPoint = { date: string; count: number };
+
+function chartPoints(current: SeriesPoint[], previous: SeriesPoint[], size: number): ChartPoint[] {
+  const points: ChartPoint[] = [];
+  for (let end = current.length; end - size >= 0; end -= size) {
+    const start = end - size;
+    const sum = (series: SeriesPoint[]) => series.slice(start, end).reduce((acc, p) => acc + p.count, 0);
+    points.unshift({
+      date: current[start].date,
+      end: size > 1 ? current[end - 1].date : undefined,
+      current: sum(current),
+      previous: previous.length > 0 ? sum(previous) : null,
+    });
+  }
+  return points;
+}
 
 type HiredRow = {
   status: string;
@@ -45,11 +43,10 @@ export default async function MetricsPage({
 }: {
   searchParams: Promise<{ days?: string; agent?: string }>;
 }) {
-  const [{ days: daysParam, agent: agentParam }, supabase, t, locale] = await Promise.all([
+  const [{ days: daysParam, agent: agentParam }, supabase, t] = await Promise.all([
     searchParams,
     createClient(),
     getTranslations("Metrics"),
-    getLocale(),
   ]);
 
   const {
@@ -74,8 +71,6 @@ export default async function MetricsPage({
     .from("company_agents")
     .select("status, name, agent_id, agents(slug)")
     .eq("company_id", company.id);
-  // PostgREST returns `agents` as one embedded object; the generated types
-  // widen it to an array (same cast the my-agents / scheduling reads make).
   const hiredRows = ((hiredRaw ?? []) as unknown as HiredRow[]).filter((r) => r.agents?.slug);
 
   if (hiredRows.length === 0) {
@@ -92,9 +87,6 @@ export default async function MetricsPage({
       />
     );
   }
-
-  // Selected team member: ?agent=slug when it names a hired one, else Malu if
-  // she's hired, else the first hire.
   const selected =
     hiredRows.find((r) => r.agents!.slug === agentParam) ??
     hiredRows.find((r) => r.agents!.slug === "malu") ??
@@ -113,16 +105,22 @@ export default async function MetricsPage({
   const rangeOpts = {
     companyId: company.id,
     timezone,
-    granularity,
+    granularity: "day" as const,
     from,
     to,
     agentId: selected.agent_id,
   };
   const { startUtc, endUtc } = localDayRangeUtc(from, to, timezone);
-  const [analytics, groundingCounts] = await Promise.all([
+  const prevTo = addDays(from, -1);
+  const prevFrom = addDays(prevTo, -(rangeDays - 1));
+  const prevOpts = { ...rangeOpts, from: prevFrom, to: prevTo };
+  const loader = (opts: typeof rangeOpts) =>
     role === "scheduling"
-      ? loadSchedulingAnalytics({ supabase, ...rangeOpts })
-      : loadCompanyAnalytics({ supabase, ...rangeOpts }),
+      ? loadSchedulingAnalytics({ supabase, ...opts })
+      : loadCompanyAnalytics({ supabase, ...opts });
+  const [analytics, previous, groundingCounts] = await Promise.all([
+    loader(rangeOpts),
+    loader(prevOpts),
     loadGroundingCounts({
       supabase,
       companyId: company.id,
@@ -131,47 +129,81 @@ export default async function MetricsPage({
       agentId: selected.agent_id,
     }),
   ]);
-  const metricOrder = role === "scheduling" ? SCHEDULING_METRIC_ORDER : SALES_METRIC_ORDER;
 
-  const byMetric = new Map(analytics.metrics.map((m) => [m.metric, m]));
-  const conversationsTotal = byMetric.get("conversations")?.total ?? 0;
+  const byMetric = new Map(analytics.metrics.map((m) => [m.metric as string, m]));
+  const prevByMetric = new Map(previous.metrics.map((m) => [m.metric as string, m]));
+  const total = (key: string) => byMetric.get(key)?.total ?? 0;
+  const conversationsTotal = total("conversations");
+  const currentSeries = byMetric.get("conversations")?.series ?? [];
+  const previousSeries = prevByMetric.get("conversations")?.series ?? [];
+  const previousTotal = prevByMetric.get("conversations")?.total ?? 0;
 
-  let healthState: HealthState;
-  if (selected.status === "paused") healthState = "paused";
-  else if (conversationsTotal === 0) healthState = "waiting";
-  else healthState = "healthy";
+  const healthState: HealthState =
+    selected.status === "paused" ? "paused" : conversationsTotal === 0 ? "waiting" : "healthy";
+  const healthTitle =
+    healthState === "paused"
+      ? t("health.pausedTitle", { name: agentName })
+      : healthState === "waiting"
+        ? t("health.waitingTitle", { name: agentName })
+        : t("health.healthyTitle", { name: agentName });
 
-  const HEALTH_COPY: Record<HealthState, { title: string; body: string }> = {
-    healthy: {
-      title: t("health.healthyTitle", { name: agentName }),
-      body: t("health.healthyBody", { name: agentName, conversations: conversationsTotal }),
-    },
-    waiting: {
-      title: t("health.waitingTitle", { name: agentName }),
-      body: t("health.waitingBody", { name: agentName }),
-    },
-    paused: {
-      title: t("health.pausedTitle", { name: agentName }),
-      body: t("health.pausedBody", { name: agentName }),
-    },
-    not_hired: {
-      title: t("health.notHiredTitle", { name: agentName }),
-      body: t("health.notHiredBody", { name: agentName }),
-    },
-  };
-
-  const numberFormat = new Intl.NumberFormat(locale === "pt" ? "pt-BR" : "en-US");
-
-  const cards: MetricCardData[] = metricOrder.map(({ key, i18n }) => {
-    const m = byMetric.get(key);
-    return {
-      key,
-      label: t(`metrics.${i18n}.label`),
-      caption: t(`metrics.${i18n}.caption`),
-      value: numberFormat.format(m?.total ?? 0),
-      series: m?.series.map((p) => p.count) ?? [],
-    };
-  });
+  const label = (i18n: string) => t(`metrics.${i18n}.label`);
+  const funnel =
+    role === "scheduling"
+      ? [
+          {
+            key: "appointments_booked",
+            label: label("appointmentsBooked"),
+            value: total("appointments_booked"),
+          },
+          {
+            key: "appointments_completed",
+            label: label("appointmentsCompleted"),
+            value: total("appointments_completed"),
+          },
+        ]
+      : [
+          {
+            key: "conversations",
+            label: label("conversations"),
+            value: total("conversations"),
+          },
+          {
+            key: "product_recommendations",
+            label: label("productRecommendations"),
+            value: total("product_recommendations"),
+          },
+          {
+            key: "buying_intent",
+            label: label("buyingIntent"),
+            value: total("buying_intent"),
+          },
+          {
+            key: "checkout_clicks",
+            label: label("checkoutClicks"),
+            value: total("checkout_clicks"),
+          },
+        ];
+  const outcomes =
+    role === "scheduling"
+      ? [
+          {
+            key: "appointments_cancelled",
+            label: label("appointmentsCancelled"),
+            value: total("appointments_cancelled"),
+          },
+          {
+            key: "appointments_no_show",
+            label: label("appointmentsNoShow"),
+            value: total("appointments_no_show"),
+          },
+          {
+            key: "waitlist_added",
+            label: label("waitlistAdded"),
+            value: total("waitlist_added"),
+          },
+        ]
+      : [];
 
   const agentOptions = hiredRows.map((r) => ({
     value: r.agents!.slug,
@@ -180,55 +212,64 @@ export default async function MetricsPage({
 
   return (
     <Suspense fallback={null}>
-      <MetricsClient
+      <h1 className="sr-only">{t("pageTitle")}</h1>
+      <PerformanceView
         rangeValue={rangeValue}
+        rangeDays={rangeDays}
+        granularity={granularity}
         agentOptions={agentOptions}
         selectedAgent={selectedSlug}
-        header={{ title: t("pageTitle"), subtitle: t("pageSubtitle") }}
-        overview={{ title: t("overviewTitle"), subtitle: t("overviewSubtitle") }}
-        rangeLabels={{
-          "7": t("range.last7Days"),
-          "30": t("range.last30Days"),
-          "90": t("range.last90Days"),
+        labels={{
+          range: {
+            "7": t("range.last7Days"),
+            "30": t("range.last30Days"),
+            "90": t("range.last90Days"),
+          },
+          rangeGroup: t("range.label"),
+          agentGroup: t("agentSelectLabel"),
+          conversations: label("conversations"),
+          funnelTitle: role === "scheduling" ? t("view.schedulingFunnelTitle") : t("view.salesFunnelTitle"),
+          funnelBody: role === "scheduling" ? t("view.schedulingFunnelBody") : t("view.salesFunnelBody"),
+          notASale: role === "scheduling" ? null : t("notASale"),
         }}
-        rangeGroupLabel={t("range.label")}
-        agentGroupLabel={t("agentSelectLabel")}
-        cards={cards}
-        notASale={t("notASale")}
-        health={{
-          state: healthState,
-          title: HEALTH_COPY[healthState].title,
-          body: HEALTH_COPY[healthState].body,
+        health={{ state: healthState, title: healthTitle }}
+        conversations={{
+          total: conversationsTotal,
+          previousTotal,
+          messages: total("messages"),
         }}
+        points={chartPoints(currentSeries, previousSeries, granularity === "week" ? 7 : 1)}
+        funnel={funnel}
+        outcomes={outcomes}
         reliability={{
-          title: t("reliability.title"),
+          title: t("view.reliabilityTitle"),
           subtitle: t("reliability.subtitle", { name: agentName }),
           emptyBody: t("reliability.empty", { name: agentName }),
           scopeNote: t("reliability.scope"),
-          hasActivity:
-            groundingCounts.verified + groundingCounts.regenerated + groundingCounts.blocked > 0,
+          hasActivity: groundingCounts.verified + groundingCounts.regenerated + groundingCounts.blocked > 0,
           stats: [
             {
               key: "verified",
-              value: numberFormat.format(groundingCounts.verified),
+              value: groundingCounts.verified,
               label: t("reliability.verifiedLabel"),
             },
             {
               key: "regenerated",
-              value: numberFormat.format(groundingCounts.regenerated),
+              value: groundingCounts.regenerated,
               label: t("reliability.regeneratedLabel"),
-              emphasis: groundingCounts.regenerated > 0,
             },
             {
               key: "blocked",
-              value: numberFormat.format(groundingCounts.blocked),
+              value: groundingCounts.blocked,
               label: t("reliability.blockedLabel"),
-              emphasis: groundingCounts.blocked > 0,
             },
           ],
           cta:
             groundingCounts.blocked > 0
-              ? { href: "/dashboard/conversations", label: t("reliability.cta") }
+              ? {
+                  href: "/dashboard/conversations",
+                  label: t("reliability.cta"),
+                }
               : undefined,
         }}
       />

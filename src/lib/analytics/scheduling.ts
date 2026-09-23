@@ -21,8 +21,7 @@ export function agentMetricRole(slug: string): AgentMetricRole {
   return SCHEDULING_AGENT_SLUGS.has(slug) ? "scheduling" : "sales";
 }
 
-// `key` is the metric id (also the sparkline icon key in metrics-client);
-// `i18n` is the suffix under `Metrics.metrics.*` for its label/caption.
+// `key` is the metric id; `i18n` is the suffix under `Metrics.metrics.*` for its label/caption.
 export const SALES_METRIC_ORDER = [
   { key: "conversations", i18n: "conversations" },
   { key: "messages", i18n: "messages" },

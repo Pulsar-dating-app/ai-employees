@@ -1015,6 +1015,27 @@
       "blockedLabel": "Seguradas para confirmação",
       "cta": "Ver quem está aguardando confirmação",
       "verifiedLabel": "Respostas com valor conferido"
+    },
+    "view": {
+      "current": "Este período",
+      "previous": "{days} dias anteriores",
+      "deltaUp": "{pct}% a mais que nos {days} dias anteriores",
+      "deltaDown": "{pct}% a menos que nos {days} dias anteriores",
+      "deltaFlat": "Igual aos {days} dias anteriores",
+      "noPrevious": "Nada para comparar nos {days} dias anteriores",
+      "messages": "{count, plural, one {# mensagem trocada} other {# mensagens trocadas}}",
+      "weekOf": "{start} – {end}",
+      "deltaFrom": "Eram {previous} nos {days} dias anteriores",
+      "chartEmpty": "Nenhuma conversa neste período ainda.",
+      "tableCaption": "Conversas por {unit, select, week {semana} other {dia}}",
+      "tableDate": "Data",
+      "salesFunnelTitle": "Da conversa ao checkout",
+      "salesFunnelBody": "Até onde os clientes chegaram no período selecionado.",
+      "schedulingFunnelTitle": "Agendamentos feitos",
+      "schedulingFunnelBody": "Agendamentos feitos no período selecionado, e quantos foram concluídos.",
+      "stepRate": "{pct}% da etapa anterior",
+      "outcomesTitle": "Outros resultados",
+      "reliabilityTitle": "Valores conferidos no seu catálogo"
     }
   },
   "AgentDetail": {

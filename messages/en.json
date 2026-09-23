@@ -1015,6 +1015,27 @@
       "blockedLabel": "Held for confirmation",
       "cta": "See who's waiting on a confirmation",
       "verifiedLabel": "Answers with a checked figure"
+    },
+    "view": {
+      "current": "This period",
+      "previous": "Previous {days} days",
+      "deltaUp": "{pct}% more than the previous {days} days",
+      "deltaDown": "{pct}% fewer than the previous {days} days",
+      "deltaFlat": "Same as the previous {days} days",
+      "noPrevious": "Nothing to compare with in the previous {days} days",
+      "messages": "{count, plural, one {# message} other {# messages}} exchanged",
+      "weekOf": "{start} – {end}",
+      "deltaFrom": "Up from {previous} in the previous {days} days",
+      "chartEmpty": "No conversations in this period yet.",
+      "tableCaption": "Conversations per {unit, select, week {week} other {day}}",
+      "tableDate": "Date",
+      "salesFunnelTitle": "From conversation to checkout",
+      "salesFunnelBody": "How far customers got in the selected period.",
+      "schedulingFunnelTitle": "Appointments taken",
+      "schedulingFunnelBody": "Bookings made in the selected period, and how many were completed.",
+      "stepRate": "{pct}% of the step above",
+      "outcomesTitle": "Other outcomes",
+      "reliabilityTitle": "Figures checked against your catalogue"
     }
   },
   "AgentDetail": {

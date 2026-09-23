@@ -455,20 +455,18 @@ select:not(:disabled) {
    Metrics dashboard (src/app/dashboard/metrics/)
    ============================================================ */
 
-/* Sparkline draws itself in on every render — so changing the date filter
-   makes each trend line redraw left-to-right. Relies on pathLength="1". */
-@keyframes metrics-spark-draw {
+.metrics-reveal {
+  transform-box: fill-box;
+  transform-origin: 0 0;
+  animation: metrics-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+@keyframes metrics-reveal {
   from {
-    stroke-dashoffset: 1;
+    transform: scaleX(0);
   }
   to {
-    stroke-dashoffset: 0;
+    transform: none;
   }
-}
-.metrics-spark-draw {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: metrics-spark-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Indeterminate progress sweep, shown while a surface swaps its data under
@@ -488,10 +486,8 @@ select:not(:disabled) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .metrics-spark-draw {
+  .metrics-reveal {
     animation: none;
-    stroke-dasharray: none;
-    stroke-dashoffset: 0;
   }
   .animate-progress-sweep {
     animation: none;

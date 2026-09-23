@@ -12,6 +12,17 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-23 — Performance becomes a chart with a funnel, compared with the previous period
+
+**Decision:** `/dashboard/metrics` now centers on one hero conversations chart with a 48px total. It compares against the previous period of the same length, loaded from the database, and is not mocked. Beside it, a funnel shows step rates. The grid of equal metric cards with sparklines is gone. At 90 days, the chart sums daily data into full 7-day buckets anchored at today. Ana's funnel is Appointments → Completed, with no conversations step. The user picked this layout over the other options.
+
+**Why:**
+- Equal cards gave every number the same weight and answered neither "is it growing?" nor "where do customers drop off?".
+- ISO-week buckets made the latest point a partial week, which drew a false drop at the end of the 90-day chart.
+- Appointments are counted for the whole company and conversations per agent (see architecture.md). Chaining them into one funnel showed impossible transitions, such as 0 conversations leading to 13 appointments.
+
+---
+
 ## 2026-09-23 — Business settings get a side index with live completeness
 
 **Decision:** `/dashboard/settings` is a two-column document: a sticky index of sections on the left, with a ✓ per filled section and an "N of 4" bar, and calm blocks on the right with paired fields. Business info is split into "About the business" and "Contact & location". The FAQ becomes expandable questions. The "almost empty" warning and the sidebar warning now update as soon as a section is saved. The user picked this over a single column with chips and over tabs.
