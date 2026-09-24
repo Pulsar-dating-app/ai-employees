@@ -124,7 +124,7 @@ export function ValueCalculator({
                   const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
                   setCostText(digits ? new Intl.NumberFormat("pt-BR").format(Number(digits)) : "");
                 }}
-                className="h-full min-w-0 flex-1 bg-transparent px-2 text-[16px] font-semibold tabular-nums text-[#0f172a] outline-none placeholder:font-normal placeholder:text-[#a0a0b8]"
+                className="h-full min-w-0 flex-1 bg-transparent px-2 text-[16px] font-semibold tabular-nums text-[#0f172a] outline-none focus-visible:!outline-none placeholder:font-normal placeholder:text-[#a0a0b8]"
               />
             </div>
             <p className="text-[12px] text-[#64748b]">{t("calc.costHint")}</p>
@@ -133,13 +133,13 @@ export function ValueCalculator({
             <label htmlFor={countId} className="text-[14px] font-semibold text-[#0f172a]">
               {t("calc.countLabel")}
             </label>
-            <div className="flex h-12 items-center rounded-xl border border-[#d8d4ee] bg-white">
+            <div className="flex h-12 items-center rounded-xl border border-[#d8d4ee] bg-white p-0.5 transition-[border-color,box-shadow] has-[input:focus]:border-[#3525cd] has-[input:focus]:shadow-[0_0_0_4px_rgba(53,37,205,0.12)]">
               <button
                 type="button"
                 aria-label={t("calc.decrease")}
                 disabled={count <= 1}
                 onClick={() => setCount((c) => Math.max(1, c - 1))}
-                className="flex h-full w-11 items-center justify-center text-[20px] text-[#464555] transition-colors hover:text-[#3525cd] disabled:opacity-30"
+                className="flex h-full w-10 items-center justify-center rounded-[9px] text-[20px] text-[#464555] transition-colors hover:text-[#3525cd] focus-visible:!outline-none focus-visible:bg-[#f5f2ff] focus-visible:text-[#3525cd] focus-visible:shadow-[inset_0_0_0_2px_#3525cd] disabled:opacity-30"
               >
                 −
               </button>
@@ -150,14 +150,14 @@ export function ValueCalculator({
                 onChange={(e) =>
                   setCount(Math.min(MAX_COUNT, Math.max(1, Number(e.target.value.replace(/\D/g, "")) || 1)))
                 }
-                className="h-full w-10 bg-transparent text-center text-[16px] font-semibold tabular-nums text-[#0f172a] outline-none"
+                className="h-full w-10 bg-transparent text-center text-[16px] font-semibold tabular-nums text-[#0f172a] outline-none focus-visible:!outline-none"
               />
               <button
                 type="button"
                 aria-label={t("calc.increase")}
                 disabled={count >= MAX_COUNT}
                 onClick={() => setCount((c) => Math.min(MAX_COUNT, c + 1))}
-                className="flex h-full w-11 items-center justify-center text-[20px] text-[#464555] transition-colors hover:text-[#3525cd] disabled:opacity-30"
+                className="flex h-full w-10 items-center justify-center rounded-[9px] text-[20px] text-[#464555] transition-colors hover:text-[#3525cd] focus-visible:!outline-none focus-visible:bg-[#f5f2ff] focus-visible:text-[#3525cd] focus-visible:shadow-[inset_0_0_0_2px_#3525cd] disabled:opacity-30"
               >
                 +
               </button>
