@@ -76,6 +76,14 @@ export async function linkUserToProfessional(
     .eq("id", userId)
     .is("name", null);
   if (nameError) throw nameError;
+
+  // Back in a company: any "you were removed" notice is moot.
+  const { error: noticeError } = await service
+    .from("company_member_removals")
+    .update({ acknowledged_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .is("acknowledged_at", null);
+  if (noticeError) throw noticeError;
 }
 
 // What giving a professional an email does, decided from the facts about that
@@ -186,19 +194,6 @@ export async function assignProfessionalEmail(
     }
   }
   return outcome;
-}
-
-// Takes a member's access away when their professional is deactivated or
-// unlinked. Owners and admins keep theirs -- the company is theirs to run
-// whether or not they take bookings.
-export async function removeMemberAccess(service: SupabaseClient, companyId: string, userId: string): Promise<void> {
-  const { error } = await service
-    .from("company_users")
-    .delete()
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .eq("role", "member");
-  if (error) throw error;
 }
 
 // Returns true when the account was just placed into a company.

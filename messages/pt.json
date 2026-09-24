@@ -1892,9 +1892,20 @@
       "accessPending": "Convite pendente",
       "pendingHint": "Peça para {name} criar uma conta na Staffra com esse e-mail para ver a própria agenda.",
       "noEmailHint": "Adicione o e-mail de {name} para que a pessoa entre e veja a própria agenda.",
-      "unlink": "Remover acesso",
-      "unlinkConfirm": "Remover o acesso de {name}? A pessoa não vai mais conseguir entrar neste negócio. A agenda e os agendamentos continuam.",
-      "unlinkSelfConfirm": "Desvincular sua conta desta agenda? Você continua com acesso total ao negócio."
+      "unlinkSelfConfirm": "Desvincular sua conta desta agenda? Você continua com acesso total ao negócio.",
+      "roles": {
+        "owner": "Dono",
+        "admin": "Administrador",
+        "member": "Membro"
+      },
+      "promote": "Tornar administrador",
+      "promoteConfirm": "Tornar {name} administrador? A pessoa vai ver e gerenciar o negócio todo, como você.",
+      "demote": "Voltar para membro",
+      "demoteConfirm": "Voltar {name} para membro? A pessoa vai ver só a própria agenda e os próprios agendamentos.",
+      "remove": "Remover do negócio",
+      "removeConfirm": "Remover {name} do negócio? A pessoa perde o acesso na hora. A agenda e os agendamentos continuam aqui para você reatribuir ou desativar.",
+      "unlinkSelf": "Desvincular minha conta desta agenda",
+      "ownerOnly": "Só o dono pode fazer isso."
     },
     "settings": {
       "pageTitle": "Configurações de agendamento",
@@ -2607,5 +2618,11 @@
       "paymentPending": "Aguardando um pagamento aprovado",
       "teamReplies": "Respostas enviadas pela sua equipe neste período"
     }
+  },
+  "AccessRemoved": {
+    "title": "Você não tem mais acesso a {company}",
+    "body": "O responsável por {company} removeu seu acesso. Se for um engano, fale com ele: ele pode te adicionar de novo com este mesmo e-mail. Você também pode criar o seu próprio negócio.",
+    "startOwn": "Criar meu próprio negócio",
+    "logout": "Sair"
   }
 }

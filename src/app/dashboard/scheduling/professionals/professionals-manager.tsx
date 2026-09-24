@@ -8,7 +8,7 @@ import clsx from "clsx";
 import { ChevronRightIcon, PlusIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { StatusBanner } from "@/components/ui/status-banner";
-import { AccessPill, emailErrorKey } from "./[professionalId]/professional-identity-card";
+import { AccessPill, RolePill, emailErrorKey } from "./[professionalId]/professional-identity-card";
 
 export type ProfessionalListItem = {
   id: string;
@@ -22,6 +22,8 @@ export type ProfessionalListItem = {
   // Their login: an account is linked, an invite waits on an email, or
   // neither (a professional from before emails were required).
   access: "active" | "pending" | "none";
+  // The linked account's role in the company, when there is one.
+  role: "owner" | "admin" | "member" | null;
   // Services explicitly linked to this professional (empty = does every
   // service that isn't restricted to someone else).
   serviceNames: string[];
@@ -94,6 +96,7 @@ export function ProfessionalsManager({
         isMe: false,
         serviceNames: [],
         access: professional.userId ? "active" : professional.inviteEmail ? "pending" : "none",
+        role: professional.userId ? "member" : null,
       },
     ]);
     setNewName("");
@@ -247,6 +250,8 @@ export function ProfessionalsManager({
                     <span className="rounded-full bg-surface-container px-2 py-0.5 text-[11px] font-semibold text-on-surface-variant">
                       {t("you")}
                     </span>
+                  ) : p.access === "active" && p.role && p.role !== "member" ? (
+                    <RolePill role={p.role} />
                   ) : p.access === "active" ? (
                     <AccessPill tone="active">{t("accessActive")}</AccessPill>
                   ) : p.access === "pending" ? (

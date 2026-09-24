@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireProfessionalAccess } from "@/lib/professionals/route-auth";
-import { assignProfessionalEmail, normalizeEmail, removeMemberAccess } from "@/lib/team/invites";
+import { assignProfessionalEmail, normalizeEmail } from "@/lib/team/invites";
+import { removeFromCompany } from "@/lib/team/roles";
 
 // 2026-09-24 -- one professional. PATCH is split by who may do what:
 //   - uses_custom_hours: an admin, or the linked team member (it's their own
@@ -14,8 +15,11 @@ import { assignProfessionalEmail, normalizeEmail, removeMemberAccess } from "@/l
 // 2026-09-25 -- the team member is given by email, not picked from a list
 // (see src/lib/team/invites.ts): `email` sets or replaces the address while
 // no account is linked (`null` withdraws a pending invite); `unlink: true`
-// detaches the linked account. Unlinking or deactivating takes a member's
-// access to the company away; an owner/admin keeps theirs.
+// detaches the linked account -- the owner's call only: for anyone else it
+// removes them from the company (same as DELETE members/[userId]); the owner
+// unlinking their own schedule keeps the company. Deactivating a schedule
+// does NOT remove its person: they keep their login and see "your schedule
+// was turned off" until it's reactivated or the owner removes them.
 
 const MAX_NAME_LENGTH = 120;
 const COLUMNS = "id, name, is_active, position, uses_custom_hours, user_id, invite_email";
@@ -32,11 +36,19 @@ function toJson(row: Record<string, unknown>) {
   };
 }
 
-// Detaching the account also ends a member's seat in the company.
-async function detachAccount(companyId: string, professionalId: string, userId: string | null) {
-  if (!userId) return;
+// Owner-only. Anyone but the owner leaves the company with their schedule's
+// link; the owner just detaches from this schedule.
+async function detachAccount(
+  companyId: string,
+  professionalId: string,
+  userId: string,
+  ownerId: string,
+) {
   const service = createServiceClient();
-  await removeMemberAccess(service, companyId, userId);
+  if (userId !== ownerId) {
+    await removeFromCompany(service, companyId, userId, ownerId);
+    return;
+  }
   const { error } = await service
     .from("professionals")
     .update({ user_id: null })
@@ -119,9 +131,6 @@ export async function PATCH(
       }
     }
     update.is_active = body.isActive;
-    if (!body.isActive && access.professional.isActive) {
-      await detachAccount(companyId, professionalId, access.professional.userId);
-    }
   }
 
   if ("userId" in body) {
@@ -129,7 +138,10 @@ export async function PATCH(
   }
 
   if (body.unlink === true && access.professional.userId) {
-    await detachAccount(companyId, professionalId, access.professional.userId);
+    if (access.role !== "owner") {
+      return NextResponse.json({ error: "owner_only" }, { status: 403 });
+    }
+    await detachAccount(companyId, professionalId, access.professional.userId, access.userId);
     access.professional.userId = null;
   }
 
@@ -232,8 +244,6 @@ export async function DELETE(
   if (upcoming > 0) {
     return NextResponse.json({ error: "has_upcoming_appointments", count: upcoming }, { status: 409 });
   }
-
-  await detachAccount(companyId, professionalId, access.professional.userId);
 
   const { data, error } = await createServiceClient()
     .from("professionals")

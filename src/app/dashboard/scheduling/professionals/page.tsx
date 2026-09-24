@@ -35,7 +35,7 @@ export default async function ProfessionalsPage() {
     );
   }
 
-  const [professionals, { data: services }, { data: connections }] = await Promise.all([
+  const [professionals, { data: services }, { data: connections }, { data: seats }] = await Promise.all([
     listProfessionalsWithServices(supabase, company.id, { includeInactive: true }),
     supabase
       .from("services")
@@ -45,7 +45,11 @@ export default async function ProfessionalsPage() {
       .eq("is_active", true)
       .order("name", { ascending: true }),
     supabase.from("company_calendar_connections").select("professional_id, status").eq("company_id", company.id),
+    supabase.from("company_users").select("user_id, role").eq("company_id", company.id),
   ]);
+  const roleByUser = new Map(
+    ((seats ?? []) as { user_id: string; role: "owner" | "admin" | "member" }[]).map((s) => [s.user_id, s.role]),
+  );
 
   const connected = new Set(
     ((connections ?? []) as { professional_id: string; status: string }[])
@@ -63,6 +67,7 @@ export default async function ProfessionalsPage() {
     isMe: p.userId === user!.id,
     calendarConnected: connected.has(p.id),
     access: p.userId ? "active" : p.inviteEmail ? "pending" : "none",
+    role: p.userId ? (roleByUser.get(p.userId) ?? null) : null,
     serviceNames: p.serviceIds.map((id) => serviceNames.get(id)).filter((n): n is string => Boolean(n)),
   }));
 

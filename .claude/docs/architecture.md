@@ -1141,7 +1141,7 @@ See decisions.md, same date. Scope: Ana's scheduling side; Malu has no member-fa
 - **Professionals API:**
   - `POST` requires `{ name, email }`.
   - `PATCH` takes `email` (while no account is linked; `null` withdraws the invite) and `unlink: true`. Name is admin-only now. `userId` is no longer accepted.
-  - Deactivating or unlinking removes a `member`'s `company_users` row (`removeMemberAccess`).
+  - Deactivating a schedule keeps its person (they see "your schedule was turned off"). `unlink: true` is owner-only: for anyone but the owner it's a removal (`removeFromCompany`).
 - **Dashboard shell:**
   - A member gets a two-item sidebar ("Agenda", "Minha agenda") with no setup guide or usage meter, and no scheduling sub-tabs.
   - A member whose professional is inactive sees a "your schedule was turned off" screen.
@@ -1152,6 +1152,11 @@ See decisions.md, same date. Scope: Ana's scheduling side; Malu has no member-fa
   - `business-hours` PUT and `time-off` writes only with their own `professionalId`.
   - Services and products (writes), intake fields (PUT), hiring, photo, widget, preview chat, Shopify sync, conversations and analytics are admin-only.
   - Waitlist notifications after a cancel run with the service client, because a member can't see "any professional" waitlist entries.
+- **Role management** (`src/lib/team/roles.ts`, `members/[userId]` route, migration `20260925150000`):
+  - `checkTeamAction` (pure) is the rule: owner/admin promote a member, only the owner demotes or removes, the owner is untouchable, and nobody changes themselves. `company_users` RLS enforces the same.
+  - `removeFromCompany` deletes the seat, unlinks the schedule (which stays) and writes a `company_member_removals` notice.
+  - A company-less account with an unacknowledged notice is sent to `/access-removed` (from the dashboard layout and `/onboarding`). Its "set up my own business" action acknowledges the notice; being re-added by email acknowledges it too.
+  - The professional page shows the account's role (Dono/Administrador/Membro) and the actions the viewer may take.
 - **RLS** (`20260925120000_team_roles.sql`) uses `private.is_own_professional` and `private.is_own_customer` alongside `is_company_admin`. Appointments are deleted by admins only; the dashboard "cancel" is an update.
 - **Tests:** `tests/unit/team/invites.test.ts` and `tests/integration/team-roles.test.ts`. `signUpTestUser` now names each user by default (`name: null` for a nameless one) and accepts a chosen `email`. Next streams a page-level `redirect()` under a `loading.tsx` as a 200 with `<meta id="__next-page-redirect">`, not a 307, so the tests' `page()` helper reads both.
 

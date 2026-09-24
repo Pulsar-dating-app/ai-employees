@@ -12,6 +12,29 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-25 — Owners/admins promote; only the owner demotes or removes
+
+**Decision:** Roles are managed from a professional's page:
+- **Promote:** an owner or admin can make a member an admin.
+- **Demote or remove:** only the owner can turn an admin back into a member, or remove anyone from the company.
+- **Limits:** the owner row is never changed or removed, and nobody changes their own role.
+- **Where the rules live:** `checkTeamAction` (`src/lib/team/roles.ts`) behind `PATCH`/`DELETE /api/companies/[id]/members/[userId]`. RLS mirrors them (migration `20260925150000`): an admin's UPDATE can only touch a `member` row, and only to make it `member`/`admin`; DELETE is the owner's only.
+- **Unlinking a schedule is owner-only too.** For anyone but the owner it is a removal.
+
+This supersedes two things from the entry just below:
+- **Deactivating a schedule no longer removes its person.** They keep their login and see "your schedule was turned off" until it's reactivated. Removal is its own, owner-only action.
+- **Removal is recorded** in `company_member_removals`. On their next login, a removed person with no company sees `/access-removed` ("You no longer have access to {company}"), not onboarding. From there they can set up a business of their own (which acknowledges the notice) or log out. Being added back by email puts them straight into the company again and clears the notice.
+- **The schedule stays when its person is removed.** It keeps its appointments, now unlinked, for the owner to reassign or turn off.
+
+**Why:** The user asked for admins to be able to promote, and for only the owner to demote or remove. For a removed person logging in again, the options were:
+- silently dropping them into "create your business" (confusing: it looks like their company vanished);
+- blocking the account (it's their account, and they may own a business later);
+- a clear notice with both ways forward, which is what was built.
+
+Separating "turn a schedule off" from "remove a person" keeps an admin's routine action (deactivating a schedule) from becoming a removal, which only the owner may do.
+
+---
+
 ## 2026-09-25 — Team members join by email; members see only their own schedule
 
 **Decision:** Roles are now used for real (Ana's scheduling side only for now):

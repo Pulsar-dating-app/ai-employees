@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAccess } from "@/lib/auth/company-access";
 import { claimPendingInvite } from "@/lib/team/invites";
+import { pendingRemovalNotice } from "@/lib/team/roles";
 import { ONBOARDING_PATHS, resolveOnboardingState } from "@/lib/companies/onboarding-step";
 import {
   isBillingPastDue as checkBillingPastDue,
@@ -77,6 +78,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // creation lives only in /onboarding — not the hire flow, not Settings.
   if (user && (!companies || companies.length === 0)) {
     if (await claimPendingInvite(user)) redirect("/dashboard/scheduling");
+    // Removed from a company: say so, rather than silently offering to set
+    // up a new business as if nothing happened.
+    if (await pendingRemovalNotice(supabase, user.id)) redirect("/access-removed");
     redirect("/onboarding");
   }
 

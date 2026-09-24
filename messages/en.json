@@ -1892,9 +1892,20 @@
       "accessPending": "Invite pending",
       "pendingHint": "Ask {name} to create a Staffra account with this email to see their own appointments.",
       "noEmailHint": "Add {name}'s email so they can log in and see their own appointments.",
-      "unlink": "Remove access",
-      "unlinkConfirm": "Remove {name}'s access? They'll no longer be able to log in to this business. Their schedule and appointments stay.",
-      "unlinkSelfConfirm": "Unlink your account from this schedule? You keep full access to the business."
+      "unlinkSelfConfirm": "Unlink your account from this schedule? You keep full access to the business.",
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "member": "Member"
+      },
+      "promote": "Make admin",
+      "promoteConfirm": "Make {name} an admin? They will see and manage the whole business, like you.",
+      "demote": "Make member again",
+      "demoteConfirm": "Make {name} a member again? They will only see their own appointments and schedule.",
+      "remove": "Remove from the business",
+      "removeConfirm": "Remove {name} from the business? They lose access right away. Their schedule and appointments stay here for you to reassign or turn off.",
+      "unlinkSelf": "Unlink my account from this schedule",
+      "ownerOnly": "Only the owner can do this."
     },
     "settings": {
       "pageTitle": "Scheduling settings",
@@ -2607,5 +2618,11 @@
       "paymentPending": "Waiting for a successful payment",
       "teamReplies": "Replies your team sent this period"
     }
+  },
+  "AccessRemoved": {
+    "title": "You no longer have access to {company}",
+    "body": "The person in charge of {company} removed your access. If this is a mistake, talk to them: they can add you back with this same email. You can also set up a business of your own.",
+    "startOwn": "Set up my own business",
+    "logout": "Log out"
   }
 }

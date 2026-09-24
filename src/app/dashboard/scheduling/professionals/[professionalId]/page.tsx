@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { getCurrentAccess } from "@/lib/auth/company-access";
+import { getCurrentAccess, type CompanyRole } from "@/lib/auth/company-access";
 import {
   canManageProfessional,
   getProfessional,
@@ -97,13 +97,20 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
   // The linked account's email. public.users is only readable for yourself,
   // so it comes through the service client, for this one account.
   let accountEmail: string | null = null;
+  let accountRole: CompanyRole | null = null;
   if (professional.userId) {
-    const { data: account } = await createServiceClient()
-      .from("users")
-      .select("email")
-      .eq("id", professional.userId)
-      .maybeSingle();
+    const service = createServiceClient();
+    const [{ data: account }, { data: seat }] = await Promise.all([
+      service.from("users").select("email").eq("id", professional.userId).maybeSingle(),
+      service
+        .from("company_users")
+        .select("role")
+        .eq("company_id", company.id)
+        .eq("user_id", professional.userId)
+        .maybeSingle(),
+    ]);
     accountEmail = (account?.email as string | undefined) ?? null;
+    accountRole = (seat?.role as CompanyRole | undefined) ?? null;
   }
 
   const rows = (hourRows ?? []) as (BusinessHourRow & { professional_id: string | null })[];
@@ -132,9 +139,10 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
           initialName={professional.name}
           inviteEmail={professional.inviteEmail}
           accountEmail={accountEmail}
-          linked={professional.userId !== null}
+          accountUserId={professional.userId}
+          accountRole={accountRole}
           isSelf={professional.userId === user.id}
-          isAdmin={isAdmin}
+          viewerRole={access.role ?? "member"}
         />
 
         <SettingsBlock id="services" title={t("servicesTitle")} description={t("servicesSubtitle")}>

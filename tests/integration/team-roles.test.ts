@@ -204,7 +204,7 @@ describe("joining by email", () => {
     expect(second.json.error).toBe("email_taken_in_company");
   });
 
-  it("deactivating a member's schedule takes their access away; the owner keeps theirs", async () => {
+  it("deactivating a member's schedule turns it off but doesn't remove them", async () => {
     const owner = await signUpTestUser("owner");
     const { companyId } = await seedCompany(owner);
     const { member, professionalId } = await inviteAndJoin(owner, companyId);
@@ -216,8 +216,138 @@ describe("joining by email", () => {
       .select("role")
       .eq("user_id", member.userId)
       .maybeSingle();
-    expect(membership).toBeNull();
-    expect((await page("/dashboard", owner.cookieHeader)).status).toBe(200);
+    expect(membership).toEqual({ role: "member" });
+    // They still log in -- to the "your schedule was turned off" screen.
+    expect((await page("/dashboard/scheduling", member.cookieHeader)).status).toBe(200);
+  });
+});
+
+describe("managing roles", () => {
+  function setRole(cookie: string, companyId: string, userId: string, role: string) {
+    return api<{ error?: string }>("PATCH", `/api/companies/${companyId}/members/${userId}`, cookie, { role });
+  }
+  function remove(cookie: string, companyId: string, userId: string) {
+    return api<{ error?: string }>("DELETE", `/api/companies/${companyId}/members/${userId}`, cookie);
+  }
+  async function roleOf(userId: string) {
+    const { data } = await getTestServiceClient().from("company_users").select("role").eq("user_id", userId).maybeSingle();
+    return (data?.role as string | undefined) ?? null;
+  }
+
+  it("owners and admins promote; only the owner demotes or removes; the owner is untouchable", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId } = await seedCompany(owner);
+    const { member: ana } = await inviteAndJoin(owner, companyId);
+    const { member: bia } = await inviteAndJoin(owner, companyId);
+
+    // Owner promotes Ana; Ana (admin) promotes Bia.
+    expect((await setRole(owner.cookieHeader, companyId, ana.userId, "admin")).status).toBe(200);
+    expect((await setRole(ana.cookieHeader, companyId, bia.userId, "admin")).status).toBe(200);
+    expect(await roleOf(bia.userId)).toBe("admin");
+
+    // An admin can't demote or remove another admin, a member, or the owner.
+    const demoteByAdmin = await setRole(ana.cookieHeader, companyId, bia.userId, "member");
+    expect(demoteByAdmin.status).toBe(403);
+    expect(demoteByAdmin.json.error).toBe("owner_only");
+    expect((await remove(ana.cookieHeader, companyId, bia.userId)).status).toBe(403);
+    expect((await setRole(ana.cookieHeader, companyId, owner.userId, "member")).json.error).toBe("owner_locked");
+    expect((await setRole(ana.cookieHeader, companyId, ana.userId, "member")).json.error).toBe("cannot_change_self");
+    expect((await remove(owner.cookieHeader, companyId, owner.userId)).status).toBe(403);
+
+    // The owner demotes Bia, then removes her.
+    expect((await setRole(owner.cookieHeader, companyId, bia.userId, "member")).status).toBe(200);
+    expect(await roleOf(bia.userId)).toBe("member");
+    expect((await remove(owner.cookieHeader, companyId, bia.userId)).status).toBe(200);
+    expect(await roleOf(bia.userId)).toBeNull();
+
+    // A promoted admin sees the whole dashboard.
+    expect((await page("/dashboard/settings", ana.cookieHeader)).status).toBe(200);
+    expect((await page("/dashboard/settings", ana.cookieHeader)).redirectedTo).toBeNull();
+  });
+
+  it("RLS holds the same line for direct PostgREST calls", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId } = await seedCompany(owner);
+    const { member: ana } = await inviteAndJoin(owner, companyId);
+    const { member: bia } = await inviteAndJoin(owner, companyId);
+    const { member: caio } = await inviteAndJoin(owner, companyId);
+    await setRole(owner.cookieHeader, companyId, ana.userId, "admin");
+    await setRole(owner.cookieHeader, companyId, bia.userId, "admin");
+
+    // Admin demoting another admin: no row matches their USING clause.
+    const demote = await ana.client
+      .from("company_users")
+      .update({ role: "member" })
+      .eq("company_id", companyId)
+      .eq("user_id", bia.userId)
+      .select();
+    expect(demote.data ?? []).toHaveLength(0);
+    // Admin removing a member: same.
+    const removal = await ana.client.from("company_users").delete().eq("company_id", companyId).eq("user_id", caio.userId).select();
+    expect(removal.data ?? []).toHaveLength(0);
+    // Admin promoting a member: allowed.
+    const promote = await ana.client
+      .from("company_users")
+      .update({ role: "admin" })
+      .eq("company_id", companyId)
+      .eq("user_id", caio.userId)
+      .select();
+    expect(promote.data).toHaveLength(1);
+    expect(await roleOf(bia.userId)).toBe("admin");
+  });
+
+  it("a removed person is told so at their next login, and can be added back by email", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId } = await seedCompany(owner);
+    const { member, professionalId } = await inviteAndJoin(owner, companyId);
+
+    expect((await remove(owner.cookieHeader, companyId, member.userId)).status).toBe(200);
+    // Their schedule stays, unlinked.
+    const { data: professional } = await getTestServiceClient()
+      .from("professionals")
+      .select("user_id, is_active")
+      .eq("id", professionalId)
+      .single();
+    expect(professional).toEqual({ user_id: null, is_active: true });
+
+    expect((await page("/dashboard", member.cookieHeader)).redirectedTo).toBe("/access-removed");
+    expect((await page("/onboarding", member.cookieHeader)).redirectedTo).toBe("/access-removed");
+    expect((await page("/access-removed", member.cookieHeader)).status).toBe(200);
+    // The notice is theirs alone to read.
+    const notices = await member.client.from("company_member_removals").select("company_id, acknowledged_at");
+    expect(notices.data).toEqual([{ company_id: companyId, acknowledged_at: null }]);
+
+    // Added back to the same schedule by email: straight back in.
+    const relinked = await api("PATCH", `/api/companies/${companyId}/professionals/${professionalId}`, owner.cookieHeader, {
+      email: member.email,
+    });
+    expect(relinked.status).toBe(200);
+    expect(await roleOf(member.userId)).toBe("member");
+    expect((await page("/dashboard/scheduling", member.cookieHeader)).status).toBe(200);
+    expect((await page("/access-removed", member.cookieHeader)).redirectedTo).toBe("/dashboard");
+  });
+
+  it("only the owner can unlink someone from a schedule (which removes them)", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId } = await seedCompany(owner);
+    const { member: ana } = await inviteAndJoin(owner, companyId);
+    const { member: bia, professionalId: biaSchedule } = await inviteAndJoin(owner, companyId);
+    await setRole(owner.cookieHeader, companyId, ana.userId, "admin");
+
+    const byAdmin = await api<{ error: string }>(
+      "PATCH",
+      `/api/companies/${companyId}/professionals/${biaSchedule}`,
+      ana.cookieHeader,
+      { unlink: true },
+    );
+    expect(byAdmin.status).toBe(403);
+    expect(await roleOf(bia.userId)).toBe("member");
+
+    const byOwner = await api("PATCH", `/api/companies/${companyId}/professionals/${biaSchedule}`, owner.cookieHeader, {
+      unlink: true,
+    });
+    expect(byOwner.status).toBe(200);
+    expect(await roleOf(bia.userId)).toBeNull();
   });
 });
 
