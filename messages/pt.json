@@ -1460,7 +1460,7 @@
       "cancelButton": "Cancelar",
       "nameLabel": "Nome",
       "descriptionLabel": "Descrição",
-      "descriptionHint": "Seja específico — tamanho, material, cor, peso, o que está incluso. Sua funcionária de IA só consegue contar aos clientes o que estiver escrito aqui, então \"camisa bonita\" não é suficiente, mas \"100% algodão, tamanho fiel, lava na máquina\" é.",
+      "descriptionHint": "Seja específico: tamanho, material, cor, peso, o que está incluso. Sua equipe só consegue contar aos clientes o que estiver escrito aqui, então \"camisa bonita\" não é suficiente, mas \"100% algodão, tamanho fiel, lava na máquina\" é.",
       "priceLabel": "Preço",
       "currencyLabel": "Moeda",
       "currencyPlaceholder": "Selecione uma moeda",
@@ -1475,7 +1475,17 @@
       "productUrlLabel": "URL da página do produto",
       "categoryLabel": "Categoria",
       "skuLabel": "SKU",
-      "nameRequired": "O nome é obrigatório."
+      "nameRequired": "O nome é obrigatório.",
+      "namePlaceholder": "ex.: Vestido midi de linho",
+      "categoryPlaceholder": "ex.: Vestidos",
+      "pricePlaceholder": "0,00",
+      "priceInvalid": "Informe um preço válido.",
+      "currencyRequiredWithPrice": "Escolha a moeda deste preço.",
+      "stockInvalid": "O estoque precisa ser um número inteiro.",
+      "detailsHeading": "Detalhes",
+      "priceHeading": "Preço e estoque",
+      "linksHeading": "Links",
+      "createButton": "Adicionar produto"
     },
     "list": {
       "nameColumn": "Nome",
@@ -1507,7 +1517,7 @@
       "formatTitle": "Formato do arquivo",
       "formatDescription": "A primeira linha deve ter estas colunas: name, description, price, currency, stock, image, product_url, category, sku. Somente name é obrigatório — deixe o resto em branco se não tiver essa informação.",
       "formatPriceHint": "Se você definir um preço, defina também a moeda (ex.: BRL, USD, EUR) — um preço sem moeda será ignorado.",
-      "formatDescriptionHint": "Coloque em description tudo que um cliente perguntaria — tamanho, material, cor, peso, o que está incluso. É o único lugar de onde sua funcionária de IA tira esse detalhe, então poucas palavras muitas vezes não bastam. Baixe o modelo abaixo para ver um exemplo.",
+      "formatDescriptionHint": "Coloque em description tudo que um cliente perguntaria: tamanho, material, cor, peso, o que está incluso. É o único lugar de onde sua equipe tira esse detalhe, então poucas palavras muitas vezes não bastam. Baixe o modelo para ver um exemplo.",
       "formatSizeHint": "Tamanho máximo do arquivo: 3MB.",
       "downloadTemplateButton": "Baixar modelo",
       "chooseFileButton": "Escolher arquivo",
@@ -1516,13 +1526,16 @@
       "importingButton": "Importando…",
       "importAnotherButton": "Importar outro arquivo",
       "progressLabel": "Importando… {percent}%",
-      "succeededSummary": "{count} produtos importados com sucesso.",
+      "succeededSummary": "{count, plural, one {# produto importado com sucesso.} other {# produtos importados com sucesso.}}",
       "failedSummary": "A importação falhou — nada foi salvo. Tente novamente.",
       "skippedTableRowHeader": "Linha",
       "skippedTableReasonHeader": "Motivo",
       "genericError": "Algo deu errado ao importar o arquivo. Tente novamente.",
       "fileRequired": "Escolha um arquivo primeiro.",
-      "fileTooLarge": "Esse arquivo passa de 3MB. Separe em arquivos menores e importe um de cada vez."
+      "fileTooLarge": "Esse arquivo passa de 3MB. Separe em arquivos menores e importe um de cada vez.",
+      "dropTitle": "Solte sua planilha aqui",
+      "dropBody": "ou clique para escolher um arquivo CSV ou Excel (até 3MB)",
+      "formatToggle": "Como o arquivo deve ser?"
     },
     "shopify": {
       "title": "Conecte sua loja Shopify",
@@ -1558,6 +1571,60 @@
         "connected_elsewhere": "Esta loja Shopify já está conectada a outra conta.",
         "connect_failed": "Não conseguimos conectar sua loja. Tente novamente."
       }
+    },
+    "catalog": {
+      "label": "Catálogo de produtos",
+      "search": "Buscar pelo nome…",
+      "clearSearch": "Limpar busca",
+      "categoriesLabel": "Filtrar por categoria",
+      "all": "Todos",
+      "showInactive": "Mostrar desativados",
+      "count": "{count, plural, one {# produto} other {# produtos}}",
+      "range": "{from}–{to} de {total}",
+      "previousPage": "Página anterior",
+      "nextPage": "Próxima página",
+      "add": "Adicionar produtos",
+      "addTitle": "Adicionar produtos",
+      "editTitle": "Editar {name}",
+      "noMatch": "Nada encontrado para “{query}”.",
+      "noMatchFilters": "Nenhum produto nesta visualização.",
+      "stockUntracked": "Estoque não controlado",
+      "stockOut": "Esgotado",
+      "stockLow": "{count, plural, one {Última unidade} other {Últimas #}}",
+      "stockIn": "{count} em estoque",
+      "noPrice": "Sem preço",
+      "deactivatedBadge": "Desativado",
+      "edit": "Editar {name}",
+      "deactivate": "Desativar {name}",
+      "deactivatePrompt": "Desativar este produto? Os clientes deixam de vê-lo, e o histórico é mantido.",
+      "deactivateConfirm": "Desativar",
+      "cancel": "Cancelar",
+      "reactivate": "Reativar",
+      "actionError": "Não foi possível atualizar este produto. Tente novamente.",
+      "loadError": "Não foi possível carregar os produtos. Tente novamente.",
+      "readOnlyTitle": "Somente leitura",
+      "emptyTitle": "Adicione seus primeiros produtos",
+      "emptyBody": "Escolha como trazê-los. Dá para combinar as três formas.",
+      "methods": {
+        "csv": {
+          "title": "Planilha",
+          "body": "Envie um arquivo CSV ou Excel com todo o catálogo de uma vez."
+        },
+        "shopify": {
+          "title": "Shopify",
+          "body": "Conecte sua loja e mantenha os produtos sincronizados com um clique."
+        },
+        "manual": {
+          "title": "Um por um",
+          "body": "Preencha os dados de um produto você mesmo."
+        }
+      },
+      "methodsLabel": "Formas de adicionar produtos",
+      "noMatchIn": "Nada encontrado para “{query}” em {category}.",
+      "noMatchCategory": "Nenhum produto em {category} nesta visualização.",
+      "clearFilters": "Limpar filtros",
+      "viewImport": "Ver importação",
+      "dismiss": "Dispensar"
     }
   },
   "Services": {

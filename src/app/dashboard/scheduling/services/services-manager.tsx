@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { ChevronRightIcon, PlusIcon, SearchIcon, XIcon } from "@/components/ui/icons";
-import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { ServiceRow } from "./service-list";
 import { ServiceForm } from "./service-form";
-import { ServiceDrawer } from "./service-drawer";
+import { SideDrawer } from "@/components/ui/side-drawer";
+import { FilterChips } from "@/components/ui/filter-chips";
 import { DefaultServiceCard } from "./default-service-card";
 
 export type Service = {
@@ -36,46 +36,6 @@ const UNCATEGORIZED = "__none__";
 
 function categoryKey(service: Service): string {
   return service.category?.trim() || UNCATEGORIZED;
-}
-
-function CategoryChips({
-  categories,
-  value,
-  onChange,
-  labelFor,
-}: {
-  categories: string[];
-  value: string;
-  onChange: (value: string) => void;
-  labelFor: (key: string) => string;
-}) {
-  const keys = [ALL, ...categories];
-  const { indicatorRef, register } = useSlidingIndicator<HTMLButtonElement>(value, keys.join("|"), "x");
-  return (
-    <div className="relative flex max-w-full gap-1 overflow-x-auto rounded-full bg-surface-container p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <span
-        ref={indicatorRef}
-        aria-hidden="true"
-        className="inbox-indicator absolute left-0 rounded-full bg-surface-container-lowest opacity-0 shadow-[0_1px_3px_rgba(25,28,29,0.14)]"
-      />
-      {keys.map((key) => (
-        <button
-          key={key}
-          ref={register(key)}
-          type="button"
-          aria-pressed={value === key}
-          onClick={() => onChange(key)}
-          className={clsx(
-            "relative z-10 inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded-full px-3.5 text-label-md font-semibold transition-colors duration-200",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-            value === key ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface",
-          )}
-        >
-          {labelFor(key)}
-        </button>
-      ))}
-    </div>
-  );
 }
 
 export function ServicesManager({
@@ -188,7 +148,7 @@ export function ServicesManager({
             ) : null}
           </div>
           {categories.length > 1 ? (
-            <CategoryChips categories={categories} value={category} onChange={setCategory} labelFor={labelFor} />
+            <FilterChips keys={[ALL, ...categories]} value={category} onChange={setCategory} labelFor={labelFor} />
           ) : null}
         </div>
         {canEdit ? (
@@ -298,7 +258,7 @@ export function ServicesManager({
 
       {defaultService ? <DefaultServiceCard companyId={companyId} service={defaultService} canEdit={canEdit} /> : null}
 
-      <ServiceDrawer
+      <SideDrawer
         open={drawer !== null}
         title={editing ? t("menu.editTitle", { name: editing.name }) : t("menu.addTitle")}
         closeLabel={t("closeDialogLabel")}
@@ -325,7 +285,7 @@ export function ServicesManager({
             onCancel={() => setDrawer(null)}
           />
         ) : null}
-      </ServiceDrawer>
+      </SideDrawer>
     </div>
   );
 }

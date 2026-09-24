@@ -8,7 +8,7 @@ function subscribeNoop() {
   return () => {};
 }
 
-export function ServiceDrawer({
+export function SideDrawer({
   open,
   title,
   closeLabel,
