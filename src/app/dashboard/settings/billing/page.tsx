@@ -18,6 +18,7 @@ import {
   WhatsAppIcon,
 } from "@/components/ui/icons";
 import { StatusBanner } from "@/components/ui/status-banner";
+import { SalesContactDialog } from "@/components/landing/sales-contact-dialog";
 import { PageHeader } from "../../page-header";
 import { CheckoutButton, EndTrialButton, ManageBillingButton } from "./billing-actions";
 import { PlanTiers } from "./plan-tiers";
@@ -26,7 +27,6 @@ import { UsageRing } from "./usage-ring";
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
 const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const DAY_MS = 86_400_000;
-const ENTERPRISE_MAILTO = "mailto:contato@staffra.com?subject=Enterprise";
 const SHELL =
   "relative overflow-hidden rounded-[28px] border border-outline-variant/60 bg-surface-container-lowest shadow-[0_1px_2px_rgba(25,28,29,0.04),0_24px_60px_-28px_rgba(53,37,205,0.22)]";
 
@@ -246,12 +246,11 @@ export default async function BillingPage() {
               variant="danger"
             />
           ) : (
-            <a
-              href={ENTERPRISE_MAILTO}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-error px-5 text-label-md font-semibold text-on-error transition-[filter] hover:brightness-95"
+            <SalesContactDialog
+              triggerClassName="inline-flex min-h-11 items-center justify-center rounded-xl bg-error px-5 text-label-md font-semibold text-on-error transition-[filter] hover:brightness-95"
             >
               {t("banner.overLimit.actionContact")}
-            </a>
+            </SalesContactDialog>
           )
         ) : null
       }
@@ -272,12 +271,11 @@ export default async function BillingPage() {
               label={t("banner.nearLimit.action")}
             />
           ) : (
-            <a
-              href={ENTERPRISE_MAILTO}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 text-label-md font-semibold text-on-primary transition-[filter] hover:brightness-110"
+            <SalesContactDialog
+              triggerClassName="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 text-label-md font-semibold text-on-primary transition-[filter] hover:brightness-110"
             >
               {t("banner.nearLimit.actionContact")}
-            </a>
+            </SalesContactDialog>
           )
         ) : null
       }
@@ -291,12 +289,11 @@ export default async function BillingPage() {
           <p className="text-label-md font-semibold text-on-surface">{t("enterprise.title")}</p>
           <p className="mt-0.5 text-sm text-on-surface-variant">{t("enterprise.body")}</p>
         </div>
-        <a
-          href={ENTERPRISE_MAILTO}
-          className="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest px-5 text-label-md font-semibold text-on-surface transition-colors hover:border-primary/40 hover:text-primary"
+        <SalesContactDialog
+          triggerClassName="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest px-5 text-label-md font-semibold text-on-surface transition-colors hover:border-primary/40 hover:text-primary"
         >
           {t("enterprise.cta")}
-        </a>
+        </SalesContactDialog>
       </div>
     ) : null;
 
