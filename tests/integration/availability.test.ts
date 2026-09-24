@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { calendarPath } from "./helpers/professionals";
 
 // Trello I2 -- over real HTTP against the thin availability route (the real
 // caller is J3's find_available_slots tool, calling loadAvailableSlots
@@ -167,7 +168,7 @@ describe("Availability GET /api/companies/:id/services/:serviceId/availability",
       { day_of_week: 1, start_time: "09:00", end_time: "10:00" },
     ]);
 
-    await api("POST", `/api/companies/${companyId}/calendar/connect`, owner.cookieHeader, { code: "good-code" });
+    await api("POST", `${await calendarPath(companyId)}/connect`, owner.cookieHeader, { code: "good-code" });
     // The connect route hard-codes google_calendar_id: "primary" -- point it
     // at the mock's "busy-calendar" scenario directly via the service
     // client, the same direct-row-write escape hatch other integration
@@ -198,7 +199,7 @@ describe("Availability GET /api/companies/:id/services/:serviceId/availability",
       { day_of_week: 1, start_time: "09:00", end_time: "10:00" },
     ]);
 
-    await api("POST", `/api/companies/${companyId}/calendar/connect`, owner.cookieHeader, { code: "good-code" });
+    await api("POST", `${await calendarPath(companyId)}/connect`, owner.cookieHeader, { code: "good-code" });
     await getTestServiceClient()
       .from("company_calendar_connections")
       .update({ google_calendar_id: "trigger-freebusy-failure" })
@@ -225,7 +226,7 @@ describe("Availability GET /api/companies/:id/services/:serviceId/availability",
       { day_of_week: 1, start_time: "09:00", end_time: "10:00" },
     ]);
 
-    await api("POST", `/api/companies/${companyId}/calendar/connect`, owner.cookieHeader, { code: "good-code" });
+    await api("POST", `${await calendarPath(companyId)}/connect`, owner.cookieHeader, { code: "good-code" });
     // Force the stored token into the past so load.ts's proactive refresh
     // path actually runs.
     await getTestServiceClient()

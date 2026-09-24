@@ -1,11 +1,15 @@
 import { WaitlistRepository } from "@/lib/appointments/waitlist";
 import type { AgentTool } from "./types";
+import { effectiveHours, eligibleProfessionals } from "@/lib/professionals/rules";
+import { linkedProfessionalIds, listProfessionals, loadAllHours } from "@/lib/professionals/repository";
+import { PROFESSIONAL_ID_PARAM, professionalIdArg } from "./professional-param";
 
 type AddToWaitlistArgs = {
   serviceId: string;
   from: string;
   to: string;
   email?: string;
+  professionalId?: string;
 };
 
 // Trello R5 -- the waitlist. Ana offers this when find_available_slots came
@@ -33,7 +37,9 @@ export const addToWaitlistTool: AgentTool = {
     "On success `added` is true. `alreadyWaiting: true` means they were already on this exact " +
     "list -- reassure them they're still in line, don't add a duplicate. Tell the customer " +
     "plainly that the spot isn't held and it's first come, first served, and that you can't " +
-    "promise anything will open up.",
+    "promise anything will open up.\n\n" +
+    "When the business has several professionals, pass the `professionalId` the customer is " +
+    "waiting for, or leave it out if any professional would do.",
   parameters: {
     type: "object",
     properties: {
@@ -49,6 +55,7 @@ export const addToWaitlistTool: AgentTool = {
           "Optional. The customer's email, if you collected one this conversation. Omit to use " +
           "whatever is already on file.",
       },
+      professionalId: PROFESSIONAL_ID_PARAM,
     },
     required: ["serviceId", "from", "to"],
     additionalProperties: false,
@@ -61,17 +68,23 @@ export const addToWaitlistTool: AgentTool = {
     // description says so, but a description is a suggestion and this is a
     // rule -- the same reasoning C7 used for putting grounding in code rather
     // than trusting the prompt alone.
-    const { data: openRows, error: hoursError } = await ctx.supabase
-      .from("business_hours")
-      .select("day_of_week")
-      .eq("company_id", ctx.companyId)
-      .eq("is_active", true);
-    if (hoursError) throw hoursError;
+    //
+    // 2026-09-24 -- "works" means the chosen professional, or anyone who
+    // performs the service when the customer has no preference.
+    const professionalId = professionalIdArg(args.professionalId);
+    const [active, linked, hoursRows] = await Promise.all([
+      listProfessionals(ctx.supabase, ctx.companyId),
+      linkedProfessionalIds(ctx.supabase, args.serviceId),
+      loadAllHours(ctx.supabase, ctx.companyId),
+    ]);
+    const relevant = professionalId
+      ? active.filter((p) => p.id === professionalId)
+      : eligibleProfessionals(active, linked);
 
     // Only meaningful for a well-formed range: a backwards one iterates zero
     // times below and would be reported as "closed" instead of reaching the
     // repository's own `invalid_range`.
-    const openWeekdays = new Set((openRows ?? []).map((r) => r.day_of_week as number));
+    const openWeekdays = new Set(relevant.flatMap((p) => effectiveHours(p, hoursRows).map((h) => h.day_of_week)));
 
     // No hours at all is "not set up yet", not "closed" -- but a waitlist for a
     // business with no bookable times is just as unkeepable a promise.
@@ -115,6 +128,7 @@ export const addToWaitlistTool: AgentTool = {
         from: args.from,
         to: args.to,
         email: typeof args.email === "string" ? args.email : null,
+        professionalId,
       },
       ctx.supabase,
     );

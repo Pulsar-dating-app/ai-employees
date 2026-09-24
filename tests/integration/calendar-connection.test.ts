@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
+import { calendarPath } from "./helpers/professionals";
 
 // Trello ticket I1. Google's real oauth2.googleapis.com/token is stood in
 // for by tests/integration/helpers/google-oauth-mock.ts (wired in via
@@ -24,10 +25,10 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Auth Check Cal Co");
 
-    expect((await api("GET", `/api/companies/${companyId}/calendar`)).status).toBe(401);
-    expect((await api("DELETE", `/api/companies/${companyId}/calendar`)).status).toBe(401);
+    expect((await api("GET", await calendarPath(companyId))).status).toBe(401);
+    expect((await api("DELETE", await calendarPath(companyId))).status).toBe(401);
     expect(
-      (await api("POST", `/api/companies/${companyId}/calendar/connect`, undefined, { code: "good-code" })).status,
+      (await api("POST", `${await calendarPath(companyId)}/connect`, undefined, { code: "good-code" })).status,
     ).toBe(401);
   });
 
@@ -36,13 +37,13 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
     const outsider = await signUpTestUser("outsider");
     const companyId = await createCompany(owner.cookieHeader, "Members Only Cal Co");
 
-    expect((await api("GET", `/api/companies/${companyId}/calendar`, outsider.cookieHeader)).status).toBe(403);
-    expect((await api("DELETE", `/api/companies/${companyId}/calendar`, outsider.cookieHeader)).status).toBe(403);
+    expect((await api("GET", await calendarPath(companyId), outsider.cookieHeader)).status).toBe(403);
+    expect((await api("DELETE", await calendarPath(companyId), outsider.cookieHeader)).status).toBe(403);
     expect(
       (
         await api(
           "POST",
-          `/api/companies/${companyId}/calendar/connect`,
+          `${await calendarPath(companyId)}/connect`,
           outsider.cookieHeader,
           { code: "good-code" },
         )
@@ -56,18 +57,18 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
     const companyId = await createCompany(owner.cookieHeader, "Read Only Cal Co");
     await addMember(owner.cookieHeader, companyId, member.userId);
 
-    const get = await api("GET", `/api/companies/${companyId}/calendar`, member.cookieHeader);
+    const get = await api("GET", await calendarPath(companyId), member.cookieHeader);
     expect(get.status).toBe(200);
 
     const connect = await api(
       "POST",
-      `/api/companies/${companyId}/calendar/connect`,
+      `${await calendarPath(companyId)}/connect`,
       member.cookieHeader,
       { code: "good-code" },
     );
     expect(connect.status).toBe(403);
 
-    const disconnect = await api("DELETE", `/api/companies/${companyId}/calendar`, member.cookieHeader);
+    const disconnect = await api("DELETE", await calendarPath(companyId), member.cookieHeader);
     expect(disconnect.status).toBe(403);
   });
 
@@ -75,7 +76,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Bad Body Cal Co");
 
-    const result = await api("POST", `/api/companies/${companyId}/calendar/connect`, owner.cookieHeader, {});
+    const result = await api("POST", `${await calendarPath(companyId)}/connect`, owner.cookieHeader, {});
     expect(result.status).toBe(400);
   });
 
@@ -85,7 +86,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
 
     const before = await api<{ connection: unknown }>(
       "GET",
-      `/api/companies/${companyId}/calendar`,
+      await calendarPath(companyId),
       owner.cookieHeader,
     );
     expect(before.json.connection).toBeNull();
@@ -100,7 +101,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
         access_token?: string;
         refresh_token?: string;
       };
-    }>("POST", `/api/companies/${companyId}/calendar/connect`, owner.cookieHeader, { code: "good-code" });
+    }>("POST", `${await calendarPath(companyId)}/connect`, owner.cookieHeader, { code: "good-code" });
 
     expect(connected.status).toBe(200);
     expect(connected.json.connection.status).toBe("connected");
@@ -113,7 +114,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
 
     const reconnected = await api<{ connection: { status: string } }>(
       "POST",
-      `/api/companies/${companyId}/calendar/connect`,
+      `${await calendarPath(companyId)}/connect`,
       owner.cookieHeader,
       { code: "good-code" },
     );
@@ -122,7 +123,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
 
     const after = await api<{ connection: { status: string } }>(
       "GET",
-      `/api/companies/${companyId}/calendar`,
+      await calendarPath(companyId),
       owner.cookieHeader,
     );
     expect(after.json.connection.status).toBe("connected");
@@ -135,7 +136,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
     // First connect: the mock includes a fresh refresh_token.
     const first = await api(
       "POST",
-      `/api/companies/${companyId}/calendar/connect`,
+      `${await calendarPath(companyId)}/connect`,
       owner.cookieHeader,
       { code: "good-code" },
     );
@@ -146,7 +147,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
     // prompt=consent. Must still succeed (not lose the connection).
     const second = await api<{ connection: { status: string } }>(
       "POST",
-      `/api/companies/${companyId}/calendar/connect`,
+      `${await calendarPath(companyId)}/connect`,
       owner.cookieHeader,
       { code: "good-code-no-refresh" },
     );
@@ -170,7 +171,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
 
     const result = await api(
       "POST",
-      `/api/companies/${companyId}/calendar/connect`,
+      `${await calendarPath(companyId)}/connect`,
       owner.cookieHeader,
       { code: "trigger-token-failure" },
     );
@@ -183,17 +184,17 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
 
     const noopDisconnect = await api<{ connection: unknown }>(
       "DELETE",
-      `/api/companies/${companyId}/calendar`,
+      await calendarPath(companyId),
       owner.cookieHeader,
     );
     expect(noopDisconnect.status).toBe(200);
     expect(noopDisconnect.json.connection).toBeNull();
 
-    await api("POST", `/api/companies/${companyId}/calendar/connect`, owner.cookieHeader, { code: "good-code" });
+    await api("POST", `${await calendarPath(companyId)}/connect`, owner.cookieHeader, { code: "good-code" });
 
     const disconnected = await api<{ connection: { status: string; token_expires_at: string | null } }>(
       "DELETE",
-      `/api/companies/${companyId}/calendar`,
+      await calendarPath(companyId),
       owner.cookieHeader,
     );
     expect(disconnected.status).toBe(200);
@@ -202,7 +203,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
 
     const after = await api<{ connection: { status: string } }>(
       "GET",
-      `/api/companies/${companyId}/calendar`,
+      await calendarPath(companyId),
       owner.cookieHeader,
     );
     expect(after.json.connection.status).toBe("disconnected");

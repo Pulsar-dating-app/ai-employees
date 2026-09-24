@@ -6,6 +6,9 @@
 export type AppointmentEmailData = {
   businessName: string;
   serviceName: string;
+  // Who the appointment is with -- only set when the business has more than
+  // one professional (a solo business never names its professional).
+  professionalName?: string | null;
   // Already formatted in the business timezone, e.g. "Thursday, 12 June at 2:00 PM".
   whenText: string;
   // Optional lines shown under the details (address, "arrive 10 min early", ...).
@@ -27,6 +30,7 @@ function shell(headline: string, bodyHtml: string): string {
 function detailsHtml(data: AppointmentEmailData): string {
   const rows = [
     ["Serviço", data.serviceName],
+    ...(data.professionalName ? [["Profissional", data.professionalName]] : []),
     ["Quando", data.whenText],
     ["Empresa", data.businessName],
   ]
@@ -47,6 +51,7 @@ function detailsHtml(data: AppointmentEmailData): string {
 function detailsText(data: AppointmentEmailData): string {
   const lines = [
     `Serviço: ${data.serviceName}`,
+    ...(data.professionalName ? [`Profissional: ${data.professionalName}`] : []),
     `Quando: ${data.whenText}`,
     `Empresa: ${data.businessName}`,
   ];

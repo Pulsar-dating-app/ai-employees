@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { loadAvailableSlots, ServiceNotFoundError } from "@/lib/availability/load";
+import {
+  loadAvailableSlots,
+  ProfessionalNotAvailableError,
+  ServiceNotFoundError,
+} from "@/lib/availability/load";
 
 // Trello I2 -- thin HTTP wrapper over the availability engine. The real
 // caller will be J3's find_available_slots tool, calling loadAvailableSlots
@@ -52,6 +56,9 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const from = searchParams.get("from") ?? "";
   const to = searchParams.get("to") ?? "";
+  // 2026-09-24 -- one professional's slots; omitted = everyone who performs
+  // the service, merged by time.
+  const professionalId = searchParams.get("professionalId");
 
   if (!DATE_ONLY.test(from) || !DATE_ONLY.test(to)) {
     return NextResponse.json(
@@ -64,11 +71,14 @@ export async function GET(
   }
 
   try {
-    const result = await loadAvailableSlots({ supabase, companyId, serviceId, from, to });
+    const result = await loadAvailableSlots({ supabase, companyId, serviceId, from, to, professionalId });
     return NextResponse.json(result);
   } catch (err) {
     if (err instanceof ServiceNotFoundError) {
       return NextResponse.json({ error: err.message }, { status: 404 });
+    }
+    if (err instanceof ProfessionalNotAvailableError) {
+      return NextResponse.json({ error: err.reason }, { status: 400 });
     }
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to load availability" },

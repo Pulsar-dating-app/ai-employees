@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
+import { calendarPath } from "./helpers/professionals";
 
 // Trello ticket I1. company_calendar_connections.access_token/refresh_token
 // are locked down with column-level privileges (migration 20260829201627),
@@ -24,7 +25,7 @@ describe("company_calendar_connections RLS: access_token/refresh_token are colum
 
     const connected = await api(
       "POST",
-      `/api/companies/${companyId}/calendar/connect`,
+      `${await calendarPath(companyId)}/connect`,
       owner.cookieHeader,
       { code: "good-code" },
     );

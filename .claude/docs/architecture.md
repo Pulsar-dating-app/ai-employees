@@ -1088,6 +1088,43 @@ The no-show-reduction story R2 unblocked (Ana now collects a required email). Al
 
 `agents` row seeded (migration `20260829195857_seed_ana_agent`, slug `ana`, role "Scheduling Assistant") — same two-step pattern as Malu's own seeding (C2): a shell row first, then `personality`/`system_prompt` content in a follow-up migration (`20260830140000_set_ana_personality_and_system_prompt`, shipped with J3) once her voice and tool-calling behavior were built out. She's hireable immediately, no app code changes needed — the marketplace and agent-detail pages already read every active `agents` row dynamically (see "Onboarding & admin shell" above), the same mechanism that surfaced `john` with zero catalog-specific code. No `src/lib/agents/catalog.ts` enrichment entry was added for her either, same precedent as `john` — she renders fully from real DB columns until/unless trait-chip content is written for her specifically.
 
+### Professionals — one schedule each (2026-09-24)
+
+Supersedes the company-wide assumptions in the H2/H3/I1/I2/I3/J3 sections below wherever they say "the company's" hours, calendar or overlap (see decisions.md, same date).
+
+- **Data** (migration `20260924120000_professionals.sql`):
+  - `professionals`: `name`, `is_active`, `position` (the order Ana names them in), `uses_custom_hours`, and `user_id` (the linked team member). RLS lets members read; writes are service-role only. `private.seed_default_professional` runs on company insert, so every company has at least one.
+  - `professional_services(professional_id, service_id)`.
+  - `professional_id` added to `appointments` (not null, with a before-insert trigger that fills it when the company has exactly one active professional), `business_hours`, `company_time_off`, `appointment_waitlist` and `company_calendar_connections`. Every one of those foreign keys is composite `(professional_id, company_id)`, so a row can never point at another company's professional.
+  - Overlap: `appointments_professional_overlap_excl`.
+- **Rules** (`src/lib/professionals/rules.ts`, pure):
+  - `effectiveHours`: own rows if `usesCustomHours`, otherwise the rows with a null `professional_id`. Custom with no rows means "works no day".
+  - `eligibleProfessionals`: linked professionals, or everyone when nobody is linked.
+  - `mergeSlotsAcrossProfessionals`, `closedDatesForAll` (closed only if closed for everyone), `orderForAutoAssignment`.
+- **IO** (`src/lib/professionals/repository.ts`): list, get, eligibility, `loadProfessionalConstraints`, `fitsProfessionalSchedule` (write-time check used by the dashboard routes), `anyProfessionalHasHours`, `setServiceProfessionals`, and `canManageProfessional` (owner/admin, or the linked member). Route gates live in `route-auth.ts`.
+- **Availability** (`load.ts`):
+  - One batch of reads, then `computeAvailableSlots` per professional; `engine.ts` is unchanged.
+  - `professionalId` narrows to one professional. Without it, the slots of everyone who performs the service are merged, each naming who is free.
+  - `multipleProfessionals` tells callers whether to show professionals at all.
+- **Booking** (`AppointmentRepository.book`): a named professional must be active and perform the service. With no name, the repository tries the eligible professionals who fit the time, fewest bookings that day first, and moves to the next on a `23P01` overlap error. `reschedule` keeps the same professional unless it's given another.
+- **Ana**:
+  - The find, book, waitlist and hours tools take an optional `professionalId` (`tools/professional-param.ts`).
+  - When there is more than one active professional, results carry `professionals` and `professionalName`, and `list_services` lists who performs each service. None of this is returned for a single-professional business.
+  - `buildProfessionalChoiceSection` is added to the prompt only in that multi-professional case.
+- **Google**:
+  - `getValidAccessToken(professionalId)`.
+  - `calendars.ts` lists writable calendars and creates one ("{name} · Staffra").
+  - Routes live under `professionals/[professionalId]/calendar`: `GET`/`PATCH`/`DELETE`, plus `/connect` and `/calendars`. The company-level `/calendar` routes were removed.
+  - The `appointment-sync` functions take the professional and the calendar the event was created in.
+- **Dashboard**:
+  - "Professionals" tab (`scheduling/professionals`): a list plus a detail page with profile/linked member, the services they perform (read-only), hours (inherit or their own), time off and Google Calendar.
+  - Scheduling settings edits the establishment's hours and closures. Its Google section is the single professional's card, or with several professionals, a summary linking to each.
+  - Agenda: professional filter, names shown via `ShowProfessionalProvider`, and a linked member opens on their own appointments.
+  - Services: "Who performs it" chips.
+  - Emails add a "Profissional" row when there are several professionals.
+- **Not built**: per-professional metrics, per-professional lanes in the "today" panel, a professionals step in onboarding (the Professionals tab nudges a solo business instead), and per-plan limits on the number of professionals.
+- **Tests**: `tests/unit/professionals/rules.test.ts`, the `buildProfessionalChoiceSection` cases in `prompt.test.ts`, and `tests/integration/professionals.test.ts`. The calendar suites moved to the per-professional routes via `helpers/professionals.ts`. The Google mock gained `calendarList`/`calendars.insert` and records each event's `calendarId`.
+
 ### Google Calendar connect flow (Trello I1)
 
 `company_calendar_connections` (migration `20260829201627`) + `src/app/api/companies/[companyId]/calendar/` — the schema and server-side OAuth token exchange that I2 (availability engine) and J-epic (Ana's booking tools) build on. Structurally a close copy of D1's WhatsApp Embedded Signup flow — same shape, different provider, because that's what lets K2's future "Connect Google Calendar" button be a straight copy of `channels-section.tsx`'s existing pattern (load a vendor JS SDK, trigger a popup, POST the result to a connect route).

@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { canManageProfessional, getProfessional } from "@/lib/professionals/repository";
 
 // Company time off (K3's time-off card) — merchant-registered date ranges
 // when nobody is available for appointments. The recurring weekly template
 // lives in `business_hours` (H2); this is only one-off closures. Member-level
 // like business-hours, matching the rest of the scheduling routes.
+//
+// 2026-09-24 -- an entry is either the whole establishment's
+// (professional_id NULL: nobody works) or one professional's (only they are
+// away). `?professionalId=` on GET narrows to what applies to that
+// professional (theirs plus the establishment's); POST takes an optional
+// `professionalId`, which an admin or the linked member may set.
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -54,9 +61,14 @@ export async function GET(
 
   let query = supabase
     .from("company_time_off")
-    .select("id, start_date, end_date, reason")
+    .select("id, start_date, end_date, reason, professional_id, professionals(name)")
     .eq("company_id", companyId)
     .order("start_date", { ascending: true });
+
+  const professionalId = new URL(request.url).searchParams.get("professionalId");
+  if (professionalId) {
+    query = query.or(`professional_id.is.null,professional_id.eq.${professionalId}`);
+  }
 
   if (new URL(request.url).searchParams.get("upcoming") === "true") {
     query = query.gte("end_date", new Date().toISOString().slice(0, 10));
@@ -112,10 +124,26 @@ export async function POST(
       ? reasonRaw.trim().slice(0, MAX_REASON_LENGTH)
       : null;
 
+  const professionalId = body?.professionalId ?? null;
+  if (professionalId !== null && typeof professionalId !== "string") {
+    return NextResponse.json({ error: "professionalId must be a string" }, { status: 400 });
+  }
+  if (professionalId) {
+    if (!(await getProfessional(supabase, companyId, professionalId))) {
+      return NextResponse.json({ error: "Professional not found" }, { status: 404 });
+    }
+    if (!(await canManageProfessional(supabase, companyId, professionalId, user.id))) {
+      return NextResponse.json(
+        { error: "Only company owners/admins, or the professional themselves, can change this schedule" },
+        { status: 403 },
+      );
+    }
+  }
+
   const { data, error } = await supabase
     .from("company_time_off")
-    .insert({ company_id: companyId, start_date: startDate, end_date: endDate, reason })
-    .select("id, start_date, end_date, reason")
+    .insert({ company_id: companyId, start_date: startDate, end_date: endDate, reason, professional_id: professionalId })
+    .select("id, start_date, end_date, reason, professional_id, professionals(name)")
     .single();
 
   if (error) {

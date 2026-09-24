@@ -47,22 +47,34 @@ export function CalendarSection({
   const [connection, setConnection] = useState<Connection>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [scriptReady, setScriptReady] = useState(false);
+  // 2026-09-24 -- Google Calendar is per professional; this dev harness
+  // drives the company's first active one.
+  const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
 
   async function refresh() {
-    const res = await fetch(`/api/companies/${companyId}/calendar`);
+    if (!calendarUrl) return;
+    const res = await fetch(calendarUrl);
     const body = await res.json().catch(() => null);
     setConnection(body?.connection ?? null);
   }
 
   useEffect(() => {
-    fetch(`/api/companies/${companyId}/calendar`)
+    fetch(`/api/companies/${companyId}/professionals`)
       .then((res) => res.json())
-      .then((body: { connection?: Connection }) => setConnection(body?.connection ?? null))
+      .then(async (body: { professionals?: { id: string; isActive: boolean }[] }) => {
+        const first = body.professionals?.find((p) => p.isActive);
+        if (!first) return;
+        const url = `/api/companies/${companyId}/professionals/${first.id}/calendar`;
+        setCalendarUrl(url);
+        const res = await fetch(url);
+        const data = (await res.json()) as { connection?: Connection };
+        setConnection(data?.connection ?? null);
+      })
       .catch(() => setConnection(null));
   }, [companyId]);
 
   function connect() {
-    if (!googleClientId || !window.google) return;
+    if (!googleClientId || !window.google || !calendarUrl) return;
     setStatus("Opening Google's consent popup...");
 
     const client = window.google.accounts.oauth2.initCodeClient({
@@ -74,7 +86,7 @@ export function CalendarSection({
           setStatus(`Google popup did not return a code (${response.error ?? "cancelled"}).`);
           return;
         }
-        const res = await fetch(`/api/companies/${companyId}/calendar/connect`, {
+        const res = await fetch(`${calendarUrl}/connect`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code: response.code }),
@@ -92,7 +104,8 @@ export function CalendarSection({
   }
 
   async function disconnect() {
-    await fetch(`/api/companies/${companyId}/calendar`, { method: "DELETE" });
+    if (!calendarUrl) return;
+    await fetch(calendarUrl, { method: "DELETE" });
     setStatus(null);
     refresh();
   }

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { parseProfessionalIds, setServiceProfessionals } from "@/lib/professionals/repository";
 
 // Trello H1 — update/soft-delete a single service. Mirrors B3's
 // products/[productId] route exactly (effective-merged-state price
@@ -156,22 +158,38 @@ export async function PATCH(
     return NextResponse.json({ error: priceError }, { status: 400 });
   }
 
+  // 2026-09-24 -- who performs the service ("Quem realiza"); [] = everyone.
+  let professionalIds: string[] | null = null;
+  if ("professionalIds" in body) {
+    professionalIds = parseProfessionalIds(body.professionalIds);
+    if (!professionalIds) {
+      return NextResponse.json({ error: "professionalIds must be an array of ids" }, { status: 400 });
+    }
+    const linked = await setServiceProfessionals(createServiceClient(), companyId, serviceId, professionalIds);
+    if (!linked.ok) return NextResponse.json({ error: linked.error }, { status: 400 });
+  }
+
   if (Object.keys(update).length === 0) {
-    return NextResponse.json({ service: serviceLookup.service });
+    return NextResponse.json({
+      service: professionalIds ? { ...serviceLookup.service, professional_ids: professionalIds } : serviceLookup.service,
+    });
   }
 
   const { data, error } = await supabase
     .from("services")
     .update(update)
     .eq("id", serviceId)
-    .select()
+    .select("*, professional_services(professional_id)")
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ service: data });
+  const { professional_services: links, ...service } = data as Record<string, unknown> & {
+    professional_services?: { professional_id: string }[] | null;
+  };
+  return NextResponse.json({ service: { ...service, professional_ids: (links ?? []).map((l) => l.professional_id) } });
 }
 
 // DELETE: soft-delete. Sets is_active = false — appointments referencing

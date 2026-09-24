@@ -1,15 +1,16 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { refreshAccessToken } from "./oauth";
 
-// Trello I3 -- extracted from availability/load.ts's loadGoogleBusy once a
-// second real caller (appointment-sync.ts) needed the exact same "get a
-// usable access token for this company's calendar connection" sequence:
-// fetch the connection row (service client -- access_token/refresh_token
-// are column-privilege-locked), confirm it's actually connected, refresh an
-// expired token and persist the refresh, and degrade to null on any
-// failure. Not extracted preemptively in I2 -- this is an "extract on
-// second use" moment, same judgment call as B4 exporting
-// validatePriceCurrency once a second file needed it.
+// Trello I3 -- the single "get a usable access token for this calendar
+// connection" sequence shared by availability/load.ts (freeBusy) and
+// appointment-sync.ts (events): fetch the connection row (service client --
+// access_token/refresh_token are column-privilege-locked), confirm it's
+// actually connected, refresh an expired token and persist the refresh, and
+// degrade to null on any failure.
+//
+// 2026-09-24 -- keyed by professional, not company: each professional has
+// their own Google connection (their own account and calendar), see
+// decisions.md "Multiple schedules per company".
 
 export type UsableCalendarConnection = {
   accessToken: string;
@@ -18,15 +19,15 @@ export type UsableCalendarConnection = {
 
 // Never throws -- null means "can't sync right now, for any reason" (not
 // connected, no access_token, expired with no refresh_token, or the refresh
-// call itself failed). Callers treat null as "skip Google sync for this
+// call itself failed). Callers treat null as "skip Google for this
 // operation," never as something to surface to the end user.
-export async function getValidAccessToken(companyId: string): Promise<UsableCalendarConnection | null> {
+export async function getValidAccessToken(professionalId: string): Promise<UsableCalendarConnection | null> {
   try {
     const serviceClient = createServiceClient();
     const { data: connection } = await serviceClient
       .from("company_calendar_connections")
       .select("google_calendar_id, status, access_token, refresh_token, token_expires_at")
-      .eq("company_id", companyId)
+      .eq("professional_id", professionalId)
       .maybeSingle();
 
     if (!connection || connection.status !== "connected" || !connection.access_token) {
@@ -44,7 +45,7 @@ export async function getValidAccessToken(companyId: string): Promise<UsableCale
       await serviceClient
         .from("company_calendar_connections")
         .update({ access_token: refreshed.accessToken, token_expires_at: refreshed.tokenExpiresAt })
-        .eq("company_id", companyId);
+        .eq("professional_id", professionalId);
     }
 
     return { accessToken, calendarId: (connection.google_calendar_id as string) ?? "primary" };

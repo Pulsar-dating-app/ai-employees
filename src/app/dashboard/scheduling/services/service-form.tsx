@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import clsx from "clsx";
 import type { Service } from "./services-manager";
 
 const CURRENCY_CODES = ["USD", "BRL", "EUR"] as const;
@@ -38,6 +39,9 @@ type ServiceFormProps = {
   companyCurrency: string | null;
   service?: Service;
   categories: string[];
+  // 2026-09-24 -- active professionals, for "who performs this service".
+  // With one (or none) the field is hidden: everyone performs everything.
+  professionals?: { id: string; name: string }[];
   onSaved: (service: Service) => void;
   onCancel: () => void;
 };
@@ -48,6 +52,7 @@ export function ServiceForm({
   companyCurrency,
   service,
   categories,
+  professionals = [],
   onSaved,
   onCancel,
 }: ServiceFormProps) {
@@ -57,6 +62,13 @@ export function ServiceForm({
   const [values, setValues] = useState<FormValues>(toFormValues(service, companyCurrency));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Empty = every professional performs it.
+  const [professionalIds, setProfessionalIds] = useState<string[]>(service?.professional_ids ?? []);
+  const showProfessionals = professionals.length > 1;
+
+  function toggleProfessional(id: string) {
+    setProfessionalIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
 
   function update(key: keyof FormValues, value: string) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -103,6 +115,7 @@ export function ServiceForm({
       price,
       currency,
       category: values.category.trim() || null,
+      ...(showProfessionals ? { professionalIds } : {}),
     };
 
     setIsSaving(true);
@@ -206,6 +219,47 @@ export function ServiceForm({
           <option key={category} value={category} />
         ))}
       </datalist>
+
+      {showProfessionals ? (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-xs font-semibold text-on-surface-variant">{t("professionalsLabel")}</legend>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              aria-pressed={professionalIds.length === 0}
+              onClick={() => setProfessionalIds([])}
+              className={clsx(
+                "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors",
+                professionalIds.length === 0
+                  ? "border-primary bg-primary-fixed text-primary"
+                  : "border-outline-variant text-on-surface-variant hover:border-outline",
+              )}
+            >
+              {t("professionalsAll")}
+            </button>
+            {professionals.map((p) => {
+              const selected = professionalIds.includes(p.id);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => toggleProfessional(p.id)}
+                  className={clsx(
+                    "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors",
+                    selected
+                      ? "border-primary bg-primary-fixed text-primary"
+                      : "border-outline-variant text-on-surface-variant hover:border-outline",
+                  )}
+                >
+                  {p.name}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[12px] text-on-surface-variant">{t("professionalsHint")}</p>
+        </fieldset>
+      ) : null}
 
       {error ? (
         <p role="alert" className="text-sm text-error">

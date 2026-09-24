@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
@@ -13,6 +13,7 @@ import { APPOINTMENT_STATUSES, type Appointment, type AppointmentStatus } from "
 import { dayHeading, localDateOf } from "./agenda-format";
 import { PendingApprovals } from "./pending-approvals";
 import { TodayPanel, type SchedulingTeamMember } from "./today-panel";
+import { ShowProfessionalProvider } from "./professional-label";
 
 type Scope = "upcoming" | "past";
 type View = "list" | "calendar";
@@ -92,6 +93,8 @@ export function AppointmentsManager({
   hoursConfigured,
   dayStart,
   teamMember,
+  professionals = [],
+  initialProfessionalId = "",
 }: {
   companyId: string;
   timezone: string;
@@ -107,6 +110,12 @@ export function AppointmentsManager({
   hoursConfigured: boolean;
   dayStart: string;
   teamMember: SchedulingTeamMember | null;
+  // 2026-09-24 -- active professionals. With more than one, the agenda can
+  // be filtered by professional and says who each appointment is with.
+  professionals?: { id: string; name: string }[];
+  // Pre-selected filter (the signed-in member's own professional). The
+  // server loaded the initial list with the same filter.
+  initialProfessionalId?: string;
 }) {
   const t = useTranslations("Scheduling.appointments");
   const locale = useLocale();
@@ -119,6 +128,12 @@ export function AppointmentsManager({
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const [professionalFilter, setProfessionalFilter] = useState(initialProfessionalId);
+  // Read by the fetchers below, updated synchronously on change so a fetch
+  // started in the same handler already sees the new filter.
+  const professionalRef = useRef(initialProfessionalId);
+  const multipleProfessionals = professionals.length > 1;
 
   const [view, setView] = useState<View>("list");
   const [month, setMonth] = useState(() => today.slice(0, 7));
@@ -133,6 +148,7 @@ export function AppointmentsManager({
       params.set("order", "desc");
     }
     if (next.status) params.set("status", next.status);
+    if (professionalRef.current) params.set("professionalId", professionalRef.current);
     params.set("page", String(next.page));
     params.set("pageSize", String(pageSize));
     const res = await fetch(`/api/companies/${companyId}/appointments?${params.toString()}`).catch(() => null);
@@ -164,6 +180,7 @@ export function AppointmentsManager({
     for (let pageIndex = 1; pageIndex <= CALENDAR_MAX_PAGES; pageIndex++) {
       const params = new URLSearchParams({ from, to, page: String(pageIndex), pageSize: String(CALENDAR_PAGE_SIZE) });
       if (next.status) params.set("status", next.status);
+      if (professionalRef.current) params.set("professionalId", professionalRef.current);
       const res = await fetch(`/api/companies/${companyId}/appointments?${params.toString()}`).catch(() => null);
       if (!res?.ok) break;
       const json = await res.json();
@@ -213,6 +230,23 @@ export function AppointmentsManager({
     setIsLoading(false);
   }
 
+  async function changeProfessional(nextProfessional: string) {
+    professionalRef.current = nextProfessional;
+    setProfessionalFilter(nextProfessional);
+    setPage(1);
+    if (view === "calendar") {
+      refetchMonth({ month, status });
+      return;
+    }
+    setIsLoading(true);
+    const json = await fetchPage({ scope, status, page: 1 });
+    if (json) {
+      setAppointments(json.appointments ?? []);
+      setTotal(json.total ?? 0);
+    }
+    setIsLoading(false);
+  }
+
   async function loadMore() {
     const nextPage = page + 1;
     setIsLoadingMore(true);
@@ -247,6 +281,7 @@ export function AppointmentsManager({
   );
 
   return (
+    <ShowProfessionalProvider value={multipleProfessionals}>
     <div className="flex flex-col gap-6">
       <TodayPanel
         appointments={todayAppointments}
@@ -333,6 +368,25 @@ export function AppointmentsManager({
               </select>
               <ChevronRightIcon className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-on-surface-variant" />
             </span>
+            {multipleProfessionals ? (
+              <span className="relative inline-flex">
+                <select
+                  aria-label={t("professionalFilterLabel")}
+                  value={professionalFilter}
+                  disabled={isLoading}
+                  onChange={(e) => changeProfessional(e.target.value)}
+                  className="h-10 max-w-[14rem] appearance-none truncate rounded-full border-0 bg-surface-container pl-4 pr-10 text-label-md font-semibold text-on-surface outline-none transition-shadow focus:shadow-[0_0_0_4px_rgba(53,37,205,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <option value="">{t("professionalFilterAll")}</option>
+                  {professionals.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronRightIcon className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-on-surface-variant" />
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -414,5 +468,6 @@ export function AppointmentsManager({
         )}
       </section>
     </div>
+    </ShowProfessionalProvider>
   );
 }

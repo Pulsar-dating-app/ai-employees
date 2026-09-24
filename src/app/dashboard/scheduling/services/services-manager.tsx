@@ -27,6 +27,8 @@ export type Service = {
   is_default: boolean;
   created_at: string;
   updated_at: string;
+  // 2026-09-24 -- who performs it; empty = every professional.
+  professional_ids?: string[];
 };
 
 const FETCH_PAGE_SIZE = 100;
@@ -44,12 +46,14 @@ export function ServicesManager({
   canEdit,
   initialServices,
   defaultService,
+  professionals = [],
 }: {
   companyId: string;
   companyCurrency: string | null;
   canEdit: boolean;
   initialServices: Service[];
   defaultService: Service | null;
+  professionals?: { id: string; name: string }[];
 }) {
   const t = useTranslations("Services");
   const router = useRouter();
@@ -270,6 +274,7 @@ export function ServicesManager({
             mode="create"
             companyCurrency={companyCurrency}
             categories={categoryNames}
+            professionals={professionals}
             onSaved={handleSaved}
             onCancel={() => setDrawer(null)}
           />

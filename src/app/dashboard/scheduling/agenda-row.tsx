@@ -7,6 +7,7 @@ import { ChevronRightIcon, XIcon } from "@/components/ui/icons";
 import { PREDEFINED_INTAKE_FIELDS } from "@/lib/appointments/intake-fields";
 import type { Appointment, AppointmentStatus } from "./appointment-types";
 import { clock } from "./agenda-format";
+import { useProfessionalName } from "./professional-label";
 
 const PREDEFINED_INTAKE_LABELS: Record<string, string> = Object.fromEntries(
   PREDEFINED_INTAKE_FIELDS.map((f) => [f.key, f.label]),
@@ -139,7 +140,8 @@ export function AgendaRow({
   const end = new Date(appointment.ends_at);
   const isTerminal = !ACTIONABLE.includes(appointment.status);
   const name = appointment.customers?.name ?? t("list.unnamedCustomer");
-  const service = appointment.services?.name ?? t("list.serviceRemoved");
+  const professionalName = useProfessionalName(appointment);
+  const service = [appointment.services?.name ?? t("list.serviceRemoved"), professionalName].filter(Boolean).join(" · ");
   const intakeEntries = Object.entries(appointment.intake_answers ?? {}).filter(
     ([, value]) => typeof value === "string" && value.trim() !== "",
   );

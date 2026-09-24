@@ -1,6 +1,7 @@
 import { AppointmentRepository } from "@/lib/appointments/repository";
 import { redactDefaultServiceName } from "./redact-default-service-name";
 import type { AgentTool } from "./types";
+import { PROFESSIONAL_ID_PARAM, professionalIdArg } from "./professional-param";
 
 type BookAppointmentArgs = {
   serviceId: string;
@@ -8,6 +9,7 @@ type BookAppointmentArgs = {
   notes?: string;
   summary?: string;
   intakeAnswers?: Record<string, unknown>;
+  professionalId?: string;
 };
 
 // Trello J3, tool #3 -- writes the appointments row. The customer, this
@@ -56,7 +58,13 @@ export const bookAppointmentTool: AgentTool = {
     "business still needs the details listed in `missingRequired` -- ask for exactly those and " +
     "retry, \"invalid_intake_answers\" = a value was the wrong shape (`invalid` names which " +
     "label and why -- e.g. a bad email or a CPF that isn't 11 digits) -- ask again for those " +
-    "and retry) and offer another time -- never tell the customer it's booked when it isn't.",
+    "and retry, \"professional_not_found\" / \"professional_not_for_service\" = that professional " +
+    "isn't available for this service -- say who does it) and offer another time -- never tell " +
+    "the customer it's booked when it isn't.\n\n" +
+    "When the business has several professionals, pass the `professionalId` the customer chose. " +
+    "If they said any professional is fine, leave it out and one who is free at that time is " +
+    "assigned. Either way, a successful result then has `professionalName`: always tell the " +
+    "customer who the appointment is with.",
   parameters: {
     type: "object",
     properties: {
@@ -88,6 +96,7 @@ export const bookAppointmentTool: AgentTool = {
           "the customer didn't answer.",
         additionalProperties: { type: "string" },
       },
+      professionalId: PROFESSIONAL_ID_PARAM,
     },
     required: ["serviceId", "startsAt"],
     additionalProperties: false,
@@ -112,6 +121,7 @@ export const bookAppointmentTool: AgentTool = {
         {
           companyId: ctx.companyId,
           serviceId: args.serviceId,
+          professionalId: professionalIdArg(args.professionalId),
           customerId: ctx.customerId,
           conversationId: ctx.conversationId,
           agentId: ctx.agentId,

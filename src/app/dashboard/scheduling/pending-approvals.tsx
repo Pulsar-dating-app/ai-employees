@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { Appointment } from "./appointment-types";
 import { clock, dayHeading, localDateOf } from "./agenda-format";
 import { DeclineForm, PRIMARY_ACTION, SECONDARY_ACTION, useAppointmentStatus } from "./agenda-row";
+import { useProfessionalName } from "./professional-label";
 
 function PendingRow({
   companyId,
@@ -25,6 +26,7 @@ function PendingRow({
   const locale = useLocale();
   const [declining, setDeclining] = useState(false);
   const { isWorking, setStatus } = useAppointmentStatus(companyId, appointment.id, onPatched);
+  const professionalName = useProfessionalName(appointment);
   const start = new Date(appointment.starts_at);
   const day = dayHeading(localDateOf(start, timezone), today, locale, {
     today: t("board.today"),
@@ -43,6 +45,7 @@ function PendingRow({
             <span className="tabular-nums"> · {clock(start, timezone, locale)}</span>
             {" · "}
             {appointment.services?.name ?? t("list.serviceRemoved")}
+            {professionalName ? ` · ${professionalName}` : null}
           </p>
         </div>
         {canEdit && !declining ? (

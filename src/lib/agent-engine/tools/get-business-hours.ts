@@ -1,4 +1,7 @@
 import type { AgentTool } from "./types";
+import { effectiveHours, type HoursRow } from "@/lib/professionals/rules";
+import { listProfessionals, loadAllHours } from "@/lib/professionals/repository";
+import { PROFESSIONAL_ID_PARAM, professionalIdArg } from "./professional-param";
 
 // "What time do you open?" is one of the most common things anyone asks a
 // business, and until now no tool could answer it: get_business_information
@@ -7,6 +10,13 @@ import type { AgentTool } from "./types";
 // which answers "when can I book", a different question. So a scheduling
 // agent whose merchant had just configured opening hours would say she had
 // none on file. Honest, per her grounding rules, and wrong.
+//
+// 2026-09-24 -- hours can be per professional. Without `professionalId` this
+// returns the establishment's hours (business_hours.professional_id NULL); a
+// business whose professionals all keep their own schedule may have none,
+// and then it is open whenever anyone works. With `professionalId`, that
+// professional's effective hours (their own, or the establishment's they
+// inherit).
 //
 // Read-only and company-scoped from ctx, like every other tool here.
 export const getBusinessHoursTool: AgentTool = {
@@ -19,25 +29,43 @@ export const getBusinessHoursTool: AgentTool = {
     "`closesAt` as HH:MM. A day missing from the list is a day the business is closed, and an " +
     "empty list means the business hasn't set its hours yet -- say \"Ainda não temos horários " +
     "definidos por aqui\" (in the customer's language), never that it is closed or never opens. These are opening hours, not free slots: a day being open says " +
-    "nothing about whether a time is still bookable, which is what find_available_slots is for.",
+    "nothing about whether a time is still bookable, which is what find_available_slots is for.\n\n" +
+    "When the business has several professionals, pass `professionalId` to get that " +
+    "professional's own working days and hours (they can differ from the business's).",
   parameters: {
     type: "object",
-    properties: {},
+    properties: { professionalId: PROFESSIONAL_ID_PARAM },
     additionalProperties: false,
   },
-  async execute(_rawArgs, ctx) {
-    const { data, error } = await ctx.supabase
-      .from("business_hours")
-      .select("day_of_week, start_time, end_time")
-      .eq("company_id", ctx.companyId)
-      .eq("is_active", true)
-      .order("day_of_week", { ascending: true });
+  async execute(rawArgs, ctx) {
+    const professionalId = professionalIdArg((rawArgs as { professionalId?: unknown }).professionalId);
+    const [rows, professionals] = await Promise.all([
+      loadAllHours(ctx.supabase, ctx.companyId),
+      listProfessionals(ctx.supabase, ctx.companyId),
+    ]);
 
-    if (error) throw error;
+    const chosen = professionalId ? professionals.find((p) => p.id === professionalId) : null;
+    let windows: Omit<HoursRow, "professional_id">[];
+    if (chosen) {
+      windows = effectiveHours(chosen, rows);
+    } else {
+      windows = rows.filter((r) => r.professional_id === null);
+      if (windows.length === 0) windows = professionals.flatMap((p) => effectiveHours(p, rows));
+    }
+
+    const seen = new Set<string>();
+    const days = windows
+      .filter((w) => {
+        const key = `${w.day_of_week}|${w.start_time}|${w.end_time}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => a.day_of_week - b.day_of_week || String(a.start_time).localeCompare(String(b.start_time)));
 
     return {
-      days: (data ?? []).map((row) => ({
-        dayOfWeek: row.day_of_week as number,
+      days: days.map((row) => ({
+        dayOfWeek: row.day_of_week,
         // `time` comes back as HH:MM:SS; the seconds are noise to read aloud.
         opensAt: String(row.start_time).slice(0, 5),
         closesAt: String(row.end_time).slice(0, 5),

@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { addDays, isValidTimeZone, localToday } from "@/lib/analytics/load";
 import { zonedTimeToUtc } from "@/lib/availability/engine";
+import { effectiveHours } from "@/lib/professionals/rules";
+import { listProfessionals, loadAllHours } from "@/lib/professionals/repository";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { resolveAgentPhoto } from "@/lib/agents/media";
 import { Button } from "@/components/ui/button";
@@ -56,21 +58,31 @@ export default async function AppointmentsPage() {
   const dayEnd = zonedTimeToUtc(addDays(today, 1), "00:00", timezone).toISOString();
 
   const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
+
+  // 2026-09-24 -- a team member linked to a professional opens the agenda
+  // on their own appointments (they can switch to everyone's).
+  const [professionals, allHours] = await Promise.all([
+    listProfessionals(supabase, company.id),
+    loadAllHours(supabase, company.id),
+  ]);
+  const ownProfessional =
+    professionals.length > 1 ? (professionals.find((p) => p.userId === user!.id) ?? null) : null;
+
+  const upcomingQuery = supabase
+    .from("appointments")
+    .select(APPOINTMENT_SELECT, { count: "exact" })
+    .eq("company_id", company.id)
+    .gte("starts_at", dayStart);
   const [
     { data: membership },
     { data: appointments, count },
     { data: todayAppointments },
     { data: hired },
-    { data: calendarConnection },
+    { count: connectedCalendars },
     { data: pendingAppointments, count: pendingTotal },
-    { data: businessHours },
   ] = await Promise.all([
     supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle(),
-    supabase
-      .from("appointments")
-      .select(APPOINTMENT_SELECT, { count: "exact" })
-      .eq("company_id", company.id)
-      .gte("starts_at", dayStart)
+    (ownProfessional ? upcomingQuery.eq("professional_id", ownProfessional.id) : upcomingQuery)
       .order("starts_at", { ascending: true })
       .range(0, PAGE_SIZE - 1),
     supabase
@@ -84,7 +96,11 @@ export default async function AppointmentsPage() {
       .from("company_agents")
       .select("status, name, photo_type, photo_asset_url, agents(slug)")
       .eq("company_id", company.id),
-    supabase.from("company_calendar_connections").select("status").eq("company_id", company.id).maybeSingle(),
+    supabase
+      .from("company_calendar_connections")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", company.id)
+      .eq("status", "connected"),
     company.requires_appointment_approval
       ? supabase
           .from("appointments")
@@ -94,15 +110,12 @@ export default async function AppointmentsPage() {
           .order("starts_at", { ascending: true })
           .limit(PENDING_LIMIT)
       : Promise.resolve({ data: [] as Appointment[], count: 0 }),
-    supabase
-      .from("business_hours")
-      .select("day_of_week, start_time, end_time")
-      .eq("company_id", company.id)
-      .eq("is_active", true),
   ]);
 
   const canEdit = membership !== null;
-  const hoursRows = (businessHours ?? []) as { day_of_week: number; start_time: string; end_time: string }[];
+  // Everyone's working hours combined (each professional's own, or the
+  // establishment's they inherit) -- today's timeline spans all of them.
+  const hoursRows = professionals.flatMap((p) => effectiveHours(p, allHours));
   const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
   const todayRows = hoursRows.filter((row) => row.day_of_week === weekday);
   const todayHours =
@@ -113,8 +126,7 @@ export default async function AppointmentsPage() {
         }
       : null;
 
-  const calendarNotConnected =
-    (calendarConnection as { status?: string } | null)?.status !== "connected" && Boolean(process.env.GOOGLE_CLIENT_ID);
+  const calendarNotConnected = (connectedCalendars ?? 0) === 0 && Boolean(process.env.GOOGLE_CLIENT_ID);
   const businessHoursEmpty = hoursRows.length === 0;
 
   const alertItems = [
@@ -198,6 +210,8 @@ export default async function AppointmentsPage() {
         hoursConfigured={!businessHoursEmpty}
         dayStart={dayStart}
         teamMember={teamMember}
+        professionals={professionals.map((p) => ({ id: p.id, name: p.name }))}
+        initialProfessionalId={ownProfessional?.id ?? ""}
       />
     </div>
   );

@@ -20,11 +20,19 @@ type EmailContext = { to: string; data: AppointmentEmailData };
 type Row = {
   starts_at: string;
   services: { name: string } | { name: string }[] | null;
+  professionals?: { name: string } | { name: string }[] | null;
   customers: { email: string | null } | { email: string | null }[] | null;
-  companies:
-    | { name: string; email: string | null; phone: string | null; timezone: string | null }
-    | { name: string; email: string | null; phone: string | null; timezone: string | null }[]
-    | null;
+  companies: CompanyRow | CompanyRow[] | null;
+};
+
+type CompanyRow = {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  timezone: string | null;
+  // 2026-09-24 -- the company's professionals, only to tell whether there is
+  // more than one (then the email names who the appointment is with).
+  professionals?: { is_active: boolean }[] | null;
 };
 
 function one<T>(v: T | T[] | null): T | null {
@@ -51,11 +59,13 @@ function contextFromRow(row: Row): EmailContext | null {
   if (!to || !company) return null;
 
   const contactBits = [company.email, company.phone].filter(Boolean) as string[];
+  const multipleProfessionals = (company.professionals ?? []).filter((p) => p.is_active).length > 1;
   return {
     to,
     data: {
       businessName: company.name,
       serviceName: service?.name ?? "seu agendamento",
+      professionalName: multipleProfessionals ? (one(row.professionals ?? null)?.name ?? null) : null,
       whenText: formatWhen(row.starts_at, company.timezone),
       businessNote: null,
       contact: contactBits.length > 0 ? `${company.name} (${contactBits.join(" / ")})` : null,
@@ -64,7 +74,7 @@ function contextFromRow(row: Row): EmailContext | null {
 }
 
 const APPOINTMENT_EMAIL_SELECT =
-  "starts_at, services(name), customers(email), companies(name, email, phone, timezone)";
+  "starts_at, services(name), professionals(name), customers(email), companies(name, email, phone, timezone, professionals(is_active))";
 
 async function loadContext(
   supabase: SupabaseClient,

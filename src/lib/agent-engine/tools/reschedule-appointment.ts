@@ -1,10 +1,12 @@
 import { AppointmentRepository } from "@/lib/appointments/repository";
 import { redactDefaultServiceName } from "./redact-default-service-name";
 import type { AgentTool } from "./types";
+import { professionalIdArg } from "./professional-param";
 
 type RescheduleAppointmentArgs = {
   appointmentId: string;
   newStartsAt: string;
+  professionalId?: string;
 };
 
 // Trello J6 -- move an existing appointment to a new time in one step,
@@ -30,7 +32,12 @@ export const rescheduleAppointmentTool: AgentTool = {
     "booking; \"slot_unavailable\" = that new time was just taken; \"outside_business_hours\" " +
     "= the business is closed/away then; \"too_soon\" = the new time is sooner than the " +
     "business allows a booking to be made; \"not_reschedulable\" = the appointment is already " +
-    "cancelled or completed. Never tell the customer it moved when it didn't.",
+    "cancelled or completed; \"professional_not_found\" / \"professional_not_for_service\" = the " +
+    "professional you passed can't take it. Never tell the customer it moved when it didn't.\n\n" +
+    "When the business has several professionals, the appointment stays with the same " +
+    "professional -- look up new times with find_available_slots passing that professional's " +
+    "id (from list_my_appointments). Pass `professionalId` here only if the customer asked to " +
+    "switch to another professional; the result's `professionalName` says who it's with now.",
   parameters: {
     type: "object",
     properties: {
@@ -44,6 +51,12 @@ export const rescheduleAppointmentTool: AgentTool = {
         description:
           "New start time as an ISO 8601 instant with offset. Must match a slot start from a fresh find_available_slots call.",
       },
+      professionalId: {
+        type: "string",
+        description:
+          "Only when the customer asked to move to a different professional: that professional's id " +
+          "from list_services. Omit to keep the same professional.",
+      },
     },
     required: ["appointmentId", "newStartsAt"],
     additionalProperties: false,
@@ -56,6 +69,7 @@ export const rescheduleAppointmentTool: AgentTool = {
         appointmentId: args.appointmentId,
         customerId: ctx.customerId,
         newStartsAt: args.newStartsAt,
+        professionalId: professionalIdArg(args.professionalId),
       },
       ctx.supabase,
     );

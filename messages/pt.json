@@ -1418,7 +1418,8 @@
         "services": "Serviços",
         "calendar": "Google Calendar",
         "approval": "Aprovação de agendamentos",
-        "intake": "Perguntas iniciais"
+        "intake": "Perguntas iniciais",
+        "professionals": "Profissionais"
       },
       "status": {
         "hoursOpen": "{count, plural, one {Aberto # dia por semana} other {Aberto # dias por semana}}",
@@ -1429,7 +1430,9 @@
         "calendarNotConnected": "Não conectado",
         "approvalOn": "Você aprova cada agendamento",
         "approvalOff": "Agendamentos confirmam na hora",
-        "intakeCount": "{count, plural, one {# pergunta feita} other {# perguntas feitas}}"
+        "intakeCount": "{count, plural, one {# pergunta feita} other {# perguntas feitas}}",
+        "professionalsCount": "{count, plural, one {# profissional} other {# profissionais}}",
+        "professionalsWithCalendars": "{count} profissionais · {connected} com Google Agenda"
       },
       "rulesHeading": "Regras",
       "descriptionBlocked": "{name} só oferece horários que batem com o que está configurado em Agendamentos. Os clientes podem agendar assim que o horário de funcionamento e os serviços estiverem configurados.",
@@ -1772,7 +1775,10 @@
         "USD": "USD — Dólar americano",
         "BRL": "BRL — Real brasileiro",
         "EUR": "EUR — Euro"
-      }
+      },
+      "professionalsLabel": "Quem realiza",
+      "professionalsAll": "Todos",
+      "professionalsHint": "Os clientes só conseguem agendar este serviço com os profissionais selecionados aqui."
     },
     "menu": {
       "search": "Buscar serviços",
@@ -1805,7 +1811,63 @@
       "ariaLabel": "Seções de agendamento",
       "appointments": "Agendamentos",
       "services": "Serviços",
+      "professionals": "Profissionais",
       "settings": "Configurações"
+    },
+    "professionals": {
+      "pageTitle": "Profissionais",
+      "noCompany": "Crie seu negócio primeiro para configurar os profissionais.",
+      "browseMarketplace": "Ir para o painel",
+      "title": "Profissionais",
+      "subtitle": "Quem atende os clientes, cada um com sua própria agenda. Com mais de um, o cliente escolhe com quem quer ser atendido.",
+      "addButton": "Adicionar profissional",
+      "singleTitle": "Mais de uma pessoa atende por aqui?",
+      "singleBody": "Adicione cada uma (barbeiros, médicos, cabeleireiras…). Cada profissional tem sua própria agenda, horário de trabalho, folgas e Google Agenda, e o cliente escolhe com quem quer agendar.",
+      "nameLabel": "Nome",
+      "namePlaceholder": "ex.: João",
+      "addConfirm": "Adicionar",
+      "cancel": "Cancelar",
+      "nameRequired": "Informe um nome.",
+      "saveError": "Não foi possível salvar. Tente novamente.",
+      "saved": "Salvo",
+      "save": "Salvar",
+      "lastActiveError": "Seu negócio precisa de pelo menos um profissional ativo.",
+      "upcomingError": "{count, plural, one {Este profissional tem # agendamento futuro.} other {Este profissional tem # agendamentos futuros.}} Cancele ou passe para outra pessoa antes.",
+      "you": "Você",
+      "ownHours": "Horário próprio",
+      "inheritedHours": "Horário do estabelecimento",
+      "allServices": "Todos os serviços",
+      "googleConnected": "Google conectado",
+      "googleNotConnected": "Google não conectado",
+      "moveUp": "Subir {name}",
+      "moveDown": "Descer {name}",
+      "deactivate": "Remover",
+      "manage": "Gerenciar",
+      "showInactive": "{count, plural, one {Mostrar # profissional removido} other {Mostrar # profissionais removidos}}",
+      "hideInactive": "Ocultar profissionais removidos",
+      "reactivate": "Reativar",
+      "backToList": "Voltar para profissionais",
+      "detailSubtitle": "A agenda própria: horário de trabalho, folgas e Google Agenda.",
+      "inactiveSubtitle": "Removido — os clientes não podem mais agendar com este profissional.",
+      "identityTitle": "Perfil",
+      "identitySubtitle": "O nome que os clientes veem ao escolher com quem agendar.",
+      "memberLabel": "Membro da equipe que cuida desta agenda",
+      "memberNone": "Ninguém (só donos e administradores)",
+      "memberHint": "Essa pessoa pode editar este horário, as folgas e o Google Agenda sem ser administradora.",
+      "memberTaken": "Esse membro da equipe já cuida da agenda de outro profissional.",
+      "servicesTitle": "Serviços",
+      "servicesSubtitle": "O que os clientes podem agendar com este profissional.",
+      "noServices": "Nenhum serviço ainda.",
+      "editServicesLink": "Escolha quem realiza cada serviço em Serviços",
+      "hoursTitle": "Horário de trabalho",
+      "inheritedHoursSubtitle": "Segue o horário do estabelecimento. Mude para um horário próprio se essa pessoa trabalha em outros dias ou horários.",
+      "ownHoursSubtitle": "A grade semanal própria, independente do horário do estabelecimento.",
+      "noEstablishmentHours": "O horário do estabelecimento ainda não foi definido.",
+      "useOwnHours": "Usar horário próprio",
+      "useEstablishmentHours": "Voltar a seguir o horário do estabelecimento",
+      "timeOffTitle": "Folgas",
+      "timeOffSubtitle": "Dias em que só este profissional não atende. Os clientes continuam agendando com os demais.",
+      "googleSubtitle": "Conecte o Google Agenda de {name}: os horários ocupados são respeitados e os agendamentos vão para lá."
     },
     "settings": {
       "pageTitle": "Configurações de agendamento",
@@ -1883,7 +1945,7 @@
         "notConfigured": "O Google Calendar ainda não está configurado para este espaço de trabalho.",
         "connectedSince": "Conectado em {date}",
         "notConnected": "Nenhum calendário conectado ainda.",
-        "adminOnly": "Peça a um proprietário ou administrador para conectar um calendário.",
+        "adminOnly": "Peça a um dono ou administrador — ou ao próprio profissional — para conectar um calendário.",
         "connectButton": "Conectar Google Calendar",
         "connecting": "Abrindo o Google…",
         "disconnectButton": "Desconectar",
@@ -1897,7 +1959,17 @@
         "stepTwoTitle": "Os agendamentos respeitam sua agenda",
         "stepTwoDescription": "Depois de conectado, sua equipe ignora qualquer horário em que você já está ocupado no Google Calendar ao oferecer horários.",
         "privacyNotice": "Os dados do seu Google Calendar são usados apenas para checar disponibilidade e gerenciar compromissos, de acordo com nossa",
-        "privacyNoticeLink": "Política de Privacidade"
+        "privacyNoticeLink": "Política de Privacidade",
+        "calendarTitle": "Escolha o calendário",
+        "calendarHint": "Os agendamentos vão para este calendário, e os horários ocupados nele bloqueiam novos agendamentos.",
+        "calendarLabel": "Calendário",
+        "primaryCalendar": "calendário principal",
+        "createCalendar": "Criar um calendário só para isso",
+        "calendarSaved": "Calendário atualizado.",
+        "calendarCreated": "“{name}” criado e selecionado.",
+        "calendarError": "Não foi possível atualizar o calendário. Tente novamente.",
+        "multiSubtitle": "Cada profissional conecta o próprio Google Agenda. Veja quem está conectado:",
+        "manageLink": "Gerenciar"
       },
       "intake": {
         "title": "Perguntas iniciais",
@@ -1943,6 +2015,7 @@
         "intakeCount": "{count, plural, one {# pergunta feita} other {# perguntas feitas}}",
         "calendarConnected": "Conectado",
         "calendarNotConnected": "Não conectado",
+        "calendarsConnected": "{connected} de {total} conectados",
         "calendarUnavailable": "Indisponível",
         "readOnlyTitle": "Somente leitura"
       }
@@ -2026,7 +2099,9 @@
         "timelineLabel": "Linha do tempo de hoje",
         "teamNoHours": "{name} ainda não pode oferecer horários",
         "noHoursTimeline": "Defina o horário de funcionamento para ver a linha do tempo de hoje."
-      }
+      },
+      "professionalFilterLabel": "Filtrar por profissional",
+      "professionalFilterAll": "Todos os profissionais"
     }
   },
   "LanguageSwitcher": {

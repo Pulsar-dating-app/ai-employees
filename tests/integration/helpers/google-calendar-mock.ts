@@ -27,8 +27,21 @@ import type { AddressInfo } from "node:net";
 // description), not just that a sync happened. Requests for the magic
 // scenario ids above still succeed/fail as documented and are never
 // captured -- they're not simulating a real event.
+//
+// 2026-09-24 -- each captured event also records the `calendarId` it was
+// created in (one calendar per professional), and the calendar list /
+// calendar creation endpoints exist for the per-professional picker:
+// calendarList always returns the fixed MOCK_CALENDARS; calendars.insert
+// returns a new "created-calendar-N" id.
+export const MOCK_CALENDARS = [
+  { id: "owner@example.test", summary: "Owner", primary: true, accessRole: "owner" },
+  { id: "barber-joao@group.calendar.google.com", summary: "João", accessRole: "writer" },
+  { id: "holidays@group.v.calendar.google.com", summary: "Holidays", accessRole: "reader" },
+];
+
 export type CapturedCalendarEvent = {
   id: string;
+  calendarId?: string;
   summary?: string;
   description?: string | null;
   start?: { dateTime: string };
@@ -37,6 +50,7 @@ export type CapturedCalendarEvent = {
 
 export function startGoogleCalendarMock(): Promise<{ url: string; stop: () => Promise<void> }> {
   let nextEventId = 1;
+  let nextCalendarId = 1;
   const capturedEvents = new Map<string, CapturedCalendarEvent>();
 
   const server: Server = createServer((req, res) => {
@@ -54,6 +68,17 @@ export function startGoogleCalendarMock(): Promise<{ url: string; stop: () => Pr
       capturedEvents.clear();
       res.writeHead(204);
       return res.end();
+    }
+
+    if (url.pathname === "/calendar/v3/users/me/calendarList" && req.method === "GET") {
+      const minRole = url.searchParams.get("minAccessRole");
+      const items = MOCK_CALENDARS.filter((c) => minRole !== "writer" || c.accessRole !== "reader");
+      return send(200, { items });
+    }
+    if (url.pathname === "/calendar/v3/calendars" && req.method === "POST") {
+      return readJsonBody(req, (body: { summary?: string }) => {
+        send(200, { id: `created-calendar-${nextCalendarId++}`, summary: body.summary ?? "" });
+      });
     }
 
     if (url.pathname === "/calendar/v3/freeBusy" && req.method === "POST") {
@@ -84,7 +109,7 @@ export function startGoogleCalendarMock(): Promise<{ url: string; stop: () => Pr
       if (req.method === "POST" && !eventId) {
         return readJsonBody(req, (body: Omit<CapturedCalendarEvent, "id">) => {
           const id = `mock-event-${nextEventId++}`;
-          capturedEvents.set(id, { ...body, id });
+          capturedEvents.set(id, { ...body, id, calendarId });
           send(200, { id });
         });
       }

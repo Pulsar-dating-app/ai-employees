@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { ClockIcon } from "@/components/ui/icons";
 import { PageHeader } from "../../page-header";
-import { ServicesManager } from "./services-manager";
+import { ServicesManager, type Service } from "./services-manager";
+import { listProfessionals } from "@/lib/professionals/repository";
 
 const SERVICES_LIMIT = 1000;
 
@@ -32,17 +33,26 @@ export default async function ServicesPage() {
     );
   }
 
-  const [{ data: membership }, { data: services }, { data: defaultService }] = await Promise.all([
+  const [{ data: membership }, { data: services }, { data: defaultService }, professionals] = await Promise.all([
     supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle(),
     supabase
       .from("services")
-      .select("*")
+      .select("*, professional_services(professional_id)")
       .eq("company_id", company.id)
       .eq("is_default", false)
       .order("name", { ascending: true })
       .limit(SERVICES_LIMIT),
     supabase.from("services").select("*").eq("company_id", company.id).eq("is_default", true).maybeSingle(),
+    listProfessionals(supabase, company.id),
   ]);
+
+  // Flatten the embed into the professional_ids the form edits.
+  const serviceRows: Service[] = (
+    (services ?? []) as (Service & { professional_services?: { professional_id: string }[] | null })[]
+  ).map(({ professional_services, ...service }) => ({
+    ...service,
+    professional_ids: (professional_services ?? []).map((link) => link.professional_id),
+  }));
 
   const canEdit = membership !== null;
 
@@ -60,8 +70,9 @@ export default async function ServicesPage() {
         companyId={company.id}
         companyCurrency={company.currency}
         canEdit={canEdit}
-        initialServices={services ?? []}
+        initialServices={serviceRows}
         defaultService={defaultService ?? null}
+        professionals={professionals.map((p) => ({ id: p.id, name: p.name }))}
       />
     </div>
   );

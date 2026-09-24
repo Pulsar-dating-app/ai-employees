@@ -24,7 +24,8 @@ export const listMyAppointmentsTool: AgentTool = {
     "`endsAtLabel` (the time already written out in the business's timezone -- say these, " +
     "translated as needed; `startsAt`/`endsAt` are raw UTC ISO instants, don't recompute from " +
     "them), status, and the appointment `id` used by cancel_appointment / " +
-    "reschedule_appointment. An appointment with no `serviceName` is under the business's " +
+    "reschedule_appointment. When the business has several professionals, each appointment " +
+    "also has `professionalName` (who it's with) and `professionalId`. An appointment with no `serviceName` is under the business's " +
     "general/default service -- don't invent or ask for a name, just refer to it by day and " +
     "time. Call this when the customer asks about an existing booking (\"what time is mine?\", " +
     "\"did it go through?\", \"I need to move/cancel my appointment\") -- especially if it was " +

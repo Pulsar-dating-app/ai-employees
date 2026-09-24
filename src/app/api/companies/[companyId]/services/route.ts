@@ -1,10 +1,24 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { parseProfessionalIds, setServiceProfessionals } from "@/lib/professionals/repository";
 
 // Trello H1 — services CRUD, scoped to company_id. Deliberately mirrors B3's
 // products routes shape (requireMember, price/currency pairing rule,
 // includeInactive/category/search/pagination) rather than inventing a new
 // pattern — services are "products, but the thing being sold is time."
+//
+// 2026-09-24 -- each service carries `professional_ids`: who performs it
+// ("Quem realiza"). Empty = every professional. POST/PATCH accept
+// `professionalIds` to set it.
+
+// Flattens the professional_services embed into professional_ids.
+function withProfessionalIds<T extends { professional_services?: { professional_id: string }[] | null }>(
+  row: T,
+): Omit<T, "professional_services"> & { professional_ids: string[] } {
+  const { professional_services, ...rest } = row;
+  return { ...rest, professional_ids: (professional_services ?? []).map((link) => link.professional_id) };
+}
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -104,7 +118,7 @@ export async function GET(
   // here or offered as a normal pickable service.
   let query = supabase
     .from("services")
-    .select("*", { count: "exact" })
+    .select("*, professional_services(professional_id)", { count: "exact" })
     .eq("company_id", companyId)
     .eq("is_default", false);
   if (!includeInactive) {
@@ -126,7 +140,7 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ services: data, total: count ?? 0, page, pageSize });
+  return NextResponse.json({ services: (data ?? []).map(withProfessionalIds), total: count ?? 0, page, pageSize });
 }
 
 // POST: create a service. name/duration_minutes are required; price/currency
@@ -170,6 +184,11 @@ export async function POST(
     return NextResponse.json({ error: priceError }, { status: 400 });
   }
 
+  const professionalIds = body?.professionalIds === undefined ? [] : parseProfessionalIds(body.professionalIds);
+  if (!professionalIds) {
+    return NextResponse.json({ error: "professionalIds must be an array of ids" }, { status: 400 });
+  }
+
   const { data, error } = await supabase
     .from("services")
     .insert({
@@ -190,5 +209,10 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ service: data }, { status: 201 });
+  if (professionalIds.length > 0) {
+    const linked = await setServiceProfessionals(createServiceClient(), companyId, data.id as string, professionalIds);
+    if (!linked.ok) return NextResponse.json({ error: linked.error }, { status: 400 });
+  }
+
+  return NextResponse.json({ service: { ...data, professional_ids: professionalIds } }, { status: 201 });
 }

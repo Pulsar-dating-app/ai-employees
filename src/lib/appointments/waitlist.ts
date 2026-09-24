@@ -5,6 +5,7 @@ import { validateIntakeAnswer } from "@/lib/appointments/intake-fields";
 import { sendEmail } from "@/lib/email/client";
 import { formatWhen } from "@/lib/email/appointments";
 import { renderWaitlistOpeningEmail } from "@/lib/email/templates";
+import { resolveProfessionalForService } from "@/lib/professionals/repository";
 
 // Trello R5 -- the waitlist ("let me know if something opens up on Friday").
 // Two halves, mirroring how R3/R4 split write-time hooks from the send:
@@ -16,6 +17,10 @@ import { renderWaitlistOpeningEmail } from "@/lib/email/templates";
 //     best-effort after the DB write, to email the oldest still-waiting
 //     customer whose window covers the freed slot. MVP: notify only, the
 //     slot is never held.
+//
+// 2026-09-24 -- an entry can wait for one professional (professional_id) or
+// for anyone (NULL). A slot freed on professional A notifies the oldest entry
+// waiting for A or for anyone -- never someone waiting for B.
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -24,7 +29,16 @@ function one<T>(v: T | T[] | null): T | null {
 }
 
 export type AddToWaitlistResult =
-  | { added: false; reason: "invalid_range" | "service_not_found" | "invalid_email" | "email_required" }
+  | {
+      added: false;
+      reason:
+        | "invalid_range"
+        | "service_not_found"
+        | "invalid_email"
+        | "email_required"
+        | "professional_not_found"
+        | "professional_not_for_service";
+    }
   | { added: true; alreadyWaiting: boolean; waitlistId: string };
 
 async function addToWaitlist(
@@ -37,6 +51,7 @@ async function addToWaitlist(
     from,
     to,
     email,
+    professionalId,
   }: {
     companyId: string;
     customerId: string;
@@ -48,6 +63,8 @@ async function addToWaitlist(
     // An address the agent just collected. Optional -- falls back to the
     // customer row's existing email.
     email: string | null;
+    // The professional the customer wants to wait for; omitted/null = anyone.
+    professionalId?: string | null;
   },
   supabaseClient?: SupabaseClient,
 ): Promise<AddToWaitlistResult> {
@@ -76,6 +93,11 @@ async function addToWaitlist(
   if (customerError) throw customerError;
   if (!service || !service.is_active) return { added: false, reason: "service_not_found" };
 
+  if (professionalId) {
+    const resolved = await resolveProfessionalForService(client, companyId, professionalId, serviceId);
+    if (!resolved.ok) return { added: false, reason: resolved.reason };
+  }
+
   // The whole feature is a future email, so an entry we can't reach is
   // pointless -- resolve an address now (explicit one wins, else the
   // customer row's) and refuse without one so Ana asks.
@@ -103,6 +125,7 @@ async function addToWaitlist(
       company_id: companyId,
       customer_id: customerId,
       service_id: serviceId,
+      professional_id: professionalId ?? null,
       conversation_id: conversationId,
       agent_id: agentId,
       desired_from: from,
@@ -115,7 +138,7 @@ async function addToWaitlist(
     // 23505 on the open-dedupe index: already on this list for this exact
     // window. Re-asking just keeps the original place in line.
     if (error.code === "23505") {
-      const { data: dupe } = await client
+      let dupeQuery = client
         .from("appointment_waitlist")
         .select("id")
         .eq("company_id", companyId)
@@ -123,8 +146,11 @@ async function addToWaitlist(
         .eq("service_id", serviceId)
         .eq("desired_from", from)
         .eq("desired_to", to)
-        .is("notified_at", null)
-        .maybeSingle();
+        .is("notified_at", null);
+      dupeQuery = professionalId
+        ? dupeQuery.eq("professional_id", professionalId)
+        : dupeQuery.is("professional_id", null);
+      const { data: dupe } = await dupeQuery.maybeSingle();
       return { added: true, alreadyWaiting: true, waitlistId: (dupe?.id as string) ?? "" };
     }
     throw error;
@@ -144,6 +170,7 @@ export async function notifyWaitlistForFreedSlot({
   supabase,
   companyId,
   serviceId,
+  professionalId,
   startsAt,
 }: {
   supabase: SupabaseClient;
@@ -151,6 +178,8 @@ export async function notifyWaitlistForFreedSlot({
   // Null when the cancelled row had lost its service (on delete set null) --
   // nothing service-scoped can match it.
   serviceId: string | null;
+  // The professional whose slot was freed.
+  professionalId: string;
   startsAt: string;
 }): Promise<void> {
   try {
@@ -171,6 +200,7 @@ export async function notifyWaitlistForFreedSlot({
       .select("id, customers(email), services(name)")
       .eq("company_id", companyId)
       .eq("service_id", serviceId)
+      .or(`professional_id.is.null,professional_id.eq.${professionalId}`)
       .is("notified_at", null)
       .lte("desired_from", slotDate)
       .gte("desired_to", slotDate)

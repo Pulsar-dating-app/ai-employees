@@ -8,7 +8,7 @@
 // build can't catch it: the types line up, and it only fails at request
 // time. Anything both sides need lives here, not in a "use client" file.
 
-export const APPOINTMENT_SELECT = "*, services(name), customers(name, phone)";
+export const APPOINTMENT_SELECT = "*, services(name), customers(name, phone), professionals(name)";
 
 export const APPOINTMENT_STATUSES = [
   "requested",
@@ -46,4 +46,7 @@ export type Appointment = {
   // after the booking (service_id is nullable and survives it)
   services: { name: string } | null;
   customers: { name: string | null; phone: string | null } | null;
+  // 2026-09-24 -- who the appointment is with (one schedule per professional).
+  professional_id?: string;
+  professionals?: { name: string } | null;
 };

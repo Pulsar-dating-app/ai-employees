@@ -8,6 +8,7 @@ import {
   ClockIcon,
   ListIcon,
   SettingsIcon,
+  UsersIcon,
   WarningIcon,
 } from "@/components/ui/icons";
 import type { SchedulingSetup } from "@/lib/scheduling/setup";
@@ -60,6 +61,21 @@ export async function SchedulingSetupCard({ agentName, setup }: { agentName: str
       : []),
   ];
   const info: Row[] = [
+    // 2026-09-24 -- one schedule per professional.
+    {
+      key: "professionals",
+      icon: UsersIcon,
+      label: t("rows.professionals"),
+      status:
+        setup.professionalsCount > 1 && setup.calendarAvailable
+          ? t("status.professionalsWithCalendars", {
+              count: setup.professionalsCount,
+              connected: setup.calendarsConnected,
+            })
+          : t("status.professionalsCount", { count: setup.professionalsCount }),
+      state: "info",
+      href: "/dashboard/scheduling/professionals",
+    },
     {
       key: "approval",
       icon: SettingsIcon,

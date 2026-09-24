@@ -12,6 +12,23 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-24 — Multiple schedules per company, one per professional (reverses "single calendar per company for MVP")
+
+**Decision:** A company has one or more **professionals** (a barber, a doctor), each with their own schedule, and Ana books with a specific one. How it works:
+- **Seeding and overlap.** Every company is seeded with one professional, named after the company, so a single-professional business works exactly as before. Ana never mentions the professional there, and the dashboard hides professional filters and fields. The overlap guard moved from `EXCLUDE (company_id, …)` to `EXCLUDE (professional_id, …)`.
+- **Hours.** `business_hours` rows with a null `professional_id` are the establishment's hours. A professional follows them unless `uses_custom_hours`, in which case only their own rows count; switching copies the establishment's hours as a starting point.
+- **Time off.** A `company_time_off` row with a null `professional_id` closes the whole business; otherwise only that professional is away.
+- **Services.** `professional_services` lists who performs a service ("Quem realiza"). A service nobody is linked to is performed by everyone.
+- **Google Calendar is per professional.** Each professional connects their own Google account and picks, or creates, one calendar of it; `company_calendar_connections` is now `unique(professional_id)`. The user raised the case of a clinic of partners, where no one "owns" the others' calendars. The same model also serves a barbershop, where the owner connects one account per barber and picks a different calendar for each. Each appointment stores the calendar its event was created in (`appointments.google_calendar_id`).
+- **A professional can be linked to a team member** (`professionals.user_id`). That member manages that professional's hours, time off and Google Calendar without being an admin.
+- **Ana always asks which professional** once the service is known. She searches across everyone only if the customer says explicitly that anyone is fine; the booking then goes to a free professional, fewest bookings that day first. The rule lives in a per-company prompt section (`buildProfessionalChoiceSection`), so Ana's shared `agents.system_prompt` is unchanged.
+- **The daily cap is still per customer per company** (3), across professionals.
+- **Deactivating a professional** is refused when it would leave the company with none, or while they have upcoming appointments.
+
+**Why:** A barbershop with 10 barbers could only book one haircut at a time, because the overlap constraint, hours, time off and Google connection were all company-wide. The user chose: optional "who performs it" per service; inherited hours that can be customised; Ana always asks; a Google connection per professional; and an optional team-member link. Seeding one professional per company, and hiding everything professional-related while there is only one, keeps the change invisible to every existing merchant.
+
+---
+
 ## 2026-09-24 — One self-checking "Getting started" guide; the ⚠ triangle is only for problems
 
 **Decision:** Setup gaps now live in one guide instead of scattered orange triangles. A "Getting started · N of M" card in the sidebar (and in the mobile "More" sheet) opens a drawer of ordered steps: plan, business info, products, hours, services, calendar and channel, showing only the steps relevant to who was hired. Each step checks itself from the database and links to the exact place to fix it. The sidebar and Scheduling sub-tabs mark setup gaps with a small dot and reserve ⚠ for real problems (a failed payment). The user chose: no "test conversation" step; a channel counts on any real signal (connected WhatsApp/Instagram, an allowed site domain, or a real conversation); dots for setup, triangles for problems. A floating checklist was considered and rejected, because it covers content and fights the mobile bottom bar.

@@ -2,7 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isValidTimeZone, addDays, localDate } from "@/lib/analytics/load";
 import { formatWallClock } from "./time-format";
-import { loadAvailableSlots, ServiceNotFoundError } from "@/lib/availability/load";
+import {
+  loadAvailableSlots,
+  ServiceNotFoundError,
+  ProfessionalNotAvailableError,
+} from "@/lib/availability/load";
 import {
   isWithinBusinessHours,
   isDuringTimeOff,
@@ -10,6 +14,16 @@ import {
   type BusinessHourWindow,
   type TimeOffBlock,
 } from "@/lib/availability/engine";
+import type { MergedSlot, ProfessionalRef } from "@/lib/professionals/rules";
+import { effectiveHours, eligibleProfessionals, orderForAutoAssignment } from "@/lib/professionals/rules";
+import {
+  anyProfessionalHasHours,
+  linkedProfessionalIds,
+  listProfessionals,
+  loadAllHours,
+  resolveProfessionalForService,
+  type Professional,
+} from "@/lib/professionals/repository";
 import {
   syncAppointmentConfirmed,
   syncAppointmentCancelled,
@@ -123,7 +137,76 @@ export type BookableService = {
   price: string | null;
   currency: string | null;
   category: string | null;
+  // 2026-09-24 -- who performs this service, in the merchant's order. Only
+  // present when the company has more than one active professional: a
+  // single-professional business never names its professional to customers.
+  professionals?: ProfessionalRef[];
 };
+
+// Why a professional-scoped request can't proceed: the id isn't an active
+// professional of this company, or that professional doesn't perform the
+// service. Also returned when nobody performs the service at all.
+export type ProfessionalProblemResult = {
+  reason: "professional_not_found" | "professional_not_for_service";
+};
+
+// 2026-09-24 -- a bookable time. `professionals` names who is free then, and
+// is only present when the company has more than one active professional
+// (exactly one entry when a professional was requested).
+export type SlotView = { start: string; end: string; label: string; professionals?: ProfessionalRef[] };
+
+function toSlotView(slot: MergedSlot, timezone: string, multipleProfessionals: boolean): SlotView {
+  return {
+    start: slot.start,
+    end: slot.end,
+    label: formatWallClock(slot.start, timezone),
+    ...(multipleProfessionals ? { professionals: slot.professionals } : {}),
+  };
+}
+
+// Business hours + time off every write path checks a time against, for one
+// professional -- see loadWriteContext.
+type WriteConstraints = { hours: BusinessHourWindow[]; timeOff: TimeOffBlock[] };
+
+type WriteContext = {
+  active: Professional[];
+  constraintsFor: (professional: Professional) => WriteConstraints;
+  // No active professional has any hours: the merchant hasn't set them up,
+  // so hours aren't enforced at all (the long-standing "not set up yet,
+  // never 'always closed'" default).
+  hoursConfigured: boolean;
+};
+
+async function loadWriteContext(client: SupabaseClient, companyId: string): Promise<WriteContext> {
+  const [active, hoursRows, { data: timeOffRows, error }] = await Promise.all([
+    listProfessionals(client, companyId),
+    loadAllHours(client, companyId),
+    client.from("company_time_off").select("start_date, end_date, professional_id").eq("company_id", companyId),
+  ]);
+  if (error) throw error;
+  const timeOff = (timeOffRows ?? []) as (TimeOffBlock & { professional_id: string | null })[];
+  return {
+    active,
+    hoursConfigured: active.some((p) => effectiveHours(p, hoursRows).length > 0),
+    constraintsFor: (professional) => ({
+      hours: effectiveHours(professional, hoursRows),
+      timeOff: timeOff.filter((t) => t.professional_id === null || t.professional_id === professional.id),
+    }),
+  };
+}
+
+// Whether `startsAt` fits one professional's hours and time off.
+function fitsProfessional(
+  ctx: WriteContext,
+  professional: Professional,
+  { timezone, startsAt, durationMinutes }: { timezone: string; startsAt: string; durationMinutes: number },
+): boolean {
+  const { hours, timeOff } = ctx.constraintsFor(professional);
+  if (ctx.hoursConfigured && !isWithinBusinessHours({ timezone, businessHours: hours, startsAt, durationMinutes })) {
+    return false;
+  }
+  return !isDuringTimeOff(timeOff, timezone, startsAt);
+}
 
 export type ListServicesResult = {
   services: BookableService[];
@@ -144,6 +227,7 @@ export type NoBusinessHoursResult = { available: false; reason: "no_business_hou
 
 export type FindAvailableSlotsResult =
   | { available: false; reason: "service_not_found" }
+  | ({ available: false } & ProfessionalProblemResult)
   | NoBusinessHoursResult
   | {
       available: true;
@@ -157,7 +241,9 @@ export type FindAvailableSlotsResult =
       // book_appointment). `label` is that start already written out in the
       // business's timezone ("Wed, Sep 3, 14:40") -- the agent speaks the
       // label and never converts the ISO itself. See time-format.ts.
-      slots: { start: string; end: string; label: string }[];
+      // `professionals` (multi-professional companies only) names who is
+      // free at that time.
+      slots: SlotView[];
       // The real result had more than MAX_SLOTS_RETURNED; the customer
       // should narrow the date range or state a preference.
       truncated: boolean;
@@ -189,6 +275,7 @@ export type FindAvailableSlotsResult =
 // without a second round-trip.
 export type FindNextAvailableResult =
   | { available: false; reason: "service_not_found" }
+  | ({ available: false } & ProfessionalProblemResult)
   | NoBusinessHoursResult
   | {
       available: true;
@@ -206,7 +293,7 @@ export type FindNextAvailableResult =
       // `start`/`end` are UTC ISO instants (pass `start` straight to
       // book_appointment); `label` is that start written out in the
       // business's timezone, ready to speak.
-      slot: { start: string; end: string; label: string };
+      slot: SlotView;
       intakeQuestions: { key: string; label: string; fieldType: IntakeFieldType; required: boolean }[];
     };
 
@@ -223,7 +310,9 @@ export type BookResult =
         | "too_soon"
         // This customer already has MAX_DAILY_BOOKINGS_PER_CUSTOMER live
         // appointments on the same local calendar day as `startsAt`.
-        | "daily_limit_reached";
+        | "daily_limit_reached"
+        | "professional_not_found"
+        | "professional_not_for_service";
     }
   | { booked: false; reason: "missing_intake_answers"; missingRequired: string[] }
   // R2 -- an answer failed its field_type's format check (e.g. "sim" for an
@@ -235,6 +324,8 @@ export type BookResult =
       status: "requested" | "confirmed";
       appointmentId: string;
       serviceName: string;
+      // Who the appointment is with -- multi-professional companies only.
+      professionalName?: string;
       startsAt: string;
       endsAt: string;
       // `startsAt`/`endsAt` in the business's timezone, ready to speak.
@@ -254,6 +345,9 @@ export type CancelResult =
 export type MyAppointment = {
   id: string;
   serviceName: string;
+  // Multi-professional companies only.
+  professionalId?: string;
+  professionalName?: string;
   startsAt: string;
   endsAt: string;
   // `startsAt`/`endsAt` in the business's timezone, ready to speak.
@@ -273,12 +367,16 @@ export type RescheduleResult =
         | "too_soon"
         | "outside_business_hours"
         | "slot_unavailable"
-        | "not_reschedulable";
+        | "not_reschedulable"
+        | "professional_not_found"
+        | "professional_not_for_service";
     }
   | {
       rescheduled: true;
       appointmentId: string;
       serviceName: string;
+      // Multi-professional companies only.
+      professionalName?: string;
       startsAt: string;
       endsAt: string;
       // `startsAt`/`endsAt` in the business's timezone, ready to speak.
@@ -301,6 +399,24 @@ async function listServices(
 
   if (error) throw error;
 
+  // 2026-09-24 -- with several professionals, each service lists who
+  // performs it (the customer picks one). One professional: never named.
+  const professionals = await listProfessionals(client, companyId);
+  const multiple = professionals.length > 1;
+  const linksByService = new Map<string, string[]>();
+  if (multiple) {
+    const { data: links, error: linksError } = await client
+      .from("professional_services")
+      .select("professional_id, service_id")
+      .eq("company_id", companyId);
+    if (linksError) throw linksError;
+    for (const link of links ?? []) {
+      const list = linksByService.get(link.service_id as string) ?? [];
+      list.push(link.professional_id as string);
+      linksByService.set(link.service_id as string, list);
+    }
+  }
+
   const rows = (data ?? []).map((row) => ({
     isDefault: row.is_default === true,
     service: {
@@ -311,6 +427,13 @@ async function listServices(
       price: (row.price as string | null) ?? null,
       currency: (row.currency as string | null) ?? null,
       category: (row.category as string | null) ?? null,
+      ...(multiple
+        ? {
+            professionals: eligibleProfessionals(professionals, linksByService.get(row.id as string) ?? []).map(
+              (p) => ({ id: p.id, name: p.name }),
+            ),
+          }
+        : {}),
     },
   }));
 
@@ -320,18 +443,12 @@ async function listServices(
   };
 }
 
-// True when the merchant has at least one active opening-hours window. Absence
-// means "not set up yet", never "always closed" -- callers must not report it
-// as a closure.
+// True when at least one active professional has an opening-hours window
+// (their own, or the establishment's they inherit). Absence means "not set
+// up yet", never "always closed" -- callers must not report it as a closure.
 async function hasBusinessHours(companyId: string, supabaseClient?: SupabaseClient): Promise<boolean> {
   const client = supabaseClient ?? createServiceClient();
-  const { count, error } = await client
-    .from("business_hours")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", companyId)
-    .eq("is_active", true);
-  if (error) throw error;
-  return (count ?? 0) > 0;
+  return anyProfessionalHasHours(client, companyId);
 }
 
 async function findAvailableSlots(
@@ -340,19 +457,24 @@ async function findAvailableSlots(
     serviceId,
     from,
     to,
-  }: { companyId: string; serviceId: string; from: string; to: string },
+    professionalId,
+  }: { companyId: string; serviceId: string; from: string; to: string; professionalId?: string | null },
   supabaseClient?: SupabaseClient,
 ): Promise<FindAvailableSlotsResult> {
   const client = supabaseClient ?? createServiceClient();
 
   try {
-    const { slots, googleCalendarChecked, timeOff, closedDates } = await loadAvailableSlots({
-      supabase: client,
-      companyId,
-      serviceId,
-      from,
-      to,
-    });
+    const { slots, googleCalendarChecked, timeOff, closedDates, professionals, multipleProfessionals } =
+      await loadAvailableSlots({
+        supabase: client,
+        companyId,
+        serviceId,
+        from,
+        to,
+        professionalId,
+      });
+    // Nobody performs this service (every linked professional deactivated).
+    if (professionals.length === 0) return { available: false, reason: "professional_not_for_service" };
 
     const [{ data: company }, intakeFields] = await Promise.all([
       client.from("companies").select("timezone").eq("id", companyId).maybeSingle(),
@@ -372,10 +494,7 @@ async function findAvailableSlots(
       available: true,
       timezone,
       googleCalendarChecked,
-      slots: slots.slice(0, MAX_SLOTS_RETURNED).map((slot) => ({
-        ...slot,
-        label: formatWallClock(slot.start, timezone),
-      })),
+      slots: slots.slice(0, MAX_SLOTS_RETURNED).map((slot) => toSlotView(slot, timezone, multipleProfessionals)),
       truncated: slots.length > MAX_SLOTS_RETURNED,
       timeOff,
       closedDates,
@@ -393,6 +512,9 @@ async function findAvailableSlots(
     if (err instanceof ServiceNotFoundError) {
       return { available: false, reason: "service_not_found" };
     }
+    if (err instanceof ProfessionalNotAvailableError) {
+      return { available: false, reason: err.reason };
+    }
     throw err;
   }
 }
@@ -404,7 +526,11 @@ async function findAvailableSlots(
 // time off and J7's lead time are all already applied -- and returns the
 // earliest slot the first non-empty chunk produces.
 async function findNextAvailable(
-  { companyId, serviceId }: { companyId: string; serviceId: string },
+  {
+    companyId,
+    serviceId,
+    professionalId,
+  }: { companyId: string; serviceId: string; professionalId?: string | null },
   supabaseClient?: SupabaseClient,
 ): Promise<FindNextAvailableResult> {
   const client = supabaseClient ?? createServiceClient();
@@ -426,13 +552,15 @@ async function findNextAvailable(
         Math.min(offset + NEXT_AVAILABLE_CHUNK_DAYS - 1, NEXT_AVAILABLE_HORIZON_DAYS),
       );
 
-      const { slots, googleCalendarChecked } = await loadAvailableSlots({
+      const { slots, googleCalendarChecked, professionals, multipleProfessionals } = await loadAvailableSlots({
         supabase: client,
         companyId,
         serviceId,
         from,
         to,
+        professionalId,
       });
+      if (professionals.length === 0) return { available: false, reason: "professional_not_for_service" };
       if (slots.length === 0) {
         // No slot in the first window and no hours at all: scanning the other
         // ~80 days can only come back empty, and "nothing in 90 days" would be
@@ -460,7 +588,7 @@ async function findNextAvailable(
         found: true,
         timezone,
         googleCalendarChecked,
-        slot: { ...earliest, label: formatWallClock(earliest.start, timezone) },
+        slot: toSlotView(earliest, timezone, multipleProfessionals),
         intakeQuestions: intakeFields.map((f) => ({
           key: f.key,
           label: f.label,
@@ -474,6 +602,9 @@ async function findNextAvailable(
   } catch (err) {
     if (err instanceof ServiceNotFoundError) {
       return { available: false, reason: "service_not_found" };
+    }
+    if (err instanceof ProfessionalNotAvailableError) {
+      return { available: false, reason: err.reason };
     }
     throw err;
   }
@@ -490,9 +621,15 @@ async function book(
     notes,
     summary,
     intakeAnswers,
+    professionalId,
   }: {
     companyId: string;
     serviceId: string;
+    // 2026-09-24 -- who the appointment is with. Omitted/null = the customer
+    // has no preference (or the company has a single professional): the
+    // first eligible professional free at `startsAt` gets it, fewest
+    // bookings that day first.
+    professionalId?: string | null;
     customerId: string;
     conversationId: string | null;
     agentId: string | null;
@@ -579,37 +716,56 @@ async function book(
     return { booked: false, reason: "daily_limit_reached" };
   }
 
-  const { data: businessHours, error: businessHoursError } = await client
-    .from("business_hours")
-    .select("day_of_week, start_time, end_time")
-    .eq("company_id", companyId)
-    .eq("is_active", true);
-  if (businessHoursError) throw businessHoursError;
-
-  // No configured hours means "not set up yet," not "never open" -- same
-  // permissive default as the H3 write route (see its own comment and the
-  // 2026-08-29 decisions.md entry).
-  if (businessHours && businessHours.length > 0) {
-    const withinHours = isWithinBusinessHours({
-      timezone,
-      businessHours: businessHours as BusinessHourWindow[],
-      startsAt: startDate.toISOString(),
-      durationMinutes: service.duration_minutes,
-    });
-    if (!withinHours) return { booked: false, reason: "outside_business_hours" };
+  // 2026-09-24 -- who can take this booking. A named professional must be an
+  // active professional of this company who performs the service; with no
+  // name, every eligible professional is a candidate.
+  const writeCtx = await loadWriteContext(client, companyId);
+  let candidates: Professional[];
+  if (professionalId) {
+    const resolved = await resolveProfessionalForService(client, companyId, professionalId, serviceId);
+    if (!resolved.ok) return { booked: false, reason: resolved.reason };
+    candidates = [resolved.professional];
+  } else {
+    candidates = eligibleProfessionals(writeCtx.active, await linkedProfessionalIds(client, serviceId));
+    if (candidates.length === 0) return { booked: false, reason: "professional_not_for_service" };
   }
 
-  // Merchant-registered time off (K3). find_available_slots already excludes
-  // these dates; this catches a stale slot or a hand-picked time. Reuses the
-  // outside_business_hours reason -- "the business isn't available then"
-  // covers both, and it keeps the tool contract unchanged.
-  const { data: timeOff, error: timeOffError } = await client
-    .from("company_time_off")
-    .select("start_date, end_date")
-    .eq("company_id", companyId);
-  if (timeOffError) throw timeOffError;
-  if (isDuringTimeOff((timeOff ?? []) as TimeOffBlock[], timezone, startDate.toISOString())) {
-    return { booked: false, reason: "outside_business_hours" };
+  // Each candidate's own hours and time off (the establishment's plus their
+  // own). find_available_slots already only offers times that fit; this
+  // catches a stale slot or a hand-picked time. No configured hours at all
+  // means "not set up yet," not "never open" -- same permissive default as
+  // the H3 write route. Time off reuses outside_business_hours: "not
+  // available then" covers both and keeps the tool contract unchanged.
+  const fitting = candidates.filter((p) =>
+    fitsProfessional(writeCtx, p, {
+      timezone,
+      startsAt: startDate.toISOString(),
+      durationMinutes: service.duration_minutes,
+    }),
+  );
+  if (fitting.length === 0) return { booked: false, reason: "outside_business_hours" };
+
+  // No preference: spread the work -- fewest live bookings that local day
+  // first, then the merchant's own ordering.
+  let ordered = fitting;
+  if (fitting.length > 1) {
+    const { data: dayRows, error: dayError } = await client
+      .from("appointments")
+      .select("professional_id")
+      .eq("company_id", companyId)
+      .in(
+        "professional_id",
+        fitting.map((p) => p.id),
+      )
+      .not("status", "in", "(cancelled,no_show)")
+      .gte("starts_at", dayStartUtc.toISOString())
+      .lt("starts_at", dayEndUtc.toISOString());
+    if (dayError) throw dayError;
+    const counts = new Map<string, number>();
+    for (const row of dayRows ?? []) {
+      counts.set(row.professional_id as string, (counts.get(row.professional_id as string) ?? 0) + 1);
+    }
+    ordered = orderForAutoAssignment(fitting, counts);
   }
 
   // Trello K9/R2 -- the merchant's pre-booking questions, keyed by each
@@ -655,29 +811,38 @@ async function book(
     ? "requested"
     : "confirmed";
 
-  const { data: appointment, error } = await client
-    .from("appointments")
-    .insert({
-      company_id: companyId,
-      service_id: serviceId,
-      customer_id: customerId,
-      conversation_id: conversationId,
-      agent_id: agentId,
-      status,
-      starts_at: startDate.toISOString(),
-      ends_at: endsAt.toISOString(),
-      notes: notes ?? null,
-      summary: summary?.trim() ? summary.trim() : null,
-      intake_answers: storedIntakeAnswers,
-    })
-    .select()
-    .single();
+  // Try each candidate in order. 23P01 = exclusion_violation: the EXCLUDE
+  // constraint (now per professional) caught an overlap with one of their
+  // live appointments -- robust against the race an app-layer
+  // check-then-insert can't be -- so move on to the next candidate.
+  let appointment: Record<string, unknown> | null = null;
+  let assigned: Professional | null = null;
+  for (const candidate of ordered) {
+    const { data: inserted, error } = await client
+      .from("appointments")
+      .insert({
+        company_id: companyId,
+        service_id: serviceId,
+        professional_id: candidate.id,
+        customer_id: customerId,
+        conversation_id: conversationId,
+        agent_id: agentId,
+        status,
+        starts_at: startDate.toISOString(),
+        ends_at: endsAt.toISOString(),
+        notes: notes ?? null,
+        summary: summary?.trim() ? summary.trim() : null,
+        intake_answers: storedIntakeAnswers,
+      })
+      .select()
+      .single();
 
-  if (error) {
-    // 23P01 = exclusion_violation: the H3 EXCLUDE constraint caught an
-    // overlap with an existing live appointment. Robust against the race an
-    // app-layer check-then-insert can't be.
-    if (error.code === "23P01") return { booked: false, reason: "slot_unavailable" };
+    if (!error) {
+      appointment = inserted as Record<string, unknown>;
+      assigned = candidate;
+      break;
+    }
+    if (error.code === "23P01") continue;
     // The daily cap's race-safe copy in the DB trigger: several bookings for
     // this customer ran concurrently and all passed the count above before
     // any of them had inserted.
@@ -686,6 +851,7 @@ async function book(
     }
     throw error;
   }
+  if (!appointment || !assigned) return { booked: false, reason: "slot_unavailable" };
 
   // R2 -- write the name/email/phone answers onto the customers row too, so
   // list_my_appointments' email lookup works and R3/R4 can reach them.
@@ -708,20 +874,20 @@ async function book(
   // calendar (I3). Best-effort: syncAppointmentConfirmed never throws, and a
   // null return just leaves google_event_id null.
   if (status === "confirmed") {
-    const googleEventId = await syncAppointmentConfirmed(companyId, {
+    const synced = await syncAppointmentConfirmed(assigned.id, {
       serviceName: service.name,
       // The name may have arrived only now, in this booking's `full_name`
       // intake answer (a fresh web-chat visitor's customer row starts
       // nameless) -- `customer.name` was read before the blank-fill above.
       customerName: customer.name ?? customerPatch.name ?? "",
-      startsAt: appointment.starts_at,
-      visibleEndsAt: calendarVisibleEndsAt(appointment.starts_at, service.duration_minutes),
+      startsAt: appointment.starts_at as string,
+      visibleEndsAt: calendarVisibleEndsAt(appointment.starts_at as string, service.duration_minutes),
       summary: appointment.summary as string | null,
     });
-    if (googleEventId) {
+    if (synced) {
       await client
         .from("appointments")
-        .update({ google_event_id: googleEventId })
+        .update({ google_event_id: synced.googleEventId, google_calendar_id: synced.googleCalendarId })
         .eq("id", appointment.id);
     }
 
@@ -736,6 +902,7 @@ async function book(
     status,
     appointmentId: appointment.id as string,
     serviceName: service.name as string,
+    ...(writeCtx.active.length > 1 ? { professionalName: assigned.name } : {}),
     startsAt: appointment.starts_at as string,
     endsAt: appointment.ends_at as string,
     startsAtLabel: formatWallClock(appointment.starts_at as string, timezone),
@@ -760,7 +927,7 @@ async function cancel(
   const [{ data: appointment, error }, { data: company, error: companyError }] = await Promise.all([
     client
       .from("appointments")
-      .select("id, status, starts_at, service_id, google_event_id")
+      .select("id, status, starts_at, service_id, professional_id, google_event_id, google_calendar_id")
       .eq("id", appointmentId)
       .eq("company_id", companyId)
       .eq("customer_id", customerId)
@@ -804,7 +971,11 @@ async function cancel(
   if (updateError) throw updateError;
 
   if (appointment.google_event_id) {
-    await syncAppointmentCancelled(companyId, appointment.google_event_id as string);
+    await syncAppointmentCancelled(
+      appointment.professional_id as string,
+      appointment.google_event_id as string,
+      (appointment.google_calendar_id as string | null) ?? null,
+    );
   }
 
   // Trello R5 -- this cancel just freed a slot; notify the oldest waitlist
@@ -813,6 +984,7 @@ async function cancel(
     supabase: client,
     companyId,
     serviceId: (appointment.service_id as string | null) ?? null,
+    professionalId: appointment.professional_id as string,
     startsAt: appointment.starts_at as string,
   });
 
@@ -851,19 +1023,21 @@ async function listMyAppointments(
     for (const row of matches ?? []) customerIds.add(row.id as string);
   }
 
-  const [{ data: company }, { data: rows, error }] = await Promise.all([
+  const [{ data: company }, { data: rows, error }, professionals] = await Promise.all([
     client.from("companies").select("timezone").eq("id", companyId).maybeSingle(),
     client
       .from("appointments")
-      .select("id, starts_at, ends_at, status, services(name)")
+      .select("id, starts_at, ends_at, status, professional_id, services(name), professionals(name)")
       .eq("company_id", companyId)
       .in("customer_id", [...customerIds])
       .not("status", "in", "(cancelled,no_show)")
       .gte("ends_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
       .limit(10),
+    listProfessionals(client, companyId),
   ]);
   if (error) throw error;
+  const multiple = professionals.length > 1;
 
   const timezone =
     company?.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
@@ -871,9 +1045,14 @@ async function listMyAppointments(
   return (rows ?? []).map((row) => {
     const service = row.services as { name: string } | { name: string }[] | null;
     const serviceName = Array.isArray(service) ? (service[0]?.name ?? "") : (service?.name ?? "");
+    const professional = row.professionals as { name: string } | { name: string }[] | null;
+    const professionalName = Array.isArray(professional) ? professional[0]?.name : professional?.name;
     return {
       id: row.id as string,
       serviceName,
+      ...(multiple
+        ? { professionalId: row.professional_id as string, professionalName: professionalName ?? "" }
+        : {}),
       startsAt: row.starts_at as string,
       endsAt: row.ends_at as string,
       startsAtLabel: formatWallClock(row.starts_at as string, timezone),
@@ -891,20 +1070,32 @@ async function listMyAppointments(
 // ends_at, business-hours + time-off + lead-time checks, the 23P01 overlap
 // catch, and syncAppointmentRescheduled for a calendar-synced row. Scoped
 // to ctx.customerId like cancel().
+//
+// 2026-09-24 -- stays with the same professional unless `professionalId`
+// names another one (who must perform the service). Hours and time off are
+// that professional's; moving professionals moves the Google event from the
+// old professional's calendar to the new one's.
 async function reschedule(
   {
     companyId,
     appointmentId,
     customerId,
     newStartsAt,
-  }: { companyId: string; appointmentId: string; customerId: string; newStartsAt: string },
+    professionalId,
+  }: {
+    companyId: string;
+    appointmentId: string;
+    customerId: string;
+    newStartsAt: string;
+    professionalId?: string | null;
+  },
   supabaseClient?: SupabaseClient,
 ): Promise<RescheduleResult> {
   const client = supabaseClient ?? createServiceClient();
 
   const { data: appointment, error } = await client
     .from("appointments")
-    .select("id, status, service_id, google_event_id")
+    .select("id, status, service_id, professional_id, google_event_id, google_calendar_id, summary, customers(name)")
     .eq("id", appointmentId)
     .eq("company_id", companyId)
     .eq("customer_id", customerId)
@@ -914,15 +1105,19 @@ async function reschedule(
   if (!["requested", "confirmed"].includes(appointment.status as string)) {
     return { rescheduled: false, reason: "not_reschedulable" };
   }
+  if (!appointment.service_id) return { rescheduled: false, reason: "not_reschedulable" };
 
   const startDate = new Date(newStartsAt);
   if (Number.isNaN(startDate.getTime())) return { rescheduled: false, reason: "invalid_time" };
 
+  const currentProfessionalId = appointment.professional_id as string;
+  const targetProfessionalId = professionalId || currentProfessionalId;
+  const movingProfessional = targetProfessionalId !== currentProfessionalId;
+
   const [
     { data: service, error: serviceError },
     { data: company, error: companyError },
-    { data: businessHours, error: businessHoursError },
-    { data: timeOff, error: timeOffError },
+    writeCtx,
   ] = await Promise.all([
     client
       .from("services")
@@ -935,18 +1130,29 @@ async function reschedule(
       .select("timezone, min_lead_time_minutes")
       .eq("id", companyId)
       .maybeSingle(),
-    client
-      .from("business_hours")
-      .select("day_of_week, start_time, end_time")
-      .eq("company_id", companyId)
-      .eq("is_active", true),
-    client.from("company_time_off").select("start_date, end_date").eq("company_id", companyId),
+    loadWriteContext(client, companyId),
   ]);
   if (serviceError) throw serviceError;
   if (companyError) throw companyError;
-  if (businessHoursError) throw businessHoursError;
-  if (timeOffError) throw timeOffError;
   if (!service) return { rescheduled: false, reason: "not_reschedulable" };
+
+  // A new professional must be active and perform the service. The current
+  // one stays valid even if the merchant later restricted the service --
+  // moving an existing booking's time shouldn't strand it.
+  let target: Professional | null;
+  if (movingProfessional) {
+    const resolved = await resolveProfessionalForService(
+      client,
+      companyId,
+      targetProfessionalId,
+      appointment.service_id as string,
+    );
+    if (!resolved.ok) return { rescheduled: false, reason: resolved.reason };
+    target = resolved.professional;
+  } else {
+    target = writeCtx.active.find((p) => p.id === currentProfessionalId) ?? null;
+    if (!target) return { rescheduled: false, reason: "professional_not_found" };
+  }
 
   const timezone =
     company?.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
@@ -956,16 +1162,13 @@ async function reschedule(
     return { rescheduled: false, reason: "too_soon" };
   }
 
-  if (businessHours && businessHours.length > 0) {
-    const withinHours = isWithinBusinessHours({
+  if (
+    !fitsProfessional(writeCtx, target, {
       timezone,
-      businessHours: businessHours as BusinessHourWindow[],
       startsAt: startDate.toISOString(),
       durationMinutes: service.duration_minutes,
-    });
-    if (!withinHours) return { rescheduled: false, reason: "outside_business_hours" };
-  }
-  if (isDuringTimeOff((timeOff ?? []) as TimeOffBlock[], timezone, startDate.toISOString())) {
+    })
+  ) {
     return { rescheduled: false, reason: "outside_business_hours" };
   }
 
@@ -975,24 +1178,54 @@ async function reschedule(
 
   const { error: updateError } = await client
     .from("appointments")
-    .update({ starts_at: startDate.toISOString(), ends_at: endsAt.toISOString() })
+    .update({
+      starts_at: startDate.toISOString(),
+      ends_at: endsAt.toISOString(),
+      ...(movingProfessional ? { professional_id: target.id } : {}),
+    })
     .eq("id", appointmentId);
   if (updateError) {
     if (updateError.code === "23P01") return { rescheduled: false, reason: "slot_unavailable" };
     throw updateError;
   }
 
-  if (appointment.google_event_id) {
-    await syncAppointmentRescheduled(companyId, appointment.google_event_id as string, {
+  const visibleEndsAt = calendarVisibleEndsAt(startDate.toISOString(), service.duration_minutes);
+  if (appointment.google_event_id && !movingProfessional) {
+    await syncAppointmentRescheduled(
+      currentProfessionalId,
+      appointment.google_event_id as string,
+      (appointment.google_calendar_id as string | null) ?? null,
+      { startsAt: startDate.toISOString(), visibleEndsAt },
+    );
+  } else if (appointment.google_event_id && movingProfessional) {
+    await syncAppointmentCancelled(
+      currentProfessionalId,
+      appointment.google_event_id as string,
+      (appointment.google_calendar_id as string | null) ?? null,
+    );
+    const customer = appointment.customers as { name: string | null } | { name: string | null }[] | null;
+    const customerName = (Array.isArray(customer) ? customer[0]?.name : customer?.name) ?? "";
+    const synced = await syncAppointmentConfirmed(target.id, {
+      serviceName: service.name as string,
+      customerName,
       startsAt: startDate.toISOString(),
-      visibleEndsAt: calendarVisibleEndsAt(startDate.toISOString(), service.duration_minutes),
+      visibleEndsAt,
+      summary: (appointment.summary as string | null) ?? null,
     });
+    await client
+      .from("appointments")
+      .update({
+        google_event_id: synced?.googleEventId ?? null,
+        google_calendar_id: synced?.googleCalendarId ?? null,
+      })
+      .eq("id", appointmentId);
   }
 
   return {
     rescheduled: true,
     appointmentId,
     serviceName: service.name as string,
+    ...(writeCtx.active.length > 1 ? { professionalName: target.name } : {}),
     startsAt: startDate.toISOString(),
     endsAt: endsAt.toISOString(),
     startsAtLabel: formatWallClock(startDate.toISOString(), timezone),

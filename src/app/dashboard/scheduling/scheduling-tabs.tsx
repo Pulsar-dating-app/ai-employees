@@ -15,6 +15,8 @@ import clsx from "clsx";
 const TABS = [
   { href: "/dashboard/scheduling", key: "appointments" as const, exact: true },
   { href: "/dashboard/scheduling/services", key: "services" as const, exact: false },
+  // 2026-09-24 -- one schedule per professional (barbers, doctors...).
+  { href: "/dashboard/scheduling/professionals", key: "professionals" as const, exact: false },
   { href: "/dashboard/scheduling/settings", key: "settings" as const, exact: false },
 ];
 
