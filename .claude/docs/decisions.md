@@ -74,7 +74,7 @@ The WhatsApp toggle now reads "Incluir as taxas da Meta no preço" (WhatsApp wor
 This supersedes two things from the entry just below:
 - **Deactivating a schedule no longer removes its person.** They keep their login and see "your schedule was turned off" until it's reactivated. Removal is its own, owner-only action.
 - **Removal is recorded** in `company_member_removals`. On their next login, a removed person with no company sees `/access-removed` ("You no longer have access to {company}"), not onboarding. From there they can set up a business of their own (which acknowledges the notice) or log out. Being added back by email puts them straight into the company again and clears the notice.
-- **The schedule stays when its person is removed.** It keeps its appointments, now unlinked, for the owner to reassign or turn off.
+- **Removing a person also turns their schedule off.** It stays in the list of inactive schedules with its history, unlinked, and can be reactivated. So removal is refused like deactivation: `409 has_upcoming_appointments` while the schedule still has bookings ahead, `409 last_active_professional` if it's the last active one. First shipped with the schedule left active, which the user found confusing: the person "disappeared" but their schedule stayed in the list, and Ana kept offering it.
 
 **Why:** The user asked for admins to be able to promote, and for only the owner to demote or remove. For a removed person logging in again, the options were:
 - silently dropping them into "create your business" (confusing: it looks like their company vanished);

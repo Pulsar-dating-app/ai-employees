@@ -302,13 +302,13 @@ describe("managing roles", () => {
     const { member, professionalId } = await inviteAndJoin(owner, companyId);
 
     expect((await remove(owner.cookieHeader, companyId, member.userId)).status).toBe(200);
-    // Their schedule stays, unlinked.
+    // Their schedule is turned off with them (kept, unlinked, reactivatable).
     const { data: professional } = await getTestServiceClient()
       .from("professionals")
       .select("user_id, is_active")
       .eq("id", professionalId)
       .single();
-    expect(professional).toEqual({ user_id: null, is_active: true });
+    expect(professional).toEqual({ user_id: null, is_active: false });
 
     expect((await page("/dashboard", member.cookieHeader)).redirectedTo).toBe("/access-removed");
     expect((await page("/onboarding", member.cookieHeader)).redirectedTo).toBe("/access-removed");
@@ -323,8 +323,29 @@ describe("managing roles", () => {
     });
     expect(relinked.status).toBe(200);
     expect(await roleOf(member.userId)).toBe("member");
+    const reactivated = await api("PATCH", `/api/companies/${companyId}/professionals/${professionalId}`, owner.cookieHeader, {
+      isActive: true,
+    });
+    expect(reactivated.status).toBe(200);
     expect((await page("/dashboard/scheduling", member.cookieHeader)).status).toBe(200);
     expect((await page("/access-removed", member.cookieHeader)).redirectedTo).toBe("/dashboard");
+  });
+
+  it("won't remove someone whose schedule still has bookings ahead", async () => {
+    const owner = await signUpTestUser("owner");
+    const { companyId, serviceId } = await seedCompany(owner);
+    const { member, professionalId } = await inviteAndJoin(owner, companyId);
+    const customer = await createCustomer(companyId, "Cliente");
+    const appointmentId = await createAppointment(companyId, serviceId, professionalId, customer, "2027-03-01T10:00:00.000Z");
+
+    const blocked = await remove(owner.cookieHeader, companyId, member.userId);
+    expect(blocked.status).toBe(409);
+    expect(blocked.json).toMatchObject({ error: "has_upcoming_appointments", count: 1 });
+    expect(await roleOf(member.userId)).toBe("member");
+
+    // Once the booking is cancelled, the removal goes through.
+    await api("DELETE", `/api/companies/${companyId}/appointments/${appointmentId}`, owner.cookieHeader);
+    expect((await remove(owner.cookieHeader, companyId, member.userId)).status).toBe(200);
   });
 
   it("only the owner can unlink someone from a schedule (which removes them)", async () => {

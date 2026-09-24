@@ -1769,7 +1769,7 @@
       "demote": "Voltar para membro",
       "demoteConfirm": "Voltar {name} para membro? A pessoa vai ver só a própria agenda e os próprios agendamentos.",
       "remove": "Remover do negócio",
-      "removeConfirm": "Remover {name} do negócio? A pessoa perde o acesso na hora. A agenda e os agendamentos continuam aqui para você reatribuir ou desativar.",
+      "removeConfirm": "Remover {name} do negócio? A pessoa perde o acesso na hora e a agenda dela é desativada, então os clientes não conseguem mais agendar com ela. O histórico fica guardado e você pode reativar a agenda depois.",
       "unlinkSelf": "Desvincular minha conta desta agenda",
       "ownerOnly": "Só o dono pode fazer isso."
     },

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CompanyRole } from "@/lib/auth/company-access";
+import { countActiveProfessionals, countUpcomingAppointments } from "@/lib/professionals/repository";
 
 // 2026-09-25 -- who may change whose role (decisions.md "Owners/admins
 // promote; only the owner demotes or removes"). Pure, so the rules are
@@ -30,10 +31,42 @@ export function checkTeamAction(input: {
   return { ok: true };
 }
 
-// Takes someone out of the company: their seat (company_users), their link
-// to a schedule (the professional stays, with its appointments, for the
-// owner to reassign or deactivate), and a notice they'll see if they log in
-// again. Never the owner.
+// Why removing someone can't happen yet: removal also turns their schedule
+// off, so -- like deactivating it -- it's refused while that schedule still
+// has bookings ahead, or when it's the company's last active one.
+export type RemovalBlocker =
+  | { error: "has_upcoming_appointments"; count: number }
+  | { error: "last_active_professional" };
+
+export async function removalBlocker(
+  service: SupabaseClient,
+  companyId: string,
+  userId: string,
+): Promise<RemovalBlocker | null> {
+  const { data, error } = await service
+    .from("professionals")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("user_id", userId)
+    .eq("is_active", true);
+  if (error) throw error;
+  const ids = (data ?? []).map((row) => row.id as string);
+  if (ids.length === 0) return null;
+
+  let upcoming = 0;
+  for (const id of ids) upcoming += await countUpcomingAppointments(service, companyId, id);
+  if (upcoming > 0) return { error: "has_upcoming_appointments", count: upcoming };
+
+  if ((await countActiveProfessionals(service, companyId)) - ids.length <= 0) {
+    return { error: "last_active_professional" };
+  }
+  return null;
+}
+
+// Takes someone out of the company: their seat (company_users), their
+// schedule (unlinked and turned off -- Ana stops offering it; its history
+// stays and it can be reactivated), and a notice they'll see if they log in
+// again. Never the owner. Callers check removalBlocker first.
 export async function removeFromCompany(
   service: SupabaseClient,
   companyId: string,
@@ -59,7 +92,7 @@ export async function removeFromCompany(
 
   const { error: unlinkError } = await service
     .from("professionals")
-    .update({ user_id: null })
+    .update({ user_id: null, is_active: false })
     .eq("company_id", companyId)
     .eq("user_id", userId);
   if (unlinkError) throw unlinkError;

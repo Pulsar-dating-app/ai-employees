@@ -1154,7 +1154,7 @@ See decisions.md, same date. Scope: Ana's scheduling side; Malu has no member-fa
   - Waitlist notifications after a cancel run with the service client, because a member can't see "any professional" waitlist entries.
 - **Role management** (`src/lib/team/roles.ts`, `members/[userId]` route, migration `20260925150000`):
   - `checkTeamAction` (pure) is the rule: owner/admin promote a member, only the owner demotes or removes, the owner is untouchable, and nobody changes themselves. `company_users` RLS enforces the same.
-  - `removeFromCompany` deletes the seat, unlinks the schedule (which stays) and writes a `company_member_removals` notice.
+  - `removalBlocker` refuses a removal while the person's schedule has upcoming bookings, or when it's the last active one. `removeFromCompany` then deletes the seat, unlinks and deactivates the schedule, and writes a `company_member_removals` notice.
   - A company-less account with an unacknowledged notice is sent to `/access-removed` (from the dashboard layout and `/onboarding`). Its "set up my own business" action acknowledges the notice; being re-added by email acknowledges it too.
   - The professional page shows the account's role (Dono/Administrador/Membro) and the actions the viewer may take.
 - **RLS** (`20260925120000_team_roles.sql`) uses `private.is_own_professional` and `private.is_own_customer` alongside `is_company_admin`. Appointments are deleted by admins only; the dashboard "cancel" is an update.

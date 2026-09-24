@@ -1769,7 +1769,7 @@
       "demote": "Make member again",
       "demoteConfirm": "Make {name} a member again? They will only see their own appointments and schedule.",
       "remove": "Remove from the business",
-      "removeConfirm": "Remove {name} from the business? They lose access right away. Their schedule and appointments stay here for you to reassign or turn off.",
+      "removeConfirm": "Remove {name} from the business? They lose access right away and their schedule is turned off, so customers can no longer book with them. Their history stays, and you can reactivate the schedule later.",
       "unlinkSelf": "Unlink my account from this schedule",
       "ownerOnly": "Only the owner can do this."
     },

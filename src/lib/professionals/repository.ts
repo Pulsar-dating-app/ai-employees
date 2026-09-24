@@ -149,6 +149,24 @@ export async function countActiveProfessionals(client: SupabaseClient, companyId
   return count ?? 0;
 }
 
+// Bookings still ahead on a professional's schedule (pending or confirmed,
+// not yet over) -- what stops deactivating them, or removing their person.
+export async function countUpcomingAppointments(
+  client: SupabaseClient,
+  companyId: string,
+  professionalId: string,
+): Promise<number> {
+  const { count, error } = await client
+    .from("appointments")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("professional_id", professionalId)
+    .in("status", ["requested", "confirmed"])
+    .gte("ends_at", new Date().toISOString());
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
 // Every active business_hours row of the company, establishment-wide and
 // per-professional alike -- effectiveHours() picks each professional's set.
 export async function loadAllHours(client: SupabaseClient, companyId: string): Promise<HoursRow[]> {

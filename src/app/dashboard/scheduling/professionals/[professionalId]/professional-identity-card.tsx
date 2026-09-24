@@ -73,7 +73,16 @@ export function ProfessionalIdentityCard({
     if (!res?.ok) {
       const json = await res?.json().catch(() => null);
       const key = emailErrorKey(json?.error);
-      setStatus({ tone: "error", text: key ? t(key) : json?.error === "owner_only" ? t("ownerOnly") : t("saveError") });
+      const text = key
+        ? t(key)
+        : json?.error === "owner_only"
+          ? t("ownerOnly")
+          : json?.error === "has_upcoming_appointments"
+            ? t("upcomingError", { count: json.count ?? 0 })
+            : json?.error === "last_active_professional"
+              ? t("lastActiveError")
+              : t("saveError");
+      setStatus({ tone: "error", text });
       return false;
     }
     return true;

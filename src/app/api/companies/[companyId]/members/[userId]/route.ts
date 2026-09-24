@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { checkCompanyRole, type CompanyRole } from "@/lib/auth/company-access";
-import { checkTeamAction, removeFromCompany, type TeamAction } from "@/lib/team/roles";
+import { checkTeamAction, removalBlocker, removeFromCompany, type TeamAction } from "@/lib/team/roles";
 
 // 2026-09-25 -- one person's place in the company:
 //   PATCH { role: "admin" | "member" } -- an owner or admin promotes a member
 //     to admin; only the owner demotes an admin back to member;
-//   DELETE -- only the owner removes someone (they get a notice if they log
-//     in again; their schedule stays, unlinked).
+//   DELETE -- only the owner removes someone. Their schedule is turned off
+//     with them (409 has_upcoming_appointments / last_active_professional,
+//     same as deactivating it), and they get a notice if they log in again.
 // The owner is never changed or removed, and nobody changes themselves.
 // Rules in checkTeamAction (src/lib/team/roles.ts); RLS mirrors them
 // (migration 20260925150000). Writes go through the service client after
@@ -80,6 +81,9 @@ export async function DELETE(
   const { companyId, userId } = await params;
   const auth = await authorize(companyId, userId, { kind: "remove" });
   if (auth.error) return auth.error;
+
+  const blocker = await removalBlocker(auth.service, companyId, userId);
+  if (blocker) return NextResponse.json(blocker, { status: 409 });
 
   await removeFromCompany(auth.service, companyId, userId, auth.actorId);
   return NextResponse.json({ ok: true });

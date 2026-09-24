@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireProfessionalAccess } from "@/lib/professionals/route-auth";
 import { assignProfessionalEmail, normalizeEmail } from "@/lib/team/invites";
-import { removeFromCompany } from "@/lib/team/roles";
+import { removalBlocker, removeFromCompany } from "@/lib/team/roles";
+import { countUpcomingAppointments } from "@/lib/professionals/repository";
 
 // 2026-09-24 -- one professional. PATCH is split by who may do what:
 //   - uses_custom_hours: an admin, or the linked team member (it's their own
@@ -17,7 +18,8 @@ import { removeFromCompany } from "@/lib/team/roles";
 // no account is linked (`null` withdraws a pending invite); `unlink: true`
 // detaches the linked account -- the owner's call only: for anyone else it
 // removes them from the company (same as DELETE members/[userId]); the owner
-// unlinking their own schedule keeps the company. Deactivating a schedule
+// unlinking their own schedule keeps the company. A removal also turns the
+// schedule off (see removeFromCompany). Deactivating a schedule
 // does NOT remove its person: they keep their login and see "your schedule
 // was turned off" until it's reactivated or the owner removes them.
 
@@ -57,16 +59,8 @@ async function detachAccount(
   if (error) throw new Error(error.message);
 }
 
-async function countUpcoming(companyId: string, professionalId: string) {
-  const { count, error } = await createServiceClient()
-    .from("appointments")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", companyId)
-    .eq("professional_id", professionalId)
-    .in("status", ["requested", "confirmed"])
-    .gte("ends_at", new Date().toISOString());
-  if (error) throw new Error(error.message);
-  return count ?? 0;
+function countUpcoming(companyId: string, professionalId: string) {
+  return countUpcomingAppointments(createServiceClient(), companyId, professionalId);
 }
 
 async function countOtherActive(companyId: string, professionalId: string) {
@@ -140,6 +134,10 @@ export async function PATCH(
   if (body.unlink === true && access.professional.userId) {
     if (access.role !== "owner") {
       return NextResponse.json({ error: "owner_only" }, { status: 403 });
+    }
+    if (access.professional.userId !== access.userId) {
+      const blocker = await removalBlocker(createServiceClient(), companyId, access.professional.userId);
+      if (blocker) return NextResponse.json(blocker, { status: 409 });
     }
     await detachAccount(companyId, professionalId, access.professional.userId, access.userId);
     access.professional.userId = null;
