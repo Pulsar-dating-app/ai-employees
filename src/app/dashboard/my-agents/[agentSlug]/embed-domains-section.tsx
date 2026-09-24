@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LockIcon, InfoIcon } from "@/components/ui/icons";
 import { ChannelPanelHeader } from "./channel-panel-header";
+import { useReportChannelStatus } from "./channel-status";
 
 type EmbedDomainsSectionProps = {
   companyId: string;
@@ -36,6 +37,14 @@ export function EmbedDomainsSection({ companyId, agentName, canEdit, initialDoma
   const [isSaving, setIsSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const [savedCount, setSavedCount] = useState(initialDomains.filter((d) => d.trim()).length);
+  const tHub = useTranslations("MyAgents.channelHub.status");
+  useReportChannelStatus(
+    "embed",
+    savedCount > 0
+      ? { tone: "ok", label: tHub("sitesCount", { count: savedCount }) }
+      : { tone: "warn", label: tHub("noSites") },
+  );
 
   function updateDomain(index: number, value: string) {
     setDomains((prev) => prev.map((d, i) => (i === index ? value : d)));
@@ -67,6 +76,7 @@ export function EmbedDomainsSection({ companyId, agentName, canEdit, initialDoma
       const { company } = await res.json();
       const saved: string[] = company.allowed_embed_domains ?? [];
       setDomains(saved.length > 0 ? saved : [""]);
+      setSavedCount(saved.length);
       setSaveState("success");
     } else {
       const body = await res.json().catch(() => null);

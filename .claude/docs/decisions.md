@@ -12,6 +12,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-24 — The hired employee page leads with the employee and shows every channel's status
+
+**Decision:** `/dashboard/my-agents/[slug]` drops "Connections — {name}" and its three stacked cards (profile, a behavior tab card, a channel tab card). It now opens with a hero (portrait, name, role, Answering/Pause, description, "Edit profile" in a drawer). Below it is a grid of the five channels, each with a live status. Each channel's setup opens in a large drawer that stays mounted. Last come always-open blocks for shipping, returns and human handoff. The user picked this over a side index and over refined tabs.
+
+**Why:** Tabs hid the one thing a merchant opens this page to learn: which channels the employee is actually reachable on. The status grid answers that without a click. The channel drawer is `keepMounted` (hidden, not unmounted) because WhatsApp Embedded Signup's listener, the widget/snippet refresh coupling and the Instagram OAuth return need the same always-mounted lifetime the tab panels had.
+
+---
+
 ## 2026-09-24 — Products becomes catalog-first, and every add or edit flow goes in a drawer
 
 **Decision:** `/dashboard/products` drops the big "Add products" card above a raw table. The list is now the page: instant search, category chips, and rows with photo, stock status and formatted price. Spreadsheet import, Shopify and one-by-one creation all move into the shared side drawer, as does editing. Import progress is tracked by the page itself (a status strip), and categories come from a new `product_categories` Postgres function. The user picked this over a storefront grid and a refined table.

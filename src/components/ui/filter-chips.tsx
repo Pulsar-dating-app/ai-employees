@@ -13,14 +13,20 @@ export function FilterChips({
   onChange,
   labelFor,
   label,
+  refreshKey,
 }: {
   keys: string[];
   value: string;
   onChange: (value: string) => void;
   labelFor: (key: string) => string;
   label?: string;
+  refreshKey?: unknown;
 }) {
-  const { indicatorRef, register } = useSlidingIndicator<HTMLButtonElement>(value, keys.join("|"), "x");
+  const { indicatorRef, register } = useSlidingIndicator<HTMLButtonElement>(
+    value,
+    `${keys.join("|")}:${String(refreshKey)}`,
+    "x",
+  );
   const stripRef = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
 

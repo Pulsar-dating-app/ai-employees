@@ -3,20 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Toggle } from "@/components/ui/toggle";
+import { SettingsBlock } from "@/components/ui/settings-block";
 
-// Trello F5 follow-up -- companies.allow_human_handoff, saved through B2's
-// existing PATCH /api/companies/[companyId] (no dedicated endpoint, same as
-// every other flat company setting). Saves on change, optimistic, reverts
-// on failure -- same shape as AvailabilityCard/AppointmentControlsCard.
-//
-// Lives here (next to AvailabilityCard, the "Customer service" card) rather
-// than on the general Settings page: it's a control over how an employee
-// handles conversations, same territory as pause/resume, not company
-// knowledge. But the underlying flag is company-wide -- the request_human
-// tool is shared by every agent (COMMON_TOOL_NAMES in tool-sets.ts), not
-// agent-specific -- so this same card, and the same value, renders on every
-// hired employee's own page. The copy says so explicitly rather than
-// implying it's scoped to just this one hire.
 export function HumanHandoffCard({
   companyId,
   agentName,
@@ -56,30 +44,21 @@ export function HumanHandoffCard({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-on-surface-variant">{t("description", { name: agentName })}</p>
-
-      <div className="flex items-start gap-4 rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
-        <div className="mt-0.5">
-          <Toggle checked={value} disabled={!canEdit || saving} label={t("toggleLabel")} onChange={change} />
-        </div>
-        <div>
-          <button
-            type="button"
-            disabled={!canEdit || saving}
-            onClick={() => change(!value)}
-            className="block text-left text-body-md font-medium text-on-surface disabled:cursor-not-allowed"
-          >
-            {t("toggleLabel")}
-          </button>
-          <p className="mt-1 text-label-md text-on-surface-variant">{t("toggleHelp")}</p>
+    <SettingsBlock id="human-handoff" title={t("title")} description={t("description", { name: agentName })}>
+      <div className="flex items-start justify-between gap-6 rounded-2xl bg-surface-container-low px-4 py-4 sm:px-5">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-on-surface">{t("toggleLabel")}</p>
+          <p className="mt-1 max-w-xl text-sm text-on-surface-variant">{t("toggleHelp")}</p>
           {error ? (
             <p role="alert" className="mt-2 text-sm text-error">
               {error}
             </p>
           ) : null}
         </div>
+        <div className="pt-0.5">
+          <Toggle checked={value} disabled={!canEdit || saving} label={t("toggleLabel")} onChange={change} />
+        </div>
       </div>
-    </div>
+    </SettingsBlock>
   );
 }

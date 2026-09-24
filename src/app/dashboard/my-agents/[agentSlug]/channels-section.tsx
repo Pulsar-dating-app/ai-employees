@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { WhatsAppIcon, CheckIcon, LockIcon } from "@/components/ui/icons";
 import { ChannelPanelHeader } from "./channel-panel-header";
 import { ChannelPreview } from "./channel-preview";
+import { useReportChannelStatus } from "./channel-status";
 
 // The exact rate is deliberately never hardcoded anywhere in this file (or
 // any copy in messages/*.json) -- see decisions.md's 2026-09-05 entry.
@@ -224,6 +225,24 @@ export function ChannelsSection({
   // already completed Embedded Signup and needs a different fix (add a
   // payment method in Meta Business Manager), not to reconnect.
   const hasPaymentIssue = isConnected && connection?.has_payment_issue === true;
+  const tHub = useTranslations("MyAgents.channelHub.status");
+  useReportChannelStatus(
+    "whatsapp",
+    !whatsappEntitled
+      ? { tone: "locked", label: tHub("notInPlan") }
+      : view === "loading"
+        ? null
+        : hasPaymentIssue
+          ? { tone: "warn", label: tHub("paymentIssue") }
+          : isConnected
+            ? {
+                tone: "ok",
+                label: connection?.display_phone_number
+                  ? tHub("connectedTo", { detail: connection.display_phone_number })
+                  : tHub("connected"),
+              }
+            : { tone: "off", label: tHub("notConnected") },
+  );
 
   if (!whatsappEntitled) {
     return (
@@ -275,9 +294,7 @@ export function ChannelsSection({
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-tertiary-container/25 px-2.5 py-1 text-xs font-semibold text-on-tertiary-container">
                       {t("connectedBadge")}
                     </span>
-                    <span className="text-sm font-medium text-on-surface">
-                      {connection?.display_phone_number}
-                    </span>
+                    <span className="text-sm font-medium text-on-surface">{connection?.display_phone_number}</span>
                   </div>
                   {hasPaymentIssue ? (
                     <div className="flex items-start gap-3 rounded-lg border border-error/30 bg-error/5 p-3">
@@ -333,12 +350,7 @@ export function ChannelsSection({
                         {t("billingDisclosurePaymentMethod")}
                         <br />
                         {t("billingDisclosureBilling")}{" "}
-                        <a
-                          href={WHATSAPP_PRICING_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline"
-                        >
+                        <a href={WHATSAPP_PRICING_URL} target="_blank" rel="noopener noreferrer" className="underline">
                           {t("billingDisclosureLinkText")}
                         </a>
                       </Alert>
@@ -400,9 +412,7 @@ function Step({
     <div className={`flex gap-4 ${muted ? "opacity-50" : ""}`}>
       <span
         className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-label-sm font-semibold ${
-          done
-            ? "bg-tertiary-container text-on-tertiary-container"
-            : "bg-primary-fixed text-on-primary-fixed"
+          done ? "bg-tertiary-container text-on-tertiary-container" : "bg-primary-fixed text-on-primary-fixed"
         }`}
       >
         {done ? <CheckIcon className="h-4 w-4" /> : index}

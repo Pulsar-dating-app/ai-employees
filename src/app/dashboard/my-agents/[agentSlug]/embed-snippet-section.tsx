@@ -5,9 +5,6 @@ import { CodeIcon, InfoIcon, CopyIcon, CheckIcon } from "@/components/ui/icons";
 import { ChannelPanelHeader } from "./channel-panel-header";
 import { useCopyFeedback } from "./use-copy-feedback";
 
-// Trello D6 -- the copyable-snippet half of the "Embed" tab of
-// ChannelTabsCard, next to WidgetCustomizeCard's editor. The embed half of
-// the old share-embed-section.tsx (now split one section per tab).
 export function EmbedSnippetSection({ agentName, embedSnippet }: { agentName: string; embedSnippet: string }) {
   const t = useTranslations("MyAgents.shareEmbed");
   const script = useCopyFeedback();

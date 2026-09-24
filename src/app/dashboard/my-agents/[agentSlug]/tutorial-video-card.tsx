@@ -34,7 +34,7 @@ export function TutorialVideoCard({ agentName }: { agentName: string }) {
 
   return (
     <>
-      <Card className="flex flex-col items-center gap-4 sm:flex-row">
+      <Card className="flex flex-col items-center gap-4 rounded-[24px] border-outline-variant/60 shadow-[0_1px_2px_rgba(25,28,29,0.04)] sm:flex-row">
         <button
           type="button"
           onClick={() => setOpen(true)}

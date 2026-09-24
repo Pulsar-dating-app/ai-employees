@@ -13,12 +13,16 @@ export function SideDrawer({
   title,
   closeLabel,
   onClose,
+  keepMounted = false,
+  size = "md",
   children,
 }: {
   open: boolean;
   title: string;
   closeLabel: string;
   onClose: () => void;
+  keepMounted?: boolean;
+  size?: "md" | "lg";
   children: React.ReactNode;
 }) {
   const mounted = useSyncExternalStore(
@@ -37,15 +41,19 @@ export function SideDrawer({
   useEffect(() => {
     if (!open) return;
     const opener = document.activeElement as HTMLElement | null;
+    const visible = (el: HTMLElement) => !el.closest("[hidden]") && el.getClientRects().length > 0;
     const focusables = () =>
       Array.from(
         panelRef.current?.querySelectorAll<HTMLElement>(
           "input:not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [href]",
         ) ?? [],
-      );
+      ).filter(visible);
     requestAnimationFrame(() => {
-      const first = panelRef.current?.querySelector<HTMLElement>("input, textarea, select");
-      (first ?? focusables()[0])?.focus();
+      const fields = Array.from(
+        panelRef.current?.querySelectorAll<HTMLElement>("input, textarea, select") ?? [],
+      ).filter(visible);
+      const target = fields[0] ?? focusables()[0] ?? panelRef.current;
+      target?.focus();
     });
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -75,10 +83,10 @@ export function SideDrawer({
     };
   }, [open]);
 
-  if (!open || !mounted) return null;
+  if (!mounted || (!open && !keepMounted)) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex justify-end">
+    <div className="fixed inset-0 z-[60] flex justify-end" hidden={!open}>
       <button
         type="button"
         aria-label={closeLabel}
@@ -90,8 +98,9 @@ export function SideDrawer({
         ref={panelRef}
         role="dialog"
         aria-modal="true"
+        tabIndex={-1}
         aria-label={title}
-        className="inbox-drawer-in chat-scroll relative flex h-full w-full max-w-lg flex-col overflow-y-auto bg-surface-container-lowest shadow-[-20px_0_60px_-20px_rgba(25,28,29,0.3)]"
+        className={`inbox-drawer-in chat-scroll relative flex outline-none h-full w-full ${size === "lg" ? "max-w-3xl" : "max-w-lg"} flex-col overflow-y-auto bg-surface-container-lowest shadow-[-20px_0_60px_-20px_rgba(25,28,29,0.3)]`}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-outline-variant/50 bg-surface-container-lowest/95 px-6 py-4 backdrop-blur">
           <h2 className="text-lg font-semibold tracking-tight text-on-surface">{title}</h2>

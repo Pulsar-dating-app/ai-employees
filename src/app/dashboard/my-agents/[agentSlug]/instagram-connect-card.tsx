@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { InstagramIcon, CheckIcon } from "@/components/ui/icons";
 import { ChannelPanelHeader } from "./channel-panel-header";
 import { ChannelPreview } from "./channel-preview";
+import { useReportChannelStatus } from "./channel-status";
 
 // Trello N3 -- the Instagram equivalent of channels-section.tsx's WhatsApp
 // card (that one is still in the tree, unmounted -- see decisions.md
@@ -94,6 +95,20 @@ export function InstagramConnectCard({
   }
 
   const isConnected = connection?.status === "connected";
+  const tHub = useTranslations("MyAgents.channelHub.status");
+  useReportChannelStatus(
+    "instagram",
+    view === "loading"
+      ? null
+      : isConnected
+        ? {
+            tone: "ok",
+            label: connection?.username
+              ? tHub("connectedTo", { detail: `@${connection.username}` })
+              : tHub("connected"),
+          }
+        : { tone: "off", label: tHub("notConnected") },
+  );
 
   return (
     <div className="relative">

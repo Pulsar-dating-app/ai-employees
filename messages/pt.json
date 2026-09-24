@@ -1137,7 +1137,6 @@
       "proactive": "Proativo(a)"
     },
     "connectionsTitle": "Conexões",
-    "connectionsSubtitle": "Escolha em quais plataformas {name} vai falar com os clientes.",
     "tutorial": {
       "title": "Novo por aqui? Assista a um resumo de 2 minutos",
       "description": "Veja tudo o que tem nesta página em ação, desde configurar {name} até compartilhá-la com os clientes.",
@@ -1171,17 +1170,15 @@
       "cancel": "Cancelar",
       "updateError": "Algo deu errado. Tente novamente.",
       "planRequired": "Reativar {name} exige um plano ativo.",
-      "goToBilling": "Ir para cobrança"
+      "goToBilling": "Ir para cobrança",
+      "responding": "Respondendo os clientes"
     },
     "humanHandoff": {
       "title": "Transferência para humano",
-      "description": "Se {name} — e qualquer outro funcionário que você contratar — pode oferecer trazer alguém da sua empresa quando um cliente precisa falar com uma pessoa.",
+      "description": "Define se {name} — e qualquer outro funcionário que você contratar — pode chamar alguém da sua empresa quando um cliente precisar falar com uma pessoa.",
       "toggleLabel": "Permitir transferência para uma pessoa",
       "toggleHelp": "Quando ativado, seus funcionários podem oferecer envolver alguém da empresa, e você pode assumir uma conversa a qualquer momento pela página de Conversas. Quando desativado, eles sempre atendem as conversas sozinhos.",
       "saveError": "Algo deu errado ao salvar essa opção. Tente novamente."
-    },
-    "settingsTabs": {
-      "tablistLabel": "Configurações deste funcionário"
     },
     "channels": {
       "title": "WhatsApp",
@@ -1323,13 +1320,11 @@
       "nameTitle": "Deixe com a sua cara",
       "nameDescription": "Renomeie {name} para combinar com sua marca — os clientes veem esse nome em toda conversa.",
       "humanHandoffTitle": "Traga uma pessoa para a conversa",
-      "humanHandoffDescription": "Na aba \"Transferência para humano\", ative para que você ou sua equipe possam assumir uma conversa sempre que {name} precisar transferir para um humano.",
+      "humanHandoffDescription": "Ative para que você ou sua equipe possam assumir uma conversa sempre que {name} precisar passar para uma pessoa.",
       "channelsTitle": "Alcance clientes em todo lugar",
-      "channelsDescription": "Conecte {name} ao WhatsApp ou Instagram, personalize o widget de chat do seu site, ou compartilhe um link direto — alterne entre eles com essas abas."
+      "channelsDescription": "Conecte {name} ao WhatsApp ou Instagram, configure o chat do seu site ou compartilhe um link direto. Cada card mostra se aquele canal está pronto."
     },
     "identity": {
-      "title": "Perfil",
-      "description": "O nome e a foto que os clientes veem para este integrante da equipe — no seu painel, na página de conversa e em todo lugar em que ele aparece.",
       "photoLabel": "Foto"
     },
     "team": {
@@ -1346,6 +1341,31 @@
       "hireCta": "Conhecer {name}",
       "silenced": "Sem atender — veja a cobrança",
       "billingIssue": "Seu pagamento precisa de atenção"
+    },
+    "hero": {
+      "editProfile": "Editar perfil",
+      "editTitle": "Editar perfil de {name}",
+      "close": "Fechar"
+    },
+    "channelHub": {
+      "title": "Onde {name} atende",
+      "description": "Escolha um canal para conectar ou ajustar a aparência.",
+      "drawerTitle": "Canais de {name}",
+      "close": "Fechar",
+      "status": {
+        "connected": "Conectado",
+        "connectedTo": "Conectado · {detail}",
+        "notConnected": "Não conectado",
+        "notInPlan": "Fora do seu plano",
+        "paymentIssue": "Pagamento pendente na Meta",
+        "ready": "Pronto para compartilhar",
+        "noSites": "Nenhum site autorizado",
+        "sitesCount": "{count, plural, one {# site autorizado} other {# sites autorizados}}"
+      }
+    },
+    "behavior": {
+      "title": "Como {name} trabalha",
+      "description": "As alterações são salvas automaticamente."
     }
   },
   "Teach": {

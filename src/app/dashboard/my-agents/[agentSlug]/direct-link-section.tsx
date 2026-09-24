@@ -6,10 +6,6 @@ import { ChannelPanelHeader } from "./channel-panel-header";
 import { CopyField } from "./copy-field";
 import { ChannelPreview } from "./channel-preview";
 
-// Trello D6 -- the "Link" tab of ChannelTabsCard. The direct-link half of
-// the old share-embed-section.tsx (now split one section per tab, since
-// M6/M4 never needed a shared file with the embed snippet beyond living on
-// the same page).
 export function DirectLinkSection({
   agentName,
   agentPhotoSrc,

@@ -1137,7 +1137,6 @@
       "proactive": "Proactive"
     },
     "connectionsTitle": "Connections",
-    "connectionsSubtitle": "Choose which platforms {name} talks to customers on.",
     "tutorial": {
       "title": "New here? Watch a 2-minute walkthrough",
       "description": "See everything on this page in action, from setting up {name} to sharing her with customers.",
@@ -1171,7 +1170,8 @@
       "cancel": "Cancel",
       "updateError": "Something went wrong. Please try again.",
       "planRequired": "Turning {name} back on needs an active plan.",
-      "goToBilling": "Go to billing"
+      "goToBilling": "Go to billing",
+      "responding": "Answering customers"
     },
     "humanHandoff": {
       "title": "Human handoff",
@@ -1179,9 +1179,6 @@
       "toggleLabel": "Allow handing off to a person",
       "toggleHelp": "When on, your employees can offer to get someone from your business involved, and you can step into a conversation yourself from the Conversations page. When off, they always handle conversations on their own.",
       "saveError": "Something went wrong saving that setting. Please try again."
-    },
-    "settingsTabs": {
-      "tablistLabel": "This employee's settings"
     },
     "channels": {
       "title": "WhatsApp",
@@ -1323,13 +1320,11 @@
       "nameTitle": "Make it yours",
       "nameDescription": "Rename {name} to match your brand — customers see this name everywhere you talk to them.",
       "humanHandoffTitle": "Bring in a person",
-      "humanHandoffDescription": "In the \"Human handoff\" tab, turn this on so you or your team can step into a conversation whenever {name} should hand it off to a human.",
+      "humanHandoffDescription": "Turn this on so you or your team can step into a conversation whenever {name} should hand it off to a person.",
       "channelsTitle": "Reach customers everywhere",
-      "channelsDescription": "Connect {name} to WhatsApp or Instagram, customize the chat widget for your site, or share a direct link — switch between them with these tabs."
+      "channelsDescription": "Connect {name} to WhatsApp or Instagram, set up the chat for your site, or share a direct link. Each card shows whether that channel is ready."
     },
     "identity": {
-      "title": "Profile",
-      "description": "The name and photo customers see for this team member — on your dashboard, the conversation page and everywhere they appear.",
       "photoLabel": "Photo"
     },
     "team": {
@@ -1346,6 +1341,31 @@
       "hireCta": "Meet {name}",
       "silenced": "Not answering — check billing",
       "billingIssue": "Your payment needs attention"
+    },
+    "hero": {
+      "editProfile": "Edit profile",
+      "editTitle": "Edit {name}'s profile",
+      "close": "Close"
+    },
+    "channelHub": {
+      "title": "Where {name} talks to customers",
+      "description": "Pick a channel to connect it or change how it looks.",
+      "drawerTitle": "{name}'s channels",
+      "close": "Close",
+      "status": {
+        "connected": "Connected",
+        "connectedTo": "Connected · {detail}",
+        "notConnected": "Not connected",
+        "notInPlan": "Not in your plan",
+        "paymentIssue": "Payment issue with Meta",
+        "ready": "Ready to share",
+        "noSites": "No sites allowed yet",
+        "sitesCount": "{count, plural, one {# site allowed} other {# sites allowed}}"
+      }
+    },
+    "behavior": {
+      "title": "How {name} works",
+      "description": "Changes save automatically."
     }
   },
   "Teach": {

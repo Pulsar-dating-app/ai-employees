@@ -16,16 +16,8 @@ type PolicySectionProps = {
   sectionKey: SectionKey;
   initialValue: string | null;
   canEdit: boolean;
-  bare?: boolean;
 };
-export function PolicySection({
-  companyId,
-  fieldName,
-  sectionKey,
-  initialValue,
-  canEdit,
-  bare = false,
-}: PolicySectionProps) {
+export function PolicySection({ companyId, fieldName, sectionKey, initialValue, canEdit }: PolicySectionProps) {
   const t = useTranslations(`Teach.${sectionKey}`);
   const { status, save } = useCompanyAutosave(companyId);
   const reportFilled = useReportFilled();
@@ -40,30 +32,6 @@ export function PolicySection({
       setSaved(normalized ?? "");
       if (sectionKey === "payments" || sectionKey === "other") reportFilled(sectionKey, Boolean(normalized));
     }
-  }
-
-  const field = (
-    <>
-      <Textarea
-        label={t("label")}
-        placeholder={t("placeholder")}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={commit}
-        disabled={!canEdit}
-        maxLength={5000}
-      />
-      {canEdit ? <SaveStatusLine status={status} /> : null}
-    </>
-  );
-
-  if (bare) {
-    return (
-      <div className="flex flex-col gap-4">
-        <p className="text-sm text-on-surface-variant">{t("description")}</p>
-        {field}
-      </div>
-    );
   }
 
   return (
