@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { createServiceClient } from "@/lib/supabase/service";
 import { parseProfessionalIds, setServiceProfessionals } from "@/lib/professionals/repository";
 
@@ -7,30 +8,6 @@ import { parseProfessionalIds, setServiceProfessionals } from "@/lib/professiona
 // products/[productId] route exactly (effective-merged-state price
 // validation, soft-delete via is_active, 404 on cross-company access).
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-
-  return { error: null };
-}
 
 async function getService(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -103,7 +80,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const serviceLookup = await getService(supabase, companyId, serviceId);
@@ -209,7 +186,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const serviceLookup = await getService(supabase, companyId, serviceId);

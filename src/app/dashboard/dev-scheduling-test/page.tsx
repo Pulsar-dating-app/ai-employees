@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SchedulingTestPanel } from "./panel";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 // DEV-ONLY test harness for Epics H (services/business hours/appointments)
 // and I (Google Calendar connect/availability/sync) -- there's no real
@@ -15,6 +16,8 @@ import { SchedulingTestPanel } from "./panel";
 // (this exact bug has hit this codebase three times already, see
 // decisions.md's 2026-08-26 entry and its 2026-08-29 recurrence note).
 export default async function DevSchedulingTestPage() {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   if (process.env.NODE_ENV === "production") {
     notFound();
   }

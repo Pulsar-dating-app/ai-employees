@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { syncAppointmentConfirmed, calendarVisibleEndsAt } from "@/lib/google-calendar/appointment-sync";
 import { isValidTimeZone } from "@/lib/analytics/load";
 import {
@@ -8,36 +9,15 @@ import {
   resolveProfessionalForService,
 } from "@/lib/professionals/repository";
 
+// 2026-09-25 -- a team member (role `member`) lists and books only on
+// their own professional's schedule; RLS enforces the same.
+//
 // Trello H3 — appointments CRUD, scoped to company_id. The booking record
 // behind Ana's scheduling tools (Trello J3) and the dashboard's Appointments
 // view (Trello K4). Google Calendar sync (Trello I3) hooks in below: a
 // newly `confirmed` appointment gets a Google event; a `requested` one
 // (pending manual approval) does not, until a later PATCH confirms it.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-
-  return { error: null };
-}
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -80,14 +60,16 @@ export async function GET(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const searchParams = new URL(request.url).searchParams;
   const status = searchParams.get("status");
   const from = searchParams.get("from");
   const to = searchParams.get("to");
-  const professionalId = searchParams.get("professionalId");
+  const professionalId = memberCheck.isAdmin
+    ? searchParams.get("professionalId")
+    : (memberCheck.ownProfessionalId ?? "00000000-0000-0000-0000-000000000000");
   const ascending = searchParams.get("order") !== "desc";
   const page = parsePositiveInt(searchParams.get("page"), 1);
   const pageSize = parsePositiveInt(searchParams.get("pageSize"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
@@ -143,10 +125,18 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const body = await request.json().catch(() => null);
+
+  if (!memberCheck.isAdmin) {
+    const requested = typeof body?.professional_id === "string" ? body.professional_id : null;
+    if (!memberCheck.ownProfessionalId || (requested && requested !== memberCheck.ownProfessionalId)) {
+      return NextResponse.json({ error: "You can only book on your own schedule" }, { status: 403 });
+    }
+    if (body && typeof body === "object") body.professional_id = memberCheck.ownProfessionalId;
+  }
 
   const serviceId = typeof body?.service_id === "string" ? body.service_id : "";
   if (!serviceId) {

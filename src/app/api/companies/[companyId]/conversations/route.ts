@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { listConversations } from "@/lib/conversations/list";
 import { findUnconfirmedConversationIds } from "@/lib/conversations/pending";
 
@@ -14,26 +15,6 @@ import { findUnconfirmedConversationIds } from "@/lib/conversations/pending";
 // server-side render (conversations/page.tsx) so the two can never return
 // differently-shaped rows for the same query.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-  if (!membership) {
-    return { error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }) };
-  }
-  return { error: null };
-}
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -57,7 +38,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ comp
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const searchParams = new URL(request.url).searchParams;

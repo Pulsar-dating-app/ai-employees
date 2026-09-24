@@ -12,8 +12,11 @@ import { IntakeQuestionsCard, type IntakeField } from "./intake-questions-card";
 import { SchedulingSettingsShell } from "./settings-shell";
 import { CalendarsSummaryBlock } from "./calendars-summary-block";
 import { listProfessionals } from "@/lib/professionals/repository";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 export default async function SchedulingSettingsPage() {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const supabase = await createClient();
   const t = await getTranslations("Scheduling.settings");
 

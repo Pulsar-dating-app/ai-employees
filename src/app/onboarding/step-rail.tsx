@@ -10,10 +10,11 @@ function currentStep(pathname: string): OnboardingStep {
   if (pathname.startsWith("/onboarding/ready")) return "ready";
   if (pathname.startsWith("/onboarding/setup")) return "setup";
   if (pathname.startsWith("/onboarding/hire")) return "hire";
+  if (pathname.startsWith("/onboarding/profile")) return "profile";
   return "company";
 }
 
-// Four hairline segments, the reached ones filled. Deliberately no numerals
+// One hairline segment per step, the reached ones filled. Deliberately no numerals
 // and no percentage: a progress meter invites the merchant to optimise for
 // finishing, and this flow's point is that each step leaves the hire more
 // capable rather than the bar more full.

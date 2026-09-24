@@ -12,6 +12,41 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-25 — Team members join by email; members see only their own schedule
+
+**Decision:** Roles are now used for real (Ana's scheduling side only for now):
+- **Owner / admin:** the whole dashboard, as before.
+- **Member:** a professional who logs in. They see only the Agenda (their own appointments) and "Minha agenda" (their own hours, time off and Google Calendar). Their name is read-only.
+
+How it works:
+- **Adding a professional needs a name and an email.** The email is how that person logs in.
+  - If the address belongs to an account with no company, that account becomes a member on the spot.
+  - If it belongs to an account already in this company (e.g. the owner), it is linked without changing its role.
+  - If it belongs to another company, or waits as an invite elsewhere, it is refused with `409 email_in_other_company`.
+  - Otherwise it is stored in `professionals.invite_email` as a pending invite.
+  - The rules live in `decideEmailAssignment` (`src/lib/team/invites.ts`).
+- **No invite email is sent.** The owner tells the person. The first time that account reaches `/dashboard` (or `/onboarding`), `claimPendingInvite` makes it a member, links it and clears the invite. The person skips onboarding entirely and lands on `/dashboard/scheduling`.
+- **`company_users` and `professionals` stay two tables, with no duplicated data.**
+  - `company_users` is the only source of login and role.
+  - `professionals` is the bookable schedule, pointing at its login through `user_id`.
+  - The email lives on the professional only while the invite is pending, then comes from `users.email`.
+  - The user suggested merging them. They aren't redundant: an owner who doesn't take bookings has a `company_users` row and no schedule, and a professional without a login has a schedule and no `company_users` row.
+- **The owner is the company's first professional.** `create_company_with_owner` links the seeded professional to the owner, for every company including Malu-only ones, and onboarding renames it to the owner's name. Existing companies were backfilled: the oldest professional belongs to the owner.
+- **Every account has a name.** `users.name` is asked in a new first onboarding step (`profile`), and the dashboard sends any nameless account there. That includes the owners who finished onboarding before the step existed; they see it once.
+- **RLS matches the roles** (migration `20260925120000_team_roles.sql`):
+  - Writes to services, products, intake fields, hires, customers, the waitlist and storage are admin-only.
+  - Conversations, messages and events are admin-only for reads too.
+  - A member reads and writes only their own professional's appointments and hours/time-off rows, and reads only customers booked with them.
+  - The routes return the same answers as clean 403s (`checkCompanyRole`, `requireAdminPage` in `src/lib/auth/company-access.ts`).
+- **Deactivating or unlinking a member's professional removes their `company_users` row.** An owner or admin never loses access this way.
+- **One company per account still holds**, and an invited address can't also create a company: `createCompany` claims the invite first.
+
+**Why:** The "Membro da equipe que cuida desta agenda" dropdown could never be filled, because nothing let a second person join a company: production had 55 owners and 0 members. And every "Company members can …" policy would have let a barber edit the shop's services, other barbers' appointments and every customer conversation the moment members existed. The user chose: join by email with no invite email, members see only their own appointments, block an address that belongs to another company, and keep both tables.
+
+**Accepted risk:** Email confirmation is off in production, so whoever signs up first with an invited address takes that seat, without proving they own the mailbox. The user accepted this for now. Turning on confirmation (or sending a real invite link) closes it.
+
+---
+
 ## 2026-09-24 — Multiple schedules per company, one per professional (reverses "single calendar per company for MVP")
 
 **Decision:** A company has one or more **professionals** (a barber, a doctor), each with their own schedule, and Ana books with a specific one. How it works:

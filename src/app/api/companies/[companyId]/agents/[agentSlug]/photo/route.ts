@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 
 // Agent photo customization -- pick one of the two curated defaults for
 // this agent, or upload a custom portrait. Mirrors the embed widget's
@@ -24,28 +25,6 @@ type PhotoType = (typeof VALID_PHOTO_TYPES)[number];
 
 const BUCKET = "agent-photos";
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return { error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }) };
-  }
-
-  return { error: null };
-}
 
 async function getAgentBySlug(supabase: Awaited<ReturnType<typeof createClient>>, slug: string) {
   const { data: agent, error } = await supabase.from("agents").select("id").eq("slug", slug).maybeSingle();
@@ -85,7 +64,7 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const agentLookup = await getAgentBySlug(supabase, agentSlug);

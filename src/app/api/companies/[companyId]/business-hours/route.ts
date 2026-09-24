@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { createServiceClient } from "@/lib/supabase/service";
 import { canManageProfessional, getProfessional } from "@/lib/professionals/repository";
 
@@ -15,30 +16,6 @@ import { canManageProfessional, getProfessional } from "@/lib/professionals/repo
 // professional's set also switches them to it (uses_custom_hours); an admin,
 // or the member linked to that professional, may do it.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-
-  return { error: null };
-}
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/;
 
@@ -133,7 +110,7 @@ export async function GET(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const scope = await resolveScope(request, supabase, companyId, user.id, false);
@@ -172,8 +149,14 @@ export async function PUT(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
+
+  // The establishment's hours are the company's: owners/admins only. A
+  // member edits their own schedule (?professionalId=, checked below).
+  if (!memberCheck.isAdmin && !new URL(request.url).searchParams.get("professionalId")) {
+    return NextResponse.json({ error: "Only company owners/admins can change the business's hours" }, { status: 403 });
+  }
 
   const scope = await resolveScope(request, supabase, companyId, user.id, true);
   if (scope.error) return scope.error;

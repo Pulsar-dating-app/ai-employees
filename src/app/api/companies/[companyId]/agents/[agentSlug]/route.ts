@@ -39,8 +39,8 @@ async function requireMember(
 // PATCH (pause/activate a hire) is admin-gated at the app layer, matching the
 // companies PATCH route and the old WhatsApp connect/disconnect: RLS still
 // lets any member UPDATE company_agents, so this check is what actually keeps
-// a plain member from silencing the team. Hiring (POST) stays member-level —
-// unchanged.
+// a plain member from silencing the team. Hiring (POST) is admin-only too
+// since 2026-09-25 (members are professionals seeing their own agenda).
 async function requireAdmin(
   supabase: Awaited<ReturnType<typeof createClient>>,
   companyId: string,
@@ -154,7 +154,7 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await requireAdmin(supabase, companyId, user.id);
   if (memberCheck.error) return memberCheck.error;
 
   const agentLookup = await getAgentBySlug(supabase, agentSlug);

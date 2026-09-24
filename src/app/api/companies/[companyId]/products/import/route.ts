@@ -2,6 +2,7 @@ import { NextResponse, after } from "next/server";
 import { parse as parseCsvSync } from "csv-parse/sync";
 import ExcelJS from "exceljs";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { createServiceClient } from "@/lib/supabase/service";
 import { validatePriceCurrency, validateStock } from "../route";
 import { buildProductEmbeddingInput, createProductEmbeddingsBatch } from "@/lib/products/embeddings";
@@ -86,30 +87,6 @@ type MappedProduct = {
   sku: string | null;
 };
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-
-  return { error: null };
-}
 
 function cellToString(value: unknown): string | null {
   if (value === undefined || value === null) return null;
@@ -228,7 +205,7 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const formData = await request.formData().catch(() => null);

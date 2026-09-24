@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// The four steps the merchant actually walks, in order. This is exactly what
-// the rail renders, which is why "done" is deliberately not a member: having
-// finished is a state, not a fifth segment.
-export const ONBOARDING_STEPS = ["company", "hire", "setup", "ready", "plan"] as const;
+// The steps the merchant actually walks, in order. This is exactly what the
+// rail renders, which is why "done" is deliberately not a member: having
+// finished is a state, not an extra segment. "profile" (their own name) comes
+// first since 2026-09-25: every account must have a name, including owners
+// who finished onboarding before the step existed.
+export const ONBOARDING_STEPS = ["profile", "company", "hire", "setup", "ready", "plan"] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
@@ -11,6 +13,7 @@ export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 export type OnboardingStatus = OnboardingStep | "done";
 
 export const ONBOARDING_PATHS: Record<OnboardingStatus, string> = {
+  profile: "/onboarding/profile",
   company: "/onboarding",
   hire: "/onboarding/hire",
   setup: "/onboarding/setup",
@@ -48,6 +51,10 @@ export async function resolveOnboardingState(supabase: SupabaseClient): Promise<
     agentName: null,
   };
 
+  // A name before anything else. "users" RLS returns only the caller's row.
+  const { data: me } = await supabase.from("users").select("name").limit(1).maybeSingle();
+  if (!((me?.name as string | null | undefined) ?? "").trim()) return { ...empty, step: "profile" };
+
   const { data: companies, error } = await supabase
     .from("companies")
     .select("id, name, onboarding_completed_at, proof_seen_at")
@@ -78,6 +85,22 @@ export async function resolveOnboardingState(supabase: SupabaseClient): Promise<
   if (!company) return empty;
 
   const base = { ...empty, companyId: company.id, companyName: company.name };
+
+  // A professional who joined someone else's company (a member) never walks
+  // the company setup -- that's the owner's. Only visible to them at all
+  // because RLS lets members read their company.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    const { data: membership } = await supabase
+      .from("company_users")
+      .select("role")
+      .eq("company_id", company.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (membership?.role === "member") return { ...base, step: "done" };
+  }
 
   // Finished once, finished for good. Checked before anything is derived from
   // the data, so a merchant who later empties their catalogue is not walked

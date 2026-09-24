@@ -1,17 +1,24 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireProfessionalAccess } from "@/lib/professionals/route-auth";
+import { assignProfessionalEmail, normalizeEmail, removeMemberAccess } from "@/lib/team/invites";
 
 // 2026-09-24 -- one professional. PATCH is split by who may do what:
-//   - name, uses_custom_hours: an admin, or the linked team member (it's
-//     their own schedule);
-//   - is_active, position, user_id (linking a team member): admins only.
+//   - uses_custom_hours: an admin, or the linked team member (it's their own
+//     schedule);
+//   - name, is_active, position, email, unlink: admins only.
 // DELETE deactivates (never hard-deletes -- past appointments keep pointing
 // at the row), refusing to leave the company without an active
 // professional or to strand upcoming appointments.
+//
+// 2026-09-25 -- the team member is given by email, not picked from a list
+// (see src/lib/team/invites.ts): `email` sets or replaces the address while
+// no account is linked (`null` withdraws a pending invite); `unlink: true`
+// detaches the linked account. Unlinking or deactivating takes a member's
+// access to the company away; an owner/admin keeps theirs.
 
 const MAX_NAME_LENGTH = 120;
-const COLUMNS = "id, name, is_active, position, uses_custom_hours, user_id";
+const COLUMNS = "id, name, is_active, position, uses_custom_hours, user_id, invite_email";
 
 function toJson(row: Record<string, unknown>) {
   return {
@@ -21,7 +28,21 @@ function toJson(row: Record<string, unknown>) {
     position: row.position,
     usesCustomHours: row.uses_custom_hours,
     userId: row.user_id ?? null,
+    inviteEmail: row.invite_email ?? null,
   };
+}
+
+// Detaching the account also ends a member's seat in the company.
+async function detachAccount(companyId: string, professionalId: string, userId: string | null) {
+  if (!userId) return;
+  const service = createServiceClient();
+  await removeMemberAccess(service, companyId, userId);
+  const { error } = await service
+    .from("professionals")
+    .update({ user_id: null })
+    .eq("company_id", companyId)
+    .eq("id", professionalId);
+  if (error) throw new Error(error.message);
 }
 
 async function countUpcoming(companyId: string, professionalId: string) {
@@ -61,7 +82,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
   }
 
-  const adminOnly = ["isActive", "position", "userId"].filter((key) => key in body);
+  const adminOnly = ["name", "isActive", "position", "email", "unlink"].filter((key) => key in body);
   if (adminOnly.length > 0 && !isAdmin) {
     return NextResponse.json({ error: `Only company owners/admins can change ${adminOnly.join(", ")}` }, { status: 403 });
   }
@@ -98,22 +119,38 @@ export async function PATCH(
       }
     }
     update.is_active = body.isActive;
+    if (!body.isActive && access.professional.isActive) {
+      await detachAccount(companyId, professionalId, access.professional.userId);
+    }
   }
 
   if ("userId" in body) {
-    if (body.userId !== null && typeof body.userId !== "string") {
-      return NextResponse.json({ error: "userId must be a string or null" }, { status: 400 });
+    return NextResponse.json({ error: "userId is no longer accepted; pass email" }, { status: 400 });
+  }
+
+  if (body.unlink === true && access.professional.userId) {
+    await detachAccount(companyId, professionalId, access.professional.userId);
+    access.professional.userId = null;
+  }
+
+  if ("email" in body) {
+    if (access.professional.userId) {
+      return NextResponse.json({ error: "account_already_linked" }, { status: 409 });
     }
-    if (body.userId) {
-      const { data: member } = await service
-        .from("company_users")
-        .select("user_id")
-        .eq("company_id", companyId)
-        .eq("user_id", body.userId)
-        .maybeSingle();
-      if (!member) return NextResponse.json({ error: "user is not a member of this company" }, { status: 400 });
+    if (body.email === null) {
+      update.invite_email = null;
+    } else {
+      const email = normalizeEmail(body.email);
+      if (!email) return NextResponse.json({ error: "invalid_email" }, { status: 400 });
+      if (email !== access.professional.inviteEmail) {
+        const assignment = await assignProfessionalEmail(
+          service,
+          { id: professionalId, company_id: companyId, name: (update.name as string) ?? access.professional.name },
+          email,
+        );
+        if (assignment.kind === "conflict") return NextResponse.json({ error: assignment.error }, { status: 409 });
+      }
     }
-    update.user_id = body.userId;
   }
 
   if ("usesCustomHours" in body) {
@@ -147,7 +184,14 @@ export async function PATCH(
   }
 
   if (Object.keys(update).length === 0) {
-    return NextResponse.json({ professional: access.professional });
+    const { data: current, error: readError } = await service
+      .from("professionals")
+      .select(COLUMNS)
+      .eq("company_id", companyId)
+      .eq("id", professionalId)
+      .single();
+    if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
+    return NextResponse.json({ professional: toJson(current) });
   }
 
   const { data, error } = await service
@@ -188,6 +232,8 @@ export async function DELETE(
   if (upcoming > 0) {
     return NextResponse.json({ error: "has_upcoming_appointments", count: upcoming }, { status: 409 });
   }
+
+  await detachAccount(companyId, professionalId, access.professional.userId);
 
   const { data, error } = await createServiceClient()
     .from("professionals")

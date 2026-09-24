@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
 import { sendWhatsappMessage } from "@/lib/whatsapp/meta-graph-api";
@@ -35,26 +36,6 @@ const MAX_MESSAGE_LENGTH = 4000;
 const STANDARD_WINDOW_MS = 24 * 60 * 60 * 1000;
 const HUMAN_AGENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-  if (!membership) {
-    return { error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }) };
-  }
-  return { error: null };
-}
 
 // Delivers a just-persisted merchant reply over Instagram. Returns whether
 // it reached the customer; never throws -- the caller has already saved the
@@ -193,7 +174,7 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const body = await request.json().catch(() => null);

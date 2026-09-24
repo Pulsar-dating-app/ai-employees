@@ -49,7 +49,44 @@ import { SetupGuide } from "./setup-guide";
 // cramming everything into one row — see the 2026-09-10 decisions.md entry
 // for why (a crowded bottom bar is unreadable at phone width; iOS/Material
 // both cap direct tabs around 4-5).
-const NAV_ITEMS = [
+type NavItem = {
+  href: string;
+  key: "myAgents" | "conversations" | "products" | "scheduling" | "metrics" | "settings" | "agenda" | "mySchedule";
+  icon: typeof UsersIcon;
+  match: (p: string) => boolean;
+  mobilePrimary?: boolean;
+  isLocked?: (s: string[]) => boolean;
+};
+
+// 2026-09-25 -- a team member (a professional who logs in, role `member`)
+// gets only their agenda and their own schedule settings; everything about
+// the company stays with owners/admins. The pages enforce it too
+// (requireAdminPage); this is just what the rail offers.
+function memberNavItems(professionalId: string | null): NavItem[] {
+  const mine = professionalId ? `/dashboard/scheduling/professionals/${professionalId}` : null;
+  return [
+    {
+      href: "/dashboard/scheduling",
+      key: "agenda",
+      icon: CalendarIcon,
+      match: (p: string) => p === "/dashboard/scheduling",
+      mobilePrimary: true,
+    },
+    ...(mine
+      ? [
+          {
+            href: mine,
+            key: "mySchedule" as const,
+            icon: SettingsIcon,
+            match: (p: string) => p.startsWith(mine),
+            mobilePrimary: true,
+          },
+        ]
+      : []),
+  ];
+}
+
+const NAV_ITEMS: NavItem[] = [
   {
     href: "/dashboard",
     key: "myAgents" as const,
@@ -194,7 +231,7 @@ function UsageTracker({ usage }: { usage: UsageSummary | null }) {
   );
 }
 
-type OverflowItem = (typeof NAV_ITEMS)[number] & { locked: boolean; attention: AttentionKind };
+type OverflowItem = NavItem & { locked: boolean; attention: AttentionKind };
 
 // The bottom bar's overflow -- a sheet rising from the bar itself (not a
 // centered `Dialog`, which would read as unrelated to the tab that opened
@@ -302,6 +339,7 @@ export function Sidebar({
   usage,
   attention,
   setupSteps,
+  member = null,
 }: {
   companyName: string | null;
   email: string | null;
@@ -311,16 +349,20 @@ export function Sidebar({
   usage: UsageSummary | null;
   attention: Attention;
   setupSteps: SetupStep[];
+  // Set for a `member` login: their name and linked professional.
+  member?: { name: string | null; professionalId: string | null } | null;
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
   const tDash = useTranslations("Dashboard");
   const tLegal = useTranslations("Legal");
 
-  const identityLabel = companyName ?? email ?? "";
+  const identityLabel = member ? (member.name ?? email ?? "") : (companyName ?? email ?? "");
+  const workspaceLabel = member ? (companyName ?? tDash("workspaceLabel")) : tDash("workspaceLabel");
 
-  const attentionByKey: Partial<Record<(typeof NAV_ITEMS)[number]["key"], AttentionKind>> = attention;
-  const navItems = NAV_ITEMS.map((item) => {
+  const attentionByKey: Partial<Record<NavItem["key"], AttentionKind>> = attention;
+  const baseItems = member ? memberNavItems(member.professionalId) : NAV_ITEMS;
+  const navItems = baseItems.map((item) => {
     const locked = item.isLocked?.(hiredAgentSlugs) ?? false;
     return {
       ...item,
@@ -359,7 +401,7 @@ export function Sidebar({
     <>
       {/* Desktop rail */}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-outline-variant bg-surface sm:flex">
-        <SidebarHeader identityLabel={identityLabel} workspaceLabel={tDash("workspaceLabel")} />
+        <SidebarHeader identityLabel={identityLabel} workspaceLabel={workspaceLabel} />
 
         <nav className="flex flex-1 flex-col gap-1 px-3 pt-4">
           {navItems.map((item) => {
@@ -397,8 +439,12 @@ export function Sidebar({
           })}
         </nav>
 
-        <SetupGuide steps={setupSteps} variant="rail" />
-        <UsageTracker usage={usage} />
+        {member ? null : (
+          <>
+            <SetupGuide steps={setupSteps} variant="rail" />
+            <UsageTracker usage={usage} />
+          </>
+        )}
 
         <div className="border-t border-outline-variant p-3">
           <Link
@@ -482,6 +528,7 @@ export function Sidebar({
             </Link>
           );
         })}
+        {mobileOverflowItems.length === 0 ? null : (
         <button
           type="button"
           onClick={() => setMoreOpen(true)}
@@ -511,6 +558,7 @@ export function Sidebar({
             {t("more")}
           </span>
         </button>
+        )}
       </nav>
 
       {moreOpen ? (

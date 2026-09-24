@@ -4,12 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 import { listProfessionalsWithServices } from "@/lib/professionals/repository";
 import { Button } from "@/components/ui/button";
 import { ProfessionalsManager, type ProfessionalListItem } from "./professionals-manager";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 // 2026-09-24 -- the Scheduling area's "Professionals" tab: one schedule per
 // professional (see decisions.md "Multiple schedules per company"). Every
 // company starts with one, seeded from its name, so a solo business sees a
 // single row and a nudge to add more.
 export default async function ProfessionalsPage() {
+  // Company-level page: owners/admins only (members get their agenda).
+  const access = await requireAdminPage();
   const supabase = await createClient();
   const t = await getTranslations("Scheduling.professionals");
 
@@ -32,8 +35,7 @@ export default async function ProfessionalsPage() {
     );
   }
 
-  const [{ data: membership }, professionals, { data: services }, { data: connections }] = await Promise.all([
-    supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle(),
+  const [professionals, { data: services }, { data: connections }] = await Promise.all([
     listProfessionalsWithServices(supabase, company.id, { includeInactive: true }),
     supabase
       .from("services")
@@ -60,6 +62,7 @@ export default async function ProfessionalsPage() {
     usesCustomHours: p.usesCustomHours,
     isMe: p.userId === user!.id,
     calendarConnected: connected.has(p.id),
+    access: p.userId ? "active" : p.inviteEmail ? "pending" : "none",
     serviceNames: p.serviceIds.map((id) => serviceNames.get(id)).filter((n): n is string => Boolean(n)),
   }));
 
@@ -68,7 +71,7 @@ export default async function ProfessionalsPage() {
       <h1 className="sr-only">{t("pageTitle")}</h1>
       <ProfessionalsManager
         companyId={company.id}
-        isAdmin={["owner", "admin"].includes(membership?.role ?? "")}
+        isAdmin={access.isAdmin}
         initialProfessionals={items}
       />
     </div>

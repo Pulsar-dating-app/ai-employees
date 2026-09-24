@@ -6,10 +6,13 @@ import { ClockIcon } from "@/components/ui/icons";
 import { PageHeader } from "../../page-header";
 import { ServicesManager, type Service } from "./services-manager";
 import { listProfessionals } from "@/lib/professionals/repository";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 const SERVICES_LIMIT = 1000;
 
 export default async function ServicesPage() {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const supabase = await createClient();
   const t = await getTranslations("Services");
 

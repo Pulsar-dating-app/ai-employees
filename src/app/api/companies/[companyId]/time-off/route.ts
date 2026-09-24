@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { canManageProfessional, getProfessional } from "@/lib/professionals/repository";
 
 // Company time off (K3's time-off card) — merchant-registered date ranges
@@ -13,28 +14,6 @@ import { canManageProfessional, getProfessional } from "@/lib/professionals/repo
 // professional (theirs plus the establishment's); POST takes an optional
 // `professionalId`, which an admin or the linked member may set.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-  return { error: null };
-}
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_REASON_LENGTH = 500;
@@ -56,7 +35,7 @@ export async function GET(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   let query = supabase
@@ -99,7 +78,7 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const body = await request.json().catch(() => null);
@@ -127,6 +106,10 @@ export async function POST(
   const professionalId = body?.professionalId ?? null;
   if (professionalId !== null && typeof professionalId !== "string") {
     return NextResponse.json({ error: "professionalId must be a string" }, { status: 400 });
+  }
+  // Closing the whole establishment is the company's call (2026-09-25).
+  if (!professionalId && !memberCheck.isAdmin) {
+    return NextResponse.json({ error: "Only company owners/admins can close the whole business" }, { status: 403 });
   }
   if (professionalId) {
     if (!(await getProfessional(supabase, companyId, professionalId))) {

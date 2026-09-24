@@ -105,13 +105,20 @@ describe("Appointment intake fields — /api/companies/:id/intake-fields", () =>
     ).toBe(400);
   });
 
-  it("a member toggles predefined fields and manages custom questions", async () => {
+  it("a plain member can read but not change them (2026-09-25: company settings are admin-only)", async () => {
     const owner = await signUpTestUser("owner");
     const member = await signUpTestUser("member");
-    const companyId = await createCompany(owner.cookieHeader, "CRUD Intake Co");
+    const companyId = await createCompany(owner.cookieHeader, "Member Intake Co");
     await addMember(owner.cookieHeader, companyId, member.userId);
+    expect((await list(member.cookieHeader, companyId)).status).toBe(200);
+    expect((await put(member.cookieHeader, companyId, { custom: [{ label: "Alergias" }] })).status).toBe(403);
+  });
 
-    const saved = await put(member.cookieHeader, companyId, {
+  it("an owner toggles predefined fields and manages custom questions", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "CRUD Intake Co");
+
+    const saved = await put(owner.cookieHeader, companyId, {
       predefined: [
         { key: "email", is_enabled: true, is_required: true },
         { key: "full_name", is_enabled: true, is_required: true },
@@ -142,12 +149,12 @@ describe("Appointment intake fields — /api/companies/:id/intake-fields", () =>
     ]);
 
     // A second PUT fully replaces custom rows; omitting `predefined` resets them to defaults.
-    const replaced = await put(member.cookieHeader, companyId, { custom: [{ label: "Alergias", is_required: true }] });
+    const replaced = await put(owner.cookieHeader, companyId, { custom: [{ label: "Alergias", is_required: true }] });
     const byKey2 = Object.fromEntries(replaced.json.intakeFields.map((f) => [f.key, f]));
     expect(byKey2.phone.is_enabled).toBe(false); // back to default
     expect(replaced.json.intakeFields.filter((f) => !f.predefined).map((f) => f.key)).toEqual(["alergias"]);
 
-    const fetched = await list(member.cookieHeader, companyId);
+    const fetched = await list(owner.cookieHeader, companyId);
     expect(fetched.json.intakeFields.filter((f) => !f.predefined).map((f) => f.label)).toEqual(["Alergias"]);
   });
 });

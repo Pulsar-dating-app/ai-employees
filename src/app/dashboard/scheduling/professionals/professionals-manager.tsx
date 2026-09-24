@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { ChevronRightIcon, PlusIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { StatusBanner } from "@/components/ui/status-banner";
+import { AccessPill, emailErrorKey } from "./[professionalId]/professional-identity-card";
 
 export type ProfessionalListItem = {
   id: string;
@@ -18,6 +19,9 @@ export type ProfessionalListItem = {
   // Linked to the signed-in team member ("Você").
   isMe: boolean;
   calendarConnected: boolean;
+  // Their login: an account is linked, an invite waits on an email, or
+  // neither (a professional from before emails were required).
+  access: "active" | "pending" | "none";
   // Services explicitly linked to this professional (empty = does every
   // service that isn't restricted to someone else).
   serviceNames: string[];
@@ -49,6 +53,7 @@ export function ProfessionalsManager({
   const [professionals, setProfessionals] = useState(initialProfessionals);
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showInactive, setShowInactive] = useState(false);
@@ -58,8 +63,13 @@ export function ProfessionalsManager({
 
   async function add() {
     const name = newName.trim();
+    const email = newEmail.trim();
     if (!name) {
       setError(t("nameRequired"));
+      return;
+    }
+    if (!email) {
+      setError(t("emailRequired"));
       return;
     }
     setBusyId("new");
@@ -67,16 +77,27 @@ export function ProfessionalsManager({
     const res = await fetch(`/api/companies/${companyId}/professionals`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, email }),
     }).catch(() => null);
     setBusyId(null);
     if (!res?.ok) {
-      setError(t("saveError"));
+      const json = await res?.json().catch(() => null);
+      const key = emailErrorKey(json?.error);
+      setError(key ? t(key) : t("saveError"));
       return;
     }
     const { professional } = await res.json();
-    setProfessionals((prev) => [...prev, { ...professional, isMe: false, serviceNames: [] }]);
+    setProfessionals((prev) => [
+      ...prev,
+      {
+        ...professional,
+        isMe: false,
+        serviceNames: [],
+        access: professional.userId ? "active" : professional.inviteEmail ? "pending" : "none",
+      },
+    ]);
     setNewName("");
+    setNewEmail("");
     setAdding(false);
     router.refresh();
   }
@@ -148,7 +169,8 @@ export function ProfessionalsManager({
       ) : null}
 
       {adding ? (
-        <div className="flex flex-col gap-3 rounded-[24px] border border-outline-variant/60 bg-surface-container-lowest p-5 sm:flex-row sm:items-end">
+        <div className="flex flex-col gap-3 rounded-[24px] border border-outline-variant/60 bg-surface-container-lowest p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="flex flex-1 flex-col gap-1.5 text-[13px] font-medium text-on-surface-variant">
             {t("nameLabel")}
             <input
@@ -164,6 +186,22 @@ export function ProfessionalsManager({
               }}
             />
           </label>
+          <label className="flex flex-1 flex-col gap-1.5 text-[13px] font-medium text-on-surface-variant">
+            {t("emailLabel")}
+            <input
+              id="new-professional-email"
+              type="email"
+              className={FIELD_CLASSES}
+              value={newEmail}
+              maxLength={254}
+              autoComplete="off"
+              placeholder={t("emailPlaceholder")}
+              onChange={(e) => setNewEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void add();
+              }}
+            />
+          </label>
           <div className="flex gap-2">
             <Button type="button" isLoading={busyId === "new"} onClick={add}>
               {t("addConfirm")}
@@ -174,12 +212,15 @@ export function ProfessionalsManager({
               onClick={() => {
                 setAdding(false);
                 setNewName("");
+                setNewEmail("");
                 setError(null);
               }}
             >
               {t("cancel")}
             </Button>
           </div>
+          </div>
+          <p className="text-[12px] text-on-surface-variant">{t("addEmailHint")}</p>
         </div>
       ) : null}
 
@@ -206,6 +247,10 @@ export function ProfessionalsManager({
                     <span className="rounded-full bg-surface-container px-2 py-0.5 text-[11px] font-semibold text-on-surface-variant">
                       {t("you")}
                     </span>
+                  ) : p.access === "active" ? (
+                    <AccessPill tone="active">{t("accessActive")}</AccessPill>
+                  ) : p.access === "pending" ? (
+                    <AccessPill tone="pending">{t("accessPending")}</AccessPill>
                   ) : null}
                 </p>
                 <p className="mt-0.5 text-[13px] text-on-surface-variant">

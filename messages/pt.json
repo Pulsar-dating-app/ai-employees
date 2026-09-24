@@ -70,7 +70,8 @@
       "hire": "Sua contratação",
       "setup": "O que ela precisa",
       "ready": "Ver ela trabalhando",
-      "plan": "Seu plano"
+      "plan": "Seu plano",
+      "profile": "Você"
     },
     "hire": {
       "title": "Quem você vai contratar para a {company}?",
@@ -243,6 +244,15 @@
       "ctaTrial": "Começar grátis",
       "later": "Decido depois",
       "error": "Não conseguimos abrir o checkout. Tente de novo."
+    },
+    "profile": {
+      "title": "Primeiro: qual é o seu nome?",
+      "subtitle": "É como sua equipe e as mensagens do seu negócio vão se referir a você.",
+      "nameLabel": "Seu nome",
+      "namePlaceholder": "ex.: Ana Souza",
+      "nameMissing": "Digite seu nome.",
+      "nameTooLong": "Use no máximo {max} caracteres.",
+      "error": "Algo deu errado ao salvar seu nome. Tente novamente."
     }
   },
   "CheckoutLink": {
@@ -923,7 +933,9 @@
       "locked": "bloqueado",
       "needsAttention": "precisa de atenção",
       "more": "Mais",
-      "needsSetup": "Falta configurar"
+      "needsSetup": "Falta configurar",
+      "agenda": "Agenda",
+      "mySchedule": "Minha agenda"
     },
     "locked": {
       "title": "{name} ainda não faz parte da sua equipe",
@@ -972,6 +984,10 @@
           "body": "WhatsApp, Instagram, o chat do seu site ou um link direto: onde os clientes vão conversar com sua equipe. Pelo link direto, o passo se marca na primeira conversa."
         }
       }
+    },
+    "member": {
+      "deactivatedTitle": "Sua agenda foi desativada",
+      "deactivatedBody": "O negócio desativou sua agenda, então não há nada para gerenciar aqui agora. Fale com o responsável se isso for um engano."
     }
   },
   "Metrics": {
@@ -1850,11 +1866,7 @@
       "detailSubtitle": "A agenda própria: horário de trabalho, folgas e Google Agenda.",
       "inactiveSubtitle": "Removido — os clientes não podem mais agendar com este profissional.",
       "identityTitle": "Perfil",
-      "identitySubtitle": "O nome que os clientes veem ao escolher com quem agendar.",
-      "memberLabel": "Membro da equipe que cuida desta agenda",
-      "memberNone": "Ninguém (só donos e administradores)",
-      "memberHint": "Essa pessoa pode editar este horário, as folgas e o Google Agenda sem ser administradora.",
-      "memberTaken": "Esse membro da equipe já cuida da agenda de outro profissional.",
+      "identitySubtitle": "O nome que os clientes veem ao escolher com quem agendar e o e-mail com que essa pessoa entra.",
       "servicesTitle": "Serviços",
       "servicesSubtitle": "O que os clientes podem agendar com este profissional.",
       "noServices": "Nenhum serviço ainda.",
@@ -1867,7 +1879,22 @@
       "useEstablishmentHours": "Voltar a seguir o horário do estabelecimento",
       "timeOffTitle": "Folgas",
       "timeOffSubtitle": "Dias em que só este profissional não atende. Os clientes continuam agendando com os demais.",
-      "googleSubtitle": "Conecte o Google Agenda de {name}: os horários ocupados são respeitados e os agendamentos vão para lá."
+      "googleSubtitle": "Conecte o Google Agenda de {name}: os horários ocupados são respeitados e os agendamentos vão para lá.",
+      "backToAgenda": "Voltar para a agenda",
+      "emailLabel": "E-mail de acesso",
+      "emailPlaceholder": "nome@exemplo.com",
+      "emailRequired": "Digite o e-mail.",
+      "emailInvalid": "Esse e-mail não parece válido.",
+      "emailInOtherCompany": "Esse e-mail já pertence a outro negócio na Staffra. Use outro.",
+      "emailTaken": "Esse e-mail já é usado por outro profissional daqui.",
+      "addEmailHint": "Peça para a pessoa criar uma conta na Staffra com esse e-mail. Ela entra direto na própria agenda.",
+      "accessActive": "Conta ativa",
+      "accessPending": "Convite pendente",
+      "pendingHint": "Peça para {name} criar uma conta na Staffra com esse e-mail para ver a própria agenda.",
+      "noEmailHint": "Adicione o e-mail de {name} para que a pessoa entre e veja a própria agenda.",
+      "unlink": "Remover acesso",
+      "unlinkConfirm": "Remover o acesso de {name}? A pessoa não vai mais conseguir entrar neste negócio. A agenda e os agendamentos continuam.",
+      "unlinkSelfConfirm": "Desvincular sua conta desta agenda? Você continua com acesso total ao negócio."
     },
     "settings": {
       "pageTitle": "Configurações de agendamento",

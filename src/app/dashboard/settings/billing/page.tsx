@@ -23,6 +23,7 @@ import { PageHeader } from "../../page-header";
 import { CheckoutButton, EndTrialButton, ManageBillingButton } from "./billing-actions";
 import { PlanTiers } from "./plan-tiers";
 import { UsageRing } from "./usage-ring";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
 const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -96,6 +97,8 @@ function TrialFact({ icon: Icon, children }: { icon: typeof ChatIcon; children: 
 }
 
 export default async function BillingPage() {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const supabase = await createClient();
   const [t, locale] = await Promise.all([getTranslations("Billing"), getLocale()]);
   const dateFmt = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" });

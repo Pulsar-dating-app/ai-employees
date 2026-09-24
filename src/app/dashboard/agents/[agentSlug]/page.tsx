@@ -8,12 +8,15 @@ import { isBillingActive } from "@/lib/billing/activation";
 import { agentPhoto } from "@/lib/agents/media";
 import { BackLink } from "../../back-link";
 import { AgentHireFlow } from "./agent-hire-flow";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 export default async function AgentDetailPage({
   params,
 }: {
   params: Promise<{ agentSlug: string }>;
 }) {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const { agentSlug } = await params;
   const supabase = await createClient();
   const t = await getTranslations("MyAgents");

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { listProfessionalsWithServices } from "@/lib/professionals/repository";
 import { requireCompanyRole } from "@/lib/professionals/route-auth";
+import { assignProfessionalEmail, normalizeEmail } from "@/lib/team/invites";
+import { isAdminRole } from "@/lib/auth/company-access";
 
 // 2026-09-24 -- the company's professionals (one schedule each; see
 // decisions.md "Multiple schedules per company"). Every company starts with
@@ -34,6 +36,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ com
     return NextResponse.json({
       professionals: professionals.map((p) => ({
         ...p,
+        // Who was invited with which address is the admins' business.
+        inviteEmail: isAdminRole(access.role) ? p.inviteEmail : null,
         calendarConnected: byProfessional.get(p.id)?.status === "connected",
       })),
     });
@@ -42,8 +46,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ com
   }
 }
 
-// POST: admin-only. Body { name }. Appended after the existing ones; hours
-// follow the establishment's until customised.
+// POST: admin-only. Body { name, email }. Appended after the existing ones;
+// hours follow the establishment's until customised. Since 2026-09-25 the
+// email is required: it's how the professional logs in to their own agenda
+// (linked now if the account exists, otherwise a pending invite claimed at
+// sign-up -- see src/lib/team/invites.ts). 409 email_in_other_company /
+// email_taken_in_company when the address can't be used.
 export async function POST(request: Request, { params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = await params;
   const access = await requireCompanyRole(companyId, "admin");
@@ -55,6 +63,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ com
   if (name.length > MAX_PROFESSIONAL_NAME_LENGTH) {
     return NextResponse.json({ error: `name must be ${MAX_PROFESSIONAL_NAME_LENGTH} characters or fewer` }, { status: 400 });
   }
+  const email = normalizeEmail(body?.email);
+  if (!email) return NextResponse.json({ error: "invalid_email" }, { status: 400 });
 
   const service = createServiceClient();
   const { data: last } = await service
@@ -72,6 +82,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ com
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  let assignment;
+  try {
+    assignment = await assignProfessionalEmail(service, { id: data.id, company_id: companyId, name: data.name }, email);
+  } catch (err) {
+    await service.from("professionals").delete().eq("id", data.id);
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 500 });
+  }
+  if (assignment.kind === "conflict") {
+    // Nothing references a professional created a moment ago.
+    await service.from("professionals").delete().eq("id", data.id);
+    return NextResponse.json({ error: assignment.error }, { status: 409 });
+  }
+
   return NextResponse.json(
     {
       professional: {
@@ -80,7 +103,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ com
         isActive: data.is_active,
         position: data.position,
         usesCustomHours: data.uses_custom_hours,
-        userId: data.user_id,
+        userId: assignment.kind === "link" ? assignment.userId : null,
+        inviteEmail: assignment.kind === "invite" ? email : null,
         serviceIds: [],
         calendarConnected: false,
       },

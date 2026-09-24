@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import {
   syncAppointmentConfirmed,
   syncAppointmentRescheduled,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/google-calendar/appointment-sync";
 import { notifyAppointmentConfirmed, notifyAppointmentDeclined } from "@/lib/email/appointments";
 import { notifyWaitlistForFreedSlot } from "@/lib/appointments/waitlist";
+import { createServiceClient } from "@/lib/supabase/service";
 import { isValidTimeZone } from "@/lib/analytics/load";
 import {
   fitsProfessionalSchedule,
@@ -34,30 +36,6 @@ import {
 // perform the service and the time must fit their hours/time off). Its
 // Google event moves from the old professional's calendar to the new one's.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-
-  return { error: null };
-}
 
 async function getAppointment(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -129,7 +107,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const appointmentLookup = await getAppointment(supabase, companyId, appointmentId);
@@ -138,6 +116,15 @@ export async function PATCH(
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
+  }
+  // 2026-09-25 -- a member reaches only their own appointments (RLS hides
+  // the rest, so getAppointment 404s) and can't hand one to someone else.
+  if (
+    !memberCheck.isAdmin &&
+    typeof body.professional_id === "string" &&
+    body.professional_id !== appointmentLookup.appointment.professional_id
+  ) {
+    return NextResponse.json({ error: "You can only manage your own schedule" }, { status: 403 });
   }
 
   const update: Record<string, unknown> = {};
@@ -318,7 +305,7 @@ export async function PATCH(
   // early. Not on a reschedule -- the customer still holds a slot then.
   if (update.status === "cancelled" && preUpdateStatus !== "cancelled") {
     await notifyWaitlistForFreedSlot({
-      supabase,
+      supabase: createServiceClient(),
       companyId,
       serviceId: (data.service_id as string | null) ?? null,
       professionalId: data.professional_id as string,
@@ -404,7 +391,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const appointmentLookup = await getAppointment(supabase, companyId, appointmentId);
@@ -426,7 +413,7 @@ export async function DELETE(
   // branch since that can return early.
   if (appointmentLookup.appointment.status !== "cancelled") {
     await notifyWaitlistForFreedSlot({
-      supabase,
+      supabase: createServiceClient(),
       companyId,
       serviceId: (data.service_id as string | null) ?? null,
       professionalId: data.professional_id as string,

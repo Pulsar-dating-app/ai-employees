@@ -71,16 +71,35 @@ describe("Company time off — /api/companies/:id/time-off", () => {
     ).toBe(400);
   });
 
-  it("a member can add, list, and remove time off (reason optional, round-trips)", async () => {
+  it("a plain member can't close the whole business or remove its closures (2026-09-25)", async () => {
     const owner = await signUpTestUser("owner");
     const member = await signUpTestUser("member");
-    const companyId = await createCompany(owner.cookieHeader, "CRUD TimeOff Co");
+    const companyId = await createCompany(owner.cookieHeader, "Member TimeOff Co");
     await addMember(owner.cookieHeader, companyId, member.userId);
+    const created = await api<{ timeOff: { id: string } }>("POST", `/api/companies/${companyId}/time-off`, owner.cookieHeader, {
+      startDate: "2027-05-01",
+      endDate: "2027-05-01",
+    });
+    expect(created.status).toBe(201);
+    expect(
+      (
+        await api("POST", `/api/companies/${companyId}/time-off`, member.cookieHeader, {
+          startDate: "2027-05-02",
+          endDate: "2027-05-02",
+        })
+      ).status,
+    ).toBe(403);
+    expect((await api("DELETE", `/api/companies/${companyId}/time-off/${created.json.timeOff.id}`, member.cookieHeader)).status).toBe(403);
+  });
+
+  it("an owner can add, list, and remove time off (reason optional, round-trips)", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "CRUD TimeOff Co");
 
     const created = await api<{ timeOff: { id: string; reason: string | null } }>(
       "POST",
       `/api/companies/${companyId}/time-off`,
-      member.cookieHeader,
+      owner.cookieHeader,
       { startDate: "2027-06-10", endDate: "2027-06-15", reason: "  Vacation  " },
     );
     expect(created.status).toBe(201);
@@ -89,18 +108,18 @@ describe("Company time off — /api/companies/:id/time-off", () => {
     const single = await api<{ timeOff: { id: string } }>(
       "POST",
       `/api/companies/${companyId}/time-off`,
-      member.cookieHeader,
+      owner.cookieHeader,
       { startDate: "2027-07-04", endDate: "2027-07-04" },
     );
     expect(single.status).toBe(201);
 
-    const after = await list(member.cookieHeader, companyId);
+    const after = await list(owner.cookieHeader, companyId);
     expect(after.json.timeOff.map((t) => t.start_date)).toEqual(["2027-06-10", "2027-07-04"]);
 
-    const del = await api("DELETE", `/api/companies/${companyId}/time-off/${created.json.timeOff.id}`, member.cookieHeader);
+    const del = await api("DELETE", `/api/companies/${companyId}/time-off/${created.json.timeOff.id}`, owner.cookieHeader);
     expect(del.status).toBe(200);
 
-    const remaining = await list(member.cookieHeader, companyId);
+    const remaining = await list(owner.cookieHeader, companyId);
     expect(remaining.json.timeOff.map((t) => t.id)).toEqual([single.json.timeOff.id]);
   });
 

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { listServicesTool } from "@/lib/agent-engine/tools/list-services";
 import { findAvailableSlotsTool } from "@/lib/agent-engine/tools/find-available-slots";
@@ -84,9 +85,21 @@ async function createCustomer(companyId: string): Promise<string> {
   return data.id as string;
 }
 
-async function addProfessional(companyId: string, name: string, cookie = owner.cookieHeader) {
-  const res = await api<{ professional: { id: string } }>("POST", `/api/companies/${companyId}/professionals`, cookie, { name });
-  return { status: res.status, id: res.json?.professional?.id };
+// Every professional is added with an email since 2026-09-25 -- a fresh one
+// (a pending invite) unless the test passes its own.
+async function addProfessional(
+  companyId: string,
+  name: string,
+  cookie = owner.cookieHeader,
+  email: string | null = `pro-${randomUUID()}@example.test`,
+) {
+  const res = await api<{ professional: { id: string }; error?: string }>(
+    "POST",
+    `/api/companies/${companyId}/professionals`,
+    cookie,
+    email === null ? { name } : { name, email },
+  );
+  return { status: res.status, id: res.json?.professional?.id, error: res.json?.error };
 }
 
 function ctxFor(s: Seed, customerId = s.customerId): ToolExecutionContext {
@@ -142,6 +155,8 @@ describe("managing professionals", () => {
     expect((await addProfessional(s.companyId, "Nope", member.cookieHeader)).status).toBe(403);
     expect((await addProfessional(s.companyId, "João")).status).toBe(201);
     expect((await addProfessional(s.companyId, "  ")).status).toBe(400);
+    expect((await addProfessional(s.companyId, "Sem Email", owner.cookieHeader, null)).status).toBe(400);
+    expect((await addProfessional(s.companyId, "Email Ruim", owner.cookieHeader, "not-an-email")).status).toBe(400);
   });
 
   it("won't deactivate the last active professional, or one with upcoming appointments", async () => {
@@ -173,13 +188,10 @@ describe("managing professionals", () => {
 
   it("a linked team member manages their own schedule but not someone else's", async () => {
     const s = await seed("Linked Member Co");
+    // An existing account with no company, added by email: linked right away.
     const member = await signUpTestUser("member");
-    await api("POST", `/api/companies/${s.companyId}/members`, owner.cookieHeader, { userId: member.userId, role: "member" });
-    const joao = await addProfessional(s.companyId, "João");
-    const linked = await api("PATCH", `/api/companies/${s.companyId}/professionals/${joao.id}`, owner.cookieHeader, {
-      userId: member.userId,
-    });
-    expect(linked.status).toBe(200);
+    const joao = await addProfessional(s.companyId, "João", owner.cookieHeader, member.email);
+    expect(joao.status).toBe(201);
 
     // Own schedule: hours, time off, Google.
     expect(
@@ -201,7 +213,7 @@ describe("managing professionals", () => {
     expect((await api("POST", `${await calendarPath(s.companyId, joao.id)}/connect`, member.cookieHeader, { code: "good-code" })).status).toBe(200);
     // ...but can't relink themselves elsewhere, or touch another professional.
     expect(
-      (await api("PATCH", `/api/companies/${s.companyId}/professionals/${joao.id}`, member.cookieHeader, { userId: null })).status,
+      (await api("PATCH", `/api/companies/${s.companyId}/professionals/${joao.id}`, member.cookieHeader, { unlink: true })).status,
     ).toBe(403);
     expect((await api("POST", `${await calendarPath(s.companyId, s.first)}/connect`, member.cookieHeader, { code: "good-code" })).status).toBe(403);
     expect(

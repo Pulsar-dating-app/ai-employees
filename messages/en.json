@@ -70,7 +70,8 @@
       "hire": "Your hire",
       "setup": "What she needs",
       "ready": "See her work",
-      "plan": "Your plan"
+      "plan": "Your plan",
+      "profile": "You"
     },
     "hire": {
       "title": "Who are you hiring for {company}?",
@@ -243,6 +244,15 @@
       "ctaTrial": "Start free",
       "later": "I'll decide later",
       "error": "We couldn't open the checkout. Please try again."
+    },
+    "profile": {
+      "title": "First, what's your name?",
+      "subtitle": "It's how your team and your business's messages will refer to you.",
+      "nameLabel": "Your name",
+      "namePlaceholder": "e.g. Ana Souza",
+      "nameMissing": "Enter your name.",
+      "nameTooLong": "Use at most {max} characters.",
+      "error": "Something went wrong saving your name. Try again."
     }
   },
   "CheckoutLink": {
@@ -923,7 +933,9 @@
       "locked": "locked",
       "needsAttention": "needs attention",
       "more": "More",
-      "needsSetup": "Needs setup"
+      "needsSetup": "Needs setup",
+      "agenda": "Appointments",
+      "mySchedule": "My schedule"
     },
     "locked": {
       "title": "{name} isn't on your team yet",
@@ -972,6 +984,10 @@
           "body": "WhatsApp, Instagram, your site's chat or a direct link: where customers will talk to your team. With the direct link, this checks off at the first conversation."
         }
       }
+    },
+    "member": {
+      "deactivatedTitle": "Your schedule was turned off",
+      "deactivatedBody": "The business turned off your schedule, so there's nothing to manage here right now. Talk to them if this is a mistake."
     }
   },
   "Metrics": {
@@ -1850,11 +1866,7 @@
       "detailSubtitle": "Their own schedule: working hours, time off and Google Calendar.",
       "inactiveSubtitle": "Removed — customers can't book with this professional anymore.",
       "identityTitle": "Profile",
-      "identitySubtitle": "The name customers see when choosing who to book with.",
-      "memberLabel": "Team member who manages this schedule",
-      "memberNone": "Nobody (only owners and admins)",
-      "memberHint": "That person can edit these hours, time off and Google Calendar without being an admin.",
-      "memberTaken": "That team member already manages another professional's schedule.",
+      "identitySubtitle": "The name customers see when choosing who to book with, and the email this person logs in with.",
       "servicesTitle": "Services",
       "servicesSubtitle": "What customers can book with this professional.",
       "noServices": "No services yet.",
@@ -1867,7 +1879,22 @@
       "useEstablishmentHours": "Follow business hours again",
       "timeOffTitle": "Time off",
       "timeOffSubtitle": "Days only this professional is away. Customers can still book with everyone else.",
-      "googleSubtitle": "Connect {name}'s Google Calendar: their busy times are respected and their appointments go there."
+      "googleSubtitle": "Connect {name}'s Google Calendar: their busy times are respected and their appointments go there.",
+      "backToAgenda": "Back to appointments",
+      "emailLabel": "Login email",
+      "emailPlaceholder": "name@example.com",
+      "emailRequired": "Enter their email.",
+      "emailInvalid": "That email doesn't look right.",
+      "emailInOtherCompany": "This email already belongs to another business on Staffra. Use a different one.",
+      "emailTaken": "This email is already used by another professional here.",
+      "addEmailHint": "Ask them to create a Staffra account with this email. They'll go straight to their own appointments and schedule.",
+      "accessActive": "Account active",
+      "accessPending": "Invite pending",
+      "pendingHint": "Ask {name} to create a Staffra account with this email to see their own appointments.",
+      "noEmailHint": "Add {name}'s email so they can log in and see their own appointments.",
+      "unlink": "Remove access",
+      "unlinkConfirm": "Remove {name}'s access? They'll no longer be able to log in to this business. Their schedule and appointments stay.",
+      "unlinkSelfConfirm": "Unlink your account from this schedule? You keep full access to the business."
     },
     "settings": {
       "pageTitle": "Scheduling settings",

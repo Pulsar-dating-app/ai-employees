@@ -38,6 +38,9 @@ export async function POST(
   if (!membership) {
     return NextResponse.json({ error: "Not a member of this company" }, { status: 403 });
   }
+  if (!["owner", "admin"].includes(membership.role as string)) {
+    return NextResponse.json({ error: "Only company owners/admins can do this" }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => null);
   const message = typeof body?.message === "string" ? body.message.trim() : "";

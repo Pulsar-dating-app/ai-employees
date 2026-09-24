@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentAccess } from "@/lib/auth/company-access";
 import { addDays, isValidTimeZone, localToday } from "@/lib/analytics/load";
 import { zonedTimeToUtc } from "@/lib/availability/engine";
 import { effectiveHours } from "@/lib/professionals/rules";
@@ -59,14 +60,24 @@ export default async function AppointmentsPage() {
 
   const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
 
-  // 2026-09-24 -- a team member linked to a professional opens the agenda
-  // on their own appointments (they can switch to everyone's).
-  const [professionals, allHours] = await Promise.all([
+  // 2026-09-25 -- a team member (role `member`) sees only their own
+  // appointments, with no professional filter; RLS enforces the same. An
+  // owner/admin who is also a professional opens on their own appointments
+  // and can switch to everyone's.
+  const access = await getCurrentAccess();
+  const isMember = !access.isAdmin;
+  const [allProfessionals, allHours] = await Promise.all([
     listProfessionals(supabase, company.id),
     loadAllHours(supabase, company.id),
   ]);
-  const ownProfessional =
-    professionals.length > 1 ? (professionals.find((p) => p.userId === user!.id) ?? null) : null;
+  const professionals = isMember ? allProfessionals.filter((p) => p.userId === user!.id) : allProfessionals;
+  const ownProfessional = isMember
+    ? (professionals[0] ?? null)
+    : professionals.length > 1
+      ? (professionals.find((p) => p.userId === user!.id) ?? null)
+      : null;
+  const scoped = <Q extends { eq: (column: string, value: string) => Q }>(query: Q): Q =>
+    isMember && ownProfessional ? query.eq("professional_id", ownProfessional.id) : query;
 
   const upcomingQuery = supabase
     .from("appointments")
@@ -85,13 +96,14 @@ export default async function AppointmentsPage() {
     (ownProfessional ? upcomingQuery.eq("professional_id", ownProfessional.id) : upcomingQuery)
       .order("starts_at", { ascending: true })
       .range(0, PAGE_SIZE - 1),
-    supabase
-      .from("appointments")
-      .select(APPOINTMENT_SELECT)
-      .eq("company_id", company.id)
-      .gte("starts_at", dayStart)
-      .lt("starts_at", dayEnd)
-      .order("starts_at", { ascending: true }),
+    scoped(
+      supabase
+        .from("appointments")
+        .select(APPOINTMENT_SELECT)
+        .eq("company_id", company.id)
+        .gte("starts_at", dayStart)
+        .lt("starts_at", dayEnd),
+    ).order("starts_at", { ascending: true }),
     supabase
       .from("company_agents")
       .select("status, name, photo_type, photo_asset_url, agents(slug)")
@@ -102,11 +114,13 @@ export default async function AppointmentsPage() {
       .eq("company_id", company.id)
       .eq("status", "connected"),
     company.requires_appointment_approval
-      ? supabase
-          .from("appointments")
-          .select(APPOINTMENT_SELECT, { count: "exact" })
-          .eq("company_id", company.id)
-          .eq("status", "requested")
+      ? scoped(
+          supabase
+            .from("appointments")
+            .select(APPOINTMENT_SELECT, { count: "exact" })
+            .eq("company_id", company.id)
+            .eq("status", "requested"),
+        )
           .order("starts_at", { ascending: true })
           .limit(PENDING_LIMIT)
       : Promise.resolve({ data: [] as Appointment[], count: 0 }),
@@ -129,6 +143,10 @@ export default async function AppointmentsPage() {
   const calendarNotConnected = (connectedCalendars ?? 0) === 0 && Boolean(process.env.GOOGLE_CLIENT_ID);
   const businessHoursEmpty = hoursRows.length === 0;
 
+  const settingsHref =
+    isMember && ownProfessional
+      ? `/dashboard/scheduling/professionals/${ownProfessional.id}`
+      : "/dashboard/scheduling/settings";
   const alertItems = [
     businessHoursEmpty ? (
       <StatusBanner
@@ -137,7 +155,7 @@ export default async function AppointmentsPage() {
         title={t("alerts.businessHoursTitle")}
         body={t("alerts.businessHoursBody")}
         action={
-          <Link href="/dashboard/scheduling/settings#business-hours" className={ALERT_ACTION}>
+          <Link href={`${settingsHref}#business-hours`} className={ALERT_ACTION}>
             {t("alerts.businessHoursAction")}
           </Link>
         }
@@ -150,7 +168,7 @@ export default async function AppointmentsPage() {
         title={t("alerts.calendarTitle")}
         body={t("alerts.calendarBody")}
         action={
-          <Link href="/dashboard/scheduling/settings#google-calendar" className={ALERT_ACTION}>
+          <Link href={`${settingsHref}#google-calendar`} className={ALERT_ACTION}>
             {t("alerts.calendarAction")}
           </Link>
         }

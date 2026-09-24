@@ -20,11 +20,14 @@ export type Professional = {
   position: number;
   usesCustomHours: boolean;
   userId: string | null;
+  // The address this professional was added with, while nobody has signed
+  // up with it yet (see src/lib/team/invites.ts). Null once linked.
+  inviteEmail: string | null;
 };
 
 export type ProfessionalWithServices = Professional & { serviceIds: string[] };
 
-const PROFESSIONAL_COLUMNS = "id, name, is_active, position, uses_custom_hours, user_id";
+const PROFESSIONAL_COLUMNS = "id, name, is_active, position, uses_custom_hours, user_id, invite_email";
 
 function toProfessional(row: Record<string, unknown>): Professional {
   return {
@@ -34,6 +37,7 @@ function toProfessional(row: Record<string, unknown>): Professional {
     position: row.position as number,
     usesCustomHours: row.uses_custom_hours as boolean,
     userId: (row.user_id as string | null) ?? null,
+    inviteEmail: (row.invite_email as string | null) ?? null,
   };
 }
 

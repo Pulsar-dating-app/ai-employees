@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentAccess } from "@/lib/auth/company-access";
 import { getSchedulingWarnings } from "@/lib/scheduling/warnings";
 import { SchedulingTabs } from "./scheduling-tabs";
 
@@ -6,6 +7,11 @@ import { SchedulingTabs } from "./scheduling-tabs";
 // renders its own PageHeader — the sub-tabs sit above it, so switching
 // screens keeps the same navigation anchored in place.
 export default async function SchedulingLayout({ children }: { children: React.ReactNode }) {
+  // A member's agenda and own schedule are reached from the sidebar; the
+  // sub-tabs (services, professionals, settings) are all admin pages.
+  const access = await getCurrentAccess();
+  if (!access.isAdmin) return <div className="flex flex-col gap-8">{children}</div>;
+
   const supabase = await createClient();
   const { data: companies } = await supabase.from("companies").select("id");
   const companyId = companies?.[0]?.id ?? null;

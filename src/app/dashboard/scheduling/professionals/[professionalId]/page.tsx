@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getCurrentAccess } from "@/lib/auth/company-access";
 import {
   canManageProfessional,
   getProfessional,
@@ -13,14 +14,14 @@ import { BackLink } from "../../../back-link";
 import { TimeOffCard, type TimeOffEntry } from "../../settings/time-off-card";
 import { GoogleCalendarCard } from "../../settings/google-calendar-card";
 import type { BusinessHourRow } from "../../settings/business-hours-card";
-import { ProfessionalIdentityCard, type MemberOption } from "./professional-identity-card";
+import { ProfessionalIdentityCard } from "./professional-identity-card";
 import { ProfessionalHoursCard } from "./professional-hours-card";
 
-// 2026-09-24 -- one professional's own schedule: name and linked team member,
-// the services they perform, their working hours (the establishment's, or
-// their own), their time off, and their Google Calendar. Editable by company
-// owners/admins, and by the team member linked to this professional; every
-// other member sees it read-only.
+// 2026-09-24 -- one professional's own schedule: name and login email, the
+// services they perform, their working hours (the establishment's, or their
+// own), their time off, and their Google Calendar. Owners/admins see and edit
+// every professional; since 2026-09-25 a team member (role `member`) reaches
+// only their own ("Minha agenda"), with the name read-only.
 export default async function ProfessionalPage({ params }: { params: Promise<{ professionalId: string }> }) {
   const { professionalId } = await params;
   const supabase = await createClient();
@@ -38,16 +39,17 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
   const professional = await getProfessional(supabase, company.id, professionalId);
   if (!professional) notFound();
 
+  const access = await getCurrentAccess();
+  if (!access.isAdmin && professional.userId !== user.id) redirect("/dashboard/scheduling");
+
   const today = new Date().toISOString().slice(0, 10);
   const [
-    { data: membership },
     canManage,
     { data: hourRows },
     { data: timeOff },
     { data: services },
     activeProfessionals,
   ] = await Promise.all([
-    supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user.id).maybeSingle(),
     canManageProfessional(supabase, company.id, professionalId, user.id),
     supabase
       .from("business_hours")
@@ -72,7 +74,7 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
       .order("name", { ascending: true }),
     listProfessionals(supabase, company.id),
   ]);
-  const isAdmin = ["owner", "admin"].includes(membership?.role ?? "");
+  const isAdmin = access.isAdmin;
 
   // Which active services this professional performs: explicitly linked, or
   // unrestricted (no one linked at all).
@@ -92,22 +94,16 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
     })
     .map((service) => service.name);
 
-  // Team members an admin can link to this professional. public.users is
-  // only readable for yourself, so the names/emails come through the
-  // service client -- admin-only, scoped to this company's members.
-  let members: MemberOption[] = [];
-  if (isAdmin) {
-    const { data: memberRows } = await createServiceClient()
-      .from("company_users")
-      .select("user_id, users(email, name)")
-      .eq("company_id", company.id);
-    type MemberUser = { email: string; name: string | null };
-    members = ((memberRows ?? []) as unknown as { user_id: string; users: MemberUser | MemberUser[] | null }[]).map(
-      (m) => {
-        const account = Array.isArray(m.users) ? m.users[0] : m.users;
-        return { userId: m.user_id, label: account?.name?.trim() || account?.email || m.user_id };
-      },
-    );
+  // The linked account's email. public.users is only readable for yourself,
+  // so it comes through the service client, for this one account.
+  let accountEmail: string | null = null;
+  if (professional.userId) {
+    const { data: account } = await createServiceClient()
+      .from("users")
+      .select("email")
+      .eq("id", professional.userId)
+      .maybeSingle();
+    accountEmail = (account?.email as string | undefined) ?? null;
   }
 
   const rows = (hourRows ?? []) as (BusinessHourRow & { professional_id: string | null })[];
@@ -117,7 +113,11 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
 
   return (
     <div className="flex flex-col gap-6">
-      <BackLink href="/dashboard/scheduling/professionals">{t("backToList")}</BackLink>
+      {isAdmin ? (
+        <BackLink href="/dashboard/scheduling/professionals">{t("backToList")}</BackLink>
+      ) : (
+        <BackLink href="/dashboard/scheduling">{t("backToAgenda")}</BackLink>
+      )}
       <div>
         <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">{professional.name}</h1>
         <p className="mt-1 text-sm text-on-surface-variant">
@@ -130,10 +130,11 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
           companyId={company.id}
           professionalId={professionalId}
           initialName={professional.name}
-          initialUserId={professional.userId}
-          canManage={canManage}
+          inviteEmail={professional.inviteEmail}
+          accountEmail={accountEmail}
+          linked={professional.userId !== null}
+          isSelf={professional.userId === user.id}
           isAdmin={isAdmin}
-          members={members}
         />
 
         <SettingsBlock id="services" title={t("servicesTitle")} description={t("servicesSubtitle")}>
@@ -151,9 +152,14 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
               ))}
             </ul>
           )}
-          <Link href="/dashboard/scheduling/services" className="self-start text-sm font-medium text-primary hover:underline">
-            {t("editServicesLink")}
-          </Link>
+          {isAdmin ? (
+            <Link
+              href="/dashboard/scheduling/services"
+              className="self-start text-sm font-medium text-primary hover:underline"
+            >
+              {t("editServicesLink")}
+            </Link>
+          ) : null}
         </SettingsBlock>
 
         <ProfessionalHoursCard
