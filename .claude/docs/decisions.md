@@ -12,6 +12,56 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-24 — Landing demo is real screenshots; value section is a calculator
+
+**Decision:** The landing's `#demo` became a tour of five real dashboard screenshots from a seeded sample account, captioned as sample data. It replaced the hand-built interactive dashboard mock. "Uma funcionária que não tira folga" became weekly coverage bars (44h vs 168h) plus a calculator where visitors enter what they pay attendants today, compared with the recommended plan's price.
+**Why:** The owner said the old demo "não reflete o produto original… dá uma impressão ruim do produto". A mock drifts from the product with every redesign, while screenshots show exactly what the merchant gets. The value section needed stronger evidence without inventing stats. The coverage math (CLT 44h/week) and the visitor's own numbers are verifiable, and the saving is only stated when it's real. The tour is also shown on mobile now: the section is the proof, so hiding it on the main traffic device made no sense.
+
+## 2026-09-24 — Landing blocks 2 and 3: honest trust and simple pricing, jargon out
+
+**Decision:** Below the hero, the landing now answers buying questions in this order:
+1. who (Malu and Ana, each with "Contratar a {name}")
+2. where (channels)
+3. the demo
+4. trust ("Ela nunca inventa…", with a real-style chat snippet of her refusing to guess)
+5. value (a Staffra vs human-only table whose cost row is the Starter price divided by 30 and rounded up, computed from `plans.ts`)
+6. pricing
+7. an FAQ built from real objections
+8. the final CTA
+
+Pricing cards show only what differs between plans: price, a per-day line and replies per month or year, all from the catalog. One shared "Tudo isso em todos os planos" list replaces 36 near-identical features per card. The trial terms are stated exactly: card up front, charge after 7 days or 500 replies, cancel before and pay nothing.
+
+Removed, because they weren't true or weren't the product:
+- the impact band (−55%, 3.8x, 99.4%) and the "Mais escolhido" badge
+- the OpenAI logo
+- PDF or history upload, "tom de voz / guardrails", QR-code WhatsApp, SOC2 and "follow-up automático"
+- "Sem fidelidade", since the yearly plan is prepaid. The cancel copy follows the Stripe portal's `at_period_end` mode, checked in the sandbox.
+- the unverified "Tech Provider Credenciado" line
+
+The WhatsApp toggle now reads "Incluir as taxas da Meta no preço" (WhatsApp works on every plan; the toggle only moves Meta's fees into our price). Visible jargon (agente, API, RAG, AI Workforce, deep link) is gone. This reverses the earlier call to keep the Stitch mockup's wording verbatim.
+
+**Why:** The owner's goal for the page is conversion. Fabricated numbers and capabilities are a legal risk and cost trust the moment a buyer notices one. Identical feature walls hid the one real difference between plans, and the old copy spoke to engineers instead of shop, salon and clinic owners.
+
+**Open with the owner:**
+- The catalog prices yearly at 4× monthly, so the toggle shows −67%, and the three monthly prices are close together (R$930/950/999). Both come from `plans.ts` / Stripe placeholders.
+- The production Stripe portal's cancel mode is unverified.
+- "Tech Provider" status would need confirming before it comes back.
+
+---
+
+## 2026-09-24 — Landing hero leads with the outcome and puts Ana beside Malu
+
+**Decision:** The landing hero is now two columns. On the left: an outcome headline ("Venda e agende pelo WhatsApp / 24 horas por dia"), one sentence naming Malu and Ana and the no-invention promise, one trial CTA plus one secondary, and three plain ticks. On the right: a WhatsApp-styled sample chat (`hero-chat-demo.tsx`) with a Vendas/Agendamentos switch, so a salon or clinic visitor sees Ana booking within seconds.
+- The switch auto-rotates every 9 seconds, pauses on hover or focus, stops on a manual choice, and is off under reduced motion.
+- The fabricated hero metrics (89.4%, 1.4s, 1,240), the workspace illustration, the badge and the third CTA are gone.
+- The nav's duplicate "Agentes de IA" / "AI Workforce" items became one "Funcionários".
+- Jargon ("agentes", "RAG", "AI Workforce") left the visible copy. "IA" stays only in the SEO title, by agreement.
+- The sample chat is labelled "Conversa de exemplo". It only shows what the product really does: a link to the merchant's own checkout (not a payment link), and an email reminder (Ana always collects email).
+
+**Why:** The owner asked whether the hero sold. It spoke about technology rather than the merchant's outcome, split attention across three CTAs, showed only the sales employee, and displayed numbers with no customers behind them. This is block 1 of 3. Block 2 covers honest proof and ROI framing (and the fabricated impact stats, the "most chosen" badge and the eyebrow above the logos). Block 3 covers pricing clarity.
+
+---
+
 ## 2026-09-25 — Owners/admins promote; only the owner demotes or removes
 
 **Decision:** Roles are managed from a professional's page:

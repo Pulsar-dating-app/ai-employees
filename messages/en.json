@@ -2,7 +2,7 @@
   "Seo": {
     "siteName": "Staffra",
     "defaultTitle": "Staffra — Hire AI employees that sell, support and book 24/7",
-    "description": "Build intelligent agents trained on your documents, catalogues and processes and connect them to Official WhatsApp, Instagram, Telegram and your website in under 15 minutes — no code."
+    "description": "Malu sells and Ana books appointments on WhatsApp, Instagram and your website, around the clock, with your real prices, stock and hours. Ready in minutes, no code."
   },
   "Auth": {
     "close": "Close",
@@ -238,7 +238,7 @@
           "annual": "Annual"
         },
         "wppToggleLabel": "Include WhatsApp in the plan",
-        "wppToggleNote": "Without this, Meta charges WhatsApp usage separately, straight to your card — you can change this later in Settings."
+        "wppToggleNote": "Without this, the plan doesn't include WhatsApp: replies work on Instagram, Telegram, website chat and direct link. You can add WhatsApp later in Settings."
       },
       "cta": "Choose plan",
       "ctaTrial": "Start free",
@@ -261,86 +261,83 @@
   },
   "LandingV2": {
     "header": {
-      "navAgents": "AI Agents",
-      "navWorkforce": "AI Workforce",
+      "navAgents": "Employees",
       "navChannels": "Channels & WhatsApp",
       "navPricing": "Plans & Pricing",
       "navDemo": "Demo",
-      "trial": "Start 7-Day Trial",
+      "trial": "Try free for 7 days",
       "login": "Log in"
     },
     "hero": {
-      "badgeMain": "✨ AI Workforce & Official WhatsApp Platform",
-      "badgeSub": "• 7-day free trial",
-      "headlinePre": "Hire",
-      "headlineHighlight": "AI employees",
-      "headlinePost": "that sell, support and book 24/7",
-      "sub": "Hire intelligent agents trained on your documents, catalogues and processes. Connect to Official WhatsApp, Instagram, Telegram and your website under 15 minutes — no code.",
-      "ctaPrimary": "Start 7-Day Free Trial",
-      "ctaSecondary": "Watch Live Demo",
-      "ctaTertiary": "Talk to a Specialist",
-      "trust1": "Official WhatsApp API (Meta)",
-      "trust2": "Multiple agents",
-      "trust3": "Safe RAG, no hallucination",
+      "headlinePre": "Sell and book appointments on WhatsApp",
+      "headlineHighlight": "around the clock",
+      "sub": "Hire Malu to sell and Ana to run your calendar. They answer with your real prices, stock and opening hours, and never make things up. Ready in minutes, no code.",
+      "ctaPrimary": "Try free for 7 days",
+      "ctaSecondary": "See it in action",
+      "ctaSales": "Talk to a specialist",
+      "trust1": "Official WhatsApp by Meta",
+      "trust2": "Instagram, Telegram and your site",
+      "trust3": "Cancel anytime",
       "chat": {
-        "agentName": "Malu · Sales",
-        "status": "Online on Official WhatsApp",
-        "badge": "Sales 24/7",
-        "msg1": "Hi! I'm Malu from the sales team. Tell me what you're looking for and I'll help you find it.",
-        "msg2": "Hi Malu! I want a gift for my wife, she's into skincare. Up to around R$ 250.",
-        "msg3a": "Got it! I picked one option that's in stock and matches what you described:",
-        "msg3b": "Delivery in up to 3 days in your area. Want me to send you the link to check out now?",
-        "msg3meta": "10:43 • Answered in 1.2s",
-        "inputPlaceholder": "Type a question to test Malu...",
-        "inputValue": "Does this kit come in other shades?",
-        "send": "Send",
-        "productName": "Facial Hydration Kit",
-        "productPrice": "R$ 219"
-      },
-      "workspace": {
-        "imageAlt": "Staffra central workspace",
-        "eyebrow": "Staffra OS Orchestrator",
-        "title": "Central Multi-Agent Workspace"
-      },
-      "metrics": {
-        "m1Label": "Resolution Rate",
-        "m1Sub": "No human handoff",
-        "m2Label": "Response Time",
-        "m2Sub": "Instant",
-        "m3Label": "Meetings Booked",
-        "m3Sub": "Google Calendar Sync"
+        "tablistLabel": "Choose what to see",
+        "sample": "Sample chat",
+        "status": "Online on WhatsApp",
+        "sales": {
+          "tab": "Sales",
+          "name": "Malu",
+          "role": "Sales",
+          "customer1": "Hi! I'm looking for a gift for my wife, she loves skincare. Up to about $50.",
+          "agent1": "Here's an option that fits what you described:",
+          "productName": "Hydrating Facial Kit",
+          "productPrice": "$44",
+          "productStock": "In stock",
+          "agent2": "It arrives within 3 days in your area. Want the link to check out?",
+          "customer2": "Yes please!",
+          "agent3": "Done! Here's the link to check out:",
+          "checkoutHost": "yourstore.com/checkout"
+        },
+        "scheduling": {
+          "tab": "Appointments",
+          "name": "Ana",
+          "role": "Appointments",
+          "customer1": "Hi! Do you have a haircut slot tomorrow afternoon?",
+          "agent1": "I do! These times are free tomorrow afternoon:",
+          "slot1": "2:00 PM",
+          "slot2": "4:30 PM",
+          "customer2": "4:30, please.",
+          "appointmentService": "Women's haircut",
+          "appointmentWhen": "Tomorrow, 4:30 PM",
+          "appointmentStatus": "Confirmed",
+          "agent2": "All set! You'll get an email reminder before your appointment."
+        }
       }
     },
     "socialProof": {
-      "title": "Built on the best technology in the market",
+      "title": "Works with the tools you already use",
       "logos": [
         {
-          "name": "Google"
-        },
-        {
-          "name": "Telegram"
-        },
-        {
-          "name": "Meta"
+          "name": "WhatsApp"
         },
         {
           "name": "Instagram"
         },
         {
-          "name": "WhatsApp"
+          "name": "Telegram"
         },
         {
           "name": "Shopify"
         },
         {
-          "name": "OpenAI"
+          "name": "Google"
+        },
+        {
+          "name": "Meta"
         }
       ]
     },
     "channels": {
-      "partnerLabel": "Accredited Tech Provider",
-      "heading": "One AI employee, every channel",
-      "sub": "Connect your AI employee to Official WhatsApp, Instagram, Telegram and your website. 24/7 sales and support with your business context — one shared memory.",
+      "heading": "One employee, all your channels",
+      "sub": "Connect to official WhatsApp, Instagram, Telegram and your website. Same employee, same memory, everywhere.",
       "tablistLabel": "Select channel",
       "cta": "Start 7-day free trial",
       "items": [
@@ -349,11 +346,11 @@
           "brand": "WhatsApp",
           "name": "WhatsApp",
           "headline": "Sell on Official WhatsApp",
-          "caption": "Your employee answers on your brand’s official number, via the Meta API — with audio, images and history.",
+          "caption": "Your employee answers on your brand’s official WhatsApp number — with audio, images and history.",
           "points": [
-            "Official connection (WhatsApp Cloud API)",
+            "Official connection through Meta",
             "Recommends products and sends the checkout link",
-            "Hands off to a human agent when needed"
+            "Hands off to a someone on your team when needed"
           ]
         },
         {
@@ -375,7 +372,7 @@
           "headline": "Answer on Telegram",
           "caption": "One link and you’re live. No setup, no server, no extra app.",
           "points": [
-            "One deep link per employee",
+            "One direct link per employee",
             "Runs in the same dashboard",
             "Zero setup"
           ]
@@ -420,347 +417,138 @@
       "teamCaption": "The same team, every channel"
     },
     "workforce": {
-      "badge": "Specialized AI Employees",
-      "heading": "A dedicated AI employee for each role",
-      "sub": "Unlike a generic chatbot, every Staffra employee has a defined role: Malu handles inbound sales and Ana runs your calendar. You only hire the ones you need.",
-      "viewProfile": "View Profile",
+      "heading": "Two employees, each with one job",
+      "sub": "Malu handles sales and Ana handles your calendar. Hire only who you need, or both: they're included in every plan.",
       "agents": [
         {
           "name": "Malu",
-          "role": "Sales on WhatsApp & Web",
-          "sub": "Inbound WhatsApp & Web",
-          "desc": "Understands what the shopper is after, recommends the right products from your catalogue, and answers price, stock and policy questions straight from what you have registered — never guessing. Guides ready buyers to checkout without being pushy."
+          "role": "Sales",
+          "sub": "WhatsApp, Instagram and your site",
+          "desc": "Understands what the customer wants, recommends the right products from your catalog and answers price, stock and policy questions from what you've set up. Takes ready buyers to your store's checkout without being pushy."
         },
         {
           "name": "Ana",
-          "role": "Scheduling Agent",
-          "sub": "Calendar Sync",
-          "desc": "Checks real availability (opening hours, existing bookings and your connected calendar) and offers customers only the slots that are genuinely free. Handles reschedules and cancellations on the spot, and adds people to the waitlist when you are fully booked."
+          "role": "Appointments",
+          "sub": "Connected to Google Calendar",
+          "desc": "Offers only times that are genuinely free, based on your opening hours, your bookings and your calendar. Reschedules and cancels on the spot, and adds people to a waitlist when you're fully booked."
         }
       ],
-      "handoffTitle": "Frictionless Human Handoff",
-      "handoffDesc": "When the conversation goes off-script or the customer asks, the employee hands the chat to a person on your team — with the full history and conversation summary ready.",
-      "handoffCta": "Meet the available employees"
-    },
-    "interactiveDemo": {
-      "badge": "See It In Action",
-      "heading": "This is your real dashboard",
-      "sub": "Pick a teammate and follow the exact screens a merchant sees — team, settings, setup, and a live conversation.",
-      "back": "Previous step",
-      "next": "Next step",
-      "goToStep": "Go to step {step}",
-      "watchAgain": "Watch again",
-      "openSettingsHotspot": "Open {name}'s settings",
-      "screens": {
-        "team": "Click Malu or Ana to open her settings — this is the exact list you see when you sign in.",
-        "availability": "Turn {name} on or off for every channel at once, from one toggle.",
-        "shipping": "Set delivery cost and timeframe — {name} quotes it automatically, never a guess.",
-        "returns": "Your return window and process, explained exactly the way you write it here.",
-        "handoff": "Decide if {name} can bring in a person when a customer needs one.",
-        "products": "Add products one by one, or import your whole catalogue from Shopify or a spreadsheet — no manual typing needed.",
-        "schedulingAppointments": "Every booking {name} has confirmed, or is waiting on you to approve.",
-        "schedulingServices": "What customers can book with {name} — duration and price for each.",
-        "schedulingSettings": "Business hours, time off, Google Calendar — {name} only offers slots that are genuinely free.",
-        "live": "Every conversation on the left, whichever channel it came in on — click one to read it, right there on the right."
-      },
-      "nav": {
-        "goToProducts": "Go to Products",
-        "goToScheduling": "Go to Scheduling",
-        "goToConversations": "Go to Conversations"
-      },
-      "openConversationHotspot": "Open conversation with {name}",
-      "live": {
-        "badge": "Active now",
-        "maluCustomerName": "Rafael Martins",
-        "maluCustomerMsg": "Do you have this in blue, size M?",
-        "maluAgentMsg": "Yes! I have 3 left in blue, size M — want me to hold one for you?",
-        "anaCustomerName": "Camila Rocha",
-        "anaCustomerMsg": "Do you have anything tomorrow afternoon?",
-        "anaAgentMsg": "Yes — 2pm or 4:30pm are both open tomorrow. Which works better for you?",
-        "secondCustomerName": "Juliana Alves",
-        "secondCustomerMsg": "Thank you so much for the help earlier!",
-        "secondAgentMsg": "Anytime! Just message us again if you need anything else."
-      },
-      "demoCompany": "Your Store",
-      "malu": {
-        "product1Name": "Facial Hydration Kit",
-        "product1Price": "$45",
-        "product1Stock": "18",
-        "product1Category": "Skincare",
-        "product2Name": "Vitamin C Serum",
-        "product2Price": "$32",
-        "product2Stock": "42",
-        "product2Category": "Skincare",
-        "productsIntro": "There are 3 ways to get products into the catalogue:",
-        "introManual": "Add one product at a time — name, price, description.",
-        "introShopify": "Connect your store and products import automatically.",
-        "introCsv": "Upload a spreadsheet with your whole catalogue at once.",
-        "moreFieldsHint": "+ {count} more fields when adding one by one: {fields}",
-        "moreFieldsShort": "(+{count} fields)"
-      },
-      "ana": {
-        "day1": "Monday",
-        "day1Hours": "9:00 AM – 6:00 PM",
-        "day2": "Tuesday",
-        "day2Hours": "9:00 AM – 6:00 PM",
-        "timeOffRange": "Dec 24 – Dec 25",
-        "timeOffReason": "Holiday"
-      },
-      "demo": {
-        "shippingText": "We ship nationwide via Correios, 3–5 business days, free over $50.",
-        "returnsText": "30-day returns, items must be unused with tags attached.",
-        "appointmentClient": "Camila Rocha",
-        "appointmentService": "Haircut",
-        "appointmentTime": "Tomorrow, 2:00 PM",
-        "serviceName": "Haircut",
-        "serviceDuration": "45 min"
-      }
+      "handoffTitle": "When it matters, she brings you in",
+      "handoffDesc": "When you allow it, if a customer asks for a person or the conversation goes beyond what she knows, she hands it to someone on your team, with the full history at hand.",
+      "handoffCta": "Ask a specialist",
+      "hireCta": "Hire {name}"
     },
     "rag": {
-      "eyebrow": "No-Code Training",
-      "heading": "Train your AI in minutes on your real business data",
-      "sub": "No code and no complex setup. Register your business, import your catalogue and set the rules — Staffra keeps every answer grounded in what you registered, so your agent never guesses.",
+      "heading": "She never makes up prices, stock or delivery times",
+      "sub": "Malu and Ana only answer with what's set up in Staffra. When the information isn't there, she doesn't guess: she asks someone on your team to confirm.",
       "steps": [
         {
-          "title": "Register your business & catalogue",
-          "desc": "Import products from a spreadsheet or Shopify and fill in your profile, hours, policies and FAQ."
+          "title": "Tell us about your business",
+          "desc": "Description, payment methods, delivery, returns and frequent questions, all in plain text."
         },
         {
-          "title": "Set the Tone of Voice & Guardrails",
-          "desc": "Define the agent's persona, hard limits, forbidden answers and when to hand off to a human."
+          "title": "Bring your products or services",
+          "desc": "Import your catalog from a spreadsheet or Shopify, or add your services and opening hours."
         },
         {
-          "title": "Connect your channels",
-          "desc": "Publish the agent to your website, Instagram or Telegram in a few clicks and start talking to real customers."
+          "title": "Connect a channel",
+          "desc": "WhatsApp, Instagram, Telegram, your website chat or a direct link."
         }
       ],
-      "cardTitle": "What your agent answers from",
-      "cardBadge": "Always grounded",
+      "cardTitle": "Where answers come from",
+      "cardBadge": "Only your data",
       "sources": [
         {
-          "title": "Product catalogue",
-          "sub": "Spreadsheet or manual entry"
+          "title": "Catalog",
+          "sub": "Spreadsheet or manual"
         },
         {
           "title": "Shopify",
-          "sub": "Automatic catalogue sync"
+          "sub": "Automatic sync"
         },
         {
-          "title": "Business profile",
-          "sub": "Name, industry, contact"
+          "title": "Your business",
+          "sub": "Description and contact"
         },
         {
-          "title": "Store policies",
-          "sub": "Shipping, returns, payments"
+          "title": "Policies",
+          "sub": "Delivery, returns, payment"
         },
         {
-          "title": "FAQ",
-          "sub": "Your common questions"
+          "title": "Frequent questions",
+          "sub": "Written by you"
         },
         {
-          "title": "Guardrails",
-          "sub": "Limits & forbidden topics"
+          "title": "Services and calendar",
+          "sub": "Duration, price and hours"
         }
       ],
-      "imageAlt": "Staffra analytics dashboard"
+      "demo": {
+        "customer": "Can you deliver to Manaus by Friday?",
+        "agent": "I don't have the delivery time for Manaus on record yet. I'll check with the team and get back to you.",
+        "sourcesLabel": "She answers from:"
+      }
     },
     "pricing": {
-      "eyebrow": "Transparent Plans",
-      "heading": "Choose the right size for your intelligence team",
-      "sub": "Start right now with a 7-day unconditional guarantee. No hidden setup fee or mandatory lock-in.",
-      "featuredBadge": "Most Chosen by Companies",
-      "showMore": "See more",
-      "showLess": "See less",
+      "heading": "Simple plans, with Malu and Ana in all of them",
+      "sub": "What changes between plans is how many replies your team can send.",
+      "trialNote": "7 days free. We ask for a card up front but only charge after 7 days or 500 replies, whichever comes first. Cancel before and you pay nothing.",
+      "featuredBadge": "Recommended",
       "periodToggle": {
         "monthly": "Monthly",
-        "annual": "Annual"
+        "annual": "Yearly"
       },
-      "wppToggleLabel": "Include WhatsApp in the plan",
-      "wppToggleNote": "Without this, Meta charges WhatsApp usage separately, straight to your card.",
-      "priceNoteMonthly": "Recurring monthly billing",
-      "priceNoteAnnual": "Recurring annual billing",
+      "periodLabel": "Billing period",
+      "savings": "−{pct}%",
+      "wppToggleLabel": "With WhatsApp",
+      "wppToggleNote": "Without WhatsApp: Instagram, Telegram, website chat and direct link. Turn it on to see prices with official WhatsApp.",
       "perMonth": "/ month",
       "perYear": "/ year",
+      "perDay": "≈ {price} a day",
+      "repliesMonthly": "{count} replies a month",
+      "repliesAnnual": "{count} replies a year",
+      "repliesNote": "Every message your team sends a customer counts as one reply.",
+      "includedTitle": "All of this in every plan",
+      "included": [
+        "Malu for sales and Ana for appointments",
+        "Instagram, Telegram, website chat and direct link, plus official WhatsApp on WhatsApp plans",
+        "Catalog from a spreadsheet or synced with Shopify",
+        "Calendar with Google Calendar, waitlist and approval",
+        "Answers only from your data, never made up",
+        "Hands conversations to your team when needed",
+        "Conversation inbox and performance reports",
+        "Name and photo for each employee, your way",
+        "Unlimited dashboard users"
+      ],
       "plans": [
         {
           "tier": "Starter",
-          "name": "Individual Automation",
-          "desc": "Ideal for freelancers and small shops that need fast customer service.",
-          "features": [
-            "Malu for sales and Ana for scheduling",
-            "Custom name and photo per employee",
-            "One employee across every channel, one shared memory",
-            "Official WhatsApp Business (Meta Cloud API)",
-            "Instagram Direct support",
-            "Telegram support",
-            "Website chat widget in one line of code",
-            "Staffra-hosted chat page and shareable link",
-            "Allowed-domains control for the widget",
-            "Custom widget greeting and launcher (animation, image or video)",
-            "No-code business profile, contacts and time zone",
-            "Shipping, return and payment policies",
-            "Custom FAQ",
-            "Product catalog with spreadsheet import (CSV / XLSX)",
-            "Automatic Shopify catalog sync",
-            "Meaning-based product search",
-            "Grounded answers on price, stock and policies",
-            "Product recommendations for each shopper",
-            "Tracked checkout links to your own store",
-            "Buying-intent and checkout-click tracking",
-            "Google Calendar two-way sync",
-            "Availability from your hours, bookings and calendar",
-            "In-chat booking, rescheduling and cancellation",
-            "Automatic waitlist when fully booked",
-            "Optional approval before confirming a booking",
-            "Service catalog with a catch-all for unlisted requests",
-            "Appointments dashboard: completed, cancelled, no-show",
-            "Human handoff and live conversation takeover",
-            "Pause or resume each employee anytime",
-            "Conversations inbox with filters and search",
-            "Performance dashboard with team-health status",
-            "7-, 30- and 90-day reporting",
-            "Unlimited teammates (owner, admin, member roles)",
-            "English and Portuguese interface",
-            "Per-reply usage shown in your dashboard",
-            "7-day free trial"
-          ],
-          "cta": "Start 7-Day Free Trial"
+          "name": "Getting started",
+          "desc": "Solo professionals and small businesses.",
+          "cta": "Try free for 7 days"
         },
         {
           "tier": "Intermediate",
-          "name": "Growing Operation",
-          "desc": "For growing businesses that need more volume, with the full sales and scheduling toolkit.",
-          "features": [
-            "Malu for sales and Ana for scheduling",
-            "Custom name and photo per employee",
-            "One employee across every channel, one shared memory",
-            "Official WhatsApp Business (Meta Cloud API)",
-            "Instagram Direct support",
-            "Telegram support",
-            "Website chat widget in one line of code",
-            "Staffra-hosted chat page and shareable link",
-            "Allowed-domains control for the widget",
-            "Custom widget greeting and launcher (animation, image or video)",
-            "No-code business profile, contacts and time zone",
-            "Shipping, return and payment policies",
-            "Custom FAQ",
-            "Product catalog with spreadsheet import (CSV / XLSX)",
-            "Automatic Shopify catalog sync",
-            "Meaning-based product search",
-            "Grounded answers on price, stock and policies",
-            "Product recommendations for each shopper",
-            "Tracked checkout links to your own store",
-            "Buying-intent and checkout-click tracking",
-            "Google Calendar two-way sync",
-            "Availability from your hours, bookings and calendar",
-            "In-chat booking, rescheduling and cancellation",
-            "Automatic waitlist when fully booked",
-            "Optional approval before confirming a booking",
-            "Service catalog with a catch-all for unlisted requests",
-            "Appointments dashboard: completed, cancelled, no-show",
-            "Human handoff and live conversation takeover",
-            "Pause or resume each employee anytime",
-            "Conversations inbox with filters and search",
-            "Performance dashboard with team-health status",
-            "7-, 30- and 90-day reporting",
-            "Unlimited teammates (owner, admin, member roles)",
-            "English and Portuguese interface",
-            "Per-reply usage shown in your dashboard",
-            "7-day free trial"
-          ],
-          "cta": "Start 7-Day Free Trial"
+          "name": "Growing",
+          "desc": "For businesses already busy on WhatsApp.",
+          "cta": "Try free for 7 days"
         },
         {
           "tier": "Pro",
-          "name": "Complete Commercial Operation",
-          "desc": "For growing companies that require lead qualification and scheduling.",
-          "features": [
-            "Malu for sales and Ana for scheduling",
-            "Custom name and photo per employee",
-            "One employee across every channel, one shared memory",
-            "Official WhatsApp Business (Meta Cloud API)",
-            "Instagram Direct support",
-            "Telegram support",
-            "Website chat widget in one line of code",
-            "Staffra-hosted chat page and shareable link",
-            "Allowed-domains control for the widget",
-            "Custom widget greeting and launcher (animation, image or video)",
-            "No-code business profile, contacts and time zone",
-            "Shipping, return and payment policies",
-            "Custom FAQ",
-            "Product catalog with spreadsheet import (CSV / XLSX)",
-            "Automatic Shopify catalog sync",
-            "Meaning-based product search",
-            "Grounded answers on price, stock and policies",
-            "Product recommendations for each shopper",
-            "Tracked checkout links to your own store",
-            "Buying-intent and checkout-click tracking",
-            "Google Calendar two-way sync",
-            "Availability from your hours, bookings and calendar",
-            "In-chat booking, rescheduling and cancellation",
-            "Automatic waitlist when fully booked",
-            "Optional approval before confirming a booking",
-            "Service catalog with a catch-all for unlisted requests",
-            "Appointments dashboard: completed, cancelled, no-show",
-            "Human handoff and live conversation takeover",
-            "Pause or resume each employee anytime",
-            "Conversations inbox with filters and search",
-            "Performance dashboard with team-health status",
-            "7-, 30- and 90-day reporting",
-            "Unlimited teammates (owner, admin, member roles)",
-            "English and Portuguese interface",
-            "Per-reply usage shown in your dashboard",
-            "7-day free trial"
-          ],
-          "cta": "Start 7-Day Free Trial"
+          "name": "High volume",
+          "desc": "Lots of conversations a day, across channels.",
+          "cta": "Try free for 7 days"
         },
         {
           "tier": "Enterprise",
-          "name": "Corporate Scale & SLA",
-          "desc": "Massive message volume, multiple departments, and LGPD/SOC2 security.",
-          "price": "Custom",
+          "name": "Custom",
+          "desc": "Multiple locations or very high volume, on negotiated terms.",
+          "price": "Let's talk",
           "priceNote": "Projects from R$ 3,900/month",
-          "features": [
-            "Malu for sales and Ana for scheduling",
-            "Custom name and photo per employee",
-            "One employee across every channel, one shared memory",
-            "Official WhatsApp Business (Meta Cloud API)",
-            "Instagram Direct support",
-            "Telegram support",
-            "Website chat widget in one line of code",
-            "Staffra-hosted chat page and shareable link",
-            "Allowed-domains control for the widget",
-            "Custom widget greeting and launcher (animation, image or video)",
-            "No-code business profile, contacts and time zone",
-            "Shipping, return and payment policies",
-            "Custom FAQ",
-            "Product catalog with spreadsheet import (CSV / XLSX)",
-            "Automatic Shopify catalog sync",
-            "Meaning-based product search",
-            "Grounded answers on price, stock and policies",
-            "Product recommendations for each shopper",
-            "Tracked checkout links to your own store",
-            "Buying-intent and checkout-click tracking",
-            "Google Calendar two-way sync",
-            "Availability from your hours, bookings and calendar",
-            "In-chat booking, rescheduling and cancellation",
-            "Automatic waitlist when fully booked",
-            "Optional approval before confirming a booking",
-            "Service catalog with a catch-all for unlisted requests",
-            "Appointments dashboard: completed, cancelled, no-show",
-            "Human handoff and live conversation takeover",
-            "Pause or resume each employee anytime",
-            "Conversations inbox with filters and search",
-            "Performance dashboard with team-health status",
-            "7-, 30- and 90-day reporting",
-            "Unlimited teammates (owner, admin, member roles)",
-            "English and Portuguese interface",
-            "Per-reply usage shown in your dashboard",
-            "7-day free trial"
-          ],
-          "cta": "Talk to an Account Engineer"
+          "cta": "Talk to sales"
         }
-      ]
+      ],
+      "wppToggleNoteOn": "Includes official WhatsApp, with Meta's fees already in the price."
     },
     "salesContact": {
       "title": "Talk to a specialist",
@@ -796,11 +584,11 @@
       "interestsHint": "What are you interested in? You can pick both.",
       "interests": {
         "sales": {
-          "label": "Sales agent",
+          "label": "Sales (Malu)",
           "desc": "Answers and sells across your channels, day and night."
         },
         "scheduling": {
-          "label": "Scheduling agent",
+          "label": "Scheduling (Ana)",
           "desc": "Books, reschedules and reminds customers automatically."
         }
       },
@@ -813,74 +601,57 @@
         "other": "Other"
       }
     },
-    "impact": {
-      "stats": [
-        {
-          "value": "-55%",
-          "title": "Fewer Repetitive Tickets",
-          "desc": "Instant resolution with no unnecessary handoff to human agents."
-        },
-        {
-          "value": "3.8x",
-          "title": "More Meetings Booked",
-          "desc": "Automatic, persistent follow-up while the lead is still hot on WhatsApp."
-        },
-        {
-          "value": "99.4%",
-          "title": "Accuracy With No Hallucinations",
-          "desc": "RAG architecture with corporate guardrails that respect your document 100%."
-        }
-      ]
-    },
     "faq": {
-      "eyebrow": "Frequently Asked Questions",
-      "heading": "Everything you need to know about Staffra",
+      "heading": "Frequently asked questions",
       "items": [
         {
-          "q": "How does the AI employee learn about my company?",
-          "a": "You just upload your files (PDFs, catalogues, commercial policies, support history, or a link to your site). Staffra processes that data in our corporate RAG infrastructure, ensuring the agent answers strictly according to what was provided."
+          "q": "How do Malu and Ana learn about my business?",
+          "a": "You fill in your business information (description, payments, delivery, returns and frequent questions), bring your catalog from a spreadsheet or Shopify and, for Ana, add your services and hours. They answer only from that."
         },
         {
-          "q": "Does the integration use the Official WhatsApp API? Is there a risk of a ban?",
-          "a": "Yes, we connect directly via Meta's Official WhatsApp Cloud API. That guarantees full stability, a high delivery rate, verified-badge support, and full compliance with Meta's guidelines, eliminating the risk of line bans."
+          "q": "What if a customer asks something she doesn't know?",
+          "a": "She doesn't make it up. If the information isn't set up, she asks someone on your team to confirm or, if you allow it, hands the conversation to a person with the full history at hand."
         },
         {
-          "q": "What happens if a customer asks a question outside the manual?",
-          "a": "Our agents have strict guardrails. If a question is outside the knowledge base or involves sensitive negotiation, the agent politely tells the customer and hands off immediately to a human operator on your team, keeping the full conversation summary accessible."
+          "q": "How does the free trial work?",
+          "a": "It's 7 days free. We ask for a card up front, and you're only charged after 7 days or 500 replies, whichever comes first. Cancel before that and you pay nothing."
         },
         {
-          "q": "How long does it take to put an agent live?",
-          "a": "The standard setup takes 15 to 30 minutes on average. Our guided onboarding walks you through it step by step: upload the knowledge base, personalize the avatar, and link the WhatsApp QR Code."
+          "q": "Do you use official WhatsApp? Can I keep my number?",
+          "a": "Yes. We connect through Meta's official connection, and you can use the number you already have in the WhatsApp Business app or a new one. WhatsApp comes with the WhatsApp plans, and Meta's fees are already included in the price."
+        },
+        {
+          "q": "Is there a contract or setup fee?",
+          "a": "There's no setup fee. You cancel from the dashboard whenever you want, without talking to anyone, and your plan stays active until the end of the period you've paid for. On the yearly plan, that means cancelling stops the next renewal."
+        },
+        {
+          "q": "How long does it take to get started?",
+          "a": "Usually under 30 minutes. The dashboard shows a step-by-step guide that checks itself off as you set things up."
         }
       ]
     },
     "finalCta": {
-      "eyebrow": "Start Today",
-      "heading": "Ready to multiply your sales and support capacity?",
-      "sub": "Create your first AI agent in under 15 minutes and experience the power of a team that works without breaks for your business.",
-      "ctaPrimary": "Start 7-Day Trial",
-      "fine": "No lock-in • Cancel any time with one click"
+      "heading": "Your next customer might message at 11pm. Who's going to answer?",
+      "sub": "Hire Malu and Ana today and let WhatsApp answer while you take care of everything else.",
+      "ctaPrimary": "Try free for 7 days",
+      "fine": "Cancel anytime · No setup fee"
     },
     "footer": {
-      "blurb": "A corporate platform for intelligent digital coworkers and orchestration of autonomous multi-agent teams to scale operations with precision.",
+      "blurb": "Employees who sell and book appointments on WhatsApp, Instagram and your website.",
       "columns": [
         {
           "title": "Solutions",
           "links": [
             {
-              "label": "AI Agents",
+              "label": "Employees",
               "href": "#workforce"
             },
             {
-              "label": "AI Workforce",
-              "href": "#workforce"
-            },
-            {
-              "label": "WhatsApp & Meta Integrations",
+              "label": "Channels and WhatsApp",
               "href": "#canais"
             },
             {
-              "label": "Guided Demo",
+              "label": "Demo",
               "href": "#demo"
             }
           ]
@@ -917,6 +688,101 @@
         }
       ],
       "rights": "© 2026 Pulsar LTDA. All rights reserved."
+    },
+    "value": {
+      "heading": "An employee who never takes a day off",
+      "sub": "Run the numbers for your own business.",
+      "coverage": {
+        "title": "How many hours of the week are covered",
+        "note": "A full-time employee in Brazil (CLT) works at most 44 hours a week. A week has 168.",
+        "person": "One full-time employee",
+        "staffra": "Malu and Ana",
+        "hours": "{hours}h a week"
+      },
+      "facts": [
+        {
+          "label": "Response time",
+          "staffra": "Seconds",
+          "person": "Depends on the queue"
+        },
+        {
+          "label": "Conversations at once",
+          "staffra": "As many as come in",
+          "person": "One at a time"
+        },
+        {
+          "label": "Prices and stock",
+          "staffra": "Always what you set up",
+          "person": "Has to look it up"
+        },
+        {
+          "label": "Days off and holidays",
+          "staffra": "None",
+          "person": "Need cover"
+        }
+      ],
+      "calc": {
+        "title": "What you spend today",
+        "sub": "Enter the monthly cost of whoever answers your customers. Nothing is sent: the math happens right here on the page.",
+        "costLabel": "Cost per employee, per month",
+        "costPlaceholder": "e.g. 2,800",
+        "costHint": "Add salary, taxes and benefits.",
+        "countLabel": "Employees",
+        "decrease": "Decrease",
+        "increase": "Increase",
+        "today": "Today, per month",
+        "todayHours": "Covers up to {hours}h a week",
+        "withStaffra": "With Staffra, per month",
+        "withStaffraHours": "“{plan}” plan with WhatsApp, around the clock",
+        "empty": "Enter a cost to see the comparison.",
+        "saving": "{amount} less per month, with 24-hour coverage.",
+        "noSaving": "For the same spend, you get 24-hour coverage.",
+        "disclaimer": "Staffra doesn't have to replace anyone: it answers while your team can't, and brings you in when it matters.",
+        "withStaffraReplies": "Up to {replies} replies a month"
+      },
+      "cta": "See plans",
+      "factsHeader": {
+        "staffra": "Malu and Ana",
+        "person": "One employee"
+      }
+    },
+    "tour": {
+      "heading": "See the dashboard from the inside",
+      "sub": "These are the real screens you'll use every day.",
+      "tablistLabel": "Dashboard screens",
+      "sampleNote": "Real dashboard screenshots, with sample data.",
+      "steps": {
+        "channels": {
+          "tab": "Channels",
+          "title": "Connect where your customers are",
+          "body": "WhatsApp, Instagram, Telegram, your website chat and a direct link. Each channel shows whether it's ready.",
+          "alt": "Malu's page with connected channels"
+        },
+        "products": {
+          "tab": "Catalog",
+          "title": "Your catalog, always up to date",
+          "body": "Import from a spreadsheet or Shopify. Malu quotes prices and stock only from what's here.",
+          "alt": "Product list with stock and prices"
+        },
+        "schedule": {
+          "tab": "Calendar",
+          "title": "Today's calendar, organized",
+          "body": "Appointments Ana confirmed appear on the day's timeline, with the next one highlighted.",
+          "alt": "Today's appointments screen"
+        },
+        "conversations": {
+          "tab": "Conversations",
+          "title": "Every conversation in one place",
+          "body": "See what they answered on each channel, who's ready to buy, and step in whenever you want.",
+          "alt": "Conversation inbox with an open thread"
+        },
+        "performance": {
+          "tab": "Performance",
+          "title": "Results you can follow",
+          "body": "Conversations, recommendations and checkout clicks, compared with the previous period.",
+          "alt": "Performance dashboard with a conversations chart"
+        }
+      }
     }
   },
   "Dashboard": {
@@ -2578,7 +2444,7 @@
         "annual": "Annual"
       },
       "wppToggleLabel": "Include WhatsApp in the plan",
-      "wppToggleNote": "Without this, Meta charges WhatsApp usage separately, straight to your card — see the channels page for details.",
+      "wppToggleNote": "Without this, the plan doesn't include WhatsApp: replies work on Instagram, Telegram, website chat and direct link. To answer on WhatsApp, pick a plan with WhatsApp.",
       "wppBadge": "WhatsApp included",
       "recommended": "Recommended"
     },

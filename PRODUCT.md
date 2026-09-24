@@ -12,13 +12,26 @@ Businesses of any size that sell through WhatsApp, Brazil-first. Primary languag
 
 ## Product Purpose
 
-Staffra is a platform where businesses hire pre-built AI employees with defined personalities, roles, and capabilities. The MVP ships exactly one employee, Malu (an AI Sales Representative), scoped to WhatsApp only. Success for the MVP: a business can hire Malu, teach her about its business and products, connect her to WhatsApp, and have her naturally assist customers — generating measurable buying intent and checkout-link clicks.
+Staffra is a platform where businesses hire pre-built AI employees with defined personalities, roles, and capabilities. As of 2026-09 it ships two:
+- **Malu (sales):** recommends from the merchant's catalog and sends a tracked link to the merchant's own checkout.
+- **Ana (appointments):** offers only genuinely free slots, books, reschedules and cancels, and keeps a waitlist.
+
+Success: a business hires an employee, teaches her about its business, connects a channel, and she naturally assists customers. That produces measurable buying intent and checkout-link clicks for Malu, and bookings for Ana.
 
 ## Positioning
 
 "Malu is the employee. WhatsApp is her workplace." Staffra is not a chatbot-builder or agent-configuration tool — it's a hiring/onboarding experience for a pre-built AI staff member. A neighboring product could copy "AI + WhatsApp + product recommendations," but not the employee framing: no persona/prompt configuration is exposed to the merchant, and Malu's behavior is fixed, not customizable, in the MVP.
 
-Long-term vision (not MVP scope, but shapes the mental model): "AI employees for your business" — multiple named agents (Malu today; Emma, Mia later) each with a distinct role, eventually reachable over multiple channels (WhatsApp today; website, Instagram later). Malu must not contain WhatsApp-specific logic — channel and agent are architecturally separate.
+Long-term vision: "AI employees for your business" — more named employees, each with a distinct role. An employee must not contain channel-specific logic, because channel and employee are architecturally separate.
+
+Current channels:
+- the official WhatsApp API (a paid plan add-on)
+- Instagram Direct
+- Telegram
+- an embeddable website widget
+- a hosted chat link
+
+One employee keeps one memory across all of them.
 
 ## Operating Context
 
@@ -30,13 +43,28 @@ Admin dashboard surfaces (current code): sign-up/login, dashboard home with a "h
 
 ## Capabilities and Constraints
 
-**MVP includes:** one fixed agent (Malu), WhatsApp channel only, product catalog (CSV/XLSX import + manual entry), business knowledge (info, shipping, returns, payments, FAQ, other), product recommendations, buying-intent detection, checkout-link click tracking, admin dashboard with conversations and basic analytics.
+**Ships today:**
+- **Employees and channels:** Malu and Ana on the channels above.
+- **Catalog:** CSV/XLSX import, manual entry, or Shopify sync.
+- **Business knowledge:** info, shipping, returns, payments, FAQ and other.
+- **Sales:** product recommendations, buying-intent detection and checkout-link click tracking.
+- **Scheduling:** business hours, services, time off, Google Calendar and intake questions. Reminders go out by email.
+- **Handoff:** human handoff with live takeover.
+- **Dashboard:** conversations, performance and a getting-started guide.
+- **Billing:** self-serve plans (monthly or annual, with or without WhatsApp) with a 7-day trial that collects a card.
 
-**MVP excludes:** multiple or custom agents, website chat, Instagram/TikTok, ecommerce platform integrations, in-chat checkout, payment processing, revenue attribution, advanced CRM/workflows. A checkout-link click is tracked as an event, never claimed as a completed sale.
+**Out of scope:**
+- custom or merchant-configured employees
+- TikTok
+- in-chat checkout and payment processing (Staffra sends a link to the merchant's own checkout)
+- revenue attribution
+- advanced CRM and workflows
+
+A checkout-link click is tracked as an event, never claimed as a completed sale. Marketing copy must never claim capabilities outside this list.
 
 **Grounding constraint:** Malu must never invent prices, stock, policies, or product characteristics — all factual claims are tool-grounded and database-backed, not left to the model's discretion.
 
-**Product-language constraint (merchant- and customer-facing copy only):** never expose "agent," "prompt," "LLM," "AI," "embeddings," or other implementation jargon, in English or Portuguese. Use product language instead — "Hire Malu," "Teach Malu about your business," "Connect Malu to WhatsApp," "Malu is ready to work."
+**Product-language constraint (merchant- and customer-facing copy only):** never expose "agent," "prompt," "LLM," "AI," "embeddings," or other implementation jargon, in English or Portuguese. Use product language instead — "Hire Malu," "Teach Malu about your business," "Connect Malu to WhatsApp," "Malu is ready to work." One agreed exception (2026-09-24): the SEO title (`Seo.defaultTitle`) keeps "funcionários de IA" / "AI employees" for search. Visible landing copy follows the rule.
 
 **i18n:** English and Portuguese via next-intl, cookie-based (no `/[locale]` URL segment). Agent names, roles, descriptions, company names, and other merchant-entered or DB-sourced content are data, not UI chrome, and stay as stored rather than being translated.
 
