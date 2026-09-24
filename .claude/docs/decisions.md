@@ -12,6 +12,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-24 — One self-checking "Getting started" guide; the ⚠ triangle is only for problems
+
+**Decision:** Setup gaps now live in one guide instead of scattered orange triangles. A "Getting started · N of M" card in the sidebar (and in the mobile "More" sheet) opens a drawer of ordered steps: plan, business info, products, hours, services, calendar and channel, showing only the steps relevant to who was hired. Each step checks itself from the database and links to the exact place to fix it. The sidebar and Scheduling sub-tabs mark setup gaps with a small dot and reserve ⚠ for real problems (a failed payment). The user chose: no "test conversation" step; a channel counts on any real signal (connected WhatsApp/Instagram, an allowed site domain, or a real conversation); dots for setup, triangles for problems. A floating checklist was considered and rejected, because it covers content and fights the mobile bottom bar.
+
+**Why:** Triangles on every tab of a fresh account read as errors, didn't say what was missing, and wore out the signal for real failures. A single list gives a path in order and reuses the same facts as the marks, so the guide, the marks and Ana's schedule card never disagree.
+
+---
+
 ## 2026-09-24 — The hired employee page leads with the employee and shows every channel's status
 
 **Decision:** `/dashboard/my-agents/[slug]` drops "Connections — {name}" and its three stacked cards (profile, a behavior tab card, a channel tab card). It now opens with a hero (portrait, name, role, Answering/Pause, description, "Edit profile" in a drawer). Below it is a grid of the five channels, each with a live status. Each channel's setup opens in a large drawer that stays mounted. Last come always-open blocks for shipping, returns and human handoff. The user picked this over a side index and over refined tabs.

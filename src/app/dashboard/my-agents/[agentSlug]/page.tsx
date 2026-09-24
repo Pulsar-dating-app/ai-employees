@@ -18,6 +18,8 @@ import { TutorialVideoCard } from "./tutorial-video-card";
 import { AgentHero } from "./agent-hero";
 import { HumanHandoffCard } from "./human-handoff-card";
 import { AgentConnectionsTour } from "./agent-connections-tour";
+import { SchedulingSetupCard } from "./scheduling-setup-card";
+import { loadSchedulingSetup } from "@/lib/scheduling/setup";
 
 export default async function AgentConnectionsPage({ params }: { params: Promise<{ agentSlug: string }> }) {
   const { agentSlug } = await params;
@@ -96,7 +98,10 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
   });
   const telegramLink = `https://t.me/${process.env.TELEGRAM_BOT_USERNAME ?? ""}?start=${companyAgent.id}`;
 
-  const blurb = await resolveAgentDescription(agentSlug, agent.description, name);
+  const [blurb, schedulingSetup] = await Promise.all([
+    resolveAgentDescription(agentSlug, agent.description, name),
+    agentSlug === "ana" ? loadSchedulingSetup(supabase, company.id) : Promise.resolve(null),
+  ]);
   const photoType = (companyAgent.photo_type as "default_1" | "default_2" | "custom") ?? "default_1";
 
   return (
@@ -182,6 +187,8 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
           />
         </div>
       </section>
+
+      {schedulingSetup ? <SchedulingSetupCard agentName={name} setup={schedulingSetup} /> : null}
     </div>
   );
 }

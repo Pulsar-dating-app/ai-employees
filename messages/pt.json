@@ -922,7 +922,8 @@
       "settings": "Configurações",
       "locked": "bloqueado",
       "needsAttention": "precisa de atenção",
-      "more": "Mais"
+      "more": "Mais",
+      "needsSetup": "Falta configurar"
     },
     "locked": {
       "title": "{name} ainda não faz parte da sua equipe",
@@ -932,7 +933,46 @@
       "metricsBody": "Depois de contratar um integrante da equipe, é aqui que você acompanha o desempenho dele.",
       "metricsCta": "Explorar o marketplace"
     },
-    "noPlanAlert": "Escolha um plano para ela começar"
+    "noPlanAlert": "Escolha um plano para ela começar",
+    "setup": {
+      "entry": "Primeiros passos",
+      "progress": "{done} de {total}",
+      "next": "Próximo: {step}",
+      "title": "Primeiros passos",
+      "close": "Fechar",
+      "doneLabel": "Concluído",
+      "description": "Cada passo se marca sozinho assim que é concluído.",
+      "steps": {
+        "plan": {
+          "title": "Escolher um plano",
+          "body": "Sua equipe atende os clientes assim que houver um plano ativo."
+        },
+        "business": {
+          "title": "Contar sobre o seu negócio",
+          "body": "Descrição, pagamentos, dúvidas frequentes: o que sua equipe usa para responder os clientes."
+        },
+        "products": {
+          "title": "Cadastrar seus produtos",
+          "body": "Sua equipe só recomenda o que está no seu catálogo."
+        },
+        "hours": {
+          "title": "Definir o horário de funcionamento",
+          "body": "Os horários que podem ser oferecidos aos clientes para agendamento."
+        },
+        "services": {
+          "title": "Cadastrar seus serviços",
+          "body": "O que os clientes podem agendar, com duração e preço."
+        },
+        "calendar": {
+          "title": "Conectar o Google Calendar",
+          "body": "Evita agendar em horários em que você já tem compromisso."
+        },
+        "channel": {
+          "title": "Conectar um canal",
+          "body": "WhatsApp, Instagram, o chat do seu site ou um link direto: onde os clientes vão conversar com sua equipe. Pelo link direto, o passo se marca na primeira conversa."
+        }
+      }
+    }
   },
   "Metrics": {
     "pageTitle": "Desempenho",
@@ -1366,6 +1406,35 @@
     "behavior": {
       "title": "Como {name} trabalha",
       "description": "As alterações são salvas automaticamente."
+    },
+    "schedulingSetup": {
+      "title": "Agenda de {name}",
+      "progress": "{done} de {total} prontos",
+      "finish": "Terminar configuração",
+      "allReady": "Tudo pronto para agendar",
+      "open": "Abrir Agendamentos",
+      "rows": {
+        "hours": "Horário de funcionamento",
+        "services": "Serviços",
+        "calendar": "Google Calendar",
+        "approval": "Aprovação de agendamentos",
+        "intake": "Perguntas iniciais"
+      },
+      "status": {
+        "hoursOpen": "{count, plural, one {Aberto # dia por semana} other {Aberto # dias por semana}}",
+        "hoursNone": "Nenhum dia aberto ainda",
+        "servicesCount": "{count, plural, one {# serviço} other {# serviços}}",
+        "servicesNone": "Nenhum serviço cadastrado",
+        "calendarConnected": "Conectado",
+        "calendarNotConnected": "Não conectado",
+        "approvalOn": "Você aprova cada agendamento",
+        "approvalOff": "Agendamentos confirmam na hora",
+        "intakeCount": "{count, plural, one {# pergunta feita} other {# perguntas feitas}}"
+      },
+      "rulesHeading": "Regras",
+      "descriptionBlocked": "{name} só oferece horários que batem com o que está configurado em Agendamentos. Os clientes podem agendar assim que o horário de funcionamento e os serviços estiverem configurados.",
+      "descriptionCalendar": "Os clientes já podem agendar. Conecte o Google Calendar para que {name} evite horários em que você já tem compromisso.",
+      "descriptionReady": "{name} oferece horários com base no seu horário de funcionamento, serviços e calendário."
     }
   },
   "Teach": {

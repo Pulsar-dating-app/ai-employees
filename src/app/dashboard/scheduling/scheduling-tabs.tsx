@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
-import { WarningIcon } from "@/components/ui/icons";
 
 // Trello K5 — Scheduling is an area, not a page: K1 (services), K4
 // (appointments) and K3 (settings — business hours + approval) all live
@@ -56,8 +55,8 @@ export function SchedulingTabs({
             {t(tab.key)}
             {attentionByKey[tab.key] ? (
               <>
-                <WarningIcon className="h-6 w-6 shrink-0 text-orange-600" />
-                <span className="sr-only">{tDash("needsAttention")}</span>
+                <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <span className="sr-only">{tDash("needsSetup")}</span>
               </>
             ) : null}
           </Link>

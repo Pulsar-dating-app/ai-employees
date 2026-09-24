@@ -39,3 +39,9 @@ Signature interaction / motion:
 - Status lines show a skeleton until each panel reports.
 
 FINISH: a build that is unreviewed and undocumented is unfinished. This one ends with the finish review, the verdict and the docs.
+
+Ana addition (2026-09-24): a "{name}'s schedule" card (`scheduling-setup-card.tsx`, a server component fed by `src/lib/scheduling/setup.ts`) sits last on the page, only on Ana's page (the user moved it to the end so merchants see this page's own settings before a link takes them to Scheduling).
+- It shows readiness for the three items the Scheduling tab and the sidebar already warn about: business hours, active non-default services, and Google Calendar (the calendar only counts when `GOOGLE_CLIENT_ID` is set).
+- A progress bar reads "N of M ready". A primary "Finish setup" link goes to the first pending item's anchor; when everything is ready, a "Ready to take bookings" pill and "Open Scheduling" replace it.
+- Under a "Rules" subheading, informational rows cover booking approval and intake questions.
+- Every row links to its exact anchor in Scheduling. The user asked for this: "deixar alguma seção que leva a pessoa para a página de agendamento pra terminar a configuração".

@@ -22,7 +22,9 @@ import {
 } from "@/components/ui/icons";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import type { UsageSummary } from "@/lib/billing/usage-summary";
+import type { SetupStep } from "@/lib/setup/checklist";
 import { BillingPastDueAlert, type SilenceReason } from "./billing-alert";
+import { SetupGuide } from "./setup-guide";
 
 // Every tab is always shown. Products → Malu, Scheduling → Ana, Performance
 // → any hire: while that team member isn't hired the tab is **muted + gets a
@@ -48,12 +50,49 @@ import { BillingPastDueAlert, type SilenceReason } from "./billing-alert";
 // for why (a crowded bottom bar is unreadable at phone width; iOS/Material
 // both cap direct tabs around 4-5).
 const NAV_ITEMS = [
-  { href: "/dashboard", key: "myAgents" as const, icon: UsersIcon, match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/agents") || p.startsWith("/dashboard/my-agents"), mobilePrimary: true },
-  { href: "/dashboard/conversations", key: "conversations" as const, icon: ChatIcon, match: (p: string) => p.startsWith("/dashboard/conversations"), mobilePrimary: true },
-  { href: "/dashboard/products", key: "products" as const, icon: PackageIcon, match: (p: string) => p.startsWith("/dashboard/products"), isLocked: (s: string[]) => !s.includes("malu") },
-  { href: "/dashboard/scheduling", key: "scheduling" as const, icon: CalendarIcon, match: (p: string) => p.startsWith("/dashboard/scheduling"), isLocked: (s: string[]) => !s.includes("ana") },
-  { href: "/dashboard/metrics", key: "metrics" as const, icon: BarChartIcon, match: (p: string) => p.startsWith("/dashboard/metrics"), isLocked: (s: string[]) => s.length === 0 },
-  { href: "/dashboard/settings", key: "settings" as const, icon: SettingsIcon, match: (p: string) => p.startsWith("/dashboard/settings"), mobilePrimary: true },
+  {
+    href: "/dashboard",
+    key: "myAgents" as const,
+    icon: UsersIcon,
+    match: (p: string) =>
+      p === "/dashboard" || p.startsWith("/dashboard/agents") || p.startsWith("/dashboard/my-agents"),
+    mobilePrimary: true,
+  },
+  {
+    href: "/dashboard/conversations",
+    key: "conversations" as const,
+    icon: ChatIcon,
+    match: (p: string) => p.startsWith("/dashboard/conversations"),
+    mobilePrimary: true,
+  },
+  {
+    href: "/dashboard/products",
+    key: "products" as const,
+    icon: PackageIcon,
+    match: (p: string) => p.startsWith("/dashboard/products"),
+    isLocked: (s: string[]) => !s.includes("malu"),
+  },
+  {
+    href: "/dashboard/scheduling",
+    key: "scheduling" as const,
+    icon: CalendarIcon,
+    match: (p: string) => p.startsWith("/dashboard/scheduling"),
+    isLocked: (s: string[]) => !s.includes("ana"),
+  },
+  {
+    href: "/dashboard/metrics",
+    key: "metrics" as const,
+    icon: BarChartIcon,
+    match: (p: string) => p.startsWith("/dashboard/metrics"),
+    isLocked: (s: string[]) => s.length === 0,
+  },
+  {
+    href: "/dashboard/settings",
+    key: "settings" as const,
+    icon: SettingsIcon,
+    match: (p: string) => p.startsWith("/dashboard/settings"),
+    mobilePrimary: true,
+  },
 ];
 
 // Computed server-side in dashboard/layout.tsx (business logic none of this
@@ -61,23 +100,48 @@ const NAV_ITEMS = [
 // left incomplete", distinct from `isLocked` ("you haven't hired anyone for
 // this yet"). Only the three tabs with a real, cheap-to-check completeness
 // signal are covered; every other key is implicitly "no warning".
+export type AttentionKind = "setup" | "problem" | null;
+
 export type Attention = {
-  settings: boolean;
-  products: boolean;
-  scheduling: boolean;
+  settings: AttentionKind;
+  products: AttentionKind;
+  scheduling: AttentionKind;
 };
+
+function AttentionMark({ kind, size, label }: { kind: AttentionKind; size: "rail" | "tab"; label: string }) {
+  if (!kind) return null;
+  if (kind === "problem") {
+    return (
+      <>
+        <WarningIcon
+          className={clsx(
+            "shrink-0 text-orange-600",
+            size === "rail" ? "ml-auto h-5 w-5" : "absolute -right-2 -top-1.5 h-4 w-4",
+          )}
+        />
+        <span className="sr-only">{label}</span>
+      </>
+    );
+  }
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className={clsx(
+          "shrink-0 rounded-full bg-primary ring-2 ring-surface",
+          size === "rail" ? "ml-auto h-2 w-2" : "absolute -right-1 -top-0.5 h-2 w-2",
+        )}
+      />
+      <span className="sr-only">{label}</span>
+    </>
+  );
+}
 
 // Sidebar top (Stitch "Performance Analytics" screen): the brand, then an
 // identity block — avatar-initial, the account label, the workspace tier —
 // directly under it. Identity used to sit in the footer; the footer is now
 // just the log-out action.
-function SidebarHeader({
-  identityLabel,
-  workspaceLabel,
-}: {
-  identityLabel: string;
-  workspaceLabel: string;
-}) {
+function SidebarHeader({ identityLabel, workspaceLabel }: { identityLabel: string; workspaceLabel: string }) {
   const initial = identityLabel ? identityLabel.charAt(0).toUpperCase() : "?";
   return (
     <div className="flex flex-col gap-4 border-b border-outline-variant px-6 py-5">
@@ -90,9 +154,7 @@ function SidebarHeader({
           {initial}
         </span>
         <div className="flex min-w-0 flex-col">
-          <span className="truncate text-sm font-semibold text-on-surface">
-            {identityLabel || workspaceLabel}
-          </span>
+          <span className="truncate text-sm font-semibold text-on-surface">{identityLabel || workspaceLabel}</span>
           <span className="truncate text-xs text-on-surface-variant">{workspaceLabel}</span>
         </div>
       </div>
@@ -132,7 +194,7 @@ function UsageTracker({ usage }: { usage: UsageSummary | null }) {
   );
 }
 
-type OverflowItem = (typeof NAV_ITEMS)[number] & { locked: boolean; attention: boolean };
+type OverflowItem = (typeof NAV_ITEMS)[number] & { locked: boolean; attention: AttentionKind };
 
 // The bottom bar's overflow -- a sheet rising from the bar itself (not a
 // centered `Dialog`, which would read as unrelated to the tab that opened
@@ -143,10 +205,12 @@ type OverflowItem = (typeof NAV_ITEMS)[number] & { locked: boolean; attention: b
 function MobileMoreSheet({
   items,
   pathname,
+  setupSteps,
   onClose,
 }: {
   items: OverflowItem[];
   pathname: string;
+  setupSteps: SetupStep[];
   onClose: () => void;
 }) {
   const t = useTranslations("Dashboard.tabs");
@@ -162,11 +226,7 @@ function MobileMoreSheet({
 
   return createPortal(
     <div className="fixed inset-0 z-30 sm:hidden">
-      <div
-        className="nav-sheet-backdrop-in absolute inset-0 bg-on-surface/40"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="nav-sheet-backdrop-in absolute inset-0 bg-on-surface/40" onClick={onClose} aria-hidden="true" />
       <div
         role="dialog"
         aria-modal="true"
@@ -174,6 +234,9 @@ function MobileMoreSheet({
         className="nav-sheet-panel-in absolute inset-x-0 bottom-0 rounded-t-2xl bg-surface-container-lowest pb-[env(safe-area-inset-bottom)] shadow-level2"
       >
         <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-outline-variant" aria-hidden="true" />
+        <div className="px-3 pt-3">
+          <SetupGuide steps={setupSteps} variant="sheet" />
+        </div>
         <nav className="flex flex-col gap-1 p-3">
           {items.map((item) => {
             const isActive = item.match(pathname);
@@ -199,12 +262,13 @@ function MobileMoreSheet({
                     <LockIcon className="ml-auto h-3.5 w-3.5 shrink-0" />
                     <span className="sr-only">{t("locked")}</span>
                   </>
-                ) : item.attention ? (
-                  <>
-                    <WarningIcon className="ml-auto h-6 w-6 shrink-0 text-orange-600" />
-                    <span className="sr-only">{t("needsAttention")}</span>
-                  </>
-                ) : null}
+                ) : (
+                  <AttentionMark
+                    kind={item.attention}
+                    size="rail"
+                    label={item.attention === "problem" ? t("needsAttention") : t("needsSetup")}
+                  />
+                )}
               </Link>
             );
           })}
@@ -237,6 +301,7 @@ export function Sidebar({
   silence,
   usage,
   attention,
+  setupSteps,
 }: {
   companyName: string | null;
   email: string | null;
@@ -245,6 +310,7 @@ export function Sidebar({
   silence: SilenceReason | null;
   usage: UsageSummary | null;
   attention: Attention;
+  setupSteps: SetupStep[];
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
@@ -253,7 +319,7 @@ export function Sidebar({
 
   const identityLabel = companyName ?? email ?? "";
 
-  const attentionByKey: Partial<Record<(typeof NAV_ITEMS)[number]["key"], boolean>> = attention;
+  const attentionByKey: Partial<Record<(typeof NAV_ITEMS)[number]["key"], AttentionKind>> = attention;
   const navItems = NAV_ITEMS.map((item) => {
     const locked = item.isLocked?.(hiredAgentSlugs) ?? false;
     return {
@@ -261,7 +327,7 @@ export function Sidebar({
       locked,
       // A locked tab already gets its own LockIcon + dimming -- a warning on
       // top of that would be noise for something the merchant can't act on yet.
-      attention: !locked && (attentionByKey[item.key] ?? false),
+      attention: locked ? null : (attentionByKey[item.key] ?? null),
     };
   });
   const mobilePrimaryItems = navItems.filter((item) => item.mobilePrimary);
@@ -269,7 +335,12 @@ export function Sidebar({
   const overflowActive = mobileOverflowItems.some((item) => item.match(pathname));
   // The "More" tab is a proxy for whatever's folded inside it -- a warning
   // buried in the sheet is invisible unless the entry point says so too.
-  const overflowNeedsAttention = mobileOverflowItems.some((item) => item.attention);
+  const setupPending = setupSteps.some((s) => !s.done);
+  const overflowAttention: AttentionKind = mobileOverflowItems.some((item) => item.attention === "problem")
+    ? "problem"
+    : mobileOverflowItems.some((item) => item.attention) || setupPending
+      ? "setup"
+      : null;
 
   const [moreOpen, setMoreOpen] = useState(false);
   // A route change -- a row tapped inside the sheet, or the browser's own
@@ -314,17 +385,19 @@ export function Sidebar({
                     <LockIcon className="ml-auto h-3.5 w-3.5 shrink-0" />
                     <span className="sr-only">{t("locked")}</span>
                   </>
-                ) : item.attention ? (
-                  <>
-                    <WarningIcon className="ml-auto h-6 w-6 shrink-0 text-orange-600" />
-                    <span className="sr-only">{t("needsAttention")}</span>
-                  </>
-                ) : null}
+                ) : (
+                  <AttentionMark
+                    kind={item.attention}
+                    size="rail"
+                    label={item.attention === "problem" ? t("needsAttention") : t("needsSetup")}
+                  />
+                )}
               </Link>
             );
           })}
         </nav>
 
+        <SetupGuide steps={setupSteps} variant="rail" />
         <UsageTracker usage={usage} />
 
         <div className="border-t border-outline-variant p-3">
@@ -390,9 +463,13 @@ export function Sidebar({
                 />
                 {item.locked ? (
                   <LockIcon className="absolute -right-1.5 -top-1 h-3 w-3 text-on-surface-variant" />
-                ) : item.attention ? (
-                  <WarningIcon className="absolute -right-2 -top-1.5 h-4 w-4 text-orange-600" />
-                ) : null}
+                ) : (
+                  <AttentionMark
+                    kind={item.attention}
+                    size="tab"
+                    label={item.attention === "problem" ? t("needsAttention") : t("needsSetup")}
+                  />
+                )}
               </span>
               <span
                 className={clsx(
@@ -419,12 +496,11 @@ export function Sidebar({
                 overflowActive ? "text-primary" : "text-on-surface-variant",
               )}
             />
-            {overflowNeedsAttention ? (
-              <>
-                <WarningIcon className="absolute -right-2 -top-1.5 h-4 w-4 text-orange-600" />
-                <span className="sr-only">{t("needsAttention")}</span>
-              </>
-            ) : null}
+            <AttentionMark
+              kind={overflowAttention}
+              size="tab"
+              label={overflowAttention === "problem" ? t("needsAttention") : t("needsSetup")}
+            />
           </span>
           <span
             className={clsx(
@@ -438,7 +514,12 @@ export function Sidebar({
       </nav>
 
       {moreOpen ? (
-        <MobileMoreSheet items={mobileOverflowItems} pathname={pathname} onClose={() => setMoreOpen(false)} />
+        <MobileMoreSheet
+          items={mobileOverflowItems}
+          pathname={pathname}
+          setupSteps={setupSteps}
+          onClose={() => setMoreOpen(false)}
+        />
       ) : null}
     </>
   );

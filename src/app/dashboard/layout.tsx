@@ -10,6 +10,7 @@ import {
 import { getUsageSummary } from "@/lib/billing/usage-summary";
 import { countFilledSections, SETTINGS_MIN_SECTIONS } from "@/lib/companies/settings-completeness";
 import { getSchedulingWarnings } from "@/lib/scheduling/warnings";
+import { buildSetupChecklist, loadPlanAndChannelFacts } from "@/lib/setup/checklist";
 import { TourProvider } from "@/components/tour/tour-provider";
 import { Sidebar, type Attention } from "./sidebar";
 import { TopBar } from "./top-bar";
@@ -70,58 +71,77 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .map((row) => row.agents?.slug)
     .filter((slug): slug is string => Boolean(slug));
 
-  // Surfaced everywhere in the shell (not just the billing page's own
-  // banner, and now also the My Team page's) so a merchant sees "your team
-  // is paused" no matter which tab they land on. The same batch also drives
-  // the sidebar's per-tab "needs attention" icons (below) -- one
-  // company-scoped round trip for everything the shell needs to decide what
-  // to nudge the merchant about.
   const companyId = companies?.[0]?.id ?? null;
-  const [isBillingPastDue, isSilentForNoPlan, usage, productsCount, settingsFields, schedulingWarnings] =
-    companyId
-      ? await Promise.all([
-          checkBillingPastDue(companyId, supabase),
-          checkSilentForNoPlan(companyId, supabase),
-          getUsageSummary(companyId, supabase),
-          supabase
-            .from("products")
-            .select("id", { count: "exact", head: true })
-            .eq("company_id", companyId)
-            .eq("is_active", true),
-          supabase
-            .from("companies")
-            .select("description, payment_policy, additional_information, faq")
-            .eq("id", companyId)
-            .maybeSingle(),
-          getSchedulingWarnings(supabase, companyId),
-        ])
-      : [
-          false,
-          false,
-          null,
-          { count: 0 },
-          { data: null },
-          { calendarNotConnected: false, businessHoursEmpty: false, servicesEmpty: false },
-        ];
+  const [
+    isBillingPastDue,
+    isSilentForNoPlan,
+    usage,
+    productsCount,
+    settingsFields,
+    schedulingWarnings,
+    planAndChannel,
+  ] = companyId
+    ? await Promise.all([
+        checkBillingPastDue(companyId, supabase),
+        checkSilentForNoPlan(companyId, supabase),
+        getUsageSummary(companyId, supabase),
+        supabase
+          .from("products")
+          .select("id", { count: "exact", head: true })
+          .eq("company_id", companyId)
+          .eq("is_active", true),
+        supabase
+          .from("companies")
+          .select("description, payment_policy, additional_information, faq")
+          .eq("id", companyId)
+          .maybeSingle(),
+        getSchedulingWarnings(supabase, companyId),
+        loadPlanAndChannelFacts(supabase, companyId),
+      ])
+    : [
+        false,
+        false,
+        null,
+        { count: 0 },
+        { data: null },
+        { calendarNotConnected: false, businessHoursEmpty: false, servicesEmpty: false },
+        { planChosen: false, channelLive: false },
+      ];
 
-  // A failed payment and a plan that was never chosen both silence the team,
-  // and the merchant has to be told which -- past_due wins when somehow both.
   const silence = isBillingPastDue ? "past_due" : isSilentForNoPlan ? "no_plan" : null;
 
-  // Each nav item's icon only appears once that item is actually reachable
-  // (unlocked) -- the sidebar's own LockIcon already covers "you haven't
-  // hired this person yet", so a warning on top of that would be noise.
-  // Settings/Billing is never locked, so it just checks its own conditions.
   const filledSections = settingsFields.data ? countFilledSections(settingsFields.data) : 0;
+  const hasMalu = hiredAgentSlugs.includes("malu");
+  const hasAna = hiredAgentSlugs.includes("ana");
   const attention: Attention = {
-    settings: filledSections < SETTINGS_MIN_SECTIONS || silence === "past_due",
-    products: hiredAgentSlugs.includes("malu") && (productsCount.count ?? 0) === 0,
+    settings:
+      silence === "past_due"
+        ? "problem"
+        : filledSections < SETTINGS_MIN_SECTIONS || !planAndChannel.planChosen
+          ? "setup"
+          : null,
+    products: hasMalu && (productsCount.count ?? 0) === 0 ? "setup" : null,
     scheduling:
-      hiredAgentSlugs.includes("ana") &&
+      hasAna &&
       (schedulingWarnings.calendarNotConnected ||
         schedulingWarnings.businessHoursEmpty ||
-        schedulingWarnings.servicesEmpty),
+        schedulingWarnings.servicesEmpty)
+        ? "setup"
+        : null,
   };
+  const setupSteps = companyId
+    ? buildSetupChecklist({
+        hiredSlugs: hiredAgentSlugs,
+        planChosen: planAndChannel.planChosen,
+        businessInfoFilled: filledSections >= SETTINGS_MIN_SECTIONS,
+        productsCount: productsCount.count ?? 0,
+        hasOpenHours: !schedulingWarnings.businessHoursEmpty,
+        hasServices: !schedulingWarnings.servicesEmpty,
+        calendarAvailable: Boolean(process.env.GOOGLE_CLIENT_ID),
+        calendarConnected: !schedulingWarnings.calendarNotConnected,
+        channelLive: planAndChannel.channelLive,
+      })
+    : [];
 
   return (
     <TourProvider>
@@ -135,12 +155,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           silence={silence}
           usage={usage}
           attention={attention}
+          setupSteps={setupSteps}
         />
         <div className="relative z-10 sm:pl-64">
           <TopBar locale={locale as "en" | "pt"} silence={silence} />
-          <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
-            {children}
-          </main>
+          <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">{children}</main>
         </div>
       </div>
     </TourProvider>

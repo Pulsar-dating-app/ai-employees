@@ -315,6 +315,10 @@ dashboard UI unification).
     - Telegram and Link are always "ready".
     - A `null` status (still loading) shows a skeleton.
   - **Behavior blocks.** "How {name} works" uses always-open `SettingsBlock`s: Shipping and Returns (Malu only, the regular `PolicySection`, whose `bare` mode was removed) and Human handoff.
+  - **Ana's schedule card (Ana only, last on the page).** `scheduling-setup-card.tsx` is a server component fed by `loadSchedulingSetup` (`src/lib/scheduling/setup.ts`, tested in `tests/integration/scheduling-setup.test.ts`). It shows readiness for exactly the three things `warnings.ts` flags: business hours, active non-default services, and Google Calendar (only when `GOOGLE_CLIENT_ID` is set). Keep the two in agreement, because a number here must never contradict the sidebar or Scheduling tab warnings.
+    - It has a progress bar, and "Finish setup" links to the first pending item's anchor in Scheduling. Rows for approval and intake questions are informational and don't count toward progress.
+    - The description changes with state: customers can't book yet (no hours or no services); they can already book and only the calendar is pending; or everything is ready.
+    - It sits last on purpose: its links leave the page, so merchants should see this page's own settings first.
   - **Tour.** The anchors are unchanged: `agent-name` on the hero, `channels` on the card grid, `human-handoff` on its block. The copy no longer mentions tabs.
 - **D6** — `src/app/dashboard/my-agents/[agentSlug]/channel-tabs-card.tsx`
   replaces four separate full-width cards (WhatsApp, Instagram, widget
@@ -1020,6 +1024,17 @@ User-driven: a company can hire Ana, land on Scheduling, and never realize she c
 #### Sidebar entry (K5)
 
 One `NAV_ITEMS` row in `sidebar.tsx` (`CalendarIcon`, matching `startsWith("/dashboard/scheduling")`), which the desktop rail and the mobile bottom tab bar both read — they share the same array, so nothing drifts. Label lives at `Dashboard.tabs.scheduling`.
+
+**Getting-started guide and two-level sidebar marks (2026-09-24).** `src/lib/setup/checklist.ts` exposes two functions:
+- `buildSetupChecklist(facts)`: pure, tested in `tests/unit/setup/checklist.test.ts`. It returns the ordered steps plan → business → products (Malu) → hours → services → calendar (Ana; calendar only when `GOOGLE_CLIENT_ID` is set) → channel. Each step carries `done` and an exact `href`.
+- `loadPlanAndChannelFacts`: tested in `tests/integration/setup-checklist.test.ts`.
+  - The plan counts as chosen when the `company_billing` status is active/trialing/past_due/unpaid. An unpaid plan is a card problem, not a plan to pick.
+  - The channel counts as live on any real signal: WhatsApp or Instagram `connected`, a non-empty `allowed_embed_domains`, or any non-preview conversation. Telegram and direct links therefore only count after a first real conversation, and the step copy says so.
+
+`dashboard/layout.tsx` builds the steps from the same facts behind the sidebar marks (`countFilledSections`, `getSchedulingWarnings`, the products count), so the guide and the marks can't disagree.
+- `SetupGuide` (`dashboard/setup-guide.tsx`) renders the card "Getting started · N of M · Next: …" above the rail's usage tracker and at the top of the mobile "More" sheet. It opens a `SideDrawer` listing the steps, and it disappears when everything is done.
+- `Attention` values are now `"setup" | "problem" | null`. A setup gap draws a small primary dot (sidebar, mobile tabs, "More", Scheduling sub-tabs). The ⚠ triangle is reserved for problems, today only `past_due` on Settings.
+- `ChannelHub` calls `router.refresh()` when a channel flips to or from ok, so the guide updates without a reload.
 
 **Tabs are always visible; a locked one is muted + gets a lock icon, and the *page* enforces it (2026-09-01 — replaced the earlier hide-the-tab approach).** `sidebar.tsx` renders every `NAV_ITEMS` row on the desktop rail. Products / Scheduling / Performance carry an `isLocked(hiredAgentSlugs)` predicate (`!includes("malu")` / `!includes("ana")` / `length === 0`); when true the item renders at `opacity-55` with a trailing `LockIcon` and an `sr-only` "locked". `layout.tsx` fetches `company_agents.select("agents(slug)")` again and passes `hiredAgentSlugs` to `Sidebar` **for this styling only** — the real gate is each page: a gated Server Component checks its requirement right after it has the hired-agents list and returns `<LockedPage>` (`src/app/dashboard/locked-page.tsx` — `PageHeader` + a centered lock message + a CTA to `/dashboard/agents/<slug>`) in place of its content. Copy is `Dashboard.locked.*` (`{name}`-interpolated; `metrics*` variants for the no-agent case). **Settings / Marketplace / My Team / Conversations are never gated** — company-wide, useful with zero agents (Settings' business knowledge is worth filling in *before* hiring).
 

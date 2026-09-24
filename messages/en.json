@@ -922,7 +922,8 @@
       "settings": "Settings",
       "locked": "locked",
       "needsAttention": "needs attention",
-      "more": "More"
+      "more": "More",
+      "needsSetup": "Needs setup"
     },
     "locked": {
       "title": "{name} isn't on your team yet",
@@ -932,7 +933,46 @@
       "metricsBody": "Once you've hired a team member, this is where you'll follow their performance.",
       "metricsCta": "Browse the marketplace"
     },
-    "noPlanAlert": "Choose a plan to put her to work"
+    "noPlanAlert": "Choose a plan to put her to work",
+    "setup": {
+      "entry": "Getting started",
+      "progress": "{done} of {total}",
+      "next": "Next: {step}",
+      "title": "Getting started",
+      "close": "Close",
+      "doneLabel": "Done",
+      "description": "Each step checks itself off as soon as it's done.",
+      "steps": {
+        "plan": {
+          "title": "Choose a plan",
+          "body": "Your team answers customers once a plan is active."
+        },
+        "business": {
+          "title": "Tell us about your business",
+          "body": "Description, payments, frequent questions: what your team uses to answer customers."
+        },
+        "products": {
+          "title": "Add your products",
+          "body": "Your team only recommends what's in your catalog."
+        },
+        "hours": {
+          "title": "Set your business hours",
+          "body": "The times that can be offered to customers for appointments."
+        },
+        "services": {
+          "title": "Add your services",
+          "body": "What customers can book, with duration and price."
+        },
+        "calendar": {
+          "title": "Connect Google Calendar",
+          "body": "Avoids booking times when you're already busy."
+        },
+        "channel": {
+          "title": "Connect a channel",
+          "body": "WhatsApp, Instagram, your site's chat or a direct link: where customers will talk to your team. With the direct link, this checks off at the first conversation."
+        }
+      }
+    }
   },
   "Metrics": {
     "pageTitle": "Performance",
@@ -1366,6 +1406,35 @@
     "behavior": {
       "title": "How {name} works",
       "description": "Changes save automatically."
+    },
+    "schedulingSetup": {
+      "title": "{name}'s schedule",
+      "progress": "{done} of {total} ready",
+      "finish": "Finish setup",
+      "allReady": "Ready to take bookings",
+      "open": "Open Scheduling",
+      "rows": {
+        "hours": "Business hours",
+        "services": "Services",
+        "calendar": "Google Calendar",
+        "approval": "Booking approval",
+        "intake": "Intake questions"
+      },
+      "status": {
+        "hoursOpen": "{count, plural, one {Open # day a week} other {Open # days a week}}",
+        "hoursNone": "No open days yet",
+        "servicesCount": "{count, plural, one {# service} other {# services}}",
+        "servicesNone": "No services added yet",
+        "calendarConnected": "Connected",
+        "calendarNotConnected": "Not connected",
+        "approvalOn": "You approve each booking",
+        "approvalOff": "Bookings confirm right away",
+        "intakeCount": "{count, plural, one {# question asked} other {# questions asked}}"
+      },
+      "rulesHeading": "Rules",
+      "descriptionBlocked": "{name} only offers times that fit what's set up in Scheduling. Customers can book once business hours and services are set.",
+      "descriptionCalendar": "Customers can already book. Connect Google Calendar so {name} skips times you're busy elsewhere.",
+      "descriptionReady": "{name} offers times based on your business hours, services and calendar."
     }
   },
   "Teach": {

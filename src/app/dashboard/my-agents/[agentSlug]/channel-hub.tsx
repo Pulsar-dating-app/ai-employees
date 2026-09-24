@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import {
@@ -125,11 +125,21 @@ export function ChannelHub({
     link: { tone: "ok", label: t("status.ready") },
   }));
 
-  const report = useCallback((key: ChannelKey, status: ChannelStatus) => {
-    setStatuses((prev) =>
-      prev[key]?.tone === status.tone && prev[key]?.label === status.label ? prev : { ...prev, [key]: status },
-    );
-  }, []);
+  const router = useRouter();
+  const tones = useRef<Partial<Record<ChannelKey, ChannelStatus["tone"]>>>({});
+  const report = useCallback(
+    (key: ChannelKey, status: ChannelStatus) => {
+      const previousTone = tones.current[key];
+      tones.current[key] = status.tone;
+      setStatuses((prev) =>
+        prev[key]?.tone === status.tone && prev[key]?.label === status.label ? prev : { ...prev, [key]: status },
+      );
+      if (previousTone && previousTone !== status.tone && (previousTone === "ok" || status.tone === "ok")) {
+        router.refresh();
+      }
+    },
+    [router],
+  );
 
   useEffect(() => {
     if (autoOpened.current) return;
