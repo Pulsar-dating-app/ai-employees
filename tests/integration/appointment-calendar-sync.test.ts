@@ -3,6 +3,7 @@ import { api } from "./helpers/request";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
 import { capturedCalendarEvent } from "./helpers/google-calendar-events";
+import { calendarPath } from "./helpers/professionals";
 
 // Trello I3 -- calendar sync hooked into H3's existing appointments CRUD
 // routes. Google's Calendar API is stood in for by
@@ -40,7 +41,7 @@ describe("Calendar sync on appointment booking/cancel/reschedule", () => {
   // "primary") so the mock's magic-value scenarios can be selected --
   // same escape hatch I2's own tests use.
   async function connectCalendar(cookie: string, companyId: string, calendarId?: string) {
-    await api("POST", `/api/companies/${companyId}/calendar/connect`, cookie, { code: "good-code" });
+    await api("POST", `${await calendarPath(companyId)}/connect`, cookie, { code: "good-code" });
     if (calendarId) {
       await getTestServiceClient()
         .from("company_calendar_connections")

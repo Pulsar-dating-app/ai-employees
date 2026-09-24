@@ -10,8 +10,13 @@ import { TimeOffCard, type TimeOffEntry } from "./time-off-card";
 import { GoogleCalendarCard } from "./google-calendar-card";
 import { IntakeQuestionsCard, type IntakeField } from "./intake-questions-card";
 import { SchedulingSettingsShell } from "./settings-shell";
+import { CalendarsSummaryBlock } from "./calendars-summary-block";
+import { listProfessionals } from "@/lib/professionals/repository";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 export default async function SchedulingSettingsPage() {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const supabase = await createClient();
   const t = await getTranslations("Scheduling.settings");
 
@@ -43,19 +48,24 @@ export default async function SchedulingSettingsPage() {
     { data: businessHours },
     { data: timeOff },
     { data: intakeFields },
-    { data: calendarConnection },
+    { data: calendarConnections },
+    professionals,
   ] = await Promise.all([
     supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle(),
     supabase
       .from("business_hours")
       .select("day_of_week, start_time, end_time, is_active")
       .eq("company_id", company.id)
+      // The establishment's hours; professionals with their own schedule
+      // are edited on their page (Scheduling > Professionals).
+      .is("professional_id", null)
       .order("day_of_week", { ascending: true })
       .order("start_time", { ascending: true }),
     supabase
       .from("company_time_off")
       .select("id, start_date, end_date, reason")
       .eq("company_id", company.id)
+      .is("professional_id", null)
       .gte("end_date", today)
       .order("start_date", { ascending: true }),
     supabase
@@ -63,7 +73,8 @@ export default async function SchedulingSettingsPage() {
       .select("id, key, label, field_type, is_required, is_enabled, position")
       .eq("company_id", company.id)
       .order("position", { ascending: true }),
-    supabase.from("company_calendar_connections").select("status").eq("company_id", company.id).maybeSingle(),
+    supabase.from("company_calendar_connections").select("professional_id, status").eq("company_id", company.id),
+    listProfessionals(supabase, company.id),
   ]);
 
   const canEdit = membership !== null;
@@ -79,7 +90,18 @@ export default async function SchedulingSettingsPage() {
   const intakeCount =
     PREDEFINED_INTAKE_FIELDS.filter((f) => intakeByKey.get(f.key)?.is_enabled ?? f.defaultEnabled).length +
     intakeRows.filter((f) => !PREDEFINED_INTAKE_KEYS.has(f.key)).length;
-  const calendarConnected = (calendarConnection as { status?: string } | null)?.status === "connected";
+  // 2026-09-24 -- Google Calendar is per professional. With one
+  // professional this screen keeps its original card (connecting that
+  // professional); with several it summarises and links to each one's page.
+  const connectedIds = new Set(
+    ((calendarConnections ?? []) as { professional_id: string; status: string }[])
+      .filter((c) => c.status === "connected")
+      .map((c) => c.professional_id),
+  );
+  const connectedCount = professionals.filter((p) => connectedIds.has(p.id)).length;
+  const calendarConnected = connectedCount > 0;
+  const soleProfessional = professionals.length === 1 ? professionals[0] : null;
+  const userId = user!.id;
 
   return (
     <div className="flex flex-col gap-6">
@@ -101,9 +123,11 @@ export default async function SchedulingSettingsPage() {
           "google-calendar": {
             summary: !googleClientId
               ? t("nav.calendarUnavailable")
-              : calendarConnected
-                ? t("nav.calendarConnected")
-                : t("nav.calendarNotConnected"),
+              : !soleProfessional
+                ? t("nav.calendarsConnected", { connected: connectedCount, total: professionals.length })
+                : calendarConnected
+                  ? t("nav.calendarConnected")
+                  : t("nav.calendarNotConnected"),
             warn: Boolean(googleClientId) && !calendarConnected,
           },
         }}
@@ -118,7 +142,19 @@ export default async function SchedulingSettingsPage() {
         />
         <TimeOffCard companyId={company.id} canEdit={canEdit} initialEntries={timeOffRows} />
         <IntakeQuestionsCard companyId={company.id} canEdit={canEdit} initialFields={intakeRows} />
-        <GoogleCalendarCard companyId={company.id} isAdmin={isAdmin} googleClientId={googleClientId} />
+        {soleProfessional ? (
+          <GoogleCalendarCard
+            companyId={company.id}
+            professionalId={soleProfessional.id}
+            canManage={isAdmin || soleProfessional.userId === userId}
+            googleClientId={googleClientId}
+          />
+        ) : (
+          <CalendarsSummaryBlock
+            professionals={professionals.map((p) => ({ id: p.id, name: p.name, connected: connectedIds.has(p.id) }))}
+            available={Boolean(googleClientId)}
+          />
+        )}
       </SchedulingSettingsShell>
     </div>
   );

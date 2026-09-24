@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import {
   syncAppointmentConfirmed,
   syncAppointmentRescheduled,
@@ -8,13 +9,13 @@ import {
 } from "@/lib/google-calendar/appointment-sync";
 import { notifyAppointmentConfirmed, notifyAppointmentDeclined } from "@/lib/email/appointments";
 import { notifyWaitlistForFreedSlot } from "@/lib/appointments/waitlist";
-import {
-  isWithinBusinessHours,
-  isDuringTimeOff,
-  type BusinessHourWindow,
-  type TimeOffBlock,
-} from "@/lib/availability/engine";
+import { createServiceClient } from "@/lib/supabase/service";
 import { isValidTimeZone } from "@/lib/analytics/load";
+import {
+  fitsProfessionalSchedule,
+  getProfessional,
+  resolveProfessionalForService,
+} from "@/lib/professionals/repository";
 
 // Trello H3 — update/cancel a single appointment. Reschedule (changing
 // starts_at and/or service_id) is supported here for dashboard convenience
@@ -29,31 +30,12 @@ import { isValidTimeZone } from "@/lib/analytics/load";
 // confirmed) creates it; rescheduling one that already had one updates it.
 // These three cases are mutually exclusive by construction. Best-effort —
 // see appointment-sync.ts, a sync failure never fails the request.
+//
+// 2026-09-24 -- `professional_id` in the body moves the appointment to
+// another professional's schedule (validated like a reschedule: they must
+// perform the service and the time must fit their hours/time off). Its
+// Google event moves from the old professional's calendar to the new one's.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-
-  return { error: null };
-}
 
 async function getAppointment(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -83,17 +65,26 @@ async function getAppointment(
 // re-fetched row (with google_event_id nulled), or null if that follow-up
 // update itself failed for some reason — callers fall back to their own
 // already-fetched row in that case.
+type SyncedAppointmentEvent = {
+  id: string;
+  professional_id: string;
+  google_event_id: string;
+  google_calendar_id: string | null;
+};
+
 async function cancelGoogleEventAndClear(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  appointmentId: string,
-  googleEventId: string,
+  appointment: SyncedAppointmentEvent,
 ) {
-  await syncAppointmentCancelled(companyId, googleEventId);
+  await syncAppointmentCancelled(
+    appointment.professional_id,
+    appointment.google_event_id,
+    appointment.google_calendar_id,
+  );
   const { data: synced } = await supabase
     .from("appointments")
-    .update({ google_event_id: null })
-    .eq("id", appointmentId)
+    .update({ google_event_id: null, google_calendar_id: null })
+    .eq("id", appointment.id)
     .select()
     .single();
   return synced ?? null;
@@ -116,7 +107,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const appointmentLookup = await getAppointment(supabase, companyId, appointmentId);
@@ -125,6 +116,15 @@ export async function PATCH(
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
+  }
+  // 2026-09-25 -- a member reaches only their own appointments (RLS hides
+  // the rest, so getAppointment 404s) and can't hand one to someone else.
+  if (
+    !memberCheck.isAdmin &&
+    typeof body.professional_id === "string" &&
+    body.professional_id !== appointmentLookup.appointment.professional_id
+  ) {
+    return NextResponse.json({ error: "You can only manage your own schedule" }, { status: 403 });
   }
 
   const update: Record<string, unknown> = {};
@@ -159,7 +159,8 @@ export async function PATCH(
   // Google-sync branch below (outside this block) can compute the calendar
   // event's visible end without a second services fetch.
   let rescheduledDurationMinutes: number | null = null;
-  if ("starts_at" in body || "service_id" in body) {
+  const current = appointmentLookup.appointment;
+  if ("starts_at" in body || "service_id" in body || "professional_id" in body) {
     const effectiveServiceId =
       "service_id" in body ? body.service_id : appointmentLookup.appointment.service_id;
 
@@ -191,50 +192,60 @@ export async function PATCH(
       return NextResponse.json({ error: "starts_at must be a valid ISO datetime string" }, { status: 400 });
     }
 
-    // Same H3 gap fix as the create route: reject a reschedule whose new
-    // time falls outside every active business_hours window for that local
-    // day, rather than only guarding this at creation.
-    const [
-      { data: company, error: companyError },
-      { data: businessHours, error: businessHoursError },
-      { data: timeOffRows, error: timeOffError },
-    ] = await Promise.all([
-      supabase.from("companies").select("timezone").eq("id", companyId).single(),
-      supabase.from("business_hours").select("day_of_week, start_time, end_time").eq("company_id", companyId).eq("is_active", true),
-      supabase.from("company_time_off").select("start_date, end_date").eq("company_id", companyId),
-    ]);
-    if (companyError) {
-      return NextResponse.json({ error: companyError.message }, { status: 500 });
-    }
-    if (businessHoursError) {
-      return NextResponse.json({ error: businessHoursError.message }, { status: 500 });
-    }
-    if (timeOffError) {
-      return NextResponse.json({ error: timeOffError.message }, { status: 500 });
-    }
-
-    const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
-
-    // No configured hours means "not set up yet," not "never open" -- see
-    // the matching comment in appointments/route.ts.
-    if (businessHours && businessHours.length > 0) {
-      const withinHours = isWithinBusinessHours({
-        timezone,
-        businessHours: businessHours as BusinessHourWindow[],
-        startsAt: startsAt.toISOString(),
-        durationMinutes: service.duration_minutes,
-      });
-      if (!withinHours) {
-        return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
+    // Whose schedule: a new professional (or a new service) must be an
+    // active professional who performs the service; otherwise the current
+    // professional stays, even if the merchant later restricted the service.
+    const professionalChanged =
+      "professional_id" in body && body.professional_id !== current.professional_id;
+    let professional;
+    if (professionalChanged || "service_id" in body) {
+      const targetId = professionalChanged ? body.professional_id : current.professional_id;
+      if (typeof targetId !== "string" || !targetId) {
+        return NextResponse.json({ error: "professional_id must be a non-empty string" }, { status: 400 });
+      }
+      const resolved = await resolveProfessionalForService(supabase, companyId, targetId, effectiveServiceId);
+      if (!resolved.ok) {
+        return NextResponse.json(
+          {
+            error:
+              resolved.reason === "professional_not_found"
+                ? "professional not found for this company"
+                : "this professional doesn't perform this service",
+          },
+          { status: 400 },
+        );
+      }
+      professional = resolved.professional;
+    } else {
+      professional = await getProfessional(supabase, companyId, current.professional_id as string);
+      if (!professional) {
+        return NextResponse.json({ error: "professional not found for this company" }, { status: 400 });
       }
     }
 
-    // Merchant-registered time off (K3) -- always applies, no permissive
-    // default. Same rejection as the create route.
-    if (isDuringTimeOff((timeOffRows ?? []) as TimeOffBlock[], timezone, startsAt.toISOString())) {
+    const { data: company, error: companyError } = await supabase
+      .from("companies")
+      .select("timezone")
+      .eq("id", companyId)
+      .single();
+    if (companyError) {
+      return NextResponse.json({ error: companyError.message }, { status: 500 });
+    }
+    const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
+
+    // Same H3 gap fix as the create route: the new time must fit the
+    // professional's hours (enforced once any are configured) and must not
+    // fall in time off that applies to them.
+    const fits = await fitsProfessionalSchedule(supabase, companyId, professional, {
+      timezone,
+      startsAt: startsAt.toISOString(),
+      durationMinutes: service.duration_minutes,
+    });
+    if (!fits) {
       return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
     }
 
+    update.professional_id = professional.id;
     update.service_id = effectiveServiceId;
     update.starts_at = startsAt.toISOString();
     update.ends_at = new Date(
@@ -263,9 +274,18 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const preUpdateGoogleEventId = appointmentLookup.appointment.google_event_id as string | null;
-  const preUpdateStatus = appointmentLookup.appointment.status as string;
-  const rescheduled = "starts_at" in body || "service_id" in body;
+  const preUpdateGoogleEventId = current.google_event_id as string | null;
+  const preUpdateStatus = current.status as string;
+  const rescheduled = "starts_at" in body || "service_id" in body || "professional_id" in body;
+  const movedProfessional = data.professional_id !== current.professional_id;
+  const preUpdateEvent: SyncedAppointmentEvent | null = preUpdateGoogleEventId
+    ? {
+        id: appointmentId,
+        professional_id: current.professional_id as string,
+        google_event_id: preUpdateGoogleEventId,
+        google_calendar_id: (current.google_calendar_id as string | null) ?? null,
+      }
+    : null;
 
   // Trello R3 -- email the customer when the merchant acts on a pending
   // request (K7): approving it sends a confirmation, declining it (status
@@ -285,23 +305,36 @@ export async function PATCH(
   // early. Not on a reschedule -- the customer still holds a slot then.
   if (update.status === "cancelled" && preUpdateStatus !== "cancelled") {
     await notifyWaitlistForFreedSlot({
-      supabase,
+      supabase: createServiceClient(),
       companyId,
       serviceId: (data.service_id as string | null) ?? null,
+      professionalId: data.professional_id as string,
       startsAt: data.starts_at as string,
     });
   }
 
-  if (update.status === "cancelled" && preUpdateGoogleEventId) {
-    const synced = await cancelGoogleEventAndClear(supabase, companyId, appointmentId, preUpdateGoogleEventId);
+  // Moving to another professional: the event leaves the old professional's
+  // calendar; the "confirmed without an event" branch below then creates it
+  // in the new one's.
+  let eventAfterMove = preUpdateGoogleEventId;
+  if (preUpdateEvent && movedProfessional && update.status !== "cancelled") {
+    await cancelGoogleEventAndClear(supabase, preUpdateEvent);
+    eventAfterMove = null;
+  }
+
+  if (update.status === "cancelled" && preUpdateEvent) {
+    const synced = await cancelGoogleEventAndClear(supabase, preUpdateEvent);
     if (synced) return NextResponse.json({ appointment: synced });
-  } else if (update.status === "confirmed" && !preUpdateGoogleEventId) {
+  } else if (
+    !eventAfterMove &&
+    (update.status === "confirmed" || (movedProfessional && data.status === "confirmed"))
+  ) {
     const [{ data: service }, { data: customer }] = await Promise.all([
       supabase.from("services").select("name, duration_minutes").eq("id", data.service_id).maybeSingle(),
       supabase.from("customers").select("name").eq("id", data.customer_id).maybeSingle(),
     ]);
     if (service && customer) {
-      const googleEventId = await syncAppointmentConfirmed(companyId, {
+      const googleEvent = await syncAppointmentConfirmed(data.professional_id as string, {
         serviceName: service.name,
         customerName:
           customer.name ??
@@ -312,10 +345,10 @@ export async function PATCH(
         // Ana's recap, captured at booking time (K-epic summary work).
         summary: data.summary as string | null,
       });
-      if (googleEventId) {
+      if (googleEvent) {
         const { data: synced } = await supabase
           .from("appointments")
-          .update({ google_event_id: googleEventId })
+          .update({ google_event_id: googleEvent.googleEventId, google_calendar_id: googleEvent.googleCalendarId })
           .eq("id", appointmentId)
           .select()
           .single();
@@ -325,10 +358,15 @@ export async function PATCH(
   } else if (preUpdateGoogleEventId && rescheduled && update.status !== "cancelled") {
     // rescheduledDurationMinutes is always set here: `rescheduled` is true
     // only when the block above (which sets it) ran.
-    await syncAppointmentRescheduled(companyId, preUpdateGoogleEventId, {
-      startsAt: data.starts_at,
-      visibleEndsAt: calendarVisibleEndsAt(data.starts_at, rescheduledDurationMinutes!),
-    });
+    await syncAppointmentRescheduled(
+      data.professional_id as string,
+      preUpdateGoogleEventId,
+      (current.google_calendar_id as string | null) ?? null,
+      {
+        startsAt: data.starts_at,
+        visibleEndsAt: calendarVisibleEndsAt(data.starts_at, rescheduledDurationMinutes!),
+      },
+    );
   }
 
   return NextResponse.json({ appointment: data });
@@ -353,7 +391,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const appointmentLookup = await getAppointment(supabase, companyId, appointmentId);
@@ -375,16 +413,22 @@ export async function DELETE(
   // branch since that can return early.
   if (appointmentLookup.appointment.status !== "cancelled") {
     await notifyWaitlistForFreedSlot({
-      supabase,
+      supabase: createServiceClient(),
       companyId,
       serviceId: (data.service_id as string | null) ?? null,
+      professionalId: data.professional_id as string,
       startsAt: data.starts_at as string,
     });
   }
 
   const preUpdateGoogleEventId = appointmentLookup.appointment.google_event_id as string | null;
   if (preUpdateGoogleEventId) {
-    const synced = await cancelGoogleEventAndClear(supabase, companyId, appointmentId, preUpdateGoogleEventId);
+    const synced = await cancelGoogleEventAndClear(supabase, {
+      id: appointmentId,
+      professional_id: appointmentLookup.appointment.professional_id as string,
+      google_event_id: preUpdateGoogleEventId,
+      google_calendar_id: (appointmentLookup.appointment.google_calendar_id as string | null) ?? null,
+    });
     if (synced) return NextResponse.json({ appointment: synced });
   }
 

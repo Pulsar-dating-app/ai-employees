@@ -62,6 +62,81 @@ The WhatsApp toggle now reads "Incluir as taxas da Meta no preço" (WhatsApp wor
 
 ---
 
+## 2026-09-25 — Owners/admins promote; only the owner demotes or removes
+
+**Decision:** Roles are managed from a professional's page:
+- **Promote:** an owner or admin can make a member an admin.
+- **Demote or remove:** only the owner can turn an admin back into a member, or remove anyone from the company.
+- **Limits:** the owner row is never changed or removed, and nobody changes their own role.
+- **Where the rules live:** `checkTeamAction` (`src/lib/team/roles.ts`) behind `PATCH`/`DELETE /api/companies/[id]/members/[userId]`. RLS mirrors them (migration `20260925150000`): an admin's UPDATE can only touch a `member` row, and only to make it `member`/`admin`; DELETE is the owner's only.
+- **Unlinking a schedule is owner-only too.** For anyone but the owner it is a removal.
+
+This supersedes two things from the entry just below:
+- **Deactivating a schedule no longer removes its person.** They keep their login and see "your schedule was turned off" until it's reactivated. Removal is its own, owner-only action.
+- **Removal is recorded** in `company_member_removals`. On their next login, a removed person with no company sees `/access-removed` ("You no longer have access to {company}"), not onboarding. From there they can set up a business of their own (which acknowledges the notice) or log out. Being added back by email puts them straight into the company again and clears the notice.
+- **Removing a person also turns their schedule off.** It stays in the list of inactive schedules with its history, unlinked, and can be reactivated. So removal is refused like deactivation: `409 has_upcoming_appointments` while the schedule still has bookings ahead, `409 last_active_professional` if it's the last active one. First shipped with the schedule left active, which the user found confusing: the person "disappeared" but their schedule stayed in the list, and Ana kept offering it.
+
+**Why:** The user asked for admins to be able to promote, and for only the owner to demote or remove. For a removed person logging in again, the options were:
+- silently dropping them into "create your business" (confusing: it looks like their company vanished);
+- blocking the account (it's their account, and they may own a business later);
+- a clear notice with both ways forward, which is what was built.
+
+Separating "turn a schedule off" from "remove a person" keeps an admin's routine action (deactivating a schedule) from becoming a removal, which only the owner may do.
+
+---
+
+## 2026-09-25 — Team members join by email; members see only their own schedule
+
+**Decision:** Roles are now used for real (Ana's scheduling side only for now):
+- **Owner / admin:** the whole dashboard, as before.
+- **Member:** a professional who logs in. They see only the Agenda (their own appointments) and "Minha agenda" (their own hours, time off and Google Calendar). Their name is read-only.
+
+How it works:
+- **Adding a professional needs a name and an email.** The email is how that person logs in.
+  - If the address belongs to an account with no company, that account becomes a member on the spot.
+  - If it belongs to an account already in this company (e.g. the owner), it is linked without changing its role.
+  - If it belongs to another company, or waits as an invite elsewhere, it is refused with `409 email_in_other_company`.
+  - Otherwise it is stored in `professionals.invite_email` as a pending invite.
+  - The rules live in `decideEmailAssignment` (`src/lib/team/invites.ts`).
+- **No invite email is sent.** The owner tells the person. The first time that account reaches `/dashboard` (or `/onboarding`), `claimPendingInvite` makes it a member, links it and clears the invite. The person skips onboarding entirely and lands on `/dashboard/scheduling`.
+- **`company_users` and `professionals` stay two tables, with no duplicated data.**
+  - `company_users` is the only source of login and role.
+  - `professionals` is the bookable schedule, pointing at its login through `user_id`.
+  - The email lives on the professional only while the invite is pending, then comes from `users.email`.
+  - The user suggested merging them. They aren't redundant: an owner who doesn't take bookings has a `company_users` row and no schedule, and a professional without a login has a schedule and no `company_users` row.
+- **The owner is the company's first professional.** `create_company_with_owner` links the seeded professional to the owner, for every company including Malu-only ones, and onboarding renames it to the owner's name. Existing companies were backfilled: the oldest professional belongs to the owner.
+- **Every account has a name.** `users.name` is asked in a new first onboarding step (`profile`), and the dashboard sends any nameless account there. That includes the owners who finished onboarding before the step existed; they see it once.
+- **RLS matches the roles** (migration `20260925120000_team_roles.sql`):
+  - Writes to services, products, intake fields, hires, customers, the waitlist and storage are admin-only.
+  - Conversations, messages and events are admin-only for reads too.
+  - A member reads and writes only their own professional's appointments and hours/time-off rows, and reads only customers booked with them.
+  - The routes return the same answers as clean 403s (`checkCompanyRole`, `requireAdminPage` in `src/lib/auth/company-access.ts`).
+- **Deactivating or unlinking a member's professional removes their `company_users` row.** An owner or admin never loses access this way.
+- **One company per account still holds**, and an invited address can't also create a company: `createCompany` claims the invite first.
+
+**Why:** The "Membro da equipe que cuida desta agenda" dropdown could never be filled, because nothing let a second person join a company: production had 55 owners and 0 members. And every "Company members can …" policy would have let a barber edit the shop's services, other barbers' appointments and every customer conversation the moment members existed. The user chose: join by email with no invite email, members see only their own appointments, block an address that belongs to another company, and keep both tables.
+
+**Accepted risk:** Email confirmation is off in production, so whoever signs up first with an invited address takes that seat, without proving they own the mailbox. The user accepted this for now. Turning on confirmation (or sending a real invite link) closes it.
+
+---
+
+## 2026-09-24 — Multiple schedules per company, one per professional (reverses "single calendar per company for MVP")
+
+**Decision:** A company has one or more **professionals** (a barber, a doctor), each with their own schedule, and Ana books with a specific one. How it works:
+- **Seeding and overlap.** Every company is seeded with one professional, named after the company, so a single-professional business works exactly as before. Ana never mentions the professional there, and the dashboard hides professional filters and fields. The overlap guard moved from `EXCLUDE (company_id, …)` to `EXCLUDE (professional_id, …)`.
+- **Hours.** `business_hours` rows with a null `professional_id` are the establishment's hours. A professional follows them unless `uses_custom_hours`, in which case only their own rows count; switching copies the establishment's hours as a starting point.
+- **Time off.** A `company_time_off` row with a null `professional_id` closes the whole business; otherwise only that professional is away.
+- **Services.** `professional_services` lists who performs a service ("Quem realiza"). A service nobody is linked to is performed by everyone.
+- **Google Calendar is per professional.** Each professional connects their own Google account and picks, or creates, one calendar of it; `company_calendar_connections` is now `unique(professional_id)`. The user raised the case of a clinic of partners, where no one "owns" the others' calendars. The same model also serves a barbershop, where the owner connects one account per barber and picks a different calendar for each. Each appointment stores the calendar its event was created in (`appointments.google_calendar_id`).
+- **A professional can be linked to a team member** (`professionals.user_id`). That member manages that professional's hours, time off and Google Calendar without being an admin.
+- **Ana always asks which professional** once the service is known. She searches across everyone only if the customer says explicitly that anyone is fine; the booking then goes to a free professional, fewest bookings that day first. The rule lives in a per-company prompt section (`buildProfessionalChoiceSection`), so Ana's shared `agents.system_prompt` is unchanged.
+- **The daily cap is still per customer per company** (3), across professionals.
+- **Deactivating a professional** is refused when it would leave the company with none, or while they have upcoming appointments.
+
+**Why:** A barbershop with 10 barbers could only book one haircut at a time, because the overlap constraint, hours, time off and Google connection were all company-wide. The user chose: optional "who performs it" per service; inherited hours that can be customised; Ana always asks; a Google connection per professional; and an optional team-member link. Seeding one professional per company, and hiding everything professional-related while there is only one, keeps the change invisible to every existing merchant.
+
+---
+
 ## 2026-09-24 — One self-checking "Getting started" guide; the ⚠ triangle is only for problems
 
 **Decision:** Setup gaps now live in one guide instead of scattered orange triangles. A "Getting started · N of M" card in the sidebar (and in the mobile "More" sheet) opens a drawer of ordered steps: plan, business info, products, hours, services, calendar and channel, showing only the steps relevant to who was hired. Each step checks itself from the database and links to the exact place to fix it. The sidebar and Scheduling sub-tabs mark setup gaps with a small dot and reserve ⚠ for real problems (a failed payment). The user chose: no "test conversation" step; a channel counts on any real signal (connected WhatsApp/Instagram, an allowed site domain, or a real conversation); dots for setup, triangles for problems. A floating checklist was considered and rejected, because it covers content and fights the mobile bottom bar.

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { getConversationDetail } from "@/lib/conversations/detail";
 
 // Trello F5 -- single-conversation detail (GET) and the one supported
@@ -14,26 +15,6 @@ import { getConversationDetail } from "@/lib/conversations/detail";
 // detail page (conversations/[conversationId]/page.tsx) so the two can
 // never return differently-shaped data for the same conversation.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-  if (!membership) {
-    return { error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }) };
-  }
-  return { error: null };
-}
 
 export async function GET(
   request: Request,
@@ -48,7 +29,7 @@ export async function GET(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const result = await getConversationDetail(supabase, companyId, conversationId);
@@ -77,7 +58,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const body = await request.json().catch(() => null);

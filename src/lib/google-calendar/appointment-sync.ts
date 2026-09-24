@@ -1,13 +1,19 @@
 import { getValidAccessToken } from "./connection";
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from "./events";
 
-// Trello I3 -- the three operations the appointments routes call to keep a
-// confirmed appointment's Google Calendar event in sync. Each is
+// Trello I3 -- the three operations the appointments write paths call to
+// keep a confirmed appointment's Google Calendar event in sync. Each is
 // best-effort and never throws: no connected calendar, an unrefreshable
 // token, or the Google API call itself failing all degrade silently
 // (logged via console.error) rather than blocking the appointment write
 // that triggered them -- the DB row is the source of truth, this is a
 // layer on top. See the 2026-08-29 decisions.md entry.
+//
+// 2026-09-24 -- per professional: events go to the calendar connected for
+// the appointment's professional. The calendar an event was created in is
+// returned and stored on the appointment (appointments.google_calendar_id),
+// and passed back on reschedule/cancel, so a professional who later picks a
+// different calendar doesn't orphan events in the old one.
 
 // The calendar event is deliberately shorter than appointments.ends_at.
 // `ends_at` = starts_at + duration + buffer, and that full span is what
@@ -39,15 +45,17 @@ export type AppointmentSyncDetails = {
   summary?: string | null;
 };
 
+export type SyncedEvent = { googleEventId: string; googleCalendarId: string };
+
 // Called the moment an appointment becomes `confirmed` (at creation for an
 // auto-confirming company, or via a later PATCH for one requiring manual
 // approval) -- never for a merely `requested` appointment. Returns the new
-// google_event_id, or null if it couldn't sync.
+// event id plus the calendar it lives in, or null if it couldn't sync.
 export async function syncAppointmentConfirmed(
-  companyId: string,
+  professionalId: string,
   details: AppointmentSyncDetails,
-): Promise<string | null> {
-  const connection = await getValidAccessToken(companyId);
+): Promise<SyncedEvent | null> {
+  const connection = await getValidAccessToken(professionalId);
   if (!connection) return null;
 
   try {
@@ -60,7 +68,7 @@ export async function syncAppointmentConfirmed(
       startIso: toCalendarIso(details.startsAt),
       endIso: toCalendarIso(details.visibleEndsAt),
     });
-    return event.id;
+    return { googleEventId: event.id, googleCalendarId: connection.calendarId };
   } catch (err) {
     console.error("Failed to create Google Calendar event for appointment", err);
     return null;
@@ -71,16 +79,19 @@ export async function syncAppointmentConfirmed(
 // updates start/end -- the summary is left as-is (see decisions.md: the
 // service essentially never changes on a reschedule, and updating it would
 // need a customer-name refetch this path doesn't otherwise need).
+// `googleCalendarId` is the calendar the event was created in (null for rows
+// synced before 2026-09-24 -> the professional's current calendar).
 export async function syncAppointmentRescheduled(
-  companyId: string,
+  professionalId: string,
   googleEventId: string,
+  googleCalendarId: string | null,
   details: { startsAt: string; visibleEndsAt: string },
 ): Promise<void> {
-  const connection = await getValidAccessToken(companyId);
+  const connection = await getValidAccessToken(professionalId);
   if (!connection) return;
 
   try {
-    await updateCalendarEvent(connection.accessToken, connection.calendarId, googleEventId, {
+    await updateCalendarEvent(connection.accessToken, googleCalendarId ?? connection.calendarId, googleEventId, {
       startIso: toCalendarIso(details.startsAt),
       endIso: toCalendarIso(details.visibleEndsAt),
     });
@@ -89,13 +100,19 @@ export async function syncAppointmentRescheduled(
   }
 }
 
-// Called when a synced appointment's status becomes `cancelled`.
-export async function syncAppointmentCancelled(companyId: string, googleEventId: string): Promise<void> {
-  const connection = await getValidAccessToken(companyId);
+// Called when a synced appointment's status becomes `cancelled` -- and when
+// an appointment moves to another professional (the event leaves the old
+// professional's calendar, and a new one is created in the new one's).
+export async function syncAppointmentCancelled(
+  professionalId: string,
+  googleEventId: string,
+  googleCalendarId: string | null,
+): Promise<void> {
+  const connection = await getValidAccessToken(professionalId);
   if (!connection) return;
 
   try {
-    await deleteCalendarEvent(connection.accessToken, connection.calendarId, googleEventId);
+    await deleteCalendarEvent(connection.accessToken, googleCalendarId ?? connection.calendarId, googleEventId);
   } catch (err) {
     console.error("Failed to delete Google Calendar event for cancelled appointment", err);
   }

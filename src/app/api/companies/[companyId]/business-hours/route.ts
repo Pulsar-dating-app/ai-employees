@@ -1,36 +1,21 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
+import { createServiceClient } from "@/lib/supabase/service";
+import { canManageProfessional, getProfessional } from "@/lib/professionals/repository";
 
 // Trello H2 — business_hours: a recurring weekly template, not a paginated
 // collection (a week has exactly 7 days, split shifts aside). GET returns
 // the current set; PUT replaces the whole set at once — same whole-array-
 // replace semantics as F2's FAQ section, just over a real table instead of
 // a jsonb column, since availability needs indexed per-day rows (Trello I2).
+//
+// 2026-09-24 -- two kinds of set: the establishment's hours (no query
+// param; business_hours.professional_id NULL) and one professional's own
+// schedule (?professionalId=). Each PUT replaces only its own set. Saving a
+// professional's set also switches them to it (uses_custom_hours); an admin,
+// or the member linked to that professional, may do it.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-
-  return { error: null };
-}
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/;
 
@@ -83,9 +68,36 @@ function validateBusinessHours(value: unknown): { rows: BusinessHourInput[] } | 
   return { rows };
 }
 
-// GET: list the company's business hours, ordered for display.
+// Resolves ?professionalId= (null = the establishment's set). For a write,
+// the caller must be allowed to manage that professional's schedule.
+async function resolveScope(
+  request: Request,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+  userId: string,
+  write: boolean,
+): Promise<{ error: NextResponse } | { error: null; professionalId: string | null }> {
+  const professionalId = new URL(request.url).searchParams.get("professionalId");
+  if (!professionalId) return { error: null, professionalId: null };
+  const professional = await getProfessional(supabase, companyId, professionalId);
+  if (!professional) {
+    return { error: NextResponse.json({ error: "Professional not found" }, { status: 404 }) };
+  }
+  if (write && !(await canManageProfessional(supabase, companyId, professionalId, userId))) {
+    return {
+      error: NextResponse.json(
+        { error: "Only company owners/admins, or the professional themselves, can change this schedule" },
+        { status: 403 },
+      ),
+    };
+  }
+  return { error: null, professionalId };
+}
+
+// GET: list one set of business hours (the establishment's, or one
+// professional's own), ordered for display.
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ companyId: string }> },
 ) {
   const { companyId } = await params;
@@ -98,13 +110,15 @@ export async function GET(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
-  const { data, error } = await supabase
-    .from("business_hours")
-    .select("*")
-    .eq("company_id", companyId)
+  const scope = await resolveScope(request, supabase, companyId, user.id, false);
+  if (scope.error) return scope.error;
+
+  let query = supabase.from("business_hours").select("*").eq("company_id", companyId);
+  query = scope.professionalId ? query.eq("professional_id", scope.professionalId) : query.is("professional_id", null);
+  const { data, error } = await query
     .order("day_of_week", { ascending: true })
     .order("start_time", { ascending: true });
 
@@ -135,8 +149,17 @@ export async function PUT(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
+
+  // The establishment's hours are the company's: owners/admins only. A
+  // member edits their own schedule (?professionalId=, checked below).
+  if (!memberCheck.isAdmin && !new URL(request.url).searchParams.get("professionalId")) {
+    return NextResponse.json({ error: "Only company owners/admins can change the business's hours" }, { status: 403 });
+  }
+
+  const scope = await resolveScope(request, supabase, companyId, user.id, true);
+  if (scope.error) return scope.error;
 
   const body = await request.json().catch(() => null);
   const validated = validateBusinessHours(body?.businessHours);
@@ -144,13 +167,25 @@ export async function PUT(
     return NextResponse.json({ error: validated.error }, { status: 400 });
   }
 
-  const { error: deleteError } = await supabase
-    .from("business_hours")
-    .delete()
-    .eq("company_id", companyId);
+  let deleteQuery = supabase.from("business_hours").delete().eq("company_id", companyId);
+  deleteQuery = scope.professionalId
+    ? deleteQuery.eq("professional_id", scope.professionalId)
+    : deleteQuery.is("professional_id", null);
+  const { error: deleteError } = await deleteQuery;
 
   if (deleteError) {
     return NextResponse.json({ error: deleteError.message }, { status: 500 });
+  }
+
+  // Saving a professional's own set means they now follow it, not the
+  // establishment's. `professionals` is service-role-write only.
+  if (scope.professionalId) {
+    const { error: flagError } = await createServiceClient()
+      .from("professionals")
+      .update({ uses_custom_hours: true })
+      .eq("company_id", companyId)
+      .eq("id", scope.professionalId);
+    if (flagError) return NextResponse.json({ error: flagError.message }, { status: 500 });
   }
 
   if (validated.rows.length === 0) {
@@ -159,7 +194,9 @@ export async function PUT(
 
   const { data, error: insertError } = await supabase
     .from("business_hours")
-    .insert(validated.rows.map((row) => ({ ...row, company_id: companyId })))
+    .insert(
+      validated.rows.map((row) => ({ ...row, company_id: companyId, professional_id: scope.professionalId })),
+    )
     .select();
 
   if (insertError) {

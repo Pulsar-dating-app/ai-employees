@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentAccess } from "@/lib/auth/company-access";
+import { claimPendingInvite } from "@/lib/team/invites";
+import { pendingRemovalNotice } from "@/lib/team/roles";
 import { ONBOARDING_PATHS, resolveOnboardingState } from "@/lib/companies/onboarding-step";
 import {
   isBillingPastDue as checkBillingPastDue,
@@ -22,6 +25,24 @@ import { DashboardBackdrop } from "./backdrop";
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
+
+function hiredSlugs(hired: unknown): string[] {
+  return ((hired ?? []) as { agents: { slug: string } | null }[])
+    .map((row) => row.agents?.slug)
+    .filter((slug): slug is string => Boolean(slug));
+}
+
+// A member whose professional the owner deactivated keeps their login (the
+// account is theirs) but has nothing left to manage.
+async function DeactivatedMember() {
+  const t = await getTranslations("Dashboard.member");
+  return (
+    <div className="mx-auto mt-16 flex max-w-md flex-col gap-2 text-center">
+      <h1 className="text-headline-sm font-semibold text-on-surface">{t("deactivatedTitle")}</h1>
+      <p className="text-body-md text-on-surface-variant">{t("deactivatedBody")}</p>
+    </div>
+  );
+}
 
 // Every /dashboard/* route renders under this shell — a persistent light
 // rail + sticky top bar on desktop, a top bar + bottom tab bar on mobile
@@ -51,25 +72,65 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ]);
 
   // The single guarantee that every /dashboard/* page can assume a company
-  // exists: a signed-in user without one is sent to set it up first.
-  // Company creation lives only in /onboarding now — not the hire flow, not
-  // Settings.
+  // exists: a signed-in user without one is sent to set it up first --
+  // unless a company added their email as a professional, in which case they
+  // join it right here and skip onboarding entirely (2026-09-25). Company
+  // creation lives only in /onboarding — not the hire flow, not Settings.
   if (user && (!companies || companies.length === 0)) {
+    if (await claimPendingInvite(user)) redirect("/dashboard/scheduling");
+    // Removed from a company: say so, rather than silently offering to set
+    // up a new business as if nothing happened.
+    if (await pendingRemovalNotice(supabase, user.id)) redirect("/access-removed");
     redirect("/onboarding");
   }
+
+  const access = await getCurrentAccess();
+
+  // Every account has a name (2026-09-25) -- including owners who finished
+  // onboarding before that step existed; they're asked once.
+  if (user && !access.userName) redirect(ONBOARDING_PATHS.profile);
 
   // ...and a merchant who walked out mid-flow is put back where they stopped,
   // rather than dropped in a dashboard for a hire that cannot work yet. Only
   // costs a query for someone who has not finished: the flag rides along on
   // the companies select above, and a finished company short-circuits here.
-  if (user && companies?.[0] && !companies[0].onboarding_completed_at) {
+  // Members never walk the company's setup -- that's the owner's.
+  if (user && access.isAdmin && companies?.[0] && !companies[0].onboarding_completed_at) {
     const state = await resolveOnboardingState(supabase);
     if (state.step !== "done") redirect(ONBOARDING_PATHS[state.step]);
   }
 
-  const hiredAgentSlugs = ((hired ?? []) as unknown as { agents: { slug: string } | null }[])
-    .map((row) => row.agents?.slug)
-    .filter((slug): slug is string => Boolean(slug));
+  if (access.company && !access.isAdmin) {
+    return (
+      <TourProvider>
+        <div className="relative min-h-screen bg-surface">
+          <DashboardBackdrop />
+          <Sidebar
+            companyName={access.company.name}
+            email={user?.email ?? null}
+            locale={locale as "en" | "pt"}
+            hiredAgentSlugs={hiredSlugs(hired)}
+            silence={null}
+            usage={null}
+            attention={{ settings: null, products: null, scheduling: null }}
+            setupSteps={[]}
+            member={{
+              name: access.userName,
+              professionalId: access.professional?.is_active ? access.professional.id : null,
+            }}
+          />
+          <div className="relative z-10 sm:pl-64">
+            <TopBar locale={locale as "en" | "pt"} silence={null} />
+            <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
+              {access.professional?.is_active ? children : <DeactivatedMember />}
+            </main>
+          </div>
+        </div>
+      </TourProvider>
+    );
+  }
+
+  const hiredAgentSlugs = hiredSlugs(hired);
 
   const companyId = companies?.[0]?.id ?? null;
   const [

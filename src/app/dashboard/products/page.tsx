@@ -10,11 +10,14 @@ import { PackageIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 import { LockedPage } from "../locked-page";
 import { ProductsManager } from "./products-manager";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 const REQUIRED_AGENT_SLUG = "malu";
 const PAGE_SIZE = 20;
 
 export default async function ProductsPage() {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const supabase = await createClient();
   const t = await getTranslations("Products");
 

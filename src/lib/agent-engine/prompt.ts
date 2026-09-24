@@ -486,6 +486,64 @@ export function buildServiceChoiceSection(choice: ServiceChoice | null | undefin
   return null;
 }
 
+// 2026-09-24 -- a business with several professionals, one schedule each (a
+// barbershop's barbers, a clinic's doctors; see decisions.md "Multiple
+// schedules per company"). Product rule: Ana always asks who the customer
+// wants, and only looks across everyone when the customer says it doesn't
+// matter. Injected per company (like the service-choice section) rather than
+// written into Ana's shared `agents.system_prompt`, and only when there is
+// more than one active professional -- a single-professional business never
+// hears the word, and the tools don't even return professionals then.
+// Avoids "agenda"/"calendar" wording on purpose (AVAILABILITY_GUARDRAIL).
+//
+// `false` (an agent that can schedule, at a single-professional business)
+// gets an explicit "never ask who" line too: found in testing that the model
+// could still ask "com qual profissional?" on its own, especially in a
+// clinic-like business, with nobody to choose between. null/undefined (an
+// agent that can't schedule) gets nothing.
+export function buildProfessionalChoiceSection(multipleProfessionals: boolean | null | undefined): string | null {
+  if (multipleProfessionals === null || multipleProfessionals === undefined) return null;
+  if (!multipleProfessionals) {
+    return (
+      "This business has a single professional, so there is nobody to choose between: never ask the " +
+      "customer who they would like to be seen by, never ask about a preferred professional, and " +
+      "never offer a choice of professional. Every booking is with that one person."
+    );
+  }
+  return (
+    "This business has several professionals, and each one has their own times. " +
+    "list_services shows, for each service, the `professionals` who perform it. " +
+    "Once you know which service the customer wants, ask which professional they would like, " +
+    "naming only the ones who perform that service (skip the question when only one does). " +
+    "If they name someone, pass that professional's `professionalId` to find_available_slots, " +
+    "find_next_available, book_appointment and add_to_waitlist. " +
+    "Only if the customer says explicitly that any professional is fine, leave `professionalId` " +
+    "out: then say who each time you offer is with, and book without it (a free professional is " +
+    "assigned). If they ask for someone who doesn't perform that service, say who does. " +
+    "Always confirm a booking by saying who it's with (`professionalName` in the result). " +
+    "To move an appointment, keep the same professional (from list_my_appointments) unless the " +
+    "customer asks to change."
+  );
+}
+
+// 2026-09-24 -- found in testing: "tem horário amanhã com o Tobias?" got
+// "qual serviço você quer para amanhã?" -- implying yes -- and only after the
+// service was picked did find_available_slots reveal Tobias was away that day.
+// Whether a day is open doesn't depend on the service, so check it first
+// (get_business_hours with a date range returns closures and time off) and
+// say so at once. Scheduling agents only.
+export function buildDateFirstSection(canSchedule: boolean | null | undefined): string | null {
+  if (!canSchedule) return null;
+  return (
+    "When the customer asks about a specific day or date (\"tem horário amanhã?\", \"dá sexta?\") " +
+    "before you know which service, first call get_business_hours with `from` and `to` set to that " +
+    "date (and `professionalId` if they named a professional). If that date comes back not open -- " +
+    "the business doesn't work that day, or it's time off -- tell them right away (with the reason, " +
+    "if there is one) and offer the nearest open day. Don't ask which service first, and never " +
+    "imply a day is bookable before you know it's open."
+  );
+}
+
 // A business that never set its opening hours (2026-09-21). Found by chat
 // testing Ana on an account with no hours: she told customers the business was
 // "fechada", and -- because "nothing in the next 90 days" is what an empty scan
@@ -578,6 +636,7 @@ export function buildSystemPrompt({
   hasProductSearch = false,
   policies,
   serviceChoice,
+  multipleProfessionals,
   noBusinessHours,
   emptyCatalog,
   currentDate,
@@ -604,6 +663,11 @@ export function buildSystemPrompt({
   // Pass it only for an agent that has list_services; null/omitted composes the
   // prompt without the section.
   serviceChoice?: ServiceChoice | null;
+  // Whether the business has more than one active professional. Pass it only
+  // for an agent that can schedule (true or false); null/omitted -- an agent
+  // that can't schedule -- composes the prompt without the professional and
+  // date-first sections.
+  multipleProfessionals?: boolean | null;
   // Set only when the business has no opening hours at all (and only for an
   // agent that can look up availability). `canOfferTeam` is whether the agent
   // can actually bring a person in. Null/omitted composes the prompt without it.
@@ -645,6 +709,9 @@ export function buildSystemPrompt({
 
   const storeInformationSection = buildStoreInformationSection(policies);
   const serviceChoiceSection = buildServiceChoiceSection(serviceChoice);
+  const professionalChoiceSection = buildProfessionalChoiceSection(multipleProfessionals);
+  // multipleProfessionals is only ever non-null for an agent that can schedule.
+  const dateFirstSection = buildDateFirstSection(multipleProfessionals !== null && multipleProfessionals !== undefined);
   const noBusinessHoursSection = buildNoBusinessHoursSection(noBusinessHours);
   const emptyCatalogSection = buildEmptyCatalogSection(emptyCatalog);
 
@@ -699,6 +766,10 @@ export function buildSystemPrompt({
     // "Which service is it for?" example) -- this is the per-company exception
     // to it, so it has to read as the later, more specific word.
     serviceChoiceSection,
+    // Right after the service choice: which professional is the next
+    // question once the service is settled.
+    professionalChoiceSection,
+    dateFirstSection,
     // After the service-choice section: with no hours the rule is "one fixed
     // line", which has to win over "answer availability in the same turn".
     noBusinessHoursSection,

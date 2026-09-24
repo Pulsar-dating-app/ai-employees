@@ -33,10 +33,18 @@ export function TimeOffCard({
   companyId,
   canEdit,
   initialEntries,
+  professionalId = null,
+  title,
+  description,
 }: {
   companyId: string;
   canEdit: boolean;
   initialEntries: TimeOffEntry[];
+  // 2026-09-24 -- set to manage one professional's own time off (only they
+  // are away) instead of the establishment's closures.
+  professionalId?: string | null;
+  title?: string;
+  description?: string;
 }) {
   const t = useTranslations("Scheduling.settings.timeOff");
   const tn = useTranslations("Scheduling.settings.nav");
@@ -84,7 +92,7 @@ export function TimeOffCard({
       const res = await fetch(`/api/companies/${companyId}/time-off`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startDate, endDate, reason: reason.trim() || undefined }),
+        body: JSON.stringify({ startDate, endDate, reason: reason.trim() || undefined, professionalId }),
       });
       if (!res.ok) {
         setError(t("saveError"));
@@ -120,7 +128,7 @@ export function TimeOffCard({
   }
 
   return (
-    <SettingsBlock id="time-off" title={t("title")} description={t("subtitle")}>
+    <SettingsBlock id="time-off" title={title ?? t("title")} description={description ?? t("subtitle")}>
       {entries.length === 0 ? (
         <p className="rounded-2xl bg-surface-container-low px-4 py-5 text-sm text-on-surface-variant">{t("empty")}</p>
       ) : (

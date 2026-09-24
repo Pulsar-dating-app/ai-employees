@@ -5,6 +5,7 @@ import { getTestEnv } from "./env";
 
 export interface TestUser {
   userId: string;
+  email: string;
   cookieHeader: string;
   /** supabase-js client authenticated as this user, for tests that talk to
    * PostgREST directly instead of going through the Next.js API routes
@@ -17,7 +18,15 @@ export interface TestUser {
 // then replays that session through @supabase/ssr's cookie-writing path —
 // the same trick used to manually validate A3 — to get a real
 // `sb-...-auth-token` cookie header the Next.js route handlers will accept.
-export async function signUpTestUser(labelPrefix = "user"): Promise<TestUser> {
+// `email` signs up with a chosen address instead -- e.g. one a company
+// already added as a professional (a pending invite). Every account needs a
+// name since 2026-09-25 (the dashboard sends a nameless one to
+// /onboarding/profile), so users get one unless `name: null` asks for a
+// brand-new, nameless account.
+export async function signUpTestUser(
+  labelPrefix = "user",
+  options: { email?: string; name?: string | null } = {},
+): Promise<TestUser> {
   const { supabaseUrl, anonKey } = getTestEnv();
   // randomUUID, not `Date.now()` + a module-level counter (what this used to
   // be). Vitest runs each test *file* in its own worker, so that counter reset
@@ -32,7 +41,7 @@ export async function signUpTestUser(labelPrefix = "user"): Promise<TestUser> {
   // grew, since every added file is another worker racing in that same
   // millisecond. A UUID is unique across processes and clock resolution, so
   // the collision can't happen regardless of how many files run in parallel.
-  const email = `${labelPrefix}-${randomUUID()}@example.test`;
+  const email = options.email ?? `${labelPrefix}-${randomUUID()}@example.test`;
   const password = "TestPass123!";
 
   const supa = createClient(supabaseUrl, anonKey);
@@ -67,5 +76,11 @@ export async function signUpTestUser(labelPrefix = "user"): Promise<TestUser> {
     global: { headers: { Authorization: `Bearer ${data.session.access_token}` } },
   });
 
-  return { userId: data.user.id, cookieHeader, client };
+  const name = options.name === undefined ? `Test ${labelPrefix}` : options.name;
+  if (name !== null) {
+    const { error: nameError } = await client.from("users").update({ name }).eq("id", data.user.id);
+    if (nameError) throw nameError;
+  }
+
+  return { userId: data.user.id, email, cookieHeader, client };
 }

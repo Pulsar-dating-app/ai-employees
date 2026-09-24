@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { anyProfessionalHasHours } from "@/lib/professionals/repository";
 
 export type SchedulingWarnings = {
   calendarNotConnected: boolean;
@@ -13,22 +14,22 @@ export type SchedulingWarnings = {
 // banners, factored out so a third and fourth caller don't reinvent them.
 // scheduling/page.tsx's own inline copy is left as-is (already shipped,
 // working, not worth touching for this).
+//
+// 2026-09-24 -- per professional: the calendar warning is "no professional
+// has Google connected" (a barbershop may connect only some barbers), and
+// the hours warning is "no active professional has hours to work".
 export async function getSchedulingWarnings(
   supabase: SupabaseClient,
   companyId: string,
 ): Promise<SchedulingWarnings> {
-  const [{ data: calendarConnection }, { count: businessHoursCount }, { count: servicesCount }] =
+  const [{ count: connectedCount }, hasHours, { count: servicesCount }] =
     await Promise.all([
       supabase
         .from("company_calendar_connections")
-        .select("status")
-        .eq("company_id", companyId)
-        .maybeSingle(),
-      supabase
-        .from("business_hours")
         .select("id", { count: "exact", head: true })
         .eq("company_id", companyId)
-        .eq("is_active", true),
+        .eq("status", "connected"),
+      anyProfessionalHasHours(supabase, companyId),
       supabase
         .from("services")
         .select("id", { count: "exact", head: true })
@@ -38,10 +39,8 @@ export async function getSchedulingWarnings(
     ]);
 
   return {
-    calendarNotConnected:
-      (calendarConnection as { status?: string } | null)?.status !== "connected" &&
-      Boolean(process.env.GOOGLE_CLIENT_ID),
-    businessHoursEmpty: (businessHoursCount ?? 0) === 0,
+    calendarNotConnected: (connectedCount ?? 0) === 0 && Boolean(process.env.GOOGLE_CLIENT_ID),
+    businessHoursEmpty: !hasHours,
     servicesEmpty: (servicesCount ?? 0) === 0,
   };
 }

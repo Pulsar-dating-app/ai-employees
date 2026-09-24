@@ -9,7 +9,10 @@ import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
 import { SettingsShell } from "./settings-shell";
+import { requireAdminPage } from "@/lib/auth/company-access";
 export default async function SettingsPage() {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const supabase = await createClient();
   const t = await getTranslations("Settings");
 

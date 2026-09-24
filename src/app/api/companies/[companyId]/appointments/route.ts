@@ -1,44 +1,23 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { syncAppointmentConfirmed, calendarVisibleEndsAt } from "@/lib/google-calendar/appointment-sync";
-import {
-  isWithinBusinessHours,
-  isDuringTimeOff,
-  type BusinessHourWindow,
-  type TimeOffBlock,
-} from "@/lib/availability/engine";
 import { isValidTimeZone } from "@/lib/analytics/load";
+import {
+  fitsProfessionalSchedule,
+  listProfessionals,
+  resolveProfessionalForService,
+} from "@/lib/professionals/repository";
 
+// 2026-09-25 -- a team member (role `member`) lists and books only on
+// their own professional's schedule; RLS enforces the same.
+//
 // Trello H3 — appointments CRUD, scoped to company_id. The booking record
 // behind Ana's scheduling tools (Trello J3) and the dashboard's Appointments
 // view (Trello K4). Google Calendar sync (Trello I3) hooks in below: a
 // newly `confirmed` appointment gets a Google event; a `requested` one
 // (pending manual approval) does not, until a later PATCH confirms it.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-
-  return { error: null };
-}
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -65,6 +44,8 @@ function parsePositiveInt(value: string | null, fallback: number, max?: number):
 //   - `?order=desc` flips to latest-first, which is what "past bookings"
 //     needs; ascending stays the default for the forward-looking case.
 // (`?status=` was already validated against VALID_STATUSES here — left as is.)
+// 2026-09-24: `?professionalId=` narrows to one professional's schedule, and
+// `professionals(name)` is embedded so the list can say who each one is with.
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ companyId: string }> },
@@ -79,13 +60,16 @@ export async function GET(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const searchParams = new URL(request.url).searchParams;
   const status = searchParams.get("status");
   const from = searchParams.get("from");
   const to = searchParams.get("to");
+  const professionalId = memberCheck.isAdmin
+    ? searchParams.get("professionalId")
+    : (memberCheck.ownProfessionalId ?? "00000000-0000-0000-0000-000000000000");
   const ascending = searchParams.get("order") !== "desc";
   const page = parsePositiveInt(searchParams.get("page"), 1);
   const pageSize = parsePositiveInt(searchParams.get("pageSize"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
@@ -99,9 +83,10 @@ export async function GET(
 
   let query = supabase
     .from("appointments")
-    .select("*, services(name), customers(name, phone)", { count: "exact" })
+    .select("*, services(name), customers(name, phone), professionals(name)", { count: "exact" })
     .eq("company_id", companyId);
   if (status) query = query.eq("status", status);
+  if (professionalId) query = query.eq("professional_id", professionalId);
   if (from) query = query.gte("starts_at", from);
   if (to) query = query.lte("starts_at", to);
 
@@ -123,6 +108,9 @@ export async function GET(
 // companies.requires_appointment_approval, never trusted from the client
 // either — both are "grounded" the same way Malu's tools never let the
 // model assert a price.
+//
+// 2026-09-24: `professional_id` says whose schedule the booking goes on. It
+// may be omitted only while the company has a single active professional.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ companyId: string }> },
@@ -137,10 +125,18 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const body = await request.json().catch(() => null);
+
+  if (!memberCheck.isAdmin) {
+    const requested = typeof body?.professional_id === "string" ? body.professional_id : null;
+    if (!memberCheck.ownProfessionalId || (requested && requested !== memberCheck.ownProfessionalId)) {
+      return NextResponse.json({ error: "You can only book on your own schedule" }, { status: 403 });
+    }
+    if (body && typeof body === "object") body.professional_id = memberCheck.ownProfessionalId;
+  }
 
   const serviceId = typeof body?.service_id === "string" ? body.service_id : "";
   if (!serviceId) {
@@ -166,6 +162,9 @@ export async function POST(
   }
   if (body?.notes !== undefined && body.notes !== null && typeof body.notes !== "string") {
     return NextResponse.json({ error: "notes must be a string" }, { status: 400 });
+  }
+  if (body?.professional_id !== undefined && body.professional_id !== null && typeof body.professional_id !== "string") {
+    return NextResponse.json({ error: "professional_id must be a string" }, { status: 400 });
   }
 
   const [{ data: service, error: serviceError }, { data: customer, error: customerError }, { data: company, error: companyError }] =
@@ -225,44 +224,39 @@ export async function POST(
     }
   }
 
-  const { data: businessHours, error: businessHoursError } = await supabase
-    .from("business_hours")
-    .select("day_of_week, start_time, end_time")
-    .eq("company_id", companyId)
-    .eq("is_active", true);
-  if (businessHoursError) {
-    return NextResponse.json({ error: businessHoursError.message }, { status: 500 });
+  let professionalId = typeof body?.professional_id === "string" ? body.professional_id : "";
+  if (!professionalId) {
+    const active = await listProfessionals(supabase, companyId);
+    if (active.length !== 1) {
+      return NextResponse.json({ error: "professional_id is required" }, { status: 400 });
+    }
+    professionalId = active[0].id;
+  }
+  const resolved = await resolveProfessionalForService(supabase, companyId, professionalId, serviceId);
+  if (!resolved.ok) {
+    return NextResponse.json(
+      {
+        error:
+          resolved.reason === "professional_not_found"
+            ? "professional not found for this company"
+            : "this professional doesn't perform this service",
+      },
+      { status: 400 },
+    );
   }
 
   const timezone = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
 
-  // No configured hours means "not set up yet," not "never open" -- only
-  // enforce once the merchant has actually defined at least one window.
-  // Otherwise a brand-new company (business_hours starts empty, H2) couldn't
-  // accept any booking until someone filled hours in first.
-  if (businessHours && businessHours.length > 0) {
-    const withinHours = isWithinBusinessHours({
-      timezone,
-      businessHours: businessHours as BusinessHourWindow[],
-      startsAt: startsAt.toISOString(),
-      durationMinutes: service.duration_minutes,
-    });
-    if (!withinHours) {
-      return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
-    }
-  }
-
-  // Merchant-registered time off (K3). Unlike business hours this has no
-  // "unconfigured = permissive" default -- a block only exists because the
-  // merchant added it, so it always applies.
-  const { data: timeOffRows, error: timeOffError } = await supabase
-    .from("company_time_off")
-    .select("start_date, end_date")
-    .eq("company_id", companyId);
-  if (timeOffError) {
-    return NextResponse.json({ error: timeOffError.message }, { status: 500 });
-  }
-  if (isDuringTimeOff((timeOffRows ?? []) as TimeOffBlock[], timezone, startsAt.toISOString())) {
+  // The professional's own hours (or the establishment's they inherit) and
+  // any time off that applies to them. No configured hours at all means "not
+  // set up yet," not "never open" -- a brand-new company (business_hours
+  // starts empty, H2) can still take bookings. Time off always applies.
+  const fits = await fitsProfessionalSchedule(supabase, companyId, resolved.professional, {
+    timezone,
+    startsAt: startsAt.toISOString(),
+    durationMinutes: service.duration_minutes,
+  });
+  if (!fits) {
     return NextResponse.json({ error: "This time is outside business hours" }, { status: 400 });
   }
 
@@ -274,6 +268,7 @@ export async function POST(
     .insert({
       company_id: companyId,
       service_id: serviceId,
+      professional_id: professionalId,
       customer_id: customerId,
       conversation_id: body?.conversation_id ?? null,
       agent_id: body?.agent_id ?? null,
@@ -287,7 +282,7 @@ export async function POST(
 
   if (error) {
     // Postgres 23P01 = exclusion_violation — the EXCLUDE constraint caught
-    // an overlap with an existing live appointment for this company. A
+    // an overlap with a live appointment of the same professional. A
     // clean 409 beats surfacing the raw constraint-violation message.
     if (error.code === "23P01") {
       return NextResponse.json(
@@ -303,16 +298,16 @@ export async function POST(
   // the merchant's calendar. Best-effort: a sync failure never fails the
   // booking itself, see appointment-sync.ts.
   if (status === "confirmed") {
-    const googleEventId = await syncAppointmentConfirmed(companyId, {
+    const googleEvent = await syncAppointmentConfirmed(professionalId, {
       serviceName: service.name,
       customerName: customer.name,
       startsAt: data.starts_at,
       visibleEndsAt: calendarVisibleEndsAt(data.starts_at, service.duration_minutes),
     });
-    if (googleEventId) {
+    if (googleEvent) {
       const { data: synced } = await supabase
         .from("appointments")
-        .update({ google_event_id: googleEventId })
+        .update({ google_event_id: googleEvent.googleEventId, google_calendar_id: googleEvent.googleCalendarId })
         .eq("id", data.id)
         .select()
         .single();

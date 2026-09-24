@@ -1,9 +1,11 @@
 import { AppointmentRepository } from "@/lib/appointments/repository";
 import { omitCalendarSignal } from "./omit-calendar-signal";
 import type { AgentTool } from "./types";
+import { PROFESSIONAL_ID_PARAM, PROFESSIONAL_RESULT_NOTE, professionalIdArg } from "./professional-param";
 
 type FindNextAvailableArgs = {
   serviceId: string;
+  professionalId?: string;
 };
 
 // Trello J8 -- the "what's your soonest slot for X?" shortcut. find_available_slots
@@ -38,7 +40,8 @@ export const findNextAvailableTool: AgentTool = {
     "this business offers. With `reason: \"no_business_hours\"` the business hasn't set its " +
     "opening hours yet -- that is not \"nothing in the next 90 days\": tell the customer \"Ainda " +
     "não temos horários definidos por aqui\" (in their language) and offer the team if you can; " +
-    "never say the business is closed and never suggest trying a later date.",
+    "never say the business is closed and never suggest trying a later date.\n\n" +
+    PROFESSIONAL_RESULT_NOTE,
   parameters: {
     type: "object",
     properties: {
@@ -46,6 +49,7 @@ export const findNextAvailableTool: AgentTool = {
         type: "string",
         description: "Id of the service to check, from a list_services result.",
       },
+      professionalId: PROFESSIONAL_ID_PARAM,
     },
     required: ["serviceId"],
     additionalProperties: false,
@@ -53,7 +57,7 @@ export const findNextAvailableTool: AgentTool = {
   async execute(rawArgs, ctx) {
     const args = rawArgs as FindNextAvailableArgs;
     const result = await AppointmentRepository.findNextAvailable(
-      { companyId: ctx.companyId, serviceId: args.serviceId },
+      { companyId: ctx.companyId, serviceId: args.serviceId, professionalId: professionalIdArg(args.professionalId) },
       ctx.supabase,
     );
     return omitCalendarSignal(result);

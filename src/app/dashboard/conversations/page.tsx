@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChatIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 import { ConversationsInbox } from "./conversations-inbox";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 const PAGE_SIZE = 30;
 
@@ -16,6 +17,8 @@ export default async function ConversationsPage({
 }: {
   searchParams: Promise<{ c?: string | string[] }>;
 }) {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const supabase = await createClient();
   const [t, { c }, { data: companies }] = await Promise.all([
     getTranslations("Conversations"),

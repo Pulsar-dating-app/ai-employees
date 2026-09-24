@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { CompanyRepository, type PolicyInformation } from "@/lib/companies/repository";
 import { AppointmentRepository } from "@/lib/appointments/repository";
 import { ProductRepository } from "@/lib/products/repository";
+import { countActiveProfessionals } from "@/lib/professionals/repository";
 import { classifyServiceChoice, type ServiceChoice } from "./prompt";
 
 // Step 4 -- Trello C3 replaced this step's original stub (a full,
@@ -38,6 +39,12 @@ export async function loadServiceChoice(
   companyId: string,
 ): Promise<ServiceChoice | null> {
   return classifyServiceChoice(await AppointmentRepository.listServices(companyId, supabase));
+}
+
+// 2026-09-24 -- whether the business has more than one active professional
+// (one schedule each). One count query, only for an agent that can schedule.
+export async function loadMultipleProfessionals(supabase: SupabaseClient, companyId: string): Promise<boolean> {
+  return (await countActiveProfessionals(supabase, companyId)) > 1;
 }
 
 // Whether this company has any product at all, from the same count

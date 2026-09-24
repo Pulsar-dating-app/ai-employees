@@ -36,7 +36,7 @@ Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (the moder
 Route Handlers under `src/app/api/companies/` — this is the API surface other epics build against, so it's plain HTTP endpoints rather than Server Actions (see decisions.md):
 - `GET /api/companies` — list companies for the current user. Plain `select * from companies`; RLS (`is_company_member`) already scopes it, no manual join.
 - `POST /api/companies` — create a company. Delegates to the `public.create_company_with_owner` RPC (migration `20260825154320`) so the `companies` insert + `company_users` owner insert happen atomically in one Postgres function call, since supabase-js has no client-side multi-table transaction. The function is `SECURITY DEFINER` (RLS-bypassing) and `anon` is explicitly denied EXECUTE — see decisions.md for why both were necessary, not just the obvious-looking `SECURITY INVOKER` + `revoke ... from public`.
-- `POST /api/companies/[companyId]/members` — add/invite a member (no email invites in MVP; target user must already have an account). Re-checks the caller is owner/admin at the API layer (querying their own `company_users` row) before inserting, so a non-admin gets a clean 403 instead of a raw Postgres RLS error. Additionally, only an existing `owner` can assign the `owner` role to someone else — an `admin` can add members/admins but not mint another owner. This distinction is API-layer only: RLS's `is_company_admin` treats `owner`/`admin` as equivalent for every other operation (updating the company, managing membership in general), so owner-vs-admin has no meaning anywhere else in the system today.
+- `POST /api/companies/[companyId]/members` — add a member by `userId` (the target must already have an account). The dashboard doesn't use it: team members join by email as professionals since 2026-09-25 (see "Team roles" below). Re-checks the caller is owner/admin at the API layer (querying their own `company_users` row) before inserting, so a non-admin gets a clean 403 instead of a raw Postgres RLS error. Additionally, only an existing `owner` can assign the `owner` role to someone else — an `admin` can add members/admins but not mint another owner. This distinction is API-layer only: RLS's `is_company_admin` treats `owner`/`admin` as equivalent for every other operation (updating the company, managing membership in general), so owner-vs-admin has no meaning anywhere else in the system today.
 - `GET /api/companies/[companyId]` (Trello B2) — the single-resource sibling of the list endpoint above; any member can view (`requireMember`, matches RLS's `is_company_member`). Returns the full row — profile fields (`name`/`email`/`phone`/`website_url`/`currency`/`country`/`timezone`/`industry`) plus the knowledge fields (`description`/`shipping_policy`/`return_policy`/`payment_policy`/`faq`/`additional_information`) that C3's `get_business_information`/`get_policy_information` tools will read at runtime. `industry` (nullable `varchar`, migration `20260827124109_add_industry_to_companies`) is a free-text business-sector label surfaced on the Settings "Business Identity" card — set/cleared through PATCH like the other short profile fields, not part of the `create_company_with_owner` RPC.
 - `PATCH /api/companies/[companyId]` (Trello B2) — only owner/admin (`requireAdmin`, matches RLS's `is_company_admin`; the only route so far needing an admin-only file-local check that isn't the members route's bespoke owner-vs-admin logic). **Merge-patch semantics**: a key present with value `null` clears that column; an omitted key leaves it untouched — this is now the pattern for any future partial-update endpoint (e.g. B3's product update), not something to reinvent per-route. Validation limits (all file-local constants, no shared validation module exists yet): free-text fields (`description`, `shipping_policy`, `return_policy`, `payment_policy`, `additional_information`) up to 5000 chars; short profile fields up to 255 chars; `currency` exactly 3 chars (matching the DB's `varchar(3)`, checked here so a bad value 400s cleanly instead of surfacing a raw Postgres error); `faq` — see decisions.md for the shape. No RPC needed (unlike A3's create-with-owner): an UPDATE has no chicken-and-egg RETURNING-vs-SELECT-policy problem the way an INSERT-and-become-member does.
 - `requireMember`/`requireAdmin` are file-local to this route (not extracted to `src/lib/`), matching B1's precedent above. Worth noting: this is now the third route file (A3's members route, B1's agents route, this one) with its own near-duplicate membership-check logic — a real candidate for extraction if a fourth shows up, but not done here since it's outside any single ticket's scope.
@@ -1087,6 +1087,78 @@ The no-show-reduction story R2 unblocked (Ana now collects a required email). Al
 ### Ana's agent row (Trello J1)
 
 `agents` row seeded (migration `20260829195857_seed_ana_agent`, slug `ana`, role "Scheduling Assistant") — same two-step pattern as Malu's own seeding (C2): a shell row first, then `personality`/`system_prompt` content in a follow-up migration (`20260830140000_set_ana_personality_and_system_prompt`, shipped with J3) once her voice and tool-calling behavior were built out. She's hireable immediately, no app code changes needed — the marketplace and agent-detail pages already read every active `agents` row dynamically (see "Onboarding & admin shell" above), the same mechanism that surfaced `john` with zero catalog-specific code. No `src/lib/agents/catalog.ts` enrichment entry was added for her either, same precedent as `john` — she renders fully from real DB columns until/unless trait-chip content is written for her specifically.
+
+### Professionals — one schedule each (2026-09-24)
+
+Supersedes the company-wide assumptions in the H2/H3/I1/I2/I3/J3 sections below wherever they say "the company's" hours, calendar or overlap (see decisions.md, same date).
+
+- **Data** (migration `20260924120000_professionals.sql`):
+  - `professionals`: `name`, `is_active`, `position` (the order Ana names them in), `uses_custom_hours`, `user_id` (the login that owns this schedule), and `invite_email` (pending, until someone signs up with it — see "Team roles" below). RLS lets members read; writes are service-role only. `private.seed_default_professional` runs on company insert, so every company has at least one.
+  - `professional_services(professional_id, service_id)`.
+  - `professional_id` added to `appointments` (not null, with a before-insert trigger that fills it when the company has exactly one active professional), `business_hours`, `company_time_off`, `appointment_waitlist` and `company_calendar_connections`. Every one of those foreign keys is composite `(professional_id, company_id)`, so a row can never point at another company's professional.
+  - Overlap: `appointments_professional_overlap_excl`.
+- **Rules** (`src/lib/professionals/rules.ts`, pure):
+  - `effectiveHours`: own rows if `usesCustomHours`, otherwise the rows with a null `professional_id`. Custom with no rows means "works no day".
+  - `eligibleProfessionals`: linked professionals, or everyone when nobody is linked.
+  - `mergeSlotsAcrossProfessionals`, `closedDatesForAll` (closed only if closed for everyone), `orderForAutoAssignment`.
+- **IO** (`src/lib/professionals/repository.ts`): list, get, eligibility, `loadProfessionalConstraints`, `fitsProfessionalSchedule` (write-time check used by the dashboard routes), `anyProfessionalHasHours`, `setServiceProfessionals`, and `canManageProfessional` (owner/admin, or the linked member). Route gates live in `route-auth.ts`.
+- **Availability** (`load.ts`):
+  - One batch of reads, then `computeAvailableSlots` per professional; `engine.ts` is unchanged.
+  - `professionalId` narrows to one professional. Without it, the slots of everyone who performs the service are merged, each naming who is free.
+  - `multipleProfessionals` tells callers whether to show professionals at all.
+- **Booking** (`AppointmentRepository.book`): a named professional must be active and perform the service. With no name, the repository tries the eligible professionals who fit the time, fewest bookings that day first, and moves to the next on a `23P01` overlap error. `reschedule` keeps the same professional unless it's given another.
+- **Ana**:
+  - The find, book, waitlist and hours tools take an optional `professionalId` (`tools/professional-param.ts`).
+  - When there is more than one active professional, results carry `professionals` and `professionalName`, and `list_services` lists who performs each service. None of this is returned for a single-professional business.
+  - `buildProfessionalChoiceSection` is added to the prompt only in that multi-professional case.
+- **Google**:
+  - `getValidAccessToken(professionalId)`.
+  - `calendars.ts` lists writable calendars and creates one ("{name} · Staffra").
+  - Routes live under `professionals/[professionalId]/calendar`: `GET`/`PATCH`/`DELETE`, plus `/connect` and `/calendars`. The company-level `/calendar` routes were removed.
+  - The `appointment-sync` functions take the professional and the calendar the event was created in.
+- **Dashboard**:
+  - "Professionals" tab (`scheduling/professionals`): a list plus a detail page with name and login email ("Conta ativa" / "Convite pendente"), the services they perform (read-only), hours (inherit or their own), time off and Google Calendar.
+  - Scheduling settings edits the establishment's hours and closures. Its Google section is the single professional's card, or with several professionals, a summary linking to each.
+  - Agenda: professional filter, names shown via `ShowProfessionalProvider`; an owner/admin who is also a professional opens on their own appointments. A `member` sees only theirs, with no filter.
+  - Services: "Who performs it" chips.
+  - Emails add a "Profissional" row when there are several professionals.
+- **Not built**: per-professional metrics, per-professional lanes in the "today" panel, a professionals step in onboarding (the Professionals tab nudges a solo business instead), and per-plan limits on the number of professionals.
+- **Tests**: `tests/unit/professionals/rules.test.ts`, the `buildProfessionalChoiceSection` cases in `prompt.test.ts`, and `tests/integration/professionals.test.ts`. The calendar suites moved to the per-professional routes via `helpers/professionals.ts`. The Google mock gained `calendarList`/`calendars.insert` and records each event's `calendarId`.
+
+### Team roles — owners/admins vs. members (2026-09-25)
+
+See decisions.md, same date. Scope: Ana's scheduling side; Malu has no member-facing surface.
+
+- **Access, one place** (`src/lib/auth/company-access.ts`):
+  - `getCurrentAccess()` returns the user, their name, company, role, `isAdmin` and linked professional. It is React-`cache`d per request, so the layout and the page share one lookup.
+  - `requireAdminPage()` is the first line of every company-level dashboard page: it sends a member to `/dashboard/scheduling`.
+  - `checkCompanyRole(supabase, companyId, userId, "member" | "admin")` is the route gate. For a member it also returns `ownProfessionalId`. It replaced the file-local `requireMember` copies in the routes whose rules changed.
+- **Joining** (`src/lib/team/invites.ts`):
+  - `decideEmailAssignment` (pure) and `assignProfessionalEmail` decide and apply what an email does: link now, pending invite, or 409.
+  - `claimPendingInvite` runs from `dashboard/layout.tsx` (for a company-less account), `/onboarding` and `createCompany`.
+  - Everything here uses the service client, since the claimant isn't a member yet.
+  - `invite_email` is stored lowercased, with one pending invite per address platform-wide (`professionals_invite_email_idx`).
+- **Professionals API:**
+  - `POST` requires `{ name, email }`.
+  - `PATCH` takes `email` (while no account is linked; `null` withdraws the invite) and `unlink: true`. Name is admin-only now. `userId` is no longer accepted.
+  - Deactivating a schedule keeps its person (they see "your schedule was turned off"). `unlink: true` is owner-only: for anyone but the owner it's a removal (`removeFromCompany`).
+- **Dashboard shell:**
+  - A member gets a two-item sidebar ("Agenda", "Minha agenda") with no setup guide or usage meter, and no scheduling sub-tabs.
+  - A member whose professional is inactive sees a "your schedule was turned off" screen.
+  - Every account without `users.name` is sent to `/onboarding/profile`, the new first step in `ONBOARDING_STEPS`.
+  - The company-onboarding redirect applies to owners/admins only, and `resolveOnboardingState` returns `done` for a member.
+- **Route rules for a member:**
+  - Appointments: GET is forced to their own professional; POST only on their own; PATCH can't move an appointment to someone else. Others' appointments 404 through RLS.
+  - `business-hours` PUT and `time-off` writes only with their own `professionalId`.
+  - Services and products (writes), intake fields (PUT), hiring, photo, widget, preview chat, Shopify sync, conversations and analytics are admin-only.
+  - Waitlist notifications after a cancel run with the service client, because a member can't see "any professional" waitlist entries.
+- **Role management** (`src/lib/team/roles.ts`, `members/[userId]` route, migration `20260925150000`):
+  - `checkTeamAction` (pure) is the rule: owner/admin promote a member, only the owner demotes or removes, the owner is untouchable, and nobody changes themselves. `company_users` RLS enforces the same.
+  - `removalBlocker` refuses a removal while the person's schedule has upcoming bookings, or when it's the last active one. `removeFromCompany` then deletes the seat, unlinks and deactivates the schedule, and writes a `company_member_removals` notice.
+  - A company-less account with an unacknowledged notice is sent to `/access-removed` (from the dashboard layout and `/onboarding`). Its "set up my own business" action acknowledges the notice; being re-added by email acknowledges it too.
+  - The professional page shows the account's role (Dono/Administrador/Membro) and the actions the viewer may take.
+- **RLS** (`20260925120000_team_roles.sql`) uses `private.is_own_professional` and `private.is_own_customer` alongside `is_company_admin`. Appointments are deleted by admins only; the dashboard "cancel" is an update.
+- **Tests:** `tests/unit/team/invites.test.ts` and `tests/integration/team-roles.test.ts`. `signUpTestUser` now names each user by default (`name: null` for a nameless one) and accepts a chosen `email`. Next streams a page-level `redirect()` under a `loading.tsx` as a 200 with `<meta id="__next-page-redirect">`, not a 307, so the tests' `page()` helper reads both.
 
 ### Google Calendar connect flow (Trello I1)
 

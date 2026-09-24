@@ -7,8 +7,10 @@ type CompanyRole = (typeof VALID_ROLES)[number];
 // POST: add/invite-member. RLS already blocks the insert unless the caller
 // is self-joining or is an admin, but the card asks for a clean 403 instead
 // of a raw Postgres error — so the admin check is duplicated here at the
-// API layer before attempting the insert. No invite-by-email: the target
-// user must already have an account (userId), per A3's MVP scope.
+// API layer before attempting the insert. The target user must already
+// have an account (userId). The dashboard doesn't use this route: team
+// members join by email as professionals since 2026-09-25 (POST
+// /professionals with `email`, claimed at sign-up -- src/lib/team/invites.ts).
 //
 // Only the owner can assign the owner role — an admin can add
 // members/admins but can't mint another owner (RLS's is_company_admin

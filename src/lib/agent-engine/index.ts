@@ -10,6 +10,7 @@ import {
   loadCompanyTimezone,
   loadHasBusinessHours,
   loadHasProducts,
+  loadMultipleProfessionals,
   loadHumanHandoffEnabled,
   loadPolicies,
   loadServiceChoice,
@@ -100,12 +101,13 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   // Same reasoning for search_products: only an agent that can search a
   // catalog needs to know whether it's empty.
   const canSearchProducts = tools.some((tool) => tool.name === "search_products");
-  const [serviceChoice, hasBusinessHours, hasProducts] = await Promise.all([
+  const [serviceChoice, hasBusinessHours, hasProducts, multipleProfessionals] = await Promise.all([
     tools.some((tool) => tool.name === "list_services")
       ? loadServiceChoice(supabase, input.companyId)
       : null,
     canSchedule ? loadHasBusinessHours(supabase, input.companyId) : true,
     canSearchProducts ? loadHasProducts(supabase, input.companyId) : true,
+    canSchedule ? loadMultipleProfessionals(supabase, input.companyId) : null,
   ]);
 
   // Step 2
@@ -130,6 +132,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     // tools) composes exactly the prompt it did before.
     policies: tools.some((tool) => tool.name === "get_policy_information") ? policies : null,
     serviceChoice,
+    multipleProfessionals,
     // Read off the resolved list like the ones above: the offer of "alguém do
     // time" must match whether request_human actually survived the handoff filter.
     noBusinessHours: hasBusinessHours

@@ -1,11 +1,13 @@
 import { AppointmentRepository } from "@/lib/appointments/repository";
 import { omitCalendarSignal } from "./omit-calendar-signal";
 import type { AgentTool } from "./types";
+import { PROFESSIONAL_ID_PARAM, PROFESSIONAL_RESULT_NOTE, professionalIdArg } from "./professional-param";
 
 type FindAvailableSlotsArgs = {
   serviceId: string;
   from: string;
   to: string;
+  professionalId?: string;
 };
 
 // Trello J3, tool #2 -- the real "keep track of available times" capability
@@ -57,7 +59,8 @@ export const findAvailableSlotsTool: AgentTool = {
     "/ `text` -- so you know what to expect), and whether it's `required`. An `email` is always " +
     "on the list and always required. Collect every required one before booking; ask for an " +
     "optional one once and move on if they'd rather not say. Pass what you gather to " +
-    "book_appointment as `intakeAnswers`, keyed by each question's `key`.",
+    "book_appointment as `intakeAnswers`, keyed by each question's `key`.\n\n" +
+    PROFESSIONAL_RESULT_NOTE,
   parameters: {
     type: "object",
     properties: {
@@ -67,6 +70,7 @@ export const findAvailableSlotsTool: AgentTool = {
       },
       from: { type: "string", description: "First date to check, YYYY-MM-DD." },
       to: { type: "string", description: "Last date to check, YYYY-MM-DD (inclusive)." },
+      professionalId: PROFESSIONAL_ID_PARAM,
     },
     required: ["serviceId", "from", "to"],
     additionalProperties: false,
@@ -74,7 +78,13 @@ export const findAvailableSlotsTool: AgentTool = {
   async execute(rawArgs, ctx) {
     const args = rawArgs as FindAvailableSlotsArgs;
     const result = await AppointmentRepository.findAvailableSlots(
-      { companyId: ctx.companyId, serviceId: args.serviceId, from: args.from, to: args.to },
+      {
+        companyId: ctx.companyId,
+        serviceId: args.serviceId,
+        from: args.from,
+        to: args.to,
+        professionalId: professionalIdArg(args.professionalId),
+      },
       ctx.supabase,
     );
     return omitCalendarSignal(result);

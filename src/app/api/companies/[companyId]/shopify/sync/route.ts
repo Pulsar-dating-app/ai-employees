@@ -6,7 +6,7 @@ import {
   ShopifyReauthRequiredError,
   ShopifyBulkFailedError,
 } from "@/lib/shopify/catalog-sync";
-import { requireMember } from "../access";
+import { requireAdmin } from "../access";
 
 // A full (bulk) sync polls Shopify while its async export runs. Give the
 // function room; it hands back status:"running" before this is hit and a
@@ -14,9 +14,9 @@ import { requireMember } from "../access";
 // caps at 10s -- the resume-on-next-click path still works, just slower).
 export const maxDuration = 300;
 
-// POST: pull the connected store's catalogue into `products`. Member-level
-// (matches product create/edit, which the product routes also gate at
-// requireMember, not requireAdmin) -- connect/disconnect stay admin-only.
+// POST: pull the connected store's catalogue into `products`. Admin-only
+// since 2026-09-25, like product create/edit (members are professionals who
+// see their own agenda, not the catalogue).
 // Body `{ full: true }` forces a bulk full re-sync (reconciles products
 // deleted in Shopify, which a delta can't see).
 export async function POST(
@@ -33,7 +33,7 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await requireAdmin(supabase, companyId, user.id);
   if (memberCheck.error) return memberCheck.error;
 
   const body = await request.json().catch(() => null);

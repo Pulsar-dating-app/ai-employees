@@ -70,7 +70,8 @@
       "hire": "Your hire",
       "setup": "What she needs",
       "ready": "See her work",
-      "plan": "Your plan"
+      "plan": "Your plan",
+      "profile": "You"
     },
     "hire": {
       "title": "Who are you hiring for {company}?",
@@ -243,6 +244,15 @@
       "ctaTrial": "Start free",
       "later": "I'll decide later",
       "error": "We couldn't open the checkout. Please try again."
+    },
+    "profile": {
+      "title": "First, what's your name?",
+      "subtitle": "It's how your team and your business's messages will refer to you.",
+      "nameLabel": "Your name",
+      "namePlaceholder": "e.g. Ana Souza",
+      "nameMissing": "Enter your name.",
+      "nameTooLong": "Use at most {max} characters.",
+      "error": "Something went wrong saving your name. Try again."
     }
   },
   "CheckoutLink": {
@@ -789,7 +799,9 @@
       "locked": "locked",
       "needsAttention": "needs attention",
       "more": "More",
-      "needsSetup": "Needs setup"
+      "needsSetup": "Needs setup",
+      "agenda": "Appointments",
+      "mySchedule": "My schedule"
     },
     "locked": {
       "title": "{name} isn't on your team yet",
@@ -838,6 +850,10 @@
           "body": "WhatsApp, Instagram, your site's chat or a direct link: where customers will talk to your team. With the direct link, this checks off at the first conversation."
         }
       }
+    },
+    "member": {
+      "deactivatedTitle": "Your schedule was turned off",
+      "deactivatedBody": "The business turned off your schedule, so there's nothing to manage here right now. Talk to them if this is a mistake."
     }
   },
   "Metrics": {
@@ -1284,7 +1300,8 @@
         "services": "Services",
         "calendar": "Google Calendar",
         "approval": "Booking approval",
-        "intake": "Intake questions"
+        "intake": "Intake questions",
+        "professionals": "Professionals"
       },
       "status": {
         "hoursOpen": "{count, plural, one {Open # day a week} other {Open # days a week}}",
@@ -1295,7 +1312,9 @@
         "calendarNotConnected": "Not connected",
         "approvalOn": "You approve each booking",
         "approvalOff": "Bookings confirm right away",
-        "intakeCount": "{count, plural, one {# question asked} other {# questions asked}}"
+        "intakeCount": "{count, plural, one {# question asked} other {# questions asked}}",
+        "professionalsCount": "{count, plural, one {# professional} other {# professionals}}",
+        "professionalsWithCalendars": "{count} professionals · {connected} with Google Calendar"
       },
       "rulesHeading": "Rules",
       "descriptionBlocked": "{name} only offers times that fit what's set up in Scheduling. Customers can book once business hours and services are set.",
@@ -1638,7 +1657,10 @@
         "USD": "USD — US Dollar",
         "BRL": "BRL — Brazilian Real",
         "EUR": "EUR — Euro"
-      }
+      },
+      "professionalsLabel": "Who performs it",
+      "professionalsAll": "Everyone",
+      "professionalsHint": "Customers can only book this service with the professionals selected here."
     },
     "menu": {
       "search": "Search services",
@@ -1671,7 +1693,85 @@
       "ariaLabel": "Scheduling sections",
       "appointments": "Appointments",
       "services": "Services",
+      "professionals": "Professionals",
       "settings": "Settings"
+    },
+    "professionals": {
+      "pageTitle": "Professionals",
+      "noCompany": "Create your business first to set up professionals.",
+      "browseMarketplace": "Go to the dashboard",
+      "title": "Professionals",
+      "subtitle": "Everyone who attends customers, each with their own schedule. When you have more than one, customers choose who they'd like to see.",
+      "addButton": "Add professional",
+      "singleTitle": "Do several people attend customers here?",
+      "singleBody": "Add each of them (barbers, doctors, stylists…). Each one gets their own schedule, working hours, time off and Google Calendar, and customers can pick who they'd like to book with.",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. João",
+      "addConfirm": "Add",
+      "cancel": "Cancel",
+      "nameRequired": "Enter a name.",
+      "saveError": "Couldn't save that. Please try again.",
+      "saved": "Saved",
+      "save": "Save",
+      "lastActiveError": "Your business needs at least one active professional.",
+      "upcomingError": "{count, plural, one {This professional has # upcoming appointment.} other {This professional has # upcoming appointments.}} Cancel or move them to someone else first.",
+      "you": "You",
+      "ownHours": "Own hours",
+      "inheritedHours": "Business hours",
+      "allServices": "All services",
+      "googleConnected": "Google connected",
+      "googleNotConnected": "Google not connected",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "deactivate": "Remove",
+      "manage": "Manage",
+      "showInactive": "{count, plural, one {Show # removed professional} other {Show # removed professionals}}",
+      "hideInactive": "Hide removed professionals",
+      "reactivate": "Bring back",
+      "backToList": "Back to professionals",
+      "detailSubtitle": "Their own schedule: working hours, time off and Google Calendar.",
+      "inactiveSubtitle": "Removed — customers can't book with this professional anymore.",
+      "identityTitle": "Profile",
+      "identitySubtitle": "The name customers see when choosing who to book with, and the email this person logs in with.",
+      "servicesTitle": "Services",
+      "servicesSubtitle": "What customers can book with this professional.",
+      "noServices": "No services yet.",
+      "editServicesLink": "Choose who performs each service in Services",
+      "hoursTitle": "Working hours",
+      "inheritedHoursSubtitle": "Follows your business hours. Switch to their own if they work different days or times.",
+      "ownHoursSubtitle": "Their own weekly schedule, independent of your business hours.",
+      "noEstablishmentHours": "Your business hours aren't set yet.",
+      "useOwnHours": "Use their own hours",
+      "useEstablishmentHours": "Follow business hours again",
+      "timeOffTitle": "Time off",
+      "timeOffSubtitle": "Days only this professional is away. Customers can still book with everyone else.",
+      "googleSubtitle": "Connect {name}'s Google Calendar: their busy times are respected and their appointments go there.",
+      "backToAgenda": "Back to appointments",
+      "emailLabel": "Login email",
+      "emailPlaceholder": "name@example.com",
+      "emailRequired": "Enter their email.",
+      "emailInvalid": "That email doesn't look right.",
+      "emailInOtherCompany": "This email already belongs to another business on Staffra. Use a different one.",
+      "emailTaken": "This email is already used by another professional here.",
+      "addEmailHint": "Ask them to create a Staffra account with this email. They'll go straight to their own appointments and schedule.",
+      "accessActive": "Account active",
+      "accessPending": "Invite pending",
+      "pendingHint": "Ask {name} to create a Staffra account with this email to see their own appointments.",
+      "noEmailHint": "Add {name}'s email so they can log in and see their own appointments.",
+      "unlinkSelfConfirm": "Unlink your account from this schedule? You keep full access to the business.",
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "member": "Member"
+      },
+      "promote": "Make admin",
+      "promoteConfirm": "Make {name} an admin? They will see and manage the whole business, like you.",
+      "demote": "Make member again",
+      "demoteConfirm": "Make {name} a member again? They will only see their own appointments and schedule.",
+      "remove": "Remove from the business",
+      "removeConfirm": "Remove {name} from the business? They lose access right away and their schedule is turned off, so customers can no longer book with them. Their history stays, and you can reactivate the schedule later.",
+      "unlinkSelf": "Unlink my account from this schedule",
+      "ownerOnly": "Only the owner can do this."
     },
     "settings": {
       "pageTitle": "Scheduling settings",
@@ -1749,7 +1849,7 @@
         "notConfigured": "Google Calendar isn't set up for this workspace yet.",
         "connectedSince": "Connected on {date}",
         "notConnected": "No calendar connected yet.",
-        "adminOnly": "Ask an owner or admin to connect a calendar.",
+        "adminOnly": "Ask an owner or admin — or this professional — to connect a calendar.",
         "connectButton": "Connect Google Calendar",
         "connecting": "Opening Google…",
         "disconnectButton": "Disconnect",
@@ -1763,7 +1863,17 @@
         "stepTwoTitle": "Bookings respect your calendar",
         "stepTwoDescription": "Once connected, your team skips any time you're already busy in Google Calendar when offering slots.",
         "privacyNotice": "Your Google Calendar data is used only to check availability and manage appointments, per our",
-        "privacyNoticeLink": "Privacy Policy"
+        "privacyNoticeLink": "Privacy Policy",
+        "calendarTitle": "Choose the calendar",
+        "calendarHint": "Appointments go to this calendar, and its busy times block new bookings.",
+        "calendarLabel": "Calendar",
+        "primaryCalendar": "main calendar",
+        "createCalendar": "Create a calendar just for this",
+        "calendarSaved": "Calendar updated.",
+        "calendarCreated": "Created “{name}” and selected it.",
+        "calendarError": "Couldn't update the calendar. Please try again.",
+        "multiSubtitle": "Each professional connects their own Google Calendar. See who is connected:",
+        "manageLink": "Manage"
       },
       "intake": {
         "title": "Intake questions",
@@ -1809,6 +1919,7 @@
         "intakeCount": "{count, plural, one {# question asked} other {# questions asked}}",
         "calendarConnected": "Connected",
         "calendarNotConnected": "Not connected",
+        "calendarsConnected": "{connected} of {total} connected",
         "calendarUnavailable": "Not available",
         "readOnlyTitle": "View only"
       }
@@ -1892,7 +2003,9 @@
         "timelineLabel": "Today's timeline",
         "teamNoHours": "{name} can't offer times yet",
         "noHoursTimeline": "Set business hours to see today's timeline."
-      }
+      },
+      "professionalFilterLabel": "Filter by professional",
+      "professionalFilterAll": "All professionals"
     }
   },
   "LanguageSwitcher": {
@@ -2371,5 +2484,11 @@
       "paymentPending": "Waiting for a successful payment",
       "teamReplies": "Replies your team sent this period"
     }
+  },
+  "AccessRemoved": {
+    "title": "You no longer have access to {company}",
+    "body": "The person in charge of {company} removed your access. If this is a mistake, talk to them: they can add you back with this same email. You can also set up a business of your own.",
+    "startOwn": "Set up my own business",
+    "logout": "Log out"
   }
 }

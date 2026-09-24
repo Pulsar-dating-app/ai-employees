@@ -1,34 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
+import { createServiceClient } from "@/lib/supabase/service";
+import { parseProfessionalIds, setServiceProfessionals } from "@/lib/professionals/repository";
 
 // Trello H1 — update/soft-delete a single service. Mirrors B3's
 // products/[productId] route exactly (effective-merged-state price
 // validation, soft-delete via is_active, 404 on cross-company access).
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json({ error: "Not a member of this company" }, { status: 403 }),
-    };
-  }
-
-  return { error: null };
-}
 
 async function getService(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -101,7 +80,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const serviceLookup = await getService(supabase, companyId, serviceId);
@@ -156,22 +135,38 @@ export async function PATCH(
     return NextResponse.json({ error: priceError }, { status: 400 });
   }
 
+  // 2026-09-24 -- who performs the service ("Quem realiza"); [] = everyone.
+  let professionalIds: string[] | null = null;
+  if ("professionalIds" in body) {
+    professionalIds = parseProfessionalIds(body.professionalIds);
+    if (!professionalIds) {
+      return NextResponse.json({ error: "professionalIds must be an array of ids" }, { status: 400 });
+    }
+    const linked = await setServiceProfessionals(createServiceClient(), companyId, serviceId, professionalIds);
+    if (!linked.ok) return NextResponse.json({ error: linked.error }, { status: 400 });
+  }
+
   if (Object.keys(update).length === 0) {
-    return NextResponse.json({ service: serviceLookup.service });
+    return NextResponse.json({
+      service: professionalIds ? { ...serviceLookup.service, professional_ids: professionalIds } : serviceLookup.service,
+    });
   }
 
   const { data, error } = await supabase
     .from("services")
     .update(update)
     .eq("id", serviceId)
-    .select()
+    .select("*, professional_services(professional_id)")
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ service: data });
+  const { professional_services: links, ...service } = data as Record<string, unknown> & {
+    professional_services?: { professional_id: string }[] | null;
+  };
+  return NextResponse.json({ service: { ...service, professional_ids: (links ?? []).map((l) => l.professional_id) } });
 }
 
 // DELETE: soft-delete. Sets is_active = false — appointments referencing
@@ -191,7 +186,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const serviceLookup = await getService(supabase, companyId, serviceId);

@@ -9,6 +9,7 @@ import { agentPhoto, resolveAgentPhoto } from "@/lib/agents/media";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { getTeamActivity, type TeamActivity } from "@/lib/agents/team-activity";
 import { HireCard, TeamBadge, type TeamMember } from "./team-badge";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 const BANNER_ACTION = {
   primary:
@@ -26,6 +27,8 @@ type HiredAgentRow = {
 };
 
 export default async function MyTeamPage() {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const supabase = await createClient();
   const t = await getTranslations("MyAgents");
 

@@ -134,10 +134,18 @@ export function BusinessHoursCard({
   companyId,
   canEdit,
   initialRows,
+  professionalId = null,
+  title,
+  description,
 }: {
   companyId: string;
   canEdit: boolean;
   initialRows: BusinessHourRow[];
+  // 2026-09-24 -- set to edit one professional's own schedule instead of the
+  // establishment's hours (the professional page reuses this card).
+  professionalId?: string | null;
+  title?: string;
+  description?: string;
 }) {
   const t = useTranslations("Scheduling.settings.businessHours");
   const tn = useTranslations("Scheduling.settings.nav");
@@ -214,7 +222,8 @@ export function BusinessHoursCard({
       const businessHours = days
         .filter((d) => d.open)
         .flatMap((d) => d.ranges.map((r) => ({ day_of_week: d.dow, start_time: r.start, end_time: r.end })));
-      const res = await fetch(`/api/companies/${companyId}/business-hours`, {
+      const query = professionalId ? `?professionalId=${encodeURIComponent(professionalId)}` : "";
+      const res = await fetch(`/api/companies/${companyId}/business-hours${query}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ businessHours }),
@@ -234,7 +243,7 @@ export function BusinessHoursCard({
   }
 
   return (
-    <SettingsBlock id="business-hours" title={t("title")} description={t("subtitle")}>
+    <SettingsBlock id="business-hours" title={title ?? t("title")} description={description ?? t("subtitle")}>
       <div className="flex flex-col">
         <div aria-hidden="true" className="hidden grid-cols-[168px_minmax(0,1fr)_296px] gap-x-6 pb-2 md:grid">
           <span />

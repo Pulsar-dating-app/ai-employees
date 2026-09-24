@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { CheckIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CHEVRON } from "@/components/ui/select";
 import { SettingsBlock } from "@/components/ui/settings-block";
 import { useSectionStatus } from "./settings-shell";
 
@@ -36,18 +37,35 @@ type Connection = {
   connected_at: string | null;
 } | null;
 
+type CalendarOption = { id: string; name: string; primary: boolean };
+
 type View = "loading" | "idle" | "connecting" | "disconnecting" | "confirmingDisconnect";
 
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
 
+const SELECT_CLASSES =
+  "h-11 w-full min-w-0 rounded-xl border border-outline-variant/70 bg-surface-container-lowest pl-3.5 text-sm text-on-surface outline-none transition-[border-color,box-shadow] hover:border-outline focus:border-primary focus:shadow-[0_0_0_4px_rgba(53,37,205,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
+
+// One professional's Google Calendar (2026-09-24: each professional connects
+// their own account and picks which of its calendars holds their
+// appointments). Used on the professional's page, and on Scheduling settings
+// when the business has a single professional -- which keeps that screen
+// exactly as it was before multiple schedules existed.
 export function GoogleCalendarCard({
   companyId,
-  isAdmin,
+  professionalId,
+  canManage,
   googleClientId,
+  title,
+  description,
 }: {
   companyId: string;
-  isAdmin: boolean;
+  professionalId: string;
+  // Company owner/admin, or the team member linked to this professional.
+  canManage: boolean;
   googleClientId: string | null;
+  title?: string;
+  description?: string;
 }) {
   const t = useTranslations("Scheduling.settings.googleCalendar");
   const tn = useTranslations("Scheduling.settings.nav");
@@ -55,17 +73,41 @@ export function GoogleCalendarCard({
   const [view, setView] = useState<View>("loading");
   const [scriptReady, setScriptReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [calendars, setCalendars] = useState<CalendarOption[] | null>(null);
+  const [calendarBusy, setCalendarBusy] = useState(false);
+  const [calendarNote, setCalendarNote] = useState<string | null>(null);
   const codeClient = useRef<GoogleCodeClient | null>(null);
+  const baseUrl = `/api/companies/${companyId}/professionals/${professionalId}/calendar`;
 
   useEffect(() => {
-    fetch(`/api/companies/${companyId}/calendar`)
+    fetch(baseUrl)
       .then((res) => res.json())
       .then((body: { connection?: Connection }) => {
         setConnection(body?.connection ?? null);
         setView("idle");
       })
       .catch(() => setView("idle"));
-  }, [companyId]);
+  }, [baseUrl]);
+
+  const isConnected = connection?.status === "connected";
+
+  // The connected account's calendars, for the picker -- loaded once the
+  // connection is live (and again after a reconnect resets the list).
+  useEffect(() => {
+    if (!isConnected || !canManage || calendars !== null) return;
+    let cancelled = false;
+    fetch(`${baseUrl}/calendars`)
+      .then((res) => (res.ok ? res.json() : { calendars: [] }))
+      .then((body: { calendars?: CalendarOption[] }) => {
+        if (!cancelled) setCalendars(body.calendars ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setCalendars([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isConnected, canManage, calendars, baseUrl]);
 
   function startConnect() {
     if (!googleClientId || !window.google || !scriptReady) {
@@ -87,7 +129,7 @@ export function GoogleCalendarCard({
             return;
           }
           try {
-            const res = await fetch(`/api/companies/${companyId}/calendar/connect`, {
+            const res = await fetch(`${baseUrl}/connect`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ code: response.code }),
@@ -99,6 +141,7 @@ export function GoogleCalendarCard({
             }
             const { connection: updated } = await res.json();
             setConnection(updated ?? null);
+            setCalendars(null);
             setView("idle");
           } catch {
             setErrorMessage(t("connectError"));
@@ -113,7 +156,7 @@ export function GoogleCalendarCard({
   async function confirmDisconnect() {
     setView("disconnecting");
     try {
-      const res = await fetch(`/api/companies/${companyId}/calendar`, { method: "DELETE" });
+      const res = await fetch(baseUrl, { method: "DELETE" });
       if (!res.ok) {
         setErrorMessage(t("disconnectError"));
         setView("idle");
@@ -121,6 +164,7 @@ export function GoogleCalendarCard({
       }
       const { connection: updated } = await res.json();
       setConnection(updated ?? null);
+      setCalendars(null);
       setView("idle");
     } catch {
       setErrorMessage(t("disconnectError"));
@@ -128,9 +172,52 @@ export function GoogleCalendarCard({
     }
   }
 
-  const isConnected = connection?.status === "connected";
+  async function chooseCalendar(googleCalendarId: string) {
+    setCalendarBusy(true);
+    setCalendarNote(null);
+    try {
+      const res = await fetch(baseUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ googleCalendarId }),
+      });
+      if (!res.ok) {
+        setCalendarNote(t("calendarError"));
+      } else {
+        const { connection: updated } = await res.json();
+        setConnection(updated ?? connection);
+        setCalendarNote(t("calendarSaved"));
+      }
+    } catch {
+      setCalendarNote(t("calendarError"));
+    }
+    setCalendarBusy(false);
+  }
+
+  async function createCalendar() {
+    setCalendarBusy(true);
+    setCalendarNote(null);
+    try {
+      const res = await fetch(`${baseUrl}/calendars`, { method: "POST" });
+      if (!res.ok) {
+        setCalendarNote(t("calendarError"));
+      } else {
+        const { calendar } = (await res.json()) as { calendar: CalendarOption };
+        setCalendars((prev) => [...(prev ?? []), calendar]);
+        setConnection((prev) => (prev ? { ...prev, google_calendar_id: calendar.id } : prev));
+        setCalendarNote(t("calendarCreated", { name: calendar.name }));
+      }
+    } catch {
+      setCalendarNote(t("calendarError"));
+    }
+    setCalendarBusy(false);
+  }
+
   const loading = view === "loading";
   const available = Boolean(googleClientId);
+  const selectedCalendar = connection?.google_calendar_id ?? "primary";
+  const primaryCalendar = calendars?.find((c) => c.primary);
+  const calendarValue = selectedCalendar === "primary" && primaryCalendar ? primaryCalendar.id : selectedCalendar;
 
   useSectionStatus(
     "google-calendar",
@@ -149,8 +236,8 @@ export function GoogleCalendarCard({
   return (
     <SettingsBlock
       id="google-calendar"
-      title={t("title")}
-      description={t("subtitle")}
+      title={title ?? t("title")}
+      description={description ?? t("subtitle")}
       aside={
         loading || !available ? null : (
           <span
@@ -195,7 +282,7 @@ export function GoogleCalendarCard({
                     {t("connectedSince", { date: new Date(connection.connected_at).toLocaleDateString() })}
                   </p>
                 ) : null}
-                {isAdmin ? (
+                {canManage ? (
                   view === "confirmingDisconnect" || view === "disconnecting" ? (
                     <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-surface-container-low px-4 py-3">
                       <p className="text-sm text-on-surface">{t("disconnectConfirm")}</p>
@@ -228,7 +315,7 @@ export function GoogleCalendarCard({
             ) : (
               <div className="flex flex-col items-start gap-3">
                 <p className="text-sm text-on-surface-variant">{t("notConnected")}</p>
-                {isAdmin ? (
+                {canManage ? (
                   <>
                     <Button
                       type="button"
@@ -252,7 +339,50 @@ export function GoogleCalendarCard({
             )}
           </Step>
 
-          <Step index={2} done={isConnected} muted={!isConnected} title={t("stepTwoTitle")}>
+          {isConnected && canManage ? (
+            <Step index={2} done={calendars !== null} title={t("calendarTitle")}>
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-on-surface-variant">{t("calendarHint")}</p>
+                {calendars === null ? (
+                  <Skeleton className="h-11 w-full max-w-md" />
+                ) : (
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <select
+                      aria-label={t("calendarLabel")}
+                      className={clsx(SELECT_CLASSES, CHEVRON, "sm:max-w-md")}
+                      value={calendarValue}
+                      disabled={calendarBusy || calendars.length === 0}
+                      onChange={(e) => void chooseCalendar(e.target.value)}
+                    >
+                      {calendars.some((c) => c.id === calendarValue) ? null : (
+                        <option value={calendarValue}>{calendarValue === "primary" ? t("primaryCalendar") : calendarValue}</option>
+                      )}
+                      {calendars.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.primary ? `${c.name} (${t("primaryCalendar")})` : c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Button type="button" variant="secondary" size="sm" isLoading={calendarBusy} onClick={createCalendar}>
+                      {t("createCalendar")}
+                    </Button>
+                  </div>
+                )}
+                {calendarNote ? (
+                  <p role="status" className="text-[13px] text-on-surface-variant">
+                    {calendarNote}
+                  </p>
+                ) : null}
+              </div>
+            </Step>
+          ) : null}
+
+          <Step
+            index={isConnected && canManage ? 3 : 2}
+            done={isConnected}
+            muted={!isConnected}
+            title={t("stepTwoTitle")}
+          >
             <p className="text-sm text-on-surface-variant">{t("stepTwoDescription")}</p>
           </Step>
         </ol>

@@ -4,6 +4,8 @@ import {
   buildEmptyCatalogSection,
   buildNoBusinessHoursSection,
   buildServiceChoiceSection,
+  buildProfessionalChoiceSection,
+  buildDateFirstSection,
   buildStoreInformationSection,
   buildSystemPrompt,
   classifyServiceChoice,
@@ -823,6 +825,49 @@ describe("buildServiceChoiceSection", () => {
 // Ana's no-opening-hours ticket: with no hours every day read as closed and
 // every window as empty, so she told customers the business was "fechada" and
 // invited them to try dates that could never work.
+// 2026-09-24 -- several professionals, one schedule each.
+describe("buildProfessionalChoiceSection", () => {
+  it("adds nothing for an agent that can't schedule", () => {
+    expect(buildProfessionalChoiceSection(null)).toBeNull();
+    expect(buildProfessionalChoiceSection(undefined)).toBeNull();
+  });
+
+  it("tells a single-professional business never to ask who", () => {
+    const section = buildProfessionalChoiceSection(false)!;
+    expect(section).toContain("single professional");
+    expect(section).toContain("never ask the customer who they would like to be seen by");
+  });
+
+  it("always asks who the customer wants, and searches everyone only when they say it doesn't matter", () => {
+    const section = buildProfessionalChoiceSection(true)!;
+    expect(section).toContain("ask which professional they would like");
+    expect(section).toContain("naming only the ones who perform that service");
+    expect(section).toContain("Only if the customer says explicitly that any professional is fine");
+    expect(section).toContain("Always confirm a booking by saying who it's with");
+  });
+
+  it("never talks about calendars or agendas (AVAILABILITY_GUARDRAIL)", () => {
+    const section = [buildProfessionalChoiceSection(true), buildProfessionalChoiceSection(false), buildDateFirstSection(true)]
+      .join(" ")
+      .toLowerCase();
+    expect(section).not.toContain("calendar");
+    expect(section).not.toContain("agenda");
+  });
+});
+
+describe("buildDateFirstSection", () => {
+  it("only for an agent that can schedule", () => {
+    expect(buildDateFirstSection(false)).toBeNull();
+    expect(buildDateFirstSection(undefined)).toBeNull();
+  });
+
+  it("checks whether the date is open before asking which service", () => {
+    const section = buildDateFirstSection(true)!;
+    expect(section).toContain("first call get_business_hours");
+    expect(section).toContain("Don't ask which service first");
+  });
+});
+
 describe("buildNoBusinessHoursSection", () => {
   it("returns null when the business has hours (nothing passed)", () => {
     expect(buildNoBusinessHoursSection(null)).toBeNull();

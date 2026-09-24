@@ -20,8 +20,11 @@ import { HumanHandoffCard } from "./human-handoff-card";
 import { AgentConnectionsTour } from "./agent-connections-tour";
 import { SchedulingSetupCard } from "./scheduling-setup-card";
 import { loadSchedulingSetup } from "@/lib/scheduling/setup";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 export default async function AgentConnectionsPage({ params }: { params: Promise<{ agentSlug: string }> }) {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const { agentSlug } = await params;
   const supabase = await createClient();
   const t = await getTranslations("MyAgents");

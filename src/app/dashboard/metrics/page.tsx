@@ -13,6 +13,7 @@ import { LockedPage } from "../locked-page";
 import { PerformanceView, type HealthState } from "./performance-view";
 import type { ChartPoint } from "./conversations-chart";
 import { DEFAULT_RANGE_DAYS } from "./constants";
+import { requireAdminPage } from "@/lib/auth/company-access";
 
 type SeriesPoint = { date: string; count: number };
 
@@ -43,6 +44,8 @@ export default async function MetricsPage({
 }: {
   searchParams: Promise<{ days?: string; agent?: string }>;
 }) {
+  // Company-level page: owners/admins only (members get their agenda).
+  await requireAdminPage();
   const [{ days: daysParam, agent: agentParam }, supabase, t] = await Promise.all([
     searchParams,
     createClient(),

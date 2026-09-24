@@ -5,6 +5,7 @@ import clsx from "clsx";
 import type { Appointment } from "./appointment-types";
 import { clock, localDateOf } from "./agenda-format";
 import { STATUS_TONE } from "./agenda-row";
+import { professionalNameOf, useShowProfessional } from "./professional-label";
 
 function buildGrid(month: string): { date: string; inMonth: boolean }[] {
   const [year, monthIndex] = month.split("-").map(Number);
@@ -35,6 +36,7 @@ export function AppointmentCalendar({
 }) {
   const t = useTranslations("Scheduling.appointments");
   const locale = useLocale();
+  const showProfessional = useShowProfessional();
 
   const byDate = new Map<string, Appointment[]>();
   for (const appointment of appointments) {
@@ -94,9 +96,14 @@ export function AppointmentCalendar({
                 {dayAppointments.map((appointment) => (
                   <span
                     key={appointment.id}
-                    title={`${appointment.customers?.name ?? t("list.unnamedCustomer")} · ${
-                      appointment.services?.name ?? t("list.serviceRemoved")
-                    } · ${t(`status.${appointment.status}`)}`}
+                    title={[
+                      appointment.customers?.name ?? t("list.unnamedCustomer"),
+                      appointment.services?.name ?? t("list.serviceRemoved"),
+                      showProfessional ? professionalNameOf(appointment) : null,
+                      t(`status.${appointment.status}`),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                     className={clsx(
                       "flex items-center gap-1 truncate rounded-md px-1.5 py-1 text-[11px] font-medium ring-1 ring-inset",
                       STATUS_TONE[appointment.status].block,

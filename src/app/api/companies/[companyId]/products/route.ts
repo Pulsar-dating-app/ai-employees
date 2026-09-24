@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCompanyRole } from "@/lib/auth/company-access";
 import { buildProductEmbeddingInput, createProductEmbedding } from "@/lib/products/embeddings";
 import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 import { validatePriceCurrency, validateStock } from "@/lib/products/validation";
@@ -13,33 +14,6 @@ export { validatePriceCurrency, validateStock };
 // membership check here exists to return a clean 403 instead of a raw
 // Postgres error or an empty result, matching A3/B1's convention.
 
-async function requireMember(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  userId: string,
-) {
-  const { data: membership, error } = await supabase
-    .from("company_users")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
-  }
-
-  if (!membership) {
-    return {
-      error: NextResponse.json(
-        { error: "Not a member of this company" },
-        { status: 403 },
-      ),
-    };
-  }
-
-  return { error: null };
-}
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -73,7 +47,7 @@ export async function GET(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "member");
   if (memberCheck.error) return memberCheck.error;
 
   const searchParams = new URL(request.url).searchParams;
@@ -122,7 +96,7 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const memberCheck = await requireMember(supabase, companyId, user.id);
+  const memberCheck = await checkCompanyRole(supabase, companyId, user.id, "admin");
   if (memberCheck.error) return memberCheck.error;
 
   const body = await request.json().catch(() => null);
