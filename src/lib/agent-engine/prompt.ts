@@ -495,8 +495,21 @@ export function buildServiceChoiceSection(choice: ServiceChoice | null | undefin
 // more than one active professional -- a single-professional business never
 // hears the word, and the tools don't even return professionals then.
 // Avoids "agenda"/"calendar" wording on purpose (AVAILABILITY_GUARDRAIL).
+//
+// `false` (an agent that can schedule, at a single-professional business)
+// gets an explicit "never ask who" line too: found in testing that the model
+// could still ask "com qual profissional?" on its own, especially in a
+// clinic-like business, with nobody to choose between. null/undefined (an
+// agent that can't schedule) gets nothing.
 export function buildProfessionalChoiceSection(multipleProfessionals: boolean | null | undefined): string | null {
-  if (!multipleProfessionals) return null;
+  if (multipleProfessionals === null || multipleProfessionals === undefined) return null;
+  if (!multipleProfessionals) {
+    return (
+      "This business has a single professional, so there is nobody to choose between: never ask the " +
+      "customer who they would like to be seen by, never ask about a preferred professional, and " +
+      "never offer a choice of professional. Every booking is with that one person."
+    );
+  }
   return (
     "This business has several professionals, and each one has their own times. " +
     "list_services shows, for each service, the `professionals` who perform it. " +
@@ -510,6 +523,24 @@ export function buildProfessionalChoiceSection(multipleProfessionals: boolean | 
     "Always confirm a booking by saying who it's with (`professionalName` in the result). " +
     "To move an appointment, keep the same professional (from list_my_appointments) unless the " +
     "customer asks to change."
+  );
+}
+
+// 2026-09-24 -- found in testing: "tem horário amanhã com o Tobias?" got
+// "qual serviço você quer para amanhã?" -- implying yes -- and only after the
+// service was picked did find_available_slots reveal Tobias was away that day.
+// Whether a day is open doesn't depend on the service, so check it first
+// (get_business_hours with a date range returns closures and time off) and
+// say so at once. Scheduling agents only.
+export function buildDateFirstSection(canSchedule: boolean | null | undefined): string | null {
+  if (!canSchedule) return null;
+  return (
+    "When the customer asks about a specific day or date (\"tem horário amanhã?\", \"dá sexta?\") " +
+    "before you know which service, first call get_business_hours with `from` and `to` set to that " +
+    "date (and `professionalId` if they named a professional). If that date comes back not open -- " +
+    "the business doesn't work that day, or it's time off -- tell them right away (with the reason, " +
+    "if there is one) and offer the nearest open day. Don't ask which service first, and never " +
+    "imply a day is bookable before you know it's open."
   );
 }
 
@@ -633,8 +664,9 @@ export function buildSystemPrompt({
   // prompt without the section.
   serviceChoice?: ServiceChoice | null;
   // Whether the business has more than one active professional. Pass it only
-  // for an agent that can schedule; null/omitted composes the prompt without
-  // the section.
+  // for an agent that can schedule (true or false); null/omitted -- an agent
+  // that can't schedule -- composes the prompt without the professional and
+  // date-first sections.
   multipleProfessionals?: boolean | null;
   // Set only when the business has no opening hours at all (and only for an
   // agent that can look up availability). `canOfferTeam` is whether the agent
@@ -678,6 +710,8 @@ export function buildSystemPrompt({
   const storeInformationSection = buildStoreInformationSection(policies);
   const serviceChoiceSection = buildServiceChoiceSection(serviceChoice);
   const professionalChoiceSection = buildProfessionalChoiceSection(multipleProfessionals);
+  // multipleProfessionals is only ever non-null for an agent that can schedule.
+  const dateFirstSection = buildDateFirstSection(multipleProfessionals !== null && multipleProfessionals !== undefined);
   const noBusinessHoursSection = buildNoBusinessHoursSection(noBusinessHours);
   const emptyCatalogSection = buildEmptyCatalogSection(emptyCatalog);
 
@@ -735,6 +769,7 @@ export function buildSystemPrompt({
     // Right after the service choice: which professional is the next
     // question once the service is settled.
     professionalChoiceSection,
+    dateFirstSection,
     // After the service-choice section: with no hours the rule is "one fixed
     // line", which has to win over "answer availability in the same turn".
     noBusinessHoursSection,

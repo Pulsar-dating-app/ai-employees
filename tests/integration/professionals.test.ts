@@ -4,6 +4,7 @@ import { findAvailableSlotsTool } from "@/lib/agent-engine/tools/find-available-
 import { bookAppointmentTool } from "@/lib/agent-engine/tools/book-appointment";
 import { rescheduleAppointmentTool } from "@/lib/agent-engine/tools/reschedule-appointment";
 import { listMyAppointmentsTool } from "@/lib/agent-engine/tools/list-my-appointments";
+import { getBusinessHoursTool } from "@/lib/agent-engine/tools/get-business-hours";
 import type { ToolExecutionContext } from "@/lib/agent-engine/tools/types";
 import { api } from "./helpers/request";
 import { signUpTestUser, type TestUser } from "./helpers/auth";
@@ -395,5 +396,48 @@ describe("Google Calendar per professional", () => {
     expect(created.status).toBe(201);
     const status = await api<{ connection: { google_calendar_id: string } }>("GET", base, owner.cookieHeader);
     expect(status.json.connection.google_calendar_id).toBe(created.json.calendar.id);
+  });
+});
+
+// Found in testing: "tem horário amanhã com o Tobias?" got "qual serviço?"
+// before Ana knew Tobias was off that day. get_business_hours now answers
+// "is this date open?" without a service.
+describe("get_business_hours dates", () => {
+  it("says a date is closed or time off, per professional or for everyone", async () => {
+    const s = await seed("Dates Co");
+    const joao = await addProfessional(s.companyId, "João");
+    await api("POST", `/api/companies/${s.companyId}/time-off`, owner.cookieHeader, {
+      startDate: DATE,
+      endDate: DATE,
+      reason: "Luto",
+      professionalId: joao.id,
+    });
+
+    const forJoao = (await getBusinessHoursTool.execute(
+      { from: DATE, to: "2027-03-02", professionalId: joao.id },
+      ctxFor(s),
+    )) as { dates: { date: string; open: boolean; reason?: string; timeOffReason?: string | null }[] };
+    expect(forJoao.dates).toEqual([
+      { date: DATE, open: false, reason: "time_off", timeOffReason: "Luto" },
+      // 2027-03-02 is a Tuesday: nobody works it.
+      { date: "2027-03-02", open: false, reason: "closed" },
+    ]);
+
+    // Without a professional: still open that Monday, someone else works it.
+    const anyone = (await getBusinessHoursTool.execute({ from: DATE, to: DATE }, ctxFor(s))) as {
+      dates: { open: boolean }[];
+    };
+    expect(anyone.dates).toEqual([{ date: DATE, open: true }]);
+
+    // Establishment-wide time off closes the date for everyone.
+    await api("POST", `/api/companies/${s.companyId}/time-off`, owner.cookieHeader, {
+      startDate: DATE,
+      endDate: DATE,
+      reason: "Feriado",
+    });
+    const holiday = (await getBusinessHoursTool.execute({ from: DATE, to: DATE }, ctxFor(s))) as {
+      dates: { open: boolean; reason?: string }[];
+    };
+    expect(holiday.dates[0]).toMatchObject({ open: false, reason: "time_off" });
   });
 });

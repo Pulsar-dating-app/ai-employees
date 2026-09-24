@@ -5,6 +5,7 @@ import {
   buildNoBusinessHoursSection,
   buildServiceChoiceSection,
   buildProfessionalChoiceSection,
+  buildDateFirstSection,
   buildStoreInformationSection,
   buildSystemPrompt,
   classifyServiceChoice,
@@ -826,10 +827,15 @@ describe("buildServiceChoiceSection", () => {
 // invited them to try dates that could never work.
 // 2026-09-24 -- several professionals, one schedule each.
 describe("buildProfessionalChoiceSection", () => {
-  it("adds nothing for a single-professional business", () => {
-    expect(buildProfessionalChoiceSection(false)).toBeNull();
+  it("adds nothing for an agent that can't schedule", () => {
     expect(buildProfessionalChoiceSection(null)).toBeNull();
     expect(buildProfessionalChoiceSection(undefined)).toBeNull();
+  });
+
+  it("tells a single-professional business never to ask who", () => {
+    const section = buildProfessionalChoiceSection(false)!;
+    expect(section).toContain("single professional");
+    expect(section).toContain("never ask the customer who they would like to be seen by");
   });
 
   it("always asks who the customer wants, and searches everyone only when they say it doesn't matter", () => {
@@ -841,9 +847,24 @@ describe("buildProfessionalChoiceSection", () => {
   });
 
   it("never talks about calendars or agendas (AVAILABILITY_GUARDRAIL)", () => {
-    const section = buildProfessionalChoiceSection(true)!.toLowerCase();
+    const section = [buildProfessionalChoiceSection(true), buildProfessionalChoiceSection(false), buildDateFirstSection(true)]
+      .join(" ")
+      .toLowerCase();
     expect(section).not.toContain("calendar");
     expect(section).not.toContain("agenda");
+  });
+});
+
+describe("buildDateFirstSection", () => {
+  it("only for an agent that can schedule", () => {
+    expect(buildDateFirstSection(false)).toBeNull();
+    expect(buildDateFirstSection(undefined)).toBeNull();
+  });
+
+  it("checks whether the date is open before asking which service", () => {
+    const section = buildDateFirstSection(true)!;
+    expect(section).toContain("first call get_business_hours");
+    expect(section).toContain("Don't ask which service first");
   });
 });
 

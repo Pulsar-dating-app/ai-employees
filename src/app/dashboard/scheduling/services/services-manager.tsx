@@ -285,6 +285,7 @@ export function ServicesManager({
             mode="edit"
             companyCurrency={companyCurrency}
             categories={categoryNames}
+            professionals={professionals}
             service={editing}
             onSaved={handleSaved}
             onCancel={() => setDrawer(null)}

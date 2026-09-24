@@ -107,7 +107,7 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
       : null,
     canSchedule ? loadHasBusinessHours(supabase, input.companyId) : true,
     canSearchProducts ? loadHasProducts(supabase, input.companyId) : true,
-    canSchedule ? loadMultipleProfessionals(supabase, input.companyId) : false,
+    canSchedule ? loadMultipleProfessionals(supabase, input.companyId) : null,
   ]);
 
   // Step 2
