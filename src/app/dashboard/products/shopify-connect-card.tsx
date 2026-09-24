@@ -3,13 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import clsx from "clsx";
 import { Button } from "@/components/ui/button";
-
-// The "Connect your store" panel on the products page, a sibling of the CSV
-// ImportPanel. Disconnected: a plain GET form that posts the shop domain to
-// the OAuth start route (full-page redirect to Shopify, no JS SDK).
-// Connected: a "Sync now" button (mirrors ImportPanel's result UI) plus an
-// admin-only disconnect.
+import { BrandLogo } from "@/components/landing/brand-logos";
 
 type ShopifyConnection = {
   shop_domain: string;
@@ -66,8 +62,6 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
   });
 
   useEffect(() => {
-    // Strip the one-shot ?shopify / ?shopify_error params so a refresh
-    // doesn't re-show the banner.
     if (searchParams.get("shopify") || searchParams.get("shopify_error")) {
       router.replace("/dashboard/products");
     }
@@ -102,21 +96,18 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
     setView("idle");
 
     if (res.status === 202 && json?.status === "running") {
-      // Bulk export still running on Shopify's side -- they click Sync again.
       setRunning(true);
       return;
     }
     if (res.ok && json) {
       setSyncResult(json);
       onSynced();
-      // Reflect the new last_synced_at.
       fetch(`/api/companies/${companyId}/shopify`)
         .then((r) => (r.ok ? r.json() : null))
         .then((j) => j && setConnection(j.connection ?? null));
       return;
     }
     if (json?.error === "reauth_required") {
-      // The stored refresh token is dead -- surface the reconnect form.
       setError(t("reauthError"));
       setConnection(null);
       return;
@@ -137,15 +128,14 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
   const isConnected = loaded && connection?.status === "connected";
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       {banner ? (
         <p
-          role={banner.kind === "error" ? "alert" : undefined}
-          className={
-            banner.kind === "error"
-              ? "rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container"
-              : "rounded-md bg-primary-container px-3 py-2 text-sm text-on-primary-container"
-          }
+          role={banner.kind === "error" ? "alert" : "status"}
+          className={clsx(
+            "rounded-2xl px-4 py-3 text-sm font-medium",
+            banner.kind === "error" ? "bg-error-container/60 text-error" : "bg-success-100 text-success-500",
+          )}
         >
           {banner.text}
         </p>
@@ -157,55 +147,73 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
         </p>
       ) : null}
 
-      {!isConnected ? (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm text-on-surface-variant">{t("disconnectedHint")}</p>
+      {!loaded ? (
+        <div className="h-28 animate-pulse rounded-2xl bg-surface-container-low" />
+      ) : !isConnected ? (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-4 rounded-2xl bg-surface-container-low p-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-container-lowest ring-1 ring-outline-variant/50">
+              <BrandLogo name="Shopify" className="h-6 w-6" />
+            </span>
+            <p className="text-sm leading-6 text-on-surface-variant">{t("disconnectedHint")}</p>
+          </div>
           {canManageConnection ? (
             <form
               method="GET"
               action={`/api/companies/${companyId}/shopify/connect/start`}
-              className="flex flex-wrap items-center gap-2"
+              className="flex flex-col gap-2"
             >
-              <input
-                type="text"
-                name="shop"
-                required
-                autoComplete="off"
-                placeholder={t("shopPlaceholder")}
-                aria-label={t("shopLabel")}
-                className="min-w-[16rem] flex-1 rounded-md border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm text-on-surface"
-              />
-              <Button type="submit">{t("connectButton")}</Button>
+              <label htmlFor="shopify-shop" className="text-[13px] font-semibold text-on-surface">
+                {t("shopLabel")}
+              </label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="shopify-shop"
+                  type="text"
+                  name="shop"
+                  required
+                  autoComplete="off"
+                  placeholder={t("shopPlaceholder")}
+                  className="h-11 min-w-0 flex-1 rounded-xl border border-outline-variant/70 bg-surface-container-lowest px-3.5 text-sm text-on-surface outline-none transition-[border-color,box-shadow] placeholder:text-outline hover:border-outline focus:border-primary focus:shadow-[0_0_0_4px_rgba(53,37,205,0.12)]"
+                />
+                <Button type="submit" className="h-11">
+                  {t("connectButton")}
+                </Button>
+              </div>
             </form>
           ) : (
             <p className="text-sm text-on-surface-variant">{t("adminOnlyHint")}</p>
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="inline-flex items-center rounded-full bg-primary-container px-2 py-0.5 text-xs font-medium text-on-primary-container">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4 rounded-2xl bg-surface-container-low p-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-container-lowest ring-1 ring-outline-variant/50">
+              <BrandLogo name="Shopify" className="h-6 w-6" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-on-surface">{connection?.shop_domain}</p>
+              <p className="text-[13px] text-on-surface-variant">
+                {connection?.last_synced_at
+                  ? t("lastSynced", { when: new Date(connection.last_synced_at).toLocaleString() })
+                  : t("neverSynced")}
+              </p>
+            </div>
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-success-100 px-2.5 py-1 text-[12px] font-semibold text-success-500">
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-success-500" />
               {t("statusConnected")}
             </span>
-            <span className="text-on-surface">{connection?.shop_domain}</span>
           </div>
-          {connection?.last_synced_at ? (
-            <p className="text-sm text-on-surface-variant">
-              {t("lastSynced", { when: new Date(connection.last_synced_at).toLocaleString() })}
-            </p>
-          ) : (
-            <p className="text-sm text-on-surface-variant">{t("neverSynced")}</p>
-          )}
 
           {running ? (
-            <p className="rounded-md border border-outline-variant bg-surface-container-low px-3 py-3 text-sm text-on-surface-variant">
+            <p role="status" className="rounded-2xl bg-primary-fixed/50 px-4 py-3 text-sm text-on-surface">
               {t("syncRunning")}
             </p>
           ) : null}
 
           {syncResult ? (
-            <div className="flex flex-col gap-2 rounded-md border border-outline-variant bg-surface-container-low px-3 py-3">
-              <p className="text-sm text-on-surface">
+            <div className="flex flex-col gap-2 rounded-2xl bg-surface-container-low px-4 py-3">
+              <p role="status" className="text-sm font-semibold text-on-surface">
                 {t(syncResult.mode === "delta" ? "syncResultDelta" : "syncResult", {
                   synced: syncResult.synced,
                   deactivated: syncResult.deactivated,
@@ -216,24 +224,14 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
                 <p className="text-sm text-on-surface-variant">{t("truncated", { max: syncResult.synced })}</p>
               ) : null}
               {syncResult.skipped.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-outline-variant text-on-surface-variant">
-                        <th className="py-2 pr-3 font-medium">{t("skippedProductHeader")}</th>
-                        <th className="py-2 pr-3 font-medium">{t("skippedReasonHeader")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {syncResult.skipped.map((row, i) => (
-                        <tr key={`${row.title}-${i}`} className="border-b border-outline-variant/50">
-                          <td className="py-2 pr-3">{row.title}</td>
-                          <td className="py-2 pr-3">{row.reason}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ul className="flex flex-col divide-y divide-outline-variant/40 text-sm">
+                  {syncResult.skipped.map((row, i) => (
+                    <li key={`${row.title}-${i}`} className="flex flex-col py-2 sm:flex-row sm:gap-4">
+                      <span className="font-medium text-on-surface sm:w-1/2">{row.title}</span>
+                      <span className="text-on-surface-variant">{row.reason}</span>
+                    </li>
+                  ))}
+                </ul>
               ) : null}
             </div>
           ) : null}
@@ -242,7 +240,6 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
             <Button type="button" isLoading={view === "syncing"} onClick={() => handleSync(false)}>
               {view === "syncing" ? t("syncingButton") : t("syncButton")}
             </Button>
-
             {canManageConnection ? (
               <Button
                 type="button"
@@ -254,7 +251,6 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
                 {t("syncFullButton")}
               </Button>
             ) : null}
-
             {canManageConnection ? (
               view === "confirmingDisconnect" ? (
                 <>
@@ -266,12 +262,7 @@ export function ShopifyConnectCard({ companyId, canManageConnection, onSynced }:
                   </Button>
                 </>
               ) : (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setView("confirmingDisconnect")}
-                >
+                <Button type="button" variant="ghost" size="sm" onClick={() => setView("confirmingDisconnect")}>
                   {t("disconnectButton")}
                 </Button>
               )

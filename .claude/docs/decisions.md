@@ -12,6 +12,18 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-24 — Products becomes catalog-first, and every add or edit flow goes in a drawer
+
+**Decision:** `/dashboard/products` drops the big "Add products" card above a raw table. The list is now the page: instant search, category chips, and rows with photo, stock status and formatted price. Spreadsheet import, Shopify and one-by-one creation all move into the shared side drawer, as does editing. Import progress is tracked by the page itself (a status strip), and categories come from a new `product_categories` Postgres function. The user picked this over a storefront grid and a refined table.
+
+**Why:**
+- Merchants open this page to find and fix products far more often than to import. The old layout pushed the catalog below a panel of format instructions.
+- A grid would suit a small catalog but not a Shopify sync with no ceiling.
+- Moving import into a drawer that unmounts meant job polling had to move up, or an import finishing while the drawer was closed would never refresh the list.
+- The categories function exists because PostgREST's 1000-row cap would silently truncate a `select category` scan.
+
+---
+
 ## 2026-09-23 — Scheduling settings adopt the general settings side index
 
 **Decision:** `/dashboard/scheduling/settings` drops the collapsible sections. It now uses the same layout as general Settings: a sticky index beside always-open blocks, with each index item showing a live summary of that section's saved state and a warning where something blocks bookings. `SettingsBlock` and the scroll spy moved to `src/components/ui/` so both screens share them. Business hours become one-line rows with a 00–24h timeline per day. The user picked this over a summary grid with drawers and over a refined accordion.
@@ -89,7 +101,7 @@ The stat-tile rail and the Stitch card clone are gone. "Upcoming" now starts at 
 **Decision:** Found during a full RLS/policy audit of the remote project (requested after the WhatsApp direct-write bypass below). Two fixes, both applied to remote immediately (production) and mirrored in migrations:
 
 1. `company_users`'s INSERT policy was `with check (user_id = auth.uid() OR private.is_company_admin(company_id))`. The `user_id = auth.uid()` branch never constrained `role` — no default, no CHECK constraint, no trigger — so **any authenticated user could call `POST /rest/v1/company_users` directly with an arbitrary `company_id` and `role: "owner"`**, becoming full owner of a company they were never invited to (full read/write on its customers, conversations, products, billing). Migration `20260922110000_fix_company_users_self_join_role_escalation.sql` drops that branch entirely — grep confirmed no feature in this codebase depends on it (`create_company_with_owner` is SECURITY DEFINER and bypasses RLS; `/api/companies/[companyId]/members` — the only other insert site — already goes through `is_company_admin`).
-2. Same vestigial-write pattern as the WhatsApp fix below, found on the other 3 "channel connection" tables: `company_calendar_connections`, `company_instagram_connections`, `company_shopify_connections` all still granted `insert/update/delete` + "Company admins can connect/update/disconnect ..." policies to the regular `authenticated` client, even though every real write already goes through each table's connect/disconnect route's service-role client (grep-verified per table). Migration `20260922120000_lock_writes_to_channel_connections.sql` closes all three the same way.
+2. Same vestigial-write pattern as the WhatsApp fix below, found on the other 3 "channel connection" tables: `company_calendar_connections`, `company_instagram_connections`, `company_shopify_connections` all still granted `insert/update/delete` + "Company admins can connect/update/disconnect ..." policies to the regular `authenticated` client, even though every real write already goes through each table's connect/disconnect route's service-role client (grep-verified per table). Migration `20260922120001_lock_writes_to_channel_connections.sql` closes all three the same way (originally committed as `20260922120000`, which collided with `ana_default_service_name_and_description`; renamed 2026-09-24 and marked applied in prod with `migration repair`, since it had already run there).
 
 **Why:** The user asked "if someone bypasses the UI, is there a lock at that layer?" about the WhatsApp fix, which prompted a full audit (`mcp__supabase__get_advisors` + manual `pg_policies`/grant review) rather than trusting that one fix was the only gap. It wasn't — `company_users` was a full account-takeover vector, unrelated to WhatsApp, sitting in production. Supabase's own security advisor doesn't catch this class of bug (it lints schema shape — RLS enabled/disabled, mutable search_path — not policy *logic*), so this needed a manual read of every policy's `with_check` against what the app actually inserts.
 

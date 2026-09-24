@@ -1,35 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import clsx from "clsx";
+import { ChevronRightIcon, UploadIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 
-// Matches Button's own secondary+sm class string so this <a> (a real
-// download link, which Button — a <button> — can't be) looks identical to
-// every other secondary button on this page.
-// Kept in sync with Button's `secondary` + `sm` styling by hand — this has
-// to be a real <a> (download link), which Button (a <button>) can't be.
-const TEMPLATE_LINK_CLASSES =
-  "inline-flex h-9 items-center justify-center gap-2 rounded-md border border-outline-variant bg-surface-container px-4 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-high";
-
-// What's known synchronously, from the import POST's own response — how
-// many valid rows were queued and which rows were skipped at validation.
-// Only ever populated by *this* browser tab actually submitting a file, so
-// it's absent after a reload resumes an in-progress job (see below).
 type ValidationResult = {
   skippedCount: number;
   skipped: { row: number; reason: string }[];
 };
 
-// Mirrors product_import_jobs (migration 20260915120000) / GET
-// .../import/status's response shape. `insertedCount` on a `failed` job is
-// diagnostic only — the route's compensating rollback means none of those
-// rows actually survive, so the UI must key off `status`, never treat
-// `insertedCount` as a real partial result.
-type JobStatus = "processing" | "succeeded" | "failed";
-type Job = {
+export type ImportJobStatus = "processing" | "succeeded" | "failed";
+export type ImportJob = {
   id: string;
-  status: JobStatus;
+  status: ImportJobStatus;
   totalRows: number;
   insertedCount: number;
 };
@@ -37,102 +22,55 @@ type Job = {
 type ImportPanelProps = {
   companyId: string;
   canEdit: boolean;
-  onImported: () => void;
+  job: ImportJob | null;
+  onJobStarted: (job: ImportJob) => void;
+  onReset: () => void;
 };
 
-const POLL_INTERVAL_MS = 1200;
-// Kept in sync by hand with MAX_FILE_SIZE_BYTES in the import route (see
-// that constant's own comment for why 3MB — Vercel's real request-body
-// ceiling is 4.5MB, not configurable). Checked here too so an oversized
-// file is rejected instantly, client-side, instead of only after a full
-// upload round-trip just to be told it was too big.
 const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024;
+const ACCEPTED = [".csv", ".xlsx", ".xls"];
 
-async function fetchLatestJob(companyId: string): Promise<Job | null> {
-  const res = await fetch(`/api/companies/${companyId}/products/import/status`);
-  if (!res.ok) return null;
-  const json = await res.json();
-  return json.job ?? null;
-}
-
-export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps) {
+export function ImportPanel({ companyId, canEdit, job, onJobStarted, onReset }: ImportPanelProps) {
   const t = useTranslations("Products.import");
-
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
-  const [job, setJob] = useState<Job | null>(null);
+  const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Resume on mount: if there's a job at all for this company — still
-  // running, or finished since the last time this tab looked — show it
-  // instead of defaulting to a blank upload form, so leaving the page (or
-  // just reloading) doesn't lose the only sign an import ever happened.
-  useEffect(() => {
-    let cancelled = false;
-    fetchLatestJob(companyId).then((latest) => {
-      if (!cancelled && latest) setJob(latest);
-    });
-    return () => {
-      cancelled = true;
-    };
-    // One-time resume on mount — not meant to re-run except if the company
-    // itself changes.
-  }, [companyId]);
-
-  // Poll only while a job is actually processing; stops itself the moment
-  // it reaches a terminal status (or this panel unmounts).
-  useEffect(() => {
-    if (!job || job.status !== "processing") return;
-
-    const interval = setInterval(async () => {
-      const latest = await fetchLatestJob(companyId);
-      if (!latest) return;
-      setJob(latest);
-      if (latest.status !== "processing") {
-        // Only now, not on the mount-time resume above — a plain page visit
-        // that happens to find an old finished job shouldn't itself trigger
-        // a product-list refresh; watching one actually finish should.
-        onImported();
-      }
-    }, POLL_INTERVAL_MS);
-
-    return () => clearInterval(interval);
-  }, [job, companyId, onImported]);
+  function pick(next: File | null) {
+    setUploadError(null);
+    if (next && !ACCEPTED.some((ext) => next.name.toLowerCase().endsWith(ext))) {
+      setUploadError(t("genericError"));
+      return;
+    }
+    if (next && next.size > MAX_FILE_SIZE_BYTES) {
+      setUploadError(t("fileTooLarge"));
+      return;
+    }
+    setFile(next);
+  }
 
   async function handleImport() {
     if (!file) {
       setUploadError(t("fileRequired"));
       return;
     }
-
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      setUploadError(t("fileTooLarge"));
-      return;
-    }
-
     setUploadError(null);
     setUploading(true);
-
     const formData = new FormData();
     formData.set("file", file);
-
-    // No Content-Type header here, unlike every other fetch in this app —
-    // the browser sets the multipart boundary itself; setting it manually
-    // would break the boundary the server parses against.
     const res = await fetch(`/api/companies/${companyId}/products/import`, {
       method: "POST",
       body: formData,
-    });
-
+    }).catch(() => null);
     setUploading(false);
-
-    if (res.ok) {
+    if (res?.ok) {
       const json = await res.json();
       setValidation({ skippedCount: json.skippedCount, skipped: json.skipped ?? [] });
       if (json.jobId) {
-        setJob({ id: json.jobId, status: "processing", totalRows: json.queued, insertedCount: 0 });
+        onJobStarted({ id: json.jobId, status: "processing", totalRows: json.queued, insertedCount: 0 });
       }
     } else {
       setUploadError(t("genericError"));
@@ -142,8 +80,8 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
   function reset() {
     setFile(null);
     setValidation(null);
-    setJob(null);
     setUploadError(null);
+    onReset();
   }
 
   if (!canEdit) return null;
@@ -151,42 +89,44 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
   if (job) {
     const percent =
       job.totalRows > 0 ? Math.round((Math.min(job.insertedCount, job.totalRows) / job.totalRows) * 100) : 0;
-
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {job.status === "processing" ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-sm text-neutral-800">{t("progressLabel", { percent })}</p>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
+          <div className="flex flex-col gap-3 rounded-2xl bg-surface-container-low p-5">
+            <p className="text-sm font-semibold text-on-surface" role="status">
+              {t("progressLabel", { percent })}
+            </p>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
               <div
-                className="h-full rounded-full bg-primary transition-all"
+                className="h-full rounded-full bg-primary transition-[width] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
                 style={{ width: `${Math.max(2, percent)}%` }}
               />
             </div>
           </div>
         ) : job.status === "succeeded" ? (
-          <p className="text-sm text-neutral-800">{t("succeededSummary", { count: job.totalRows })}</p>
+          <p role="status" className="rounded-2xl bg-success-100 px-5 py-4 text-sm font-semibold text-success-500">
+            {t("succeededSummary", { count: job.totalRows })}
+          </p>
         ) : (
-          // No count shown here on purpose — a failed run means zero
-          // products were actually kept (compensating rollback), so
-          // surfacing insertedCount would misreport a partial success.
-          <p className="text-sm text-error">{t("failedSummary")}</p>
+          <p role="alert" className="rounded-2xl bg-error-container/60 px-5 py-4 text-sm font-semibold text-error">
+            {t("failedSummary")}
+          </p>
         )}
 
         {validation && validation.skippedCount > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-hidden rounded-2xl border border-outline-variant/60">
             <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-neutral-200 text-neutral-500">
-                  <th className="py-2 pr-3 font-medium">{t("skippedTableRowHeader")}</th>
-                  <th className="py-2 pr-3 font-medium">{t("skippedTableReasonHeader")}</th>
+              <thead className="bg-surface-container-low text-[13px] text-on-surface-variant">
+                <tr>
+                  <th className="px-4 py-2 font-medium">{t("skippedTableRowHeader")}</th>
+                  <th className="px-4 py-2 font-medium">{t("skippedTableReasonHeader")}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-outline-variant/40">
                 {validation.skipped.map((row) => (
-                  <tr key={row.row} className="border-b border-neutral-100">
-                    <td className="py-2 pr-3">{row.row}</td>
-                    <td className="py-2 pr-3">{row.reason}</td>
+                  <tr key={row.row}>
+                    <td className="px-4 py-2 tabular-nums text-on-surface">{row.row}</td>
+                    <td className="px-4 py-2 text-on-surface-variant">{row.reason}</td>
                   </tr>
                 ))}
               </tbody>
@@ -206,40 +146,54 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="rounded-md border border-outline-variant bg-surface-container-low px-3 py-3 text-sm text-on-surface-variant">
-        <p className="font-semibold text-on-surface">{t("formatTitle")}</p>
-        <p className="mt-1">{t("formatDescription")}</p>
-        <p className="mt-1">{t("formatPriceHint")}</p>
-        <p className="mt-1">{t("formatDescriptionHint")}</p>
-        <p className="mt-1">{t("formatSizeHint")}</p>
-        <div className="mt-2">
-          <a href={`/api/companies/${companyId}/products/import-template`} className={TEMPLATE_LINK_CLASSES}>
-            {t("downloadTemplateButton")}
-          </a>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          disabled={uploading}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {t("chooseFileButton")}
-        </Button>
-        <span className="text-sm text-neutral-600">{file ? file.name : t("noFileChosen")}</span>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          disabled={uploading}
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="hidden"
-        />
-      </div>
+    <div className="flex flex-col gap-5">
+      <button
+        type="button"
+        disabled={uploading}
+        onClick={() => fileInputRef.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          pick(e.dataTransfer.files?.[0] ?? null);
+        }}
+        className={clsx(
+          "flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed px-6 py-9 text-center transition-colors duration-200",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60",
+          dragging
+            ? "border-primary bg-primary-fixed/50"
+            : file
+              ? "border-primary/40 bg-primary-fixed/25"
+              : "border-outline-variant hover:border-primary/40 hover:bg-surface-container-low",
+        )}
+      >
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-fixed text-primary">
+          <UploadIcon className="h-5 w-5" />
+        </span>
+        {file ? (
+          <>
+            <span className="max-w-full truncate text-sm font-semibold text-on-surface">{file.name}</span>
+            <span className="text-[13px] text-primary">{t("chooseFileButton")}</span>
+          </>
+        ) : (
+          <>
+            <span className="text-sm font-semibold text-on-surface">{t("dropTitle")}</span>
+            <span className="text-[13px] text-on-surface-variant">{t("dropBody")}</span>
+          </>
+        )}
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ACCEPTED.join(",")}
+        disabled={uploading}
+        onChange={(e) => pick(e.target.files?.[0] ?? null)}
+        className="hidden"
+      />
 
       {uploadError ? (
         <p role="alert" className="text-sm text-error">
@@ -247,11 +201,30 @@ export function ImportPanel({ companyId, canEdit, onImported }: ImportPanelProps
         </p>
       ) : null}
 
-      <div>
+      <div className="flex flex-wrap items-center gap-3">
         <Button type="button" isLoading={uploading} disabled={!file} onClick={handleImport}>
           {uploading ? t("importingButton") : t("importButton")}
         </Button>
+        <a
+          href={`/api/companies/${companyId}/products/import-template`}
+          className="inline-flex h-9 items-center rounded-xl px-2 text-sm font-semibold text-primary transition-colors hover:bg-primary-fixed/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          {t("downloadTemplateButton")}
+        </a>
       </div>
+
+      <details className="group rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">
+        <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-on-surface [&::-webkit-details-marker]:hidden">
+          <ChevronRightIcon className="h-4 w-4 transition-transform duration-200 group-open:rotate-90" />
+          {t("formatToggle")}
+        </summary>
+        <div className="mt-3 flex flex-col gap-2 pl-6 leading-6">
+          <p>{t("formatDescription")}</p>
+          <p>{t("formatPriceHint")}</p>
+          <p>{t("formatDescriptionHint")}</p>
+          <p>{t("formatSizeHint")}</p>
+        </div>
+      </details>
     </div>
   );
 }

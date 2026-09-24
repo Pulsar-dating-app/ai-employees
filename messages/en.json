@@ -1460,7 +1460,7 @@
       "cancelButton": "Cancel",
       "nameLabel": "Name",
       "descriptionLabel": "Description",
-      "descriptionHint": "Be specific — size, material, color, weight, what's included. Your AI employee can only tell customers what's written here, so \"nice shirt\" won't be enough, but \"100% cotton, true to size, machine washable\" will.",
+      "descriptionHint": "Be specific: size, material, color, weight, what's included. Your team can only tell customers what's written here, so \"nice shirt\" won't be enough, but \"100% cotton, true to size, machine washable\" will.",
       "priceLabel": "Price",
       "currencyLabel": "Currency",
       "currencyPlaceholder": "Select a currency",
@@ -1475,7 +1475,17 @@
       "productUrlLabel": "Product page URL",
       "categoryLabel": "Category",
       "skuLabel": "SKU",
-      "nameRequired": "Name is required."
+      "nameRequired": "Name is required.",
+      "namePlaceholder": "e.g. Linen midi dress",
+      "categoryPlaceholder": "e.g. Dresses",
+      "pricePlaceholder": "0.00",
+      "priceInvalid": "Enter a valid price.",
+      "currencyRequiredWithPrice": "Choose a currency for this price.",
+      "stockInvalid": "Stock must be a whole number.",
+      "detailsHeading": "Details",
+      "priceHeading": "Price and stock",
+      "linksHeading": "Links",
+      "createButton": "Add product"
     },
     "list": {
       "nameColumn": "Name",
@@ -1507,7 +1517,7 @@
       "formatTitle": "File format",
       "formatDescription": "The first row must have these column headers: name, description, price, currency, stock, image, product_url, category, sku. Only name is required — leave the rest blank if you don't have that info.",
       "formatPriceHint": "If you set a price, also set its currency (e.g. BRL, USD, EUR) — a price without one will be skipped.",
-      "formatDescriptionHint": "Put everything a customer would ask about into description — size, material, color, weight, what's included. It's the only place your AI employee gets that detail from, so a few words often isn't enough. Download the template below for an example.",
+      "formatDescriptionHint": "Put everything a customer would ask about into description: size, material, color, weight, what's included. It's the only place your team gets that detail from, so a few words often aren't enough. Download the template for an example.",
       "formatSizeHint": "Maximum file size: 3MB.",
       "downloadTemplateButton": "Download template",
       "chooseFileButton": "Choose file",
@@ -1516,13 +1526,16 @@
       "importingButton": "Importing…",
       "importAnotherButton": "Import another file",
       "progressLabel": "Importing… {percent}%",
-      "succeededSummary": "{count} product(s) imported successfully.",
+      "succeededSummary": "{count, plural, one {# product imported successfully.} other {# products imported successfully.}}",
       "failedSummary": "The import failed — nothing was saved. Please try again.",
       "skippedTableRowHeader": "Row",
       "skippedTableReasonHeader": "Reason",
       "genericError": "Something went wrong importing the file. Please try again.",
       "fileRequired": "Choose a file first.",
-      "fileTooLarge": "This file is larger than 3MB. Split it into smaller files and import them one at a time."
+      "fileTooLarge": "This file is larger than 3MB. Split it into smaller files and import them one at a time.",
+      "dropTitle": "Drop your spreadsheet here",
+      "dropBody": "or click to choose a CSV or Excel file (up to 3MB)",
+      "formatToggle": "What should the file look like?"
     },
     "shopify": {
       "title": "Connect your Shopify store",
@@ -1558,6 +1571,60 @@
         "connected_elsewhere": "This Shopify store is already connected to another account.",
         "connect_failed": "We couldn't connect your store. Please try again."
       }
+    },
+    "catalog": {
+      "label": "Product catalog",
+      "search": "Search by name…",
+      "clearSearch": "Clear search",
+      "categoriesLabel": "Filter by category",
+      "all": "All",
+      "showInactive": "Show deactivated",
+      "count": "{count, plural, one {# product} other {# products}}",
+      "range": "{from}–{to} of {total}",
+      "previousPage": "Previous page",
+      "nextPage": "Next page",
+      "add": "Add products",
+      "addTitle": "Add products",
+      "editTitle": "Edit {name}",
+      "noMatch": "Nothing matches “{query}”.",
+      "noMatchFilters": "No products in this view.",
+      "stockUntracked": "Stock not tracked",
+      "stockOut": "Sold out",
+      "stockLow": "{count, plural, one {Last one left} other {Only # left}}",
+      "stockIn": "{count} in stock",
+      "noPrice": "No price",
+      "deactivatedBadge": "Deactivated",
+      "edit": "Edit {name}",
+      "deactivate": "Deactivate {name}",
+      "deactivatePrompt": "Deactivate this product? Customers stop seeing it, and its history is kept.",
+      "deactivateConfirm": "Deactivate",
+      "cancel": "Cancel",
+      "reactivate": "Reactivate",
+      "actionError": "Couldn't update this product. Please try again.",
+      "loadError": "Couldn't load products. Please try again.",
+      "readOnlyTitle": "View only",
+      "emptyTitle": "Add your first products",
+      "emptyBody": "Choose how to bring them in. You can combine all three.",
+      "methods": {
+        "csv": {
+          "title": "Spreadsheet",
+          "body": "Upload a CSV or Excel file with your whole catalog at once."
+        },
+        "shopify": {
+          "title": "Shopify",
+          "body": "Connect your store and keep products in sync with one click."
+        },
+        "manual": {
+          "title": "One by one",
+          "body": "Type in a product's details yourself."
+        }
+      },
+      "methodsLabel": "Ways to add products",
+      "noMatchIn": "Nothing matches “{query}” in {category}.",
+      "noMatchCategory": "No products in {category} for this view.",
+      "clearFilters": "Clear filters",
+      "viewImport": "View import",
+      "dismiss": "Dismiss"
     }
   },
   "Services": {

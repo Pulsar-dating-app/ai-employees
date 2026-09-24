@@ -1,27 +1,23 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
+import { StatusBanner } from "@/components/ui/status-banner";
 import { PackageIcon } from "@/components/ui/icons";
 import { PageHeader } from "../page-header";
 import { LockedPage } from "../locked-page";
 import { ProductsManager } from "./products-manager";
 
-// Products exists to serve Malu — no catalog, nothing for her to sell from.
 const REQUIRED_AGENT_SLUG = "malu";
-
 const PAGE_SIZE = 20;
 
 export default async function ProductsPage() {
   const supabase = await createClient();
   const t = await getTranslations("Products");
 
-  // user/companies don't depend on each other — fire both at once instead
-  // of paying two sequential round-trips to the remote Supabase project
-  // (same convention every other dashboard page follows).
   const [
     {
       data: { user },
@@ -42,15 +38,14 @@ export default async function ProductsPage() {
     );
   }
 
-  // Membership, hire status, and the first page of products all only depend
-  // on company.id, not on each other — parallelize.
-  const [{ data: membership }, { data: hiredAgents }, { data: products, count }] = await Promise.all([
-    supabase
-      .from("company_users")
-      .select("role")
-      .eq("company_id", company.id)
-      .eq("user_id", user!.id)
-      .maybeSingle(),
+  const [
+    { data: membership },
+    { data: hiredAgents },
+    { data: products, count },
+    { count: inactiveCount },
+    { data: categoryRows, error: categoryError },
+  ] = await Promise.all([
+    supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle(),
     supabase.from("company_agents").select("agents(slug)").eq("company_id", company.id),
     supabase
       .from("products")
@@ -59,6 +54,12 @@ export default async function ProductsPage() {
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .range(0, PAGE_SIZE - 1),
+    supabase
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", company.id)
+      .eq("is_active", false),
+    supabase.rpc("product_categories", { p_company_id: company.id }),
   ]);
 
   const hiredSlugs = ((hiredAgents ?? []) as unknown as { agents: { slug: string } | null }[])
@@ -81,40 +82,44 @@ export default async function ProductsPage() {
     );
   }
 
-  // Deliberately not owner/admin-gated like Settings' canEdit — B3's product
-  // routes only ever call requireMember, never requireAdmin, so any member
-  // can create/edit/deactivate products. Matching Settings' stricter gate
-  // here would invent a restriction the API doesn't enforce.
   const canEdit = membership !== null;
-  // The Shopify connect/disconnect routes ARE admin-gated (like every other
-  // connection table), so the card's connect/disconnect controls need this.
   const canManageConnection = membership?.role === "owner" || membership?.role === "admin";
+  const activeCount = count ?? 0;
+  let categoryNames = ((categoryRows ?? []) as { category: string }[]).map((r) => r.category);
+  if (categoryError) {
+    const { data: scanned } = await supabase
+      .from("products")
+      .select("category")
+      .eq("company_id", company.id)
+      .eq("is_active", true)
+      .not("category", "is", null);
+    categoryNames = [
+      ...new Set(((scanned ?? []) as { category: string | null }[]).map((r) => r.category ?? "").filter(Boolean)),
+    ];
+  }
+  const categories = categoryNames.sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader icon={PackageIcon} title={t("pageTitle")} subtitle={t("pageSubtitle")} />
-
-      {(count ?? 0) === 0 ? (
-        <Alert variant="warning" title={t("emptyAlert.title")}>
-          {t("emptyAlert.body")}
-        </Alert>
+    <div className="flex flex-col gap-6">
+      <h1 className="sr-only">{t("pageTitle")}</h1>
+      {activeCount === 0 && (inactiveCount ?? 0) > 0 ? (
+        <StatusBanner tone="warn" title={t("emptyAlert.title")} body={t("emptyAlert.body")} />
       ) : null}
-
-      {!canEdit ? (
-        <p className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-on-surface-variant">
-          {t("readOnlyBanner")}
-        </p>
-      ) : null}
-
-      <ProductsManager
-        companyId={company.id}
-        companyCurrency={company.currency}
-        canEdit={canEdit}
-        canManageConnection={canManageConnection}
-        initialProducts={products ?? []}
-        initialTotal={count ?? 0}
-        pageSize={PAGE_SIZE}
-      />
+      {!canEdit ? <StatusBanner tone="info" title={t("catalog.readOnlyTitle")} body={t("readOnlyBanner")} /> : null}
+      <Suspense fallback={null}>
+        <ProductsManager
+          companyId={company.id}
+          companyCurrency={company.currency}
+          canEdit={canEdit}
+          canManageConnection={canManageConnection}
+          categories={categories}
+          activeCount={activeCount}
+          inactiveCount={inactiveCount ?? 0}
+          initialProducts={products ?? []}
+          initialTotal={activeCount}
+          pageSize={PAGE_SIZE}
+        />
+      </Suspense>
     </div>
   );
 }
