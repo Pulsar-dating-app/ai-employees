@@ -2,7 +2,7 @@
   "Seo": {
     "siteName": "Staffra",
     "defaultTitle": "Staffra — Contrate funcionários de IA que vendem, atendem e agendam 24/7",
-    "description": "Crie agentes inteligentes treinados com seus documentos, catálogos e processos e conecte no WhatsApp Oficial, Instagram, Telegram e no seu site em menos de 15 minutos, sem programar."
+    "description": "A Malu vende e a Ana agenda pelo WhatsApp, Instagram e pelo seu site, 24 horas por dia, com os seus preços, estoque e horários. Pronto em minutos, sem programar."
   },
   "Auth": {
     "close": "Fechar",
@@ -237,7 +237,7 @@
           "annual": "Anual"
         },
         "wppToggleLabel": "Incluir WhatsApp no plano",
-        "wppToggleNote": "Sem essa opção, a Meta cobra o uso do WhatsApp separadamente, direto no seu cartão — dá para mudar isso depois nas Configurações."
+        "wppToggleNote": "Sem essa opção, o plano não inclui o WhatsApp: o atendimento funciona no Instagram, Telegram, chat do site e link direto. Dá para incluir o WhatsApp depois nas Configurações."
       },
       "cta": "Escolher plano",
       "ctaTrial": "Começar grátis",
@@ -251,86 +251,83 @@
   },
   "LandingV2": {
     "header": {
-      "navAgents": "Agentes de IA",
-      "navWorkforce": "AI Workforce",
+      "navAgents": "Funcionários",
       "navChannels": "Canais & WhatsApp",
       "navPricing": "Planos & Preços",
       "navDemo": "Demonstração",
-      "trial": "Testar 7 Dias",
+      "trial": "Testar 7 dias grátis",
       "login": "Entrar"
     },
     "hero": {
-      "badgeMain": "✨ Plataforma de AI Workforce & WhatsApp Oficial",
-      "badgeSub": "• Teste 7 dias grátis",
-      "headlinePre": "Contrate",
-      "headlineHighlight": "funcionários de IA",
-      "headlinePost": "que vendem, atendem e agendam 24/7",
-      "sub": "Contrate agentes inteligentes treinados com seus documentos, catálogos e processos. Conecte no WhatsApp Oficial, Instagram, Telegram e em seu site em menos de 15 minutos sem programar.",
-      "ctaPrimary": "Testar 7 Dias Grátis",
-      "ctaSecondary": "Ver Demonstração Ao Vivo",
-      "ctaTertiary": "Falar com Especialista",
-      "trust1": "API WhatsApp Oficial (Meta)",
-      "trust2": "Múltiplos agentes",
-      "trust3": "RAG seguro sem alucinação",
+      "headlinePre": "Venda e agende pelo WhatsApp",
+      "headlineHighlight": "24 horas por dia",
+      "sub": "Contrate a Malu para vender e a Ana para cuidar da sua agenda. Elas respondem com os seus preços, estoque e horários de verdade, sem inventar nada. Tudo pronto em minutos, sem programar.",
+      "ctaPrimary": "Testar 7 dias grátis",
+      "ctaSecondary": "Ver funcionando",
+      "ctaSales": "Falar com um especialista",
+      "trust1": "WhatsApp oficial da Meta",
+      "trust2": "Instagram, Telegram e seu site",
+      "trust3": "Cancele quando quiser",
       "chat": {
-        "agentName": "Malu · Vendas",
-        "status": "Online no WhatsApp Oficial",
-        "badge": "Vendas 24/7",
-        "msg1": "Oi! Sou a Malu, do time de vendas. Me conta o que você procura que eu te ajudo a achar.",
-        "msg2": "Oi Malu! Quero um presente pra minha esposa, ela curte skincare. Até uns R$ 250.",
-        "msg3a": "Fechou! Separei uma opção que está em estoque e combina bem com o que você descreveu:",
-        "msg3b": "Entrega em até 3 dias na sua região. Quer que eu já te mande o link pra finalizar a compra?",
-        "msg3meta": "10:43 • Respondido em 1,2s",
-        "inputPlaceholder": "Digite uma pergunta para testar a Malu...",
-        "inputValue": "Tem outras cores desse kit?",
-        "send": "Enviar",
-        "productName": "Kit Hidratação Facial",
-        "productPrice": "R$ 219"
-      },
-      "workspace": {
-        "imageAlt": "Workspace central da Staffra",
-        "eyebrow": "Orquestrador Staffra OS",
-        "title": "Workspace Central Multi-Agente"
-      },
-      "metrics": {
-        "m1Label": "Taxa de Resolução",
-        "m1Sub": "Sem transbordo humano",
-        "m2Label": "Tempo de Resposta",
-        "m2Sub": "Práticamente instantâneo",
-        "m3Label": "Reuniões Marcadas",
-        "m3Sub": "Google Calendar Sync"
+        "tablistLabel": "Escolha o que ver",
+        "sample": "Conversa de exemplo",
+        "status": "Online no WhatsApp",
+        "sales": {
+          "tab": "Vendas",
+          "name": "Malu",
+          "role": "Vendas",
+          "customer1": "Oi! Quero um presente pra minha esposa, ela curte skincare. Até uns R$ 250.",
+          "agent1": "Separei uma opção que combina com o que você descreveu:",
+          "productName": "Kit Hidratação Facial",
+          "productPrice": "R$ 219",
+          "productStock": "Em estoque",
+          "agent2": "Chega em até 3 dias na sua região. Quer o link pra finalizar a compra?",
+          "customer2": "Quero sim!",
+          "agent3": "Pronto! Aqui está o link pra finalizar a compra:",
+          "checkoutHost": "sualoja.com.br/checkout"
+        },
+        "scheduling": {
+          "tab": "Agendamentos",
+          "name": "Ana",
+          "role": "Agendamentos",
+          "customer1": "Oi! Tem horário pra corte amanhã à tarde?",
+          "agent1": "Tenho sim! Amanhã à tarde estes horários estão livres:",
+          "slot1": "14:00",
+          "slot2": "16:30",
+          "customer2": "16:30, por favor.",
+          "appointmentService": "Corte feminino",
+          "appointmentWhen": "Amanhã, 16:30",
+          "appointmentStatus": "Confirmado",
+          "agent2": "Tudo certo! Você vai receber um lembrete por e-mail antes do horário."
+        }
       }
     },
     "socialProof": {
-      "title": "Utilizamos as melhores tecnologias do mercado",
+      "title": "Funciona com o que você já usa",
       "logos": [
         {
-          "name": "Google"
-        },
-        {
-          "name": "Telegram"
-        },
-        {
-          "name": "Meta"
+          "name": "WhatsApp"
         },
         {
           "name": "Instagram"
         },
         {
-          "name": "WhatsApp"
+          "name": "Telegram"
         },
         {
           "name": "Shopify"
         },
         {
-          "name": "OpenAI"
+          "name": "Google"
+        },
+        {
+          "name": "Meta"
         }
       ]
     },
     "channels": {
-      "partnerLabel": "Tech Provider Credenciado",
-      "heading": "Um funcionário de IA, em todos os canais",
-      "sub": "Conecte seu funcionário de IA ao WhatsApp Oficial, Instagram, Telegram e ao seu site. Vendas e atendimento 24/7 com o contexto do seu negócio — uma só memória.",
+      "heading": "Uma funcionária, todos os seus canais",
+      "sub": "Conecte ao WhatsApp oficial, ao Instagram, ao Telegram e ao seu site. É a mesma funcionária, com a mesma memória, em todos eles.",
       "tablistLabel": "Selecionar canal",
       "cta": "Testar 7 dias grátis",
       "items": [
@@ -339,11 +336,11 @@
           "brand": "WhatsApp",
           "name": "WhatsApp",
           "headline": "Venda no WhatsApp Oficial",
-          "caption": "Seu funcionário atende no número oficial da sua marca, via API da Meta — com áudio, imagem e histórico.",
+          "caption": "Sua funcionária atende no número oficial da sua marca, no número oficial do WhatsApp — com áudio, imagem e histórico.",
           "points": [
-            "Conexão oficial (WhatsApp Cloud API)",
+            "Conexão oficial com a Meta",
             "Recomenda produtos e envia o link de checkout",
-            "Passa pra um atendente humano quando precisa"
+            "Passa pra alguém do seu time quando precisa"
           ]
         },
         {
@@ -351,7 +348,7 @@
           "brand": "Instagram",
           "name": "Instagram",
           "headline": "Responda o Direct do Instagram",
-          "caption": "O mesmo funcionário e a mesma memória, agora nas conversas do seu Instagram.",
+          "caption": "A mesma funcionária e a mesma memória, agora nas conversas do seu Instagram.",
           "points": [
             "Conta profissional conectada em minutos",
             "Histórico unificado com os outros canais",
@@ -365,7 +362,7 @@
           "headline": "Atenda pelo Telegram",
           "caption": "Um link e pronto. Sem configuração, sem servidor e sem app extra.",
           "points": [
-            "Um deep link por funcionário",
+            "Um link direto por funcionária",
             "Funciona no mesmo painel",
             "Zero setup"
           ]
@@ -387,7 +384,7 @@
           "brand": "Shopify",
           "name": "Shopify",
           "headline": "Conecte à sua loja Shopify",
-          "caption": "Conecte a loja uma vez e seu funcionário vende com o catálogo ao vivo — sem exportar nada, sem planilhas.",
+          "caption": "Conecte a loja uma vez e sua funcionária vende com o catálogo ao vivo — sem exportar nada, sem planilhas.",
           "points": [
             "Catálogo sincronizado automaticamente — preços, estoque e novos produtos",
             "Responde com o seu catálogo real e leva ao checkout da sua Shopify",
@@ -410,347 +407,138 @@
       "teamCaption": "A mesma equipe, em todos os canais"
     },
     "workforce": {
-      "badge": "Funcionários de IA Especializados",
-      "heading": "Cada função com um funcionário de IA dedicado",
-      "sub": "Diferente de um chatbot genérico, cada funcionário da Staffra tem um papel definido: a Malu cuida das vendas no atendimento inbound e a Ana organiza a sua agenda. Você contrata só quem precisa.",
-      "viewProfile": "Ver Perfil",
+      "heading": "Duas funcionárias, cada uma com uma função",
+      "sub": "A Malu cuida das vendas e a Ana cuida da agenda. Contrate só quem você precisa, ou as duas: estão incluídas em todos os planos.",
       "agents": [
         {
           "name": "Malu",
-          "role": "Vendas no WhatsApp & Web",
-          "sub": "Inbound WhatsApp & Web",
-          "desc": "Entende o que o cliente procura, recomenda os produtos certos do seu catálogo e responde preço, estoque e políticas com base no que você cadastrou — sem inventar. Conduz quem está pronto para comprar até o checkout, sem ser insistente."
+          "role": "Vendas",
+          "sub": "WhatsApp, Instagram e site",
+          "desc": "Entende o que o cliente procura, recomenda os produtos certos do seu catálogo e responde preço, estoque e políticas com base no que você cadastrou. Leva quem está pronto até o checkout da sua loja, sem ser insistente."
         },
         {
           "name": "Ana",
-          "role": "Agente de Agendamento",
-          "sub": "Sincronização de Calendário",
-          "desc": "Confere a disponibilidade real (horário de funcionamento, agenda existente e calendário conectado) e oferece aos clientes só os horários de fato livres. Resolve remarcações e cancelamentos na hora, e coloca na lista de espera quando você está lotado."
+          "role": "Agendamentos",
+          "sub": "Conectada ao Google Calendar",
+          "desc": "Oferece só os horários que estão realmente livres, considerando seu horário de funcionamento, sua agenda e o calendário. Remarca e cancela na hora, e coloca na lista de espera quando você está lotado."
         }
       ],
-      "handoffTitle": "Transbordo para Humano Sem Fricção",
-      "handoffDesc": "Quando a conversa sai do script ou o cliente pede, o funcionário passa o atendimento para uma pessoa do seu time — com todo o histórico e o resumo da conversa à mão.",
-      "handoffCta": "Conheça os funcionários disponíveis"
-    },
-    "interactiveDemo": {
-      "badge": "Veja Funcionando",
-      "heading": "Esse é o seu dashboard de verdade",
-      "sub": "Escolha uma funcionária e siga exatamente as telas que um lojista vê — time, configurações, setup e uma conversa ao vivo.",
-      "back": "Etapa anterior",
-      "next": "Próxima etapa",
-      "goToStep": "Ir para a etapa {step}",
-      "watchAgain": "Assistir novamente",
-      "openSettingsHotspot": "Abrir configurações de {name}",
-      "screens": {
-        "team": "Clique na Malu ou na Ana pra abrir as configurações dela — essa é a lista exata que você vê ao entrar.",
-        "availability": "Ligue ou pause a {name} em todos os canais de uma vez, num único botão.",
-        "shipping": "Defina custo e prazo de entrega — a {name} informa automaticamente, sem inventar.",
-        "returns": "Seu prazo e processo de devolução, explicado exatamente do jeito que você escreve aqui.",
-        "handoff": "Decida se a {name} pode chamar uma pessoa quando o cliente precisar.",
-        "products": "Cadastre produtos um a um, ou importe o catálogo inteiro pelo Shopify ou uma planilha — sem digitar nada na mão.",
-        "schedulingAppointments": "Todo agendamento que a {name} confirmou, ou que está esperando sua aprovação.",
-        "schedulingServices": "O que os clientes podem agendar com a {name} — duração e preço de cada um.",
-        "schedulingSettings": "Horário de funcionamento, folgas, Google Calendar — a {name} só oferece horários realmente livres.",
-        "live": "Toda conversa à esquerda, não importa o canal — clique numa pra ler ela ali do lado, na direita."
-      },
-      "nav": {
-        "goToProducts": "Ir para Produtos",
-        "goToScheduling": "Ir para Agendamentos",
-        "goToConversations": "Ir para Conversas"
-      },
-      "openConversationHotspot": "Abrir conversa com {name}",
-      "live": {
-        "badge": "Ativa agora",
-        "maluCustomerName": "Rafael Martins",
-        "maluCustomerMsg": "Tem esse modelo em azul, tamanho M?",
-        "maluAgentMsg": "Tenho sim! Ainda tenho 3 em azul, tamanho M — quer que eu separe um pra você?",
-        "anaCustomerName": "Camila Rocha",
-        "anaCustomerMsg": "Vocês têm horário amanhã à tarde?",
-        "anaAgentMsg": "Tenho sim — 14h ou 16h30 amanhã, ambos livres. Qual fica melhor pra você?",
-        "secondCustomerName": "Juliana Alves",
-        "secondCustomerMsg": "Muito obrigada pela ajuda mais cedo!",
-        "secondAgentMsg": "Disponha! Qualquer coisa é só chamar de novo."
-      },
-      "demoCompany": "Sua Loja",
-      "malu": {
-        "product1Name": "Kit Hidratação Facial",
-        "product1Price": "R$ 219",
-        "product1Stock": "18",
-        "product1Category": "Skincare",
-        "product2Name": "Sérum Vitamina C",
-        "product2Price": "R$ 129",
-        "product2Stock": "42",
-        "product2Category": "Skincare",
-        "productsIntro": "Existem 3 formas de colocar produtos no catálogo:",
-        "introManual": "Cadastre um produto por vez — nome, preço, descrição.",
-        "introShopify": "Conecte sua loja e os produtos são importados automaticamente.",
-        "introCsv": "Suba uma planilha com o catálogo inteiro de uma vez.",
-        "moreFieldsHint": "+ {count} campos ao cadastrar individualmente: {fields}",
-        "moreFieldsShort": "(+{count} campos)"
-      },
-      "ana": {
-        "day1": "Segunda-feira",
-        "day1Hours": "09:00 – 18:00",
-        "day2": "Terça-feira",
-        "day2Hours": "09:00 – 18:00",
-        "timeOffRange": "24/12 – 25/12",
-        "timeOffReason": "Feriado"
-      },
-      "demo": {
-        "shippingText": "Enviamos pra todo o Brasil pelos Correios, 3–5 dias úteis, frete grátis acima de R$ 150.",
-        "returnsText": "Devolução em até 30 dias, produto sem uso e com etiqueta.",
-        "appointmentClient": "Camila Rocha",
-        "appointmentService": "Corte de cabelo",
-        "appointmentTime": "Amanhã, 14h",
-        "serviceName": "Corte de cabelo",
-        "serviceDuration": "45 min"
-      }
+      "handoffTitle": "Quando precisar, ela chama você",
+      "handoffDesc": "Quando você permitir, se o cliente pedir uma pessoa ou a conversa sair do que ela sabe, ela passa para alguém do seu time, com o histórico inteiro à mão.",
+      "handoffCta": "Tirar dúvidas com um especialista",
+      "hireCta": "Contratar a {name}"
     },
     "rag": {
-      "eyebrow": "Treinamento sem Código",
-      "heading": "Treine sua IA em minutos com os dados reais da sua empresa",
-      "sub": "Sem programar e sem configuração complexa. Cadastre sua empresa, importe seu catálogo e defina as regras — a Staffra mantém cada resposta baseada no que você cadastrou, sem sua IA inventar nada.",
+      "heading": "Ela nunca inventa preço, estoque ou prazo",
+      "sub": "A Malu e a Ana só respondem com o que está cadastrado na Staffra. Quando a informação não está lá, ela não chuta: pede para alguém do seu time confirmar.",
       "steps": [
         {
-          "title": "Cadastre sua empresa & catálogo",
-          "desc": "Importe produtos de uma planilha ou do Shopify e preencha perfil, horários, políticas e FAQ."
+          "title": "Conte sobre o seu negócio",
+          "desc": "Descrição, formas de pagamento, entrega, trocas e perguntas frequentes, tudo em texto simples."
         },
         {
-          "title": "Defina o Tom de Voz & Guardrails",
-          "desc": "Defina a persona do agente, limites rígidos, respostas proibidas e quando passar para um humano."
+          "title": "Traga seus produtos ou serviços",
+          "desc": "Importe o catálogo por planilha ou pelo Shopify, ou cadastre seus serviços e horários de atendimento."
         },
         {
-          "title": "Conecte seus canais",
-          "desc": "Publique o agente no seu site, Instagram ou Telegram em poucos cliques e comece a falar com clientes reais."
+          "title": "Conecte um canal",
+          "desc": "WhatsApp, Instagram, Telegram, o chat do seu site ou um link direto."
         }
       ],
-      "cardTitle": "De onde seu agente responde",
-      "cardBadge": "Sempre ancorado",
+      "cardTitle": "De onde vêm as respostas",
+      "cardBadge": "Só os seus dados",
       "sources": [
         {
-          "title": "Catálogo de produtos",
-          "sub": "Planilha ou cadastro manual"
+          "title": "Catálogo",
+          "sub": "Planilha ou cadastro"
         },
         {
           "title": "Shopify",
           "sub": "Sincronização automática"
         },
         {
-          "title": "Perfil da empresa",
-          "sub": "Nome, setor, contato"
+          "title": "Seu negócio",
+          "sub": "Descrição e contato"
         },
         {
-          "title": "Políticas da loja",
+          "title": "Políticas",
           "sub": "Entrega, trocas, pagamento"
         },
         {
-          "title": "FAQ",
-          "sub": "Suas perguntas frequentes"
+          "title": "Perguntas frequentes",
+          "sub": "Escritas por você"
         },
         {
-          "title": "Guardrails",
-          "sub": "Limites e temas proibidos"
+          "title": "Serviços e agenda",
+          "sub": "Duração, preço e horários"
         }
       ],
-      "imageAlt": "Dashboard de analytics da Staffra"
+      "demo": {
+        "customer": "Vocês entregam em Manaus até sexta?",
+        "agent": "Ainda não tenho o prazo para Manaus cadastrado. Vou confirmar com a equipe e já te aviso.",
+        "sourcesLabel": "Ela responde a partir de:"
+      }
     },
     "pricing": {
-      "eyebrow": "Planos Transparentes",
-      "heading": "Escolha o tamanho ideal da sua equipe de inteligência",
-      "sub": "Comece agora mesmo com 7 dias de garantia incondicional. Sem taxa oculta de setup ou fidelidade obrigatória.",
-      "featuredBadge": "Mais Escolhido por Empresas",
-      "showMore": "Ver mais",
-      "showLess": "Ver menos",
+      "heading": "Planos simples, com a Malu e a Ana em todos",
+      "sub": "O que muda entre os planos é quantas respostas sua equipe pode enviar.",
+      "trialNote": "7 dias grátis. Pedimos o cartão no início, mas só cobramos depois de 7 dias ou de 500 respostas, o que vier primeiro. Cancele antes e não paga nada.",
+      "featuredBadge": "Recomendado",
       "periodToggle": {
         "monthly": "Mensal",
         "annual": "Anual"
       },
-      "wppToggleLabel": "Incluir WhatsApp no plano",
-      "wppToggleNote": "Sem essa opção, a Meta cobra o uso do WhatsApp separadamente, direto no seu cartão.",
-      "priceNoteMonthly": "Cobrança mensal recorrente",
-      "priceNoteAnnual": "Cobrança anual recorrente",
+      "periodLabel": "Período de cobrança",
+      "savings": "−{pct}%",
+      "wppToggleLabel": "Com WhatsApp",
+      "wppToggleNote": "Sem WhatsApp: Instagram, Telegram, chat no site e link direto. Ligue para ver os preços com o WhatsApp oficial.",
       "perMonth": "/ mês",
       "perYear": "/ ano",
+      "perDay": "≈ {price} por dia",
+      "repliesMonthly": "{count} respostas por mês",
+      "repliesAnnual": "{count} respostas por ano",
+      "repliesNote": "Cada mensagem que sua equipe envia para um cliente conta como uma resposta.",
+      "includedTitle": "Tudo isso em todos os planos",
+      "included": [
+        "Malu para vendas e Ana para agendamentos",
+        "Instagram, Telegram, chat no site e link direto, e o WhatsApp oficial nos planos com WhatsApp",
+        "Catálogo por planilha ou sincronizado com o Shopify",
+        "Agenda com Google Calendar, lista de espera e aprovação",
+        "Respostas só com os seus dados, sem inventar",
+        "Passa a conversa para o seu time quando precisar",
+        "Caixa de conversas e relatórios de desempenho",
+        "Nome e foto de cada funcionária do seu jeito",
+        "Usuários ilimitados no painel"
+      ],
       "plans": [
         {
           "tier": "Starter",
-          "name": "Automação Individual",
-          "desc": "Ideal para autônomos e pequenos comércios que precisam de atendimento ágil.",
-          "features": [
-            "Malu para vendas e Ana para agendamentos",
-            "Nome e foto personalizados por funcionário",
-            "Um funcionário em todos os canais, memória única",
-            "WhatsApp Business Oficial (Meta Cloud API)",
-            "Suporte a Instagram Direct",
-            "Suporte a Telegram",
-            "Widget de chat no site em uma linha de código",
-            "Página de chat hospedada e link para compartilhar",
-            "Controle de domínios autorizados do widget",
-            "Saudação e launcher do widget personalizados (animação, imagem ou vídeo)",
-            "Perfil da empresa, contatos e fuso horário sem código",
-            "Políticas de entrega, troca e pagamento",
-            "FAQ personalizado",
-            "Catálogo de produtos com importação de planilha (CSV / XLSX)",
-            "Sincronização automática do catálogo Shopify",
-            "Busca de produtos por significado",
-            "Respostas ancoradas em preço, estoque e políticas",
-            "Recomendações de produtos para cada cliente",
-            "Links de checkout rastreados para a sua loja",
-            "Rastreamento de intenção de compra e cliques no checkout",
-            "Sincronização em duas vias com o Google Calendar",
-            "Disponibilidade a partir dos seus horários, agenda e calendário",
-            "Agendar, remarcar e cancelar na conversa",
-            "Lista de espera automática com agenda cheia",
-            "Aprovação opcional antes de confirmar",
-            "Catálogo de serviços com curinga para pedidos não listados",
-            "Painel de agendamentos: concluídos, cancelados, faltas",
-            "Transbordo para humano e assumir a conversa ao vivo",
-            "Pausar ou reativar cada funcionário quando quiser",
-            "Caixa de conversas com filtros e busca",
-            "Painel de desempenho com status de saúde do time",
-            "Relatórios de 7, 30 e 90 dias",
-            "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
-            "Interface em português e inglês",
-            "Uso por resposta exibido no painel",
-            "7 dias de teste grátis"
-          ],
-          "cta": "Testar 7 Dias Grátis"
+          "name": "Para começar",
+          "desc": "Autônomos e negócios pequenos.",
+          "cta": "Testar 7 dias grátis"
         },
         {
           "tier": "Intermediate",
-          "name": "Operação em Crescimento",
-          "desc": "Para negócios em crescimento que precisam de mais volume com recursos completos de vendas e agendamento.",
-          "features": [
-            "Malu para vendas e Ana para agendamentos",
-            "Nome e foto personalizados por funcionário",
-            "Um funcionário em todos os canais, memória única",
-            "WhatsApp Business Oficial (Meta Cloud API)",
-            "Suporte a Instagram Direct",
-            "Suporte a Telegram",
-            "Widget de chat no site em uma linha de código",
-            "Página de chat hospedada e link para compartilhar",
-            "Controle de domínios autorizados do widget",
-            "Saudação e launcher do widget personalizados (animação, imagem ou vídeo)",
-            "Perfil da empresa, contatos e fuso horário sem código",
-            "Políticas de entrega, troca e pagamento",
-            "FAQ personalizado",
-            "Catálogo de produtos com importação de planilha (CSV / XLSX)",
-            "Sincronização automática do catálogo Shopify",
-            "Busca de produtos por significado",
-            "Respostas ancoradas em preço, estoque e políticas",
-            "Recomendações de produtos para cada cliente",
-            "Links de checkout rastreados para a sua loja",
-            "Rastreamento de intenção de compra e cliques no checkout",
-            "Sincronização em duas vias com o Google Calendar",
-            "Disponibilidade a partir dos seus horários, agenda e calendário",
-            "Agendar, remarcar e cancelar na conversa",
-            "Lista de espera automática com agenda cheia",
-            "Aprovação opcional antes de confirmar",
-            "Catálogo de serviços com curinga para pedidos não listados",
-            "Painel de agendamentos: concluídos, cancelados, faltas",
-            "Transbordo para humano e assumir a conversa ao vivo",
-            "Pausar ou reativar cada funcionário quando quiser",
-            "Caixa de conversas com filtros e busca",
-            "Painel de desempenho com status de saúde do time",
-            "Relatórios de 7, 30 e 90 dias",
-            "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
-            "Interface em português e inglês",
-            "Uso por resposta exibido no painel",
-            "7 dias de teste grátis"
-          ],
-          "cta": "Testar 7 Dias Grátis"
+          "name": "Para crescer",
+          "desc": "Para quem já atende bastante pelo WhatsApp.",
+          "cta": "Testar 7 dias grátis"
         },
         {
           "tier": "Pro",
-          "name": "Operação Comercial Completa",
-          "desc": "Para empresas em expansão que exigem qualificação de leads e agendamento.",
-          "features": [
-            "Malu para vendas e Ana para agendamentos",
-            "Nome e foto personalizados por funcionário",
-            "Um funcionário em todos os canais, memória única",
-            "WhatsApp Business Oficial (Meta Cloud API)",
-            "Suporte a Instagram Direct",
-            "Suporte a Telegram",
-            "Widget de chat no site em uma linha de código",
-            "Página de chat hospedada e link para compartilhar",
-            "Controle de domínios autorizados do widget",
-            "Saudação e launcher do widget personalizados (animação, imagem ou vídeo)",
-            "Perfil da empresa, contatos e fuso horário sem código",
-            "Políticas de entrega, troca e pagamento",
-            "FAQ personalizado",
-            "Catálogo de produtos com importação de planilha (CSV / XLSX)",
-            "Sincronização automática do catálogo Shopify",
-            "Busca de produtos por significado",
-            "Respostas ancoradas em preço, estoque e políticas",
-            "Recomendações de produtos para cada cliente",
-            "Links de checkout rastreados para a sua loja",
-            "Rastreamento de intenção de compra e cliques no checkout",
-            "Sincronização em duas vias com o Google Calendar",
-            "Disponibilidade a partir dos seus horários, agenda e calendário",
-            "Agendar, remarcar e cancelar na conversa",
-            "Lista de espera automática com agenda cheia",
-            "Aprovação opcional antes de confirmar",
-            "Catálogo de serviços com curinga para pedidos não listados",
-            "Painel de agendamentos: concluídos, cancelados, faltas",
-            "Transbordo para humano e assumir a conversa ao vivo",
-            "Pausar ou reativar cada funcionário quando quiser",
-            "Caixa de conversas com filtros e busca",
-            "Painel de desempenho com status de saúde do time",
-            "Relatórios de 7, 30 e 90 dias",
-            "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
-            "Interface em português e inglês",
-            "Uso por resposta exibido no painel",
-            "7 dias de teste grátis"
-          ],
-          "cta": "Testar 7 Dias Grátis"
+          "name": "Para alto volume",
+          "desc": "Muitas conversas por dia, em vários canais.",
+          "cta": "Testar 7 dias grátis"
         },
         {
           "tier": "Enterprise",
-          "name": "Escala Corporativa & SLA",
-          "desc": "Volume massivo de mensagens, múltiplos departamentos e segurança LGPD/SOC2.",
-          "price": "Customizado",
+          "name": "Sob medida",
+          "desc": "Várias unidades ou volume muito alto, com condições negociadas.",
+          "price": "Sob consulta",
           "priceNote": "Projetos a partir de R$ 3.900/mês",
-          "features": [
-            "Malu para vendas e Ana para agendamentos",
-            "Nome e foto personalizados por funcionário",
-            "Um funcionário em todos os canais, memória única",
-            "WhatsApp Business Oficial (Meta Cloud API)",
-            "Suporte a Instagram Direct",
-            "Suporte a Telegram",
-            "Widget de chat no site em uma linha de código",
-            "Página de chat hospedada e link para compartilhar",
-            "Controle de domínios autorizados do widget",
-            "Saudação e launcher do widget personalizados (animação, imagem ou vídeo)",
-            "Perfil da empresa, contatos e fuso horário sem código",
-            "Políticas de entrega, troca e pagamento",
-            "FAQ personalizado",
-            "Catálogo de produtos com importação de planilha (CSV / XLSX)",
-            "Sincronização automática do catálogo Shopify",
-            "Busca de produtos por significado",
-            "Respostas ancoradas em preço, estoque e políticas",
-            "Recomendações de produtos para cada cliente",
-            "Links de checkout rastreados para a sua loja",
-            "Rastreamento de intenção de compra e cliques no checkout",
-            "Sincronização em duas vias com o Google Calendar",
-            "Disponibilidade a partir dos seus horários, agenda e calendário",
-            "Agendar, remarcar e cancelar na conversa",
-            "Lista de espera automática com agenda cheia",
-            "Aprovação opcional antes de confirmar",
-            "Catálogo de serviços com curinga para pedidos não listados",
-            "Painel de agendamentos: concluídos, cancelados, faltas",
-            "Transbordo para humano e assumir a conversa ao vivo",
-            "Pausar ou reativar cada funcionário quando quiser",
-            "Caixa de conversas com filtros e busca",
-            "Painel de desempenho com status de saúde do time",
-            "Relatórios de 7, 30 e 90 dias",
-            "Colaboradores ilimitados (papéis de proprietário, admin e membro)",
-            "Interface em português e inglês",
-            "Uso por resposta exibido no painel",
-            "7 dias de teste grátis"
-          ],
-          "cta": "Falar com Engenheiro de Contas"
+          "cta": "Falar com vendas"
         }
-      ]
+      ],
+      "wppToggleNoteOn": "Inclui o WhatsApp oficial, com as taxas da Meta já no preço."
     },
     "salesContact": {
       "title": "Falar com especialista",
@@ -786,11 +574,11 @@
       "interestsHint": "No que você tem interesse? Pode escolher os dois.",
       "interests": {
         "sales": {
-          "label": "Agente de vendas",
+          "label": "Vendas (Malu)",
           "desc": "Atende e vende nos seus canais, dia e noite."
         },
         "scheduling": {
-          "label": "Agente de agendamentos",
+          "label": "Agendamentos (Ana)",
           "desc": "Agenda, remarca e lembra os clientes automaticamente."
         }
       },
@@ -803,74 +591,57 @@
         "other": "Outro"
       }
     },
-    "impact": {
-      "stats": [
-        {
-          "value": "-55%",
-          "title": "Redução nos Chamados Repetitivos",
-          "desc": "Resolução instantânea sem transbordo desnecessário para atendentes humanos."
-        },
-        {
-          "value": "3.8x",
-          "title": "Mais Reuniões Agendadas",
-          "desc": "Follow-up automático e persistente enquanto o lead está quente no WhatsApp."
-        },
-        {
-          "value": "99.4%",
-          "title": "Precisão Sem Alucinações",
-          "desc": "Arquitetura RAG com guardrails corporativos que respeitam 100% o seu documento."
-        }
-      ]
-    },
     "faq": {
-      "eyebrow": "Perguntas Frequentes",
-      "heading": "Tudo o que você precisa saber sobre a Staffra",
+      "heading": "Perguntas frequentes",
       "items": [
         {
-          "q": "Como o funcionário de IA aprende sobre minha empresa?",
-          "a": "Você apenas faz o upload dos seus arquivos (PDFs, catálogos, políticas comerciais, histórico de atendimento ou link do seu site). A Staffra processa esses dados em nossa infraestrutura RAG corporativa, garantindo que o agente responda estritamente de acordo com o que foi fornecido."
+          "q": "Como a Malu e a Ana aprendem sobre o meu negócio?",
+          "a": "Você preenche as informações do negócio (descrição, pagamentos, entrega, trocas e perguntas frequentes), traz o catálogo por planilha ou pelo Shopify e, para a Ana, cadastra serviços e horários. Elas respondem só com base nisso."
         },
         {
-          "q": "A integração utiliza a API Oficial do WhatsApp? Há risco de banimento?",
-          "a": "Sim, conectamos diretamente via WhatsApp Cloud API Oficial da Meta. Isso garante estabilidade total, alta taxa de entrega, suporte a selo de verificação e conformidade integral com as diretrizes da Meta, eliminando riscos de banimento de linhas."
+          "q": "E se o cliente perguntar algo que ela não sabe?",
+          "a": "Ela não inventa. Se a informação não estiver cadastrada, ela pede para alguém do seu time confirmar, ou, se você permitir, passa a conversa para uma pessoa, com o histórico inteiro à mão."
         },
         {
-          "q": "O que acontece se um cliente fizer uma pergunta fora do manual?",
-          "a": "Nossos agentes possuem guardrails estritos. Se uma pergunta estiver fora da base ou envolver negociações sensíveis, ele avisa cordialmente o cliente e realiza a transferência (transbordo) imediata para um operador humano do seu time, mantendo todo o resumo da conversa acessível."
+          "q": "Como funciona o teste grátis?",
+          "a": "São 7 dias grátis. Pedimos o cartão no início, e a cobrança só acontece depois de 7 dias ou de 500 respostas, o que vier primeiro. Se cancelar antes, não paga nada."
         },
         {
-          "q": "Quanto tempo demora para colocar um agente no ar?",
-          "a": "A configuração padrão leva em média 15 a 30 minutos. Nosso onboarding guiado orienta passo a passo: upload da base, personalização do avatar e vinculação do QR Code do WhatsApp."
+          "q": "Vocês usam o WhatsApp oficial? Posso usar meu número atual?",
+          "a": "Sim. A conexão é feita pela conexão oficial da Meta, e dá para usar o número que você já tem no app WhatsApp Business ou um número novo. O WhatsApp vem nos planos com WhatsApp, e as taxas da Meta já estão incluídas no preço."
+        },
+        {
+          "q": "Tem fidelidade ou taxa de instalação?",
+          "a": "Não tem taxa de instalação. Você cancela pelo próprio painel quando quiser, sem precisar falar com ninguém, e o plano segue ativo até o fim do período já pago. No plano anual, isso significa que o cancelamento vale para a próxima renovação."
+        },
+        {
+          "q": "Quanto tempo leva para começar?",
+          "a": "Em geral, menos de 30 minutos. O painel mostra um passo a passo que se marca sozinho conforme você configura."
         }
       ]
     },
     "finalCta": {
-      "eyebrow": "Comece Hoje Mesmo",
-      "heading": "Pronto para multiplicar sua capacidade de vendas e atendimento?",
-      "sub": "Crie seu primeiro agente de IA em menos de 15 minutos e experimente o poder de uma equipe trabalhando sem pausas para o seu negócio.",
-      "ctaPrimary": "Começar Teste de 7 Dias",
-      "fine": "Sem fidelidade • Cancele a qualquer momento com 1 clique"
+      "heading": "Seu próximo cliente pode chegar às 23h. Quem vai responder?",
+      "sub": "Contrate a Malu e a Ana hoje e deixe o WhatsApp atendendo enquanto você cuida do resto.",
+      "ctaPrimary": "Testar 7 dias grátis",
+      "fine": "Cancele quando quiser · Sem taxa de instalação"
     },
     "footer": {
-      "blurb": "Plataforma corporativa de colaboradores digitais inteligentes e orquestração de multi-agentes autônomos para escalar operações com precisão.",
+      "blurb": "Funcionárias que vendem e agendam pelo WhatsApp, pelo Instagram e pelo seu site.",
       "columns": [
         {
           "title": "Soluções",
           "links": [
             {
-              "label": "Agentes de IA",
+              "label": "Funcionários",
               "href": "#workforce"
             },
             {
-              "label": "AI Workforce",
-              "href": "#workforce"
-            },
-            {
-              "label": "Integrações WhatsApp & Meta",
+              "label": "Canais e WhatsApp",
               "href": "#canais"
             },
             {
-              "label": "Demonstração Guiada",
+              "label": "Demonstração",
               "href": "#demo"
             }
           ]
@@ -907,6 +678,101 @@
         }
       ],
       "rights": "© 2026 Pulsar LTDA. Todos os direitos reservados."
+    },
+    "value": {
+      "heading": "Uma funcionária que não tira folga",
+      "sub": "Faça a conta com os números do seu negócio.",
+      "coverage": {
+        "title": "Quantas horas da semana ficam cobertas",
+        "note": "A CLT limita a jornada de um atendente a 44 horas por semana. A semana tem 168.",
+        "person": "Um atendente em tempo integral",
+        "staffra": "Malu e Ana",
+        "hours": "{hours}h por semana"
+      },
+      "facts": [
+        {
+          "label": "Tempo de resposta",
+          "staffra": "Em segundos",
+          "person": "Depende da fila"
+        },
+        {
+          "label": "Conversas ao mesmo tempo",
+          "staffra": "Quantas chegarem",
+          "person": "Uma de cada vez"
+        },
+        {
+          "label": "Preço e estoque",
+          "staffra": "Sempre o cadastrado",
+          "person": "Precisa consultar"
+        },
+        {
+          "label": "Folgas e férias",
+          "staffra": "Não tem",
+          "person": "Precisa de cobertura"
+        }
+      ],
+      "calc": {
+        "title": "Quanto você gasta hoje",
+        "sub": "Coloque o custo mensal de quem responde seus clientes. Nada é enviado: a conta é feita aqui na página.",
+        "costLabel": "Custo por atendente, por mês",
+        "costPlaceholder": "ex.: 2.800",
+        "costHint": "Some salário, encargos e benefícios.",
+        "countLabel": "Atendentes",
+        "decrease": "Diminuir",
+        "increase": "Aumentar",
+        "today": "Hoje, por mês",
+        "todayHours": "Cobre até {hours}h por semana",
+        "withStaffra": "Com a Staffra, por mês",
+        "withStaffraHours": "Plano “{plan}” com WhatsApp, 24h por dia",
+        "empty": "Digite o custo para ver a comparação.",
+        "saving": "{amount} a menos por mês, com atendimento 24 horas.",
+        "noSaving": "Pelo mesmo investimento, o atendimento passa a ser 24 horas.",
+        "disclaimer": "A Staffra não precisa substituir ninguém: ela atende enquanto sua equipe não pode e chama vocês quando precisar.",
+        "withStaffraReplies": "Até {replies} respostas por mês"
+      },
+      "cta": "Ver planos",
+      "factsHeader": {
+        "staffra": "Malu e Ana",
+        "person": "Um atendente"
+      }
+    },
+    "tour": {
+      "heading": "Veja o painel por dentro",
+      "sub": "Estas são as telas reais que você vai usar no dia a dia.",
+      "tablistLabel": "Telas do painel",
+      "sampleNote": "Capturas reais do painel, com dados de exemplo.",
+      "steps": {
+        "channels": {
+          "tab": "Canais",
+          "title": "Conecte onde seus clientes estão",
+          "body": "WhatsApp, Instagram, Telegram, o chat do seu site e um link direto. Cada canal mostra se está pronto.",
+          "alt": "Página da Malu com os canais conectados"
+        },
+        "products": {
+          "tab": "Catálogo",
+          "title": "Seu catálogo, sempre atualizado",
+          "body": "Importe por planilha ou Shopify. A Malu responde preço e estoque só com o que está aqui.",
+          "alt": "Lista de produtos com estoque e preço"
+        },
+        "schedule": {
+          "tab": "Agenda",
+          "title": "A agenda do dia, organizada",
+          "body": "Os agendamentos que a Ana confirmou aparecem na linha do tempo do dia, com o próximo em destaque.",
+          "alt": "Tela de agendamentos do dia"
+        },
+        "conversations": {
+          "tab": "Conversas",
+          "title": "Todas as conversas num só lugar",
+          "body": "Veja o que elas responderam em cada canal, quem está pronto para comprar e assuma quando quiser.",
+          "alt": "Caixa de conversas com uma conversa aberta"
+        },
+        "performance": {
+          "tab": "Desempenho",
+          "title": "Resultados que você acompanha",
+          "body": "Conversas, recomendações e cliques para o checkout, comparados com o período anterior.",
+          "alt": "Painel de desempenho com gráfico de conversas"
+        }
+      }
     }
   },
   "Dashboard": {
@@ -2465,7 +2331,7 @@
         "annual": "Anual"
       },
       "wppToggleLabel": "Incluir WhatsApp no plano",
-      "wppToggleNote": "Sem essa opção, a Meta cobra o uso do WhatsApp separadamente, direto no seu cartão — veja mais na tela de canais.",
+      "wppToggleNote": "Sem essa opção, o plano não inclui o WhatsApp: o atendimento funciona no Instagram, Telegram, chat do site e link direto. Para atender pelo WhatsApp, escolha um plano com WhatsApp.",
       "wppBadge": "WhatsApp incluso",
       "recommended": "Recomendado"
     },

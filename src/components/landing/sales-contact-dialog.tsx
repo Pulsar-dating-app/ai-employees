@@ -33,7 +33,16 @@ const inputClass =
 
 function Check({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M20 6 9 17l-5-5" />
     </svg>
   );
@@ -84,9 +93,7 @@ export function SalesContactDialog({
   function toggleInterest(key: string) {
     setForm((f) => ({
       ...f,
-      interests: f.interests.includes(key)
-        ? f.interests.filter((i) => i !== key)
-        : [...f.interests, key],
+      interests: f.interests.includes(key) ? f.interests.filter((i) => i !== key) : [...f.interests, key],
     }));
   }
 
@@ -146,12 +153,7 @@ export function SalesContactDialog({
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={triggerLabel}
-        className={triggerClassName}
-        onClick={() => setOpen(true)}
-      >
+      <button type="button" aria-label={triggerLabel} className={triggerClassName} onClick={() => setOpen(true)}>
         {children}
       </button>
 
@@ -161,11 +163,7 @@ export function SalesContactDialog({
           <div
             className={`${landingV2Sans.className} landing-v2-root fixed inset-0 z-[60] flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-4`}
           >
-            <div
-              className="absolute inset-0 bg-[#0f172a]/45 backdrop-blur-sm"
-              onClick={close}
-              aria-hidden="true"
-            />
+            <div className="absolute inset-0 bg-[#0f172a]/45 backdrop-blur-sm" onClick={close} aria-hidden="true" />
             <div
               ref={panelRef}
               role="dialog"
@@ -180,7 +178,16 @@ export function SalesContactDialog({
                 aria-label={t("close")}
                 className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#0f172a]/5 text-[#0f172a] transition-colors hover:bg-[#0f172a]/10"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
                   <path d="M4 4l8 8M12 4l-8 8" />
                 </svg>
               </button>
@@ -193,9 +200,7 @@ export function SalesContactDialog({
                   <h2 id="sales-contact-title" className="mt-4 text-[22px] font-bold text-[#0f172a]">
                     {t("successTitle")}
                   </h2>
-                  <p className="mx-auto mt-2 max-w-sm text-[14px] leading-[22px] text-[#464555]">
-                    {t("successBody")}
-                  </p>
+                  <p className="mx-auto mt-2 max-w-sm text-[14px] leading-[22px] text-[#464555]">{t("successBody")}</p>
                   <button
                     type="button"
                     onClick={close}
@@ -323,9 +328,7 @@ export function SalesContactDialog({
                               >
                                 <span
                                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
-                                    selected
-                                      ? "border-[#3525cd] bg-[#3525cd] text-white"
-                                      : "border-[#cbd5e1] bg-white"
+                                    selected ? "border-[#3525cd] bg-[#3525cd] text-white" : "border-[#cbd5e1] bg-white"
                                   }`}
                                 >
                                   {selected && <Check className="h-3 w-3" />}
@@ -334,9 +337,7 @@ export function SalesContactDialog({
                                   <span className="block text-[14px] font-semibold text-[#0f172a]">
                                     {t(`interests.${key}.label`)}
                                   </span>
-                                  {desc && (
-                                    <span className="block text-[13px] text-[#464555]">{desc}</span>
-                                  )}
+                                  {desc && <span className="block text-[13px] text-[#464555]">{desc}</span>}
                                 </span>
                               </button>
                             );
@@ -363,9 +364,7 @@ export function SalesContactDialog({
                           />
                         </label>
                         <label className="flex flex-col gap-1.5">
-                          <span className="text-[13px] font-semibold text-[#0f172a]">
-                            {t("fields.referralSource")}
-                          </span>
+                          <span className="text-[13px] font-semibold text-[#0f172a]">{t("fields.referralSource")}</span>
                           <select
                             className={`${inputClass} ${form.referralSource === "" ? "text-[#64748b]" : ""}`}
                             value={form.referralSource}
@@ -396,12 +395,8 @@ export function SalesContactDialog({
                       </>
                     )}
 
-                    {showErrors && !stepValid && (
-                      <p className="text-[13px] text-[#ba1a1a]">{t("errorRequired")}</p>
-                    )}
-                    {status === "error" && (
-                      <p className="text-[13px] text-[#ba1a1a]">{t("errorSubmit")}</p>
-                    )}
+                    {showErrors && !stepValid && <p className="text-[13px] text-[#ba1a1a]">{t("errorRequired")}</p>}
+                    {status === "error" && <p className="text-[13px] text-[#ba1a1a]">{t("errorSubmit")}</p>}
 
                     <div className="mt-1 flex items-center gap-3">
                       {step > 0 && (

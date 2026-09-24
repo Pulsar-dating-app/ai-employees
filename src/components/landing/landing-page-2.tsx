@@ -7,59 +7,23 @@ import { BrandLogo } from "./brand-logos";
 import { ChannelShowcase, type ChannelItem } from "./channel-showcase";
 import { M } from "./landing-icons";
 import { PricingSection } from "./pricing-section";
+import { getPlan } from "@/lib/billing/plans";
+import { CalendarIcon } from "@/components/ui/icons";
 import { SalesContactDialog } from "./sales-contact-dialog";
 import { ShaderBackground } from "@/components/ui/shader-background";
 import { ScrollHeader } from "./scroll-header";
-import { CountUp } from "./count-up";
 import { ShutterReveal } from "./shutter-reveal";
 import { SlideReveal } from "./slide-reveal";
 import { CascadeText } from "./cascade-text";
-import { InteractiveDemo, type DemoAgent } from "./interactive-demo";
+import { ProductTour } from "./product-tour";
+import { ValueCalculator } from "./value-calculator";
+import { HeroChatDemo, type HeroChatCopy } from "./hero-chat-demo";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
-import workspaceImg from "../../../public/landing-v2/workspace.jpg";
-import analyticsImg from "../../../public/landing-v2/analytics.jpg";
 import logo from "../../../public/logo.png";
-
-// Public landing — a faithful, pixel-level reproduction of the Stitch
-// "Staffra - Landing Page Oficial" screen (project 16467959335975114559,
-// screen 75c1da7a…). Palette, type scale, spacing rhythm and every string
-// are taken straight from that mockup. The design system there uses a large
-// custom Tailwind config; since this repo's Tailwind doesn't carry those
-// token names, the classes below inline the resolved hex / pixel values.
-//
-// Design tokens (Stitch "Staffra Oficial"):
-//   surface #fcf8ff · container-lowest #ffffff · container-low #f5f2ff
-//   container-high #eae6f4 · on-surface #1b1b24 · on-surface-variant #464555
-//   primary #3525cd · primary-container #4f46e5 · primary-fixed #e2dfff
-//   secondary #006591 · secondary-fixed #c9e6ff · secondary-container #39b8fd
-//   tertiary #7e3000 · tertiary-fixed #ffdbcc · neutral-900 #0f172a
-//   neutral-500 #64748b · status-success #10b981 · error #ba1a1a
-//
-// Type roles (Inter, --font-landing-v2 — the only family on this page):
-//   display  40→48 / 1.05 / 700 / -0.02em  — hero h1
-//   h2       32 / 40 / 600 / -0.01em        — section headings
-//   stat     48 / 1  / 800 / -0.02em        — count-up figures, featured price
-//   h3       24 / 32 / 600                   — card / plan names
-//   title    15 / 20 / 600                   — card & step sub-headings
-//   body-lg  18 / 28 / 400                   — hero subhead
-//   body     16 / 24 / 400                   — section subs, prose
-//   label    12 / 700 / uppercase / 0.14em   — kickers, eyebrows (pills 11 / 0.12em)
-//   meta     12 / 16 / 500–600               — captions, helper text
-//   fine     11 / 500                         — timestamps, legal, sub-captions
-//
-// NOTE: this page deliberately keeps the mockup's product wording verbatim
-// ("agentes de IA", "AI Workforce", "RAG", model names, …). That runs against
-// the product-language rules in CLAUDE.md, and was an explicit call by the
-// owner to mirror the Stitch copy exactly.
 
 const HIRE = "/?auth=signup";
 const LOGIN = "/?auth=login";
-
-// Icons (`<M name=… />`) are inline SVGs from ./landing-icons — the Stitch
-// export used the Material Symbols icon *font*, loaded as a render-blocking
-// <link> to fonts.googleapis.com, which cost LCP on the page that most needs
-// it. The component keeps the same call signature.
 
 type LogoItem = { name: string };
 type Agent = {
@@ -70,48 +34,30 @@ type Agent = {
 };
 type Step = { title: string; desc: string };
 type Source = { title: string; sub: string };
-// price/priceSuffix/priceNote are only read for the Enterprise (contact-us)
-// card now -- the 3 self-serve cards compute those from the real catalog
-// (plans.ts) instead, see pricing-section.tsx.
-type Plan = {
-  tier: string;
-  name: string;
-  desc: string;
-  price?: string;
-  priceSuffix?: string;
-  priceNote?: string;
-  features: string[];
-  cta: string;
-};
-type Stat = { value: string; title: string; desc: string };
 type Faq = { q: string; a: string };
 type FooterCol = { title: string; links: { label: string; href: string }[] };
 
-// Two real hired employees only — Malu (sales) and Ana (scheduling), each
-// with a real portrait. There is no third "support" agent and no
-// agent-to-agent collaboration in the product.
 const AGENT_STYLES = [
-  { img: maluImg, role: "text-[#3525cd]", btn: "text-[#3525cd] hover:bg-[#3525cd] hover:text-white" },
-  { img: anaImg, role: "text-[#006591]", btn: "text-[#006591] hover:bg-[#006591] hover:text-white" },
+  {
+    img: maluImg,
+    role: "text-[#3525cd]",
+    btn: "text-[#3525cd] hover:bg-[#3525cd] hover:text-white",
+  },
+  {
+    img: anaImg,
+    role: "text-[#006591]",
+    btn: "text-[#006591] hover:bg-[#006591] hover:text-white",
+  },
 ] as const;
 
 const SOURCE_ICONS = [
-  { icon: "shopping_bag", color: "text-[#3525cd]" },
-  { icon: "link", color: "text-[#10b981]" },
-  { icon: "mail", color: "text-[#006591]" },
-  { icon: "picture_as_pdf", color: "text-[#7e3000]" },
+  { icon: "table_chart", color: "text-[#3525cd]" },
+  { icon: "shopping_bag", color: "text-[#10b981]" },
+  { icon: "public", color: "text-[#006591]" },
+  { icon: "check_circle", color: "text-[#7e3000]" },
   { icon: "chat_bubble", color: "text-[#4f46e5]" },
-  { icon: "check_circle", color: "text-[#0f172a]" },
+  { icon: "calendar", color: "text-[#0f172a]" },
 ] as const;
-
-const IMPACT_ACCENT = ["text-[#e2dfff]", "text-[#10b981]", "text-[#39b8fd]"] as const;
-
-function parseStatValue(raw: string) {
-  const match = raw.match(/^(-?\d+(?:\.(\d+))?)(.*)$/);
-  if (!match) return { value: 0, decimals: 0, suffix: raw };
-  const [, numeric, decimalDigits, suffix] = match;
-  return { value: parseFloat(numeric), decimals: decimalDigits?.length ?? 0, suffix };
-}
 
 export async function LandingPageV2() {
   const t = await getTranslations("LandingV2");
@@ -119,35 +65,19 @@ export async function LandingPageV2() {
   const logos = t.raw("socialProof.logos") as LogoItem[];
   const channels = t.raw("channels.items") as ChannelItem[];
   const agents = t.raw("workforce.agents") as Agent[];
-  const demoAgents: DemoAgent[] = agents.map((a, i) => ({ ...a, slug: i === 0 ? "malu" : "ana" }));
   const steps = t.raw("rag.steps") as Step[];
   const sources = t.raw("rag.sources") as Source[];
-  const plans = t.raw("pricing.plans") as Plan[];
-  const pricingCopy = {
-    eyebrow: t("pricing.eyebrow"),
-    heading: t("pricing.heading"),
-    sub: t("pricing.sub"),
-    featuredBadge: t("pricing.featuredBadge"),
-    showMore: t("pricing.showMore"),
-    showLess: t("pricing.showLess"),
-    periodMonthly: t("pricing.periodToggle.monthly"),
-    periodAnnual: t("pricing.periodToggle.annual"),
-    wppToggleLabel: t("pricing.wppToggleLabel"),
-    wppToggleNote: t("pricing.wppToggleNote"),
-    priceNoteMonthly: t("pricing.priceNoteMonthly"),
-    priceNoteAnnual: t("pricing.priceNoteAnnual"),
-    perMonth: t("pricing.perMonth"),
-    perYear: t("pricing.perYear"),
-  };
-  const stats = t.raw("impact.stats") as Stat[];
+  const locale = (await getLocale()) as "en" | "pt";
+  const recommendedPlan = getPlan("intermediate_wpp");
+  const recommendedName = (t.raw("pricing.plans") as { name: string }[])[1]?.name ?? "";
   const faqs = t.raw("faq.items") as Faq[];
+  const heroChat = t.raw("hero.chat") as HeroChatCopy;
   const footerCols = t.raw("footer.columns") as FooterCol[];
 
   return (
     <div
       className={`${landingV2Sans.className} landing-v2-root min-h-screen scroll-smooth bg-[#fcf8ff] text-[#1b1b24] antialiased [&_section]:scroll-mt-24`}
     >
-      {/* ── Header ─────────────────────────────────────────────── */}
       <ScrollHeader>
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-2 px-4 sm:h-20 md:px-10">
           <Link href="/" className="flex items-center gap-2">
@@ -155,14 +85,8 @@ export async function LandingPageV2() {
           </Link>
 
           <nav className="hidden items-center gap-2 lg:flex">
-            <a
-              href="#workforce"
-              className="rounded-lg bg-[#eae6f4] px-3 py-2 text-[14px] font-semibold text-[#1b1b24]"
-            >
-              {t("header.navAgents")}
-            </a>
             {[
-              { label: t("header.navWorkforce"), href: "#workforce" },
+              { label: t("header.navAgents"), href: "#workforce" },
               { label: t("header.navChannels"), href: "#canais" },
               { label: t("header.navPricing"), href: "#planos" },
               { label: t("header.navDemo"), href: "#demo" },
@@ -178,7 +102,7 @@ export async function LandingPageV2() {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-2">
-            <LanguageSwitcher currentLocale={(await getLocale()) as "en" | "pt"} />
+            <LanguageSwitcher currentLocale={locale} />
             <Link
               href={LOGIN}
               aria-label={t("header.login")}
@@ -198,7 +122,6 @@ export async function LandingPageV2() {
       </ScrollHeader>
 
       <main className="w-full bg-[#fcf8ff] pt-16 sm:pt-20">
-        {/* ── 1. Hero ─────────────────────────────────────────── */}
         <div className="relative w-full overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[820px] select-none">
             <ShaderBackground
@@ -210,211 +133,67 @@ export async function LandingPageV2() {
 
           <section
             id="hero"
-            className="relative z-10 mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-10 md:pt-12"
+            className="relative z-10 mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-10 px-4 pb-14 pt-8 md:px-10 md:pt-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-14 lg:pb-20"
           >
-            <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-[0_4px_24px_rgba(79,70,229,0.08)] sm:mb-6">
-                <span className="flex h-2 w-2 animate-pulse rounded-full bg-[#10b981]" />
-                <span className="text-[12px] font-semibold tracking-[0.02em] text-[#3525cd]">
-                  {t("hero.badgeMain")}
-                </span>
-                <span className="hidden text-[12px] font-semibold tracking-[0.02em] text-[#464555] sm:inline">
-                  {t("hero.badgeSub")}
-                </span>
-              </div>
-
-              <h1 className="text-wrap text-[30px] font-bold leading-[1.1] tracking-[-0.02em] text-[#0f172a] sm:text-balance sm:text-[40px] sm:leading-[1.05] md:text-[48px]">
+            <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+              <h1 className="text-balance text-[34px] font-bold leading-[1.08] tracking-[-0.025em] text-[#0f172a] sm:text-[46px] lg:text-[58px] lg:leading-[1.03] xl:text-[64px]">
                 {t("hero.headlinePre")}{" "}
                 <ShutterReveal>
                   <span className="bg-gradient-to-r from-[#3525cd] via-[#4f46e5] to-[#006591] bg-clip-text text-transparent">
                     {t("hero.headlineHighlight")}
                   </span>
-                </ShutterReveal>{" "}
-                {t("hero.headlinePost")}
+                </ShutterReveal>
               </h1>
 
-              <p className="mt-3 max-w-2xl text-balance text-[16px] leading-[24px] text-[#464555] sm:text-[18px] sm:leading-[28px]">
+              <p className="mt-5 max-w-[34rem] text-pretty text-[17px] leading-[27px] text-[#464555] sm:text-[18px] sm:leading-[29px]">
                 {t("hero.sub")}
               </p>
 
-              <div className="mt-6 flex w-full flex-col items-center justify-center gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
+              <div className="mt-8 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row">
                 <Link
                   href={HIRE}
                   aria-label={t("hero.ctaPrimary")}
-                  className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#3525cd] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.22)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#4f46e5] hover:shadow-[0_18px_44px_rgba(53,37,205,0.34)] sm:w-auto"
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#3525cd] px-7 py-4 text-[15px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.28)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#4f46e5] hover:shadow-[0_18px_44px_rgba(53,37,205,0.36)] sm:w-auto"
                 >
-                  <M name="bolt" size={20} />
                   <CascadeText text={t("hero.ctaPrimary")} />
+                  <M name="arrow_forward" size={18} />
                 </Link>
                 <a
                   href="#demo"
                   aria-label={t("hero.ctaSecondary")}
-                  className="group hidden items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-[14px] font-semibold text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:bg-[#f5f2ff] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)] sm:inline-flex"
+                  className="group hidden items-center justify-center gap-2 rounded-xl px-5 py-4 text-[15px] font-semibold text-[#0f172a] transition-colors hover:text-[#3525cd] sm:inline-flex"
                 >
                   <M name="play_circle" size={20} className="text-[#3525cd]" />
                   <CascadeText text={t("hero.ctaSecondary")} />
                 </a>
                 <SalesContactDialog
-                  triggerLabel={t("hero.ctaTertiary")}
-                  triggerClassName="group inline-flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-[14px] font-semibold text-[#464555] transition-colors hover:text-[#3525cd]"
+                  triggerLabel={t("hero.ctaSales")}
+                  triggerClassName="group inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[15px] font-semibold text-[#0f172a] transition-colors hover:text-[#3525cd] sm:hidden"
                 >
-                  <CascadeText text={t("hero.ctaTertiary")} />
+                  <CascadeText text={t("hero.ctaSales")} />
                   <M name="arrow_forward" size={18} />
                 </SalesContactDialog>
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] font-semibold tracking-[0.02em] text-[#464555] sm:mt-3 sm:gap-6 sm:text-[12px]">
+              <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13px] font-medium text-[#464555] lg:justify-start">
                 {[t("hero.trust1"), t("hero.trust2"), t("hero.trust3")].map((trust) => (
-                  <span key={trust} className="flex items-center gap-1.5">
-                    <M name="verified" size={16} className="text-[#10b981]" fill />
+                  <li key={trust} className="flex items-center gap-1.5">
+                    <M name="check_circle" size={16} className="text-[#10b981]" />
                     {trust}
-                  </span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
 
-            {/* Hero showcase — dual platform card */}
-            <div className="relative mt-8 w-full sm:mt-12">
-              <div className="relative w-full overflow-hidden rounded-xl bg-white p-3 shadow-[0_20px_50px_rgba(79,70,229,0.08)] sm:p-6">
-                <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
-                  {/* Left — live chat with Malu */}
-                  <SlideReveal from="left" className="lg:col-span-5">
-                    <div className="flex flex-col rounded-lg bg-[#f5f2ff] p-3">
-                      <div className="mb-1 flex items-center justify-between pb-1">
-                        <div className="flex items-center gap-2">
-                          <div className="relative">
-                            <Image
-                              src={maluImg}
-                              alt="Malu"
-                              sizes="48px"
-                              className="h-12 w-12 rounded-full object-cover object-center shadow-sm"
-                            />
-                            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-[#10b981] ring-2 ring-white" />
-                          </div>
-                          <div className="flex flex-col text-left">
-                            <div className="flex items-center gap-1">
-                              <span className="text-[14px] font-semibold text-[#0f172a]">
-                                {t("hero.chat.agentName")}
-                              </span>
-                              <M name="verified" size={15} className="text-[#3525cd]" fill />
-                            </div>
-                            <span className="text-[12px] font-semibold text-[#10b981]">
-                              {t("hero.chat.status")}
-                            </span>
-                          </div>
-                        </div>
-                        <span className="rounded-full bg-[#e2dfff] px-2 py-0.5 text-[12px] font-semibold text-[#0f0069]">
-                          {t("hero.chat.badge")}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-2 py-2 text-left text-[13px] leading-relaxed">
-                        <div className="max-w-[85%] self-start rounded-xl rounded-tl-none bg-white p-3 text-[#0f172a] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
-                          <p>{t("hero.chat.msg1")}</p>
-                          <span className="mt-1 block text-right text-[11px] tabular-nums text-[#64748b]">10:42</span>
-                        </div>
-                        <div className="max-w-[85%] self-end rounded-xl rounded-tr-none bg-[#3525cd] p-3 text-white shadow-[0_2px_8px_rgba(53,37,205,0.15)]">
-                          <p>{t("hero.chat.msg2")}</p>
-                          <span className="mt-1 block text-right text-[11px] tabular-nums text-[#e2dfff]">10:43</span>
-                        </div>
-                        <div className="max-w-[90%] self-start rounded-xl rounded-tl-none bg-white p-3 text-[#0f172a] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
-                          <p>{t("hero.chat.msg3a")}</p>
-                          <div className="mt-2 flex items-center justify-between rounded bg-[#f5f2ff] p-2">
-                            <div className="flex items-center gap-2">
-                              <M name="shopping_bag" size={20} className="text-[#3525cd]" />
-                              <span className="truncate text-[12px] font-semibold text-[#0f172a]">
-                                {t("hero.chat.productName")}
-                              </span>
-                            </div>
-                            <span className="text-[11px] font-semibold text-[#64748b]">
-                              {t("hero.chat.productPrice")}
-                            </span>
-                          </div>
-                          <p className="mt-2">{t("hero.chat.msg3b")}</p>
-                          <span className="mt-1 block text-right text-[11px] tabular-nums text-[#64748b]">
-                            {t("hero.chat.msg3meta")}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-2 flex items-center gap-2 rounded-lg bg-white p-2 pt-2">
-                        <M name="attach_file" size={20} className="text-[#64748b]" />
-                        <input
-                          className="w-full bg-transparent text-[13px] text-[#0f172a] outline-none placeholder:text-[#64748b]"
-                          placeholder={t("hero.chat.inputPlaceholder")}
-                          defaultValue={t("hero.chat.inputValue")}
-                          readOnly
-                          type="text"
-                        />
-                        <button
-                          type="button"
-                          aria-label={t("hero.chat.send")}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3525cd] text-white shadow-sm hover:bg-[#4f46e5]"
-                        >
-                          <M name="send" size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </SlideReveal>
-
-                  {/* Right — workspace + metrics */}
-                  <SlideReveal from="right" delayMs={200} className="lg:col-span-7">
-                    <div className="flex flex-col gap-3">
-                      <div className="relative overflow-hidden rounded-lg shadow-sm">
-                        <Image
-                          src={workspaceImg}
-                          alt={t("hero.workspace.imageAlt")}
-                          sizes="(min-width: 1024px) 780px, 100vw"
-                          className="h-auto w-full rounded-lg object-contain"
-                        />
-                        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-[#0f172a]/80 via-[#0f172a]/20 to-transparent p-3 sm:from-[#0f172a]/60 sm:via-transparent">
-                          <div className="text-left text-white">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#e2dfff] sm:text-[12px]">
-                              {t("hero.workspace.eyebrow")}
-                            </p>
-                            <p className="mt-0.5 text-[18px] font-bold leading-[24px] tracking-[-0.01em] sm:text-[24px] sm:leading-[32px]">
-                              {t("hero.workspace.title")}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
-                        {[
-                          { label: t("hero.metrics.m1Label"), value: "89.4%", delta: "+14%", sub: t("hero.metrics.m1Sub"), color: "text-[#0f172a]" },
-                          { label: t("hero.metrics.m2Label"), value: "1.4s", delta: "-98%", sub: t("hero.metrics.m2Sub"), color: "text-[#3525cd]" },
-                          { label: t("hero.metrics.m3Label"), value: "1.240", delta: "3.8x", sub: t("hero.metrics.m3Sub"), color: "text-[#0f172a]" },
-                        ].map((m) => (
-                          <div
-                            key={m.label}
-                            className="flex items-center justify-between gap-3 rounded-lg bg-[#f5f2ff] p-3 text-left transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(79,70,229,0.1)] sm:block"
-                          >
-                            <span className="min-w-0 sm:contents">
-                              <span className="block text-[12px] font-semibold text-[#64748b] sm:inline">{m.label}</span>
-                              <span className="mt-0.5 block text-[11px] text-[#464555] sm:hidden">{m.sub}</span>
-                            </span>
-                            <div className="flex shrink-0 items-baseline gap-1 sm:mt-1">
-                              <span className={`text-[22px] font-bold tabular-nums sm:text-[24px] ${m.color}`}>{m.value}</span>
-                              <span className="text-[12px] font-semibold tabular-nums text-[#10b981]">{m.delta}</span>
-                            </div>
-                            <span className="hidden text-[11px] text-[#464555] sm:inline">{m.sub}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </SlideReveal>
-                </div>
-              </div>
-            </div>
+            <SlideReveal from="right" className="w-full lg:max-w-[560px] lg:justify-self-end">
+              <HeroChatDemo copy={heroChat} maluImg={maluImg} anaImg={anaImg} />
+            </SlideReveal>
           </section>
         </div>
 
-        {/* ── 2. Social proof strip ───────────────────────────── */}
         <section className="w-full bg-[#f5f2ff] py-6">
           <div className="mx-auto max-w-[1440px] px-4 text-center md:px-10">
-            <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[#464555]">
-              {t("socialProof.title")}
-            </p>
+            <p className="mb-3 text-[14px] font-medium text-[#464555]">{t("socialProof.title")}</p>
             <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
               {logos.map((brand) => (
                 <div
@@ -422,44 +201,17 @@ export async function LandingPageV2() {
                   className="flex items-center gap-2 grayscale transition-[filter,transform] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:grayscale-0"
                 >
                   <BrandLogo name={brand.name} />
-                  <span className="text-[18px] font-bold tracking-tight text-[#0f172a]">
-                    {brand.name}
-                  </span>
+                  <span className="text-[18px] font-bold tracking-tight text-[#0f172a]">{brand.name}</span>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── 3. Omnichannel ──────────────────────────────────── */}
-        <section id="canais" className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
-          <div className="mx-auto mb-10 max-w-2xl text-center">
-            <div className="mb-5 flex flex-col items-center gap-1.5">
-              <span className="flex items-center gap-2">
-                <BrandLogo name="Meta" className="h-7 w-7" />
-                <span className="text-[22px] font-bold tracking-tight text-[#0f172a]">Meta</span>
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#64748b]">
-                {t("channels.partnerLabel")}
-              </span>
-            </div>
-            <h2 className="text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
-              {t("channels.heading")}
-            </h2>
-            <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("channels.sub")}</p>
-          </div>
-
-          <ChannelShowcase items={channels} hireHref={HIRE} />
-        </section>
-
-        {/* ── 4. AI Workforce / multi-agent ───────────────────── */}
         <section id="workforce" className="w-full bg-[#f5f2ff] py-12">
           <div className="mx-auto max-w-[1440px] px-4 md:px-10">
             <div className="mx-auto mb-6 max-w-2xl text-center">
-              <span className="rounded-full bg-[#e2dfff] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[#0f0069]">
-                {t("workforce.badge")}
-              </span>
-              <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
+              <h2 className="text-balance text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
                 {t("workforce.heading")}
               </h2>
               <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("workforce.sub")}</p>
@@ -483,7 +235,9 @@ export async function LandingPageV2() {
                         />
                         <div className="text-left">
                           <div className="flex items-center gap-1">
-                            <h4 className="text-[24px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a]">{agent.name}</h4>
+                            <h4 className="text-[24px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a]">
+                              {agent.name}
+                            </h4>
                             <span className="h-2.5 w-2.5 rounded-full bg-[#10b981]" />
                           </div>
                           <p className={`text-[14px] font-semibold ${s.role}`}>{agent.role}</p>
@@ -495,10 +249,13 @@ export async function LandingPageV2() {
                     <div className="mt-3 flex items-center justify-between pt-3">
                       <Link
                         href={HIRE}
-                        aria-label={t("workforce.viewProfile")}
-                        className={`group rounded-lg bg-[#eae6f4] px-3 py-1.5 text-[12px] font-semibold transition-all ${s.btn}`}
+                        aria-label={t("workforce.hireCta", {
+                          name: agent.name,
+                        })}
+                        className={`group inline-flex items-center gap-1.5 rounded-lg bg-[#eae6f4] px-4 py-2 text-[14px] font-semibold transition-all ${s.btn}`}
                       >
-                        <CascadeText text={t("workforce.viewProfile")} />
+                        <CascadeText text={t("workforce.hireCta", { name: agent.name })} />
+                        <M name="arrow_forward" size={16} />
                       </Link>
                     </div>
                   </div>
@@ -506,17 +263,15 @@ export async function LandingPageV2() {
               })}
             </div>
 
-            <div className="mt-6 rounded-xl bg-white p-3 shadow-[0_4px_24px_rgba(0,0,0,0.02)] md:p-6">
+            <div className="mx-auto mt-6 max-w-4xl rounded-xl bg-white p-4 shadow-[0_4px_24px_rgba(0,0,0,0.02)] md:p-6">
               <div className="flex flex-col items-center justify-between gap-3 text-left md:flex-row">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#3525cd]/10 text-[#3525cd]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#3525cd]/10 text-[#3525cd]">
                     <M name="account_tree" size={24} />
                   </div>
                   <div>
                     <p className="text-[15px] font-semibold text-[#0f172a]">{t("workforce.handoffTitle")}</p>
-                    <p className="mt-0.5 text-[14px] leading-[20px] text-[#464555]">
-                      {t("workforce.handoffDesc")}
-                    </p>
+                    <p className="mt-0.5 text-[14px] leading-[20px] text-[#464555]">{t("workforce.handoffDesc")}</p>
                   </div>
                 </div>
                 <SalesContactDialog
@@ -531,33 +286,31 @@ export async function LandingPageV2() {
           </div>
         </section>
 
-        {/* ── 5. Interactive demo ─────────────────────────────── */}
-        {/* Tablet/desktop only: the tour packs a full sidebar+content
-            dashboard chrome into a fixed-width frame, which has no usable
-            layout on a phone screen. Hidden below `sm` rather than shrunk,
-            so the hero's own CTA to it (below) is hidden the same way. */}
-        <section id="demo" className="hidden sm:block mx-auto max-w-[1440px] px-4 py-12 md:px-10">
+        <section id="canais" className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="mx-auto mb-10 max-w-2xl text-center">
-            <span className="rounded-full bg-[#e2dfff] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[#0f0069]">
-              {t("interactiveDemo.badge")}
-            </span>
-            <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
-              {t("interactiveDemo.heading")}
+            <h2 className="text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
+              {t("channels.heading")}
             </h2>
-            <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("interactiveDemo.sub")}</p>
+            <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("channels.sub")}</p>
           </div>
 
-          <InteractiveDemo agents={demoAgents} />
+          <ChannelShowcase items={channels} hireHref={HIRE} />
         </section>
 
-        {/* ── 6. No-code RAG training ─────────────────────────── */}
+        <section id="demo" className="mx-auto max-w-[1320px] px-4 py-16 md:px-10">
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h2 className="text-balance text-[28px] font-semibold leading-[34px] tracking-[-0.015em] text-[#0f172a] sm:text-[36px] sm:leading-[44px]">
+              {t("tour.heading")}
+            </h2>
+            <p className="mt-3 text-[17px] leading-[26px] text-[#464555]">{t("tour.sub")}</p>
+          </div>
+          <ProductTour locale={locale} />
+        </section>
+
         <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
             <div className="flex flex-col text-left lg:col-span-6">
-              <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
-                {t("rag.eyebrow")}
-              </span>
-              <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
+              <h2 className="text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
                 {t("rag.heading")}
               </h2>
               <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{t("rag.sub")}</p>
@@ -577,70 +330,81 @@ export async function LandingPageV2() {
               </div>
             </div>
 
-            <div className="rounded-xl bg-white p-6 shadow-[0_12px_40px_rgba(79,70,229,0.06)] lg:col-span-6">
+            <div className="rounded-[24px] bg-white p-6 shadow-[0_12px_40px_rgba(79,70,229,0.08)] ring-1 ring-[#e7e3f7] lg:col-span-6">
               <div className="mb-3 flex items-center justify-between pb-3">
                 <span className="text-[15px] font-semibold text-[#0f172a]">{t("rag.cardTitle")}</span>
                 <span className="rounded bg-[#10b981]/10 px-2 py-0.5 text-[12px] font-semibold text-[#10b981]">
                   {t("rag.cardBadge")}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+              <div className="flex flex-col gap-2 rounded-2xl bg-[#efeae2] bg-[radial-gradient(#e2dccf_1px,transparent_1px)] p-4 [background-size:16px_16px]">
+                <p className="max-w-[86%] self-end rounded-2xl rounded-tr-md bg-[#dcf8c6] px-3.5 py-2.5 text-[14px] leading-[1.45] text-[#0f172a]">
+                  {t("rag.demo.customer")}
+                </p>
+                <div className="flex max-w-[90%] items-end gap-2 self-start">
+                  <Image
+                    src={maluImg}
+                    alt=""
+                    sizes="28px"
+                    className="h-7 w-7 shrink-0 rounded-full object-cover object-top"
+                  />
+                  <p className="rounded-2xl rounded-bl-md bg-white px-3.5 py-2.5 text-[14px] leading-[1.45] text-[#0f172a] shadow-[0_2px_8px_rgba(15,23,42,0.05)]">
+                    {t("rag.demo.agent")}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-5 text-[13px] font-semibold text-[#464555]">{t("rag.demo.sourcesLabel")}</p>
+              <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
                 {sources.map((src, i) => (
-                  <div
-                    key={src.title}
-                    className="flex flex-col items-center rounded-lg bg-[#f5f2ff] p-3 text-center"
-                  >
-                    <M name={SOURCE_ICONS[i].icon} size={28} className={SOURCE_ICONS[i].color} />
-                    <span className="mt-1 text-[12px] font-bold text-[#0f172a]">{src.title}</span>
-                    <span className="text-[11px] text-[#64748b]">{src.sub}</span>
-                  </div>
+                  <li key={src.title} className="flex items-center gap-2 text-[13px] font-medium text-[#0f172a]">
+                    {SOURCE_ICONS[i].icon === "calendar" ? (
+                      <CalendarIcon className={`h-4 w-4 shrink-0 ${SOURCE_ICONS[i].color}`} />
+                    ) : (
+                      <M name={SOURCE_ICONS[i].icon} size={16} className={`shrink-0 ${SOURCE_ICONS[i].color}`} />
+                    )}
+                    {src.title}
+                  </li>
                 ))}
-              </div>
-              <div className="mt-6 overflow-hidden rounded-lg shadow-sm">
-                <Image
-                  src={analyticsImg}
-                  alt={t("rag.imageAlt")}
-                  sizes="(min-width: 1024px) 620px, 100vw"
-                  className="max-h-[190px] w-full object-cover"
-                />
-              </div>
+              </ul>
             </div>
           </div>
         </section>
 
-        {/* ── 7. Pricing ──────────────────────────────────────── */}
-        <PricingSection plans={plans} copy={pricingCopy} />
-
-        {/* ── 8. Proven impact stats ─────────────────────────── */}
-        <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
-          <div className="rounded-xl bg-gradient-to-br from-[#0f172a] to-[#302f39] p-6 text-white shadow-xl md:p-12">
-            <div className="grid grid-cols-1 gap-6 text-center md:grid-cols-3 md:text-left">
-              {stats.map((stat, i) => {
-                const parsed = parseStatValue(stat.value);
-                return (
-                  <div key={stat.title} className="flex flex-col gap-2">
-                    <CountUp
-                      value={parsed.value}
-                      decimals={parsed.decimals}
-                      suffix={parsed.suffix}
-                      className={`text-[40px] font-extrabold tabular-nums leading-none tracking-[-0.02em] sm:text-[48px] ${IMPACT_ACCENT[i]}`}
-                    />
-                    <p className="text-[24px] font-bold leading-[32px] tracking-[-0.01em] text-white">{stat.title}</p>
-                    <p className="text-[14px] leading-[22px] tracking-[0.01em] text-[#dad7ff]">{stat.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
+        <section className="mx-auto max-w-[1320px] px-4 py-16 md:px-10">
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h2 className="text-balance text-[28px] font-semibold leading-[34px] tracking-[-0.015em] text-[#0f172a] sm:text-[36px] sm:leading-[44px]">
+              {t("value.heading")}
+            </h2>
+            <p className="mt-3 text-[17px] leading-[26px] text-[#464555]">{t("value.sub")}</p>
+          </div>
+          <ValueCalculator
+            planPriceCents={recommendedPlan.priceBrlCents ?? 0}
+            planReplies={recommendedPlan.monthlyReplyLimit ?? 0}
+            planName={recommendedName}
+          />
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href={HIRE}
+              aria-label={t("hero.ctaPrimary")}
+              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#3525cd] px-7 py-4 text-[15px] font-semibold text-white shadow-[0_12px_32px_rgba(53,37,205,0.28)] transition-[transform,background-color] duration-300 hover:scale-[1.02] hover:bg-[#4f46e5] sm:w-auto"
+            >
+              <CascadeText text={t("hero.ctaPrimary")} />
+              <M name="arrow_forward" size={18} />
+            </Link>
+            <a
+              href="#planos"
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-4 text-[15px] font-semibold text-[#0f172a] transition-colors hover:text-[#3525cd]"
+            >
+              {t("value.cta")}
+            </a>
           </div>
         </section>
 
-        {/* ── 9. FAQ ─────────────────────────────────────────── */}
+        <PricingSection />
+
         <section id="faq" className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="mx-auto mb-6 max-w-3xl text-center">
-            <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">
-              {t("faq.eyebrow")}
-            </span>
-            <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
+            <h2 className="text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
               {t("faq.heading")}
             </h2>
           </div>
@@ -653,10 +417,7 @@ export async function LandingPageV2() {
               >
                 <summary className="flex list-none items-center justify-between gap-3 text-[16px] font-semibold text-[#0f172a]">
                   <span>{item.q}</span>
-                  <M
-                    name="expand_more"
-                    className="text-[#3525cd] transition-transform group-open:rotate-180"
-                  />
+                  <M name="expand_more" className="text-[#3525cd] transition-transform group-open:rotate-180" />
                 </summary>
                 <p className="mt-2 max-w-[64ch] text-left text-[16px] leading-relaxed text-[#464555]">{item.a}</p>
               </details>
@@ -664,7 +425,6 @@ export async function LandingPageV2() {
           </div>
         </section>
 
-        {/* ── 10. Final CTA ───────────────────────────────────── */}
         <section className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#3525cd] via-[#4f46e5] to-[#006591] p-6 text-center text-white shadow-[0_20px_50px_rgba(53,37,205,0.25)] md:p-12">
             <style>{`
@@ -678,9 +438,6 @@ export async function LandingPageV2() {
             <div className="lv2-cta-blob-a pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
             <div className="lv2-cta-blob-b pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-[#39b8fd]/20 blur-2xl" />
             <div className="relative z-10 mx-auto flex max-w-2xl flex-col items-center">
-              <span className="mb-3 rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[#e2dfff] backdrop-blur-md">
-                {t("finalCta.eyebrow")}
-              </span>
               <h2 className="text-[26px] font-bold leading-[32px] tracking-[-0.01em] text-white sm:text-[32px] sm:leading-[40px]">
                 {t("finalCta.heading")}
               </h2>
@@ -693,8 +450,8 @@ export async function LandingPageV2() {
                   aria-label={t("finalCta.ctaPrimary")}
                   className="group inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3.5 text-[14px] font-semibold text-[#3525cd] shadow-lg transition-[transform,box-shadow,background-color] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:bg-[#f5f2ff] hover:shadow-[0_20px_50px_rgba(0,0,0,0.25)]"
                 >
-                  <M name="rocket_launch" size={20} />
                   <CascadeText text={t("finalCta.ctaPrimary")} />
+                  <M name="arrow_forward" size={18} />
                 </Link>
               </div>
               <span className="mt-3 text-[11px] font-semibold text-[#e2dfff] sm:text-[12px]">{t("finalCta.fine")}</span>
@@ -703,7 +460,6 @@ export async function LandingPageV2() {
         </section>
       </main>
 
-      {/* ── Footer ─────────────────────────────────────────────── */}
       <footer className="w-full bg-white pb-12 pt-12 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="mx-auto max-w-[1440px] px-4 md:px-10">
           <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
@@ -723,9 +479,7 @@ export async function LandingPageV2() {
             </div>
             {footerCols.map((col) => (
               <div key={col.title} className="flex flex-col gap-1.5">
-                <span className="mb-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#1b1b24]">
-                  {col.title}
-                </span>
+                <span className="mb-2 text-[14px] font-semibold text-[#1b1b24]">{col.title}</span>
                 {col.links.map((link) => (
                   <a
                     key={link.label}

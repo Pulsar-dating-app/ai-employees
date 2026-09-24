@@ -47,10 +47,8 @@ const HAZE: Record<string, string> = {
     "radial-gradient(65% 85% at 95% -5%, rgba(41,169,235,0.55), transparent 66%), radial-gradient(60% 75% at -5% 105%, rgba(41,169,235,0.3), transparent 66%)",
   Shopify:
     "radial-gradient(65% 85% at 95% -5%, rgba(149,191,72,0.55), transparent 66%), radial-gradient(60% 75% at -5% 105%, rgba(95,142,62,0.3), transparent 66%)",
-  Site:
-    "radial-gradient(65% 85% at 95% -5%, rgba(79,70,229,0.5), transparent 66%), radial-gradient(60% 75% at -5% 105%, rgba(53,37,205,0.3), transparent 66%)",
-  Chat:
-    "radial-gradient(65% 85% at 95% -5%, rgba(79,70,229,0.5), transparent 66%), radial-gradient(60% 75% at -5% 105%, rgba(53,37,205,0.3), transparent 66%)",
+  Site: "radial-gradient(65% 85% at 95% -5%, rgba(79,70,229,0.5), transparent 66%), radial-gradient(60% 75% at -5% 105%, rgba(53,37,205,0.3), transparent 66%)",
+  Chat: "radial-gradient(65% 85% at 95% -5%, rgba(79,70,229,0.5), transparent 66%), radial-gradient(60% 75% at -5% 105%, rgba(53,37,205,0.3), transparent 66%)",
 };
 
 const CYCLE_MS = 5000;
@@ -64,9 +62,7 @@ export function ChannelShowcase({ items, hireHref }: { items: ChannelItem[]; hir
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [motionOk, setMotionOk] = useState(
-    () =>
-      typeof window === "undefined" ||
-      !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => typeof window === "undefined" || !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
 
   useEffect(() => {
@@ -86,11 +82,7 @@ export function ChannelShowcase({ items, hireHref }: { items: ChannelItem[]; hir
   const accent = ACCENT[current.brand] ?? "#3525cd";
 
   return (
-    <div
-      className="mx-auto max-w-4xl"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <div className="mx-auto max-w-4xl" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <style>{`@keyframes ls-channel-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}`}</style>
 
       {/* Floating pill row */}
@@ -147,20 +139,12 @@ export function ChannelShowcase({ items, hireHref }: { items: ChannelItem[]; hir
               >
                 <BrandLogo name={current.brand} className="h-6 w-6" />
               </span>
-              <span
-                className="text-[12px] font-bold uppercase tracking-[0.14em]"
-                style={{ color: accent }}
-              >
-                {current.name}
-              </span>
             </div>
 
             <h3 className="max-w-lg text-[26px] font-semibold leading-[1.2] tracking-[-0.01em] text-[#0f172a] sm:text-[32px]">
               {current.headline}
             </h3>
-            <p className="mt-3 max-w-md text-[16px] leading-[24px] text-[#464555]">
-              {current.caption}
-            </p>
+            <p className="mt-3 max-w-md text-[16px] leading-[24px] text-[#464555]">{current.caption}</p>
 
             <ul className="mt-6 flex flex-col gap-2.5">
               {current.points.map((p) => (
@@ -205,9 +189,7 @@ export function ChannelShowcase({ items, hireHref }: { items: ChannelItem[]; hir
                     style={{
                       transform: `translate(-50%, -50%) translate(${step * 40}px, ${step * 18}px) rotate(${step * 15}deg)`,
                       zIndex: i,
-                      boxShadow: front
-                        ? "0 18px 40px rgba(15,23,42,0.20)"
-                        : "0 8px 22px rgba(15,23,42,0.12)",
+                      boxShadow: front ? "0 18px 40px rgba(15,23,42,0.20)" : "0 8px 22px rgba(15,23,42,0.12)",
                     }}
                   >
                     <Image src={img} alt="" fill sizes="120px" className="object-cover object-top" />
@@ -218,9 +200,7 @@ export function ChannelShowcase({ items, hireHref }: { items: ChannelItem[]; hir
                 <BrandLogo name={current.brand} className="h-6 w-6" />
               </span>
             </div>
-            <p className="mt-6 text-center text-[12px] font-semibold text-[#64748b]">
-              {t("teamCaption")}
-            </p>
+            <p className="mt-6 text-center text-[12px] font-semibold text-[#64748b]">{t("teamCaption")}</p>
           </div>
         </div>
       </div>

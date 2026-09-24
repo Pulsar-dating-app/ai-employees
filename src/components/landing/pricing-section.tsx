@@ -2,190 +2,207 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import clsx from "clsx";
 import { getSelfServePlansForVariant, type BillingPeriod, type PlanTier } from "@/lib/billing/plans";
-import { PlanFeatures, PlanFeaturesProvider } from "./plan-features";
+import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 import { SalesContactDialog } from "./sales-contact-dialog";
 import { CascadeText } from "./cascade-text";
-
-// Public landing pricing (section 7) — 2026-09-17. Was static copy (fabricated
-// R$ figures per plan, see decisions.md 2026-09-06); now a client component so
-// it can carry the same period/WhatsApp toggles as the dashboard's PlanPicker
-// (`src/app/dashboard/settings/billing/plan-picker.tsx`) and price the 3
-// self-serve cards straight from the real catalog (`plans.ts`) instead of a
-// hand-typed number. Only price/priceSuffix/priceNote are computed — name,
-// desc, features and cta stay translated marketing copy (`LandingV2.pricing`),
-// since those aren't billing-catalog concerns. Enterprise (the 4th, contact-us
-// card) is unaffected by either toggle and keeps its own static copy.
+import { M } from "./landing-icons";
 
 const HIRE = "/?auth=signup";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
+const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
-type Plan = {
+type LandingPlan = {
   tier: string;
   name: string;
   desc: string;
   price?: string;
-  priceSuffix?: string;
   priceNote?: string;
-  features: string[];
   cta: string;
 };
 
-export type PricingCopy = {
-  eyebrow: string;
-  heading: string;
-  sub: string;
-  featuredBadge: string;
-  showMore: string;
-  showLess: string;
-  periodMonthly: string;
-  periodAnnual: string;
-  wppToggleLabel: string;
-  wppToggleNote: string;
-  priceNoteMonthly: string;
-  priceNoteAnnual: string;
-  perMonth: string;
-  perYear: string;
-};
+function PeriodSwitch({
+  value,
+  onChange,
+  savingsPct,
+}: {
+  value: BillingPeriod;
+  onChange: (next: BillingPeriod) => void;
+  savingsPct: number | null;
+}) {
+  const t = useTranslations("LandingV2.pricing");
+  const { indicatorRef, register } = useSlidingIndicator<HTMLButtonElement>(value, savingsPct, "x");
+  return (
+    <div
+      role="radiogroup"
+      aria-label={t("periodLabel")}
+      className="relative inline-flex rounded-full bg-white p-1 shadow-[0_4px_24px_rgba(79,70,229,0.08)]"
+    >
+      <span
+        ref={indicatorRef}
+        aria-hidden="true"
+        className="inbox-indicator absolute left-0 rounded-full bg-[#3525cd] opacity-0 shadow-[0_6px_16px_-6px_rgba(53,37,205,0.6)]"
+      />
+      {(["monthly", "annual"] as const).map((period) => (
+        <button
+          key={period}
+          ref={register(period)}
+          type="button"
+          role="radio"
+          aria-checked={value === period}
+          onClick={() => onChange(period)}
+          className={clsx(
+            "relative z-10 inline-flex h-10 items-center gap-2 rounded-full px-5 text-[14px] font-semibold transition-colors duration-200",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3525cd]",
+            value === period ? "text-white" : "text-[#464555] hover:text-[#0f172a]",
+          )}
+        >
+          {t(`periodToggle.${period}`)}
+          {period === "annual" && savingsPct ? (
+            <span
+              className={clsx(
+                "rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums transition-colors duration-200",
+                value === "annual" ? "bg-white/20 text-white" : "bg-[#d1fae5] text-[#047857]",
+              )}
+            >
+              {t("savings", { pct: savingsPct })}
+            </span>
+          ) : null}
+        </button>
+      ))}
+    </div>
+  );
+}
 
-export function PricingSection({ plans, copy }: { plans: Plan[]; copy: PricingCopy }) {
+export function PricingSection() {
+  const t = useTranslations("LandingV2.pricing");
+  const plans = t.raw("plans") as LandingPlan[];
+  const included = t.raw("included") as string[];
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
   const [whatsappIncluded, setWhatsappIncluded] = useState(false);
 
   const selfServePlans = getSelfServePlansForVariant(billingPeriod, whatsappIncluded);
+  const [monthlyRef] = getSelfServePlansForVariant("monthly", whatsappIncluded);
+  const [annualRef] = getSelfServePlansForVariant("annual", whatsappIncluded);
+  const savingsPct =
+    monthlyRef?.priceBrlCents && annualRef?.priceBrlCents
+      ? Math.round((1 - annualRef.priceBrlCents / (monthlyRef.priceBrlCents * 12)) * 100)
+      : null;
+  const numberFmt = new Intl.NumberFormat("pt-BR");
 
   return (
-    <section id="planos" className="w-full bg-[#f5f2ff] py-12">
-      <div className="mx-auto max-w-[1440px] px-4 md:px-10">
+    <section id="planos" className="w-full bg-[#f5f2ff] py-16">
+      <div className="mx-auto max-w-[1320px] px-4 md:px-10">
         <div className="mx-auto mb-8 max-w-2xl text-center">
-          <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#3525cd]">{copy.eyebrow}</span>
-          <h2 className="mt-3 text-[26px] font-semibold leading-[32px] tracking-[-0.01em] text-[#0f172a] sm:text-[32px] sm:leading-[40px]">
-            {copy.heading}
+          <h2 className="text-balance text-[28px] font-semibold leading-[34px] tracking-[-0.015em] text-[#0f172a] sm:text-[36px] sm:leading-[44px]">
+            {t("heading")}
           </h2>
-          <p className="mt-2 text-[16px] leading-[24px] text-[#464555]">{copy.sub}</p>
+          <p className="mt-3 text-[17px] leading-[26px] text-[#464555]">{t("sub")}</p>
         </div>
 
-        <div className="mx-auto mb-10 flex max-w-2xl flex-col items-center gap-4">
-          <div className="inline-flex rounded-full border border-[#e2dfff] bg-white p-1 shadow-[0_4px_24px_rgba(79,70,229,0.04)]">
-            {(["monthly", "annual"] as const).map((period) => (
+        <div className="mx-auto mb-10 flex max-w-3xl flex-col items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <PeriodSwitch value={billingPeriod} onChange={setBillingPeriod} savingsPct={savingsPct} />
+            <label className="inline-flex h-12 cursor-pointer items-center gap-3 rounded-full bg-white py-1 pl-4 pr-1.5 shadow-[0_4px_24px_rgba(79,70,229,0.08)]">
+              <span className="text-[14px] font-medium text-[#0f172a]">{t("wppToggleLabel")}</span>
               <button
-                key={period}
                 type="button"
-                onClick={() => setBillingPeriod(period)}
-                className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-colors ${
-                  billingPeriod === period ? "bg-[#3525cd] text-white" : "text-[#464555] hover:text-[#0f172a]"
-                }`}
+                role="switch"
+                aria-checked={whatsappIncluded}
+                onClick={() => setWhatsappIncluded((v) => !v)}
+                className={clsx(
+                  "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3525cd]",
+                  whatsappIncluded ? "bg-[#3525cd]" : "bg-[#d8d4ee]",
+                )}
               >
-                {period === "monthly" ? copy.periodMonthly : copy.periodAnnual}
+                <span
+                  className={clsx(
+                    "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                    whatsappIncluded ? "translate-x-6" : "translate-x-1",
+                  )}
+                />
               </button>
-            ))}
+            </label>
           </div>
-          <div className="inline-flex items-center gap-2.5 rounded-full border border-[#e2dfff] bg-white px-4 py-2 shadow-[0_4px_24px_rgba(79,70,229,0.04)]">
-            <span className="text-[14px] font-medium text-[#0f172a]">{copy.wppToggleLabel}</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={whatsappIncluded}
-              onClick={() => setWhatsappIncluded((v) => !v)}
-              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                whatsappIncluded ? "bg-[#3525cd]" : "bg-[#e2dfff]"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                  whatsappIncluded ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-          <p className="max-w-md text-center text-[13px] leading-[18px] text-[#64748b]">{copy.wppToggleNote}</p>
+          <p className="max-w-lg text-balance text-center text-[13px] leading-5 text-[#64748b]">
+            {whatsappIncluded ? t("wppToggleNoteOn") : t("wppToggleNote")}
+          </p>
         </div>
 
-        <PlanFeaturesProvider>
-          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {plans.map((plan, i) => {
-              // The middle self-serve plan gets the "most chosen" badge --
-              // classic anchor-the-buyer-off-the-cheapest-tier pricing
-              // psychology, not "whichever plan happens to be Pro". Deliberately
-              // index-based (the middle *position*), not a `plan.tier === "Pro"`
-              // check, so it keeps following whichever plan is visually in the
-              // middle if the lineup changes again.
-              const featured = i === 1;
-              // The last plan is always the contact-us tier (Enterprise) --
-              // length-relative, not a hardcoded index, so inserting a
-              // self-serve plan earlier in the array doesn't silently
-              // misroute this.
-              const isContactPlan = i === plans.length - 1;
-              const catalogPlan = isContactPlan
-                ? null
-                : selfServePlans.find((p) => p.tier === (plan.tier.toLowerCase() as PlanTier));
+        <div className="grid grid-cols-1 items-stretch gap-5 pt-3 sm:grid-cols-2 xl:grid-cols-4">
+          {plans.map((plan, i) => {
+            const featured = i === 1;
+            const isContactPlan = i === plans.length - 1;
+            const catalogPlan = isContactPlan
+              ? null
+              : selfServePlans.find((p) => p.tier === (plan.tier.toLowerCase() as PlanTier));
+            const cents = catalogPlan?.priceBrlCents ?? 0;
+            const perDayCents = billingPeriod === "annual" ? cents / 365 : cents / 30;
+            const replies = catalogPlan?.monthlyReplyLimit ?? 0;
 
-              const priceLabel = isContactPlan ? plan.price : catalogPlan ? BRL.format(catalogPlan.priceBrlCents! / 100) : "";
-              const priceSuffix = isContactPlan
-                ? plan.priceSuffix
-                : billingPeriod === "annual"
-                  ? copy.perYear
-                  : copy.perMonth;
-              const priceNote = isContactPlan
-                ? plan.priceNote
-                : billingPeriod === "annual"
-                  ? copy.priceNoteAnnual
-                  : copy.priceNoteMonthly;
-
-              return (
+            return (
+              <div key={plan.tier} className="billing-card-in h-full" style={{ "--i": i } as React.CSSProperties}>
                 <div
-                  key={plan.name}
-                  className={`relative flex flex-col justify-between rounded-xl bg-white p-6 transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 ${
+                  className={clsx(
+                    "relative flex h-full flex-col rounded-[24px] bg-white p-6 transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] sm:p-7",
                     featured
-                      ? "shadow-[0_12px_40px_rgba(53,37,205,0.12)] ring-2 ring-[#3525cd] hover:shadow-[0_24px_56px_rgba(53,37,205,0.2)]"
-                      : "shadow-[0_4px_24px_rgba(79,70,229,0.04)] hover:shadow-[0_16px_40px_rgba(79,70,229,0.14)]"
-                  }`}
-                >
-                  {featured && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#3525cd] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
-                      {copy.featuredBadge}
-                    </div>
+                      ? "shadow-[0_1px_2px_rgba(15,23,42,0.04),0_28px_60px_-28px_rgba(53,37,205,0.5)] ring-2 ring-[#3525cd]"
+                      : "shadow-[0_1px_2px_rgba(15,23,42,0.04)] ring-1 ring-[#e7e3f7] hover:-translate-y-0.5 hover:shadow-[0_20px_44px_-24px_rgba(53,37,205,0.3)]",
                   )}
-                  <div>
-                    <span
-                      className={`text-[12px] font-bold uppercase tracking-[0.14em] ${
-                        featured ? "text-[#3525cd]" : "text-[#64748b]"
-                      }`}
-                    >
-                      {plan.tier}
+                >
+                  {featured ? (
+                    <span className="absolute -top-3 left-6 rounded-full bg-[#3525cd] px-3 py-1 text-[12px] font-semibold text-white shadow-[0_6px_16px_-6px_rgba(53,37,205,0.6)]">
+                      {t("featuredBadge")}
                     </span>
-                    <h3 className="mt-1 text-[24px] font-semibold leading-[32px] text-[#0f172a]">{plan.name}</h3>
-                    <p className="mt-1 text-[14px] leading-[20px] text-[#464555]">{plan.desc}</p>
-                    <div className="my-6">
-                      <div className="flex items-baseline gap-1">
-                        <span
-                          className={`font-extrabold tabular-nums text-[#0f172a] ${
-                            featured ? "text-[48px] leading-[56px] tracking-[-0.02em]" : "text-[24px] leading-[32px]"
-                          }`}
-                        >
-                          {priceLabel}
-                        </span>
-                        {priceSuffix && <span className="text-[16px] text-[#464555]">{priceSuffix}</span>}
-                      </div>
-                      <span
-                        className={`text-[11px] ${featured ? "font-semibold text-[#3525cd]" : "text-[#64748b]"}`}
-                      >
-                        {priceNote}
-                      </span>
-                    </div>
-                    <PlanFeatures
-                      features={plan.features}
-                      featured={featured}
-                      moreLabel={copy.showMore}
-                      lessLabel={copy.showLess}
-                    />
+                  ) : null}
+                  <h3 className="text-[18px] font-semibold text-[#0f172a]">{plan.name}</h3>
+                  <p className="mt-1 text-[14px] leading-5 text-[#464555]">{plan.desc}</p>
+
+                  <div key={`${billingPeriod}-${whatsappIncluded}`} className="billing-price-in mt-6">
+                    {isContactPlan ? (
+                      <>
+                        <p className="text-[32px] font-semibold leading-none tracking-[-0.02em] text-[#0f172a]">
+                          {plan.price}
+                        </p>
+                        <p className="mt-2 text-[13px] text-[#64748b]">{plan.priceNote}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="flex items-baseline gap-1.5">
+                          <span className="text-[36px] font-semibold leading-none tracking-[-0.025em] text-[#0f172a] tabular-nums">
+                            {BRL.format(cents / 100)}
+                          </span>
+                          <span className="text-[14px] text-[#464555]">
+                            {billingPeriod === "annual" ? t("perYear") : t("perMonth")}
+                          </span>
+                        </p>
+                        <p className="mt-2 text-[13px] font-medium text-[#3525cd]">
+                          {t("perDay", { price: BRL_WHOLE.format(Math.ceil(perDayCents / 100)) })}
+                        </p>
+                      </>
+                    )}
                   </div>
-                  <div className="mt-8 sm:mt-12">
+
+                  <div className="mt-5 flex-1 border-t border-[#efecf8] pt-5">
+                    {isContactPlan ? null : (
+                      <p className="flex items-start gap-2.5 text-[15px] font-semibold text-[#0f172a]">
+                        <M name="chat_bubble" size={18} className="mt-0.5 shrink-0 text-[#3525cd]" />
+                        {t(billingPeriod === "annual" ? "repliesAnnual" : "repliesMonthly", {
+                          count: numberFmt.format(replies),
+                        })}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-6">
                     {isContactPlan ? (
                       <SalesContactDialog
                         triggerLabel={plan.cta}
-                        triggerClassName="group inline-flex w-full items-center justify-center rounded-lg bg-[#0f172a] py-3 text-[14px] font-semibold text-white transition-all hover:bg-[#3525cd]"
+                        triggerClassName="group inline-flex h-12 w-full items-center justify-center rounded-xl bg-[#0f172a] text-[15px] font-semibold text-white transition-colors hover:bg-[#3525cd]"
                       >
                         <CascadeText text={plan.cta} />
                       </SalesContactDialog>
@@ -193,21 +210,41 @@ export function PricingSection({ plans, copy }: { plans: Plan[]; copy: PricingCo
                       <Link
                         href={HIRE}
                         aria-label={plan.cta}
-                        className={`group inline-flex w-full items-center justify-center rounded-lg py-3 text-[14px] font-semibold transition-all ${
+                        className={clsx(
+                          "group inline-flex h-12 w-full items-center justify-center rounded-xl text-[15px] font-semibold transition-[background-color,color,box-shadow]",
                           featured
-                            ? "bg-[#3525cd] text-white shadow-[0_8px_24px_rgba(53,37,205,0.25)] hover:bg-[#4f46e5]"
-                            : "bg-[#eae6f4] text-[#0f172a] hover:bg-[#0f172a] hover:text-white"
-                        }`}
+                            ? "bg-[#3525cd] text-white shadow-[0_10px_24px_-10px_rgba(53,37,205,0.7)] hover:bg-[#4f46e5]"
+                            : "bg-[#eae6f4] text-[#0f172a] hover:bg-[#0f172a] hover:text-white",
+                        )}
                       >
                         <CascadeText text={plan.cta} />
                       </Link>
                     )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </PlanFeaturesProvider>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="mt-6 text-center text-[13px] text-[#64748b]">{t("repliesNote")}</p>
+
+        <div className="mx-auto mt-10 max-w-4xl rounded-[24px] bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] ring-1 ring-[#e7e3f7] sm:p-8">
+          <h3 className="text-[18px] font-semibold text-[#0f172a]">{t("includedTitle")}</h3>
+          <ul className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+            {included.map((item) => (
+              <li key={item} className="flex items-start gap-2.5 text-[15px] leading-6 text-[#464555]">
+                <M name="check_circle" size={18} className="mt-0.5 shrink-0 text-[#10b981]" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="mx-auto mt-8 max-w-2xl text-balance text-center text-[15px] font-medium leading-6 text-[#0f172a]">
+          <M name="verified" size={18} className="-mt-0.5 mr-1.5 inline-block align-middle text-[#10b981]" />
+          {t("trialNote")}
+        </p>
       </div>
     </section>
   );
