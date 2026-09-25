@@ -138,6 +138,9 @@ F4 calls — F4 has since shipped for real, see the "Onboarding & admin shell"
 section above (`src/app/dashboard/my-agents/[agentSlug]/channels-section.tsx`).
 **Provider: Meta Cloud API direct** (Embedded Signup), not a BSP
 (Twilio/360dialog) — see decisions.md for the cost/UX tradeoff that drove this.
+**Superseded 2026-09-25:** new connections go through Twilio's Partner
+Solution — see "WhatsApp via Twilio Partner Solution" below. The register/PIN
+details here now apply only to `provider = 'meta'` rows.
 
 - `supabase/migrations/20260826104820_create_whatsapp_connection_tables.sql`
   — one table, `company_whatsapp_connections` (one row per company,
@@ -374,6 +377,8 @@ dashboard UI unification).
 
 ### WhatsApp coexistence (Trello D8) — 2026-09-05
 
+> **Legacy since 2026-09-25:** new connections go through Twilio, which doesn't support coexistence for Tech Provider numbers. Embedded Signup no longer offers it and the connect route no longer accepts `isCoexistence`. What follows applies only to existing `provider = 'meta'` rows.
+
 Discovered live-testing the real Embedded Signup popup (not
 `manual-connect-test`): registering a number the normal way removes it from
 the merchant's WhatsApp Business mobile app — Cloud API only from then on.
@@ -446,22 +451,17 @@ is **Coexistence** — mobile app and Cloud API on the same number, in sync.
   development. Code-complete and integration-tested only until that
   happens.
 
-### WhatsApp connect: billing/payment-method disclosure — 2026-09-05
+### WhatsApp connect: billing note — 2026-09-05, rewritten 2026-09-25
 
-`channels-section.tsx`'s not-connected state gates the "Conectar WhatsApp"
-button behind an explicit checkbox acknowledgment, shown alongside a warning
-`Alert` covering two costs the connect flow otherwise never mentions: the
-merchant must add a payment method to the WABA in Meta Business Manager
-(D5's `has_payment_issue` only surfaces the consequence *after* a send
-fails), and Meta bills the merchant directly, separately from Staffra, once
-usage passes a free allowance. **No BRL rate is hardcoded anywhere** — the
-copy links to Meta's own live pricing page instead. This is deliberate:
-Meta's pricing changes materially on 2026-10-01 (service-window replies,
-today unconditionally free — the mode this codebase's agents rely on —
-start being billed past a free allowance), and the exact post-change rate
-isn't confirmed from an authoritative source as of this writing. See
-decisions.md's 2026-09-05 entry for the full reasoning and what to update
-once the real rate is confirmed.
+Originally a warning `Alert` plus a required checkbox telling the merchant
+to add a payment method at Meta and that Meta bills them directly. Since
+the Twilio Partner Solution (2026-09-25), Twilio's credit line pays Meta and
+the `_wpp` plan already prices Meta's fees in, so that copy was false. The
+not-connected state now shows an `info` `Alert` (`billingIncludedTitle` /
+`billingIncludedDescription`): WhatsApp is covered by the plan, no payment
+method at Meta, nothing billed separately. No checkbox gate, no link to
+Meta's pricing page. The D5 payment-issue badge stays for legacy
+`provider = 'meta'` rows only.
 
 ### WhatsApp entitlement gate (WhatsApp add-on) — 2026-09-22
 
@@ -529,6 +529,27 @@ went through the service-role client regardless, so migration
 policies and revokes the grants outright — same shape as `company_billing`'s
 lockdown. See decisions.md for the full reasoning (including why this
 couldn't have made WhatsApp actually functional even before being closed).
+
+### WhatsApp via Twilio Partner Solution — 2026-09-25
+
+New WhatsApp connections go through **Twilio's Tech Provider Partner Solution**, not Meta Cloud API direct (reverses 2026-08-26; see decisions.md). Rows created before this stay `provider = 'meta'` and keep the old paths.
+
+- **Embedded Signup** passes `extras.setup.solutionID` (`META_WHATSAPP_SOLUTION_ID`, Twilio's Partner Solution ID from App Dashboard > WhatsApp > Partner Solutions). **No `featureType` any more:** Twilio confirmed (2026-09-25 support ticket) that Tech Provider numbers can't do WhatsApp Business App coexistence. A number already on the app must migrate to the API, which ends its use in the app. Only the `FINISH` event is handled.
+- **Connect route** still exchanges the `code`, but only to read the display number (`lookupDisplayPhoneNumber`). The FINISH event carries only `phone_number_id`, and Twilio needs E.164. It no longer calls `/register` or `subscribed_apps`, because Twilio owns both and doing them ourselves would fight Twilio over the number. It then:
+  1. gets or creates the company's **Twilio subaccount** (`company_twilio_accounts`, one per company, service-role only: RLS on, no policies, all privileges revoked);
+  2. `POST messaging.twilio.com/v2/Channels/Senders` authenticated **as the subaccount**, with `sender_id = whatsapp:+E164`, `configuration.waba_id`, `configuration.account_type = "ISVSubAccount"` (Twilio's instruction for senders under customer subaccounts; `profile.name` is not needed for ESU numbers) and `webhook.callback_url = {STAFFRA_CHECKOUT_BASE_URL}/api/webhooks/twilio/whatsapp`;
+  3. upserts the row with `provider = 'twilio'`, `twilio_sender_sid` / `twilio_sender_id` / `twilio_sender_status`, and `status = 'connected'` only if the sender came back `ONLINE`, else `pending`.
+  A reconnect or a `force` move of the same number reuses the existing sender sid instead of registering it twice.
+- **Pending → connected:** Twilio has no webhook for sender status changes (confirmed by Twilio). `GET .../whatsapp` refreshes a pending Twilio row from the Senders API, stores the latest `twilio_sender_status`, and promotes it on `ONLINE`. `channels-section.tsx` polls that GET every 5s while pending. It branches on the sender status:
+  - `PENDING_VERIFICATION` (Twilio says ESU numbers usually go straight to `ONLINE`, but not always): the admin types the SMS code, and `PATCH .../whatsapp {verificationCode}` posts it to `POST /v2/Channels/Senders/{sid}` (→ `VERIFYING`, then polling). The PATCH returns 409 unless the row is actually awaiting verification, and 502 if Twilio rejects the code.
+  - `OFFLINE`: "Activation failed", with a disconnect-and-retry button.
+  - anything else: "Activating".
+- **Disconnect** deletes the sender on Twilio first, then flips the row. It returns 502 and leaves the row untouched if Twilio refuses, so the number doesn't stay registered out of sight.
+- **Inbound:** `POST /api/webhooks/twilio/whatsapp` (form-encoded). It looks up the subaccount by `AccountSid`, verifies `X-Twilio-Signature` with **that subaccount's** auth token over the configured public URL (not `request.url`, which can differ behind a proxy), then matches the connection by `To` **scoped to that subaccount's company**, so a valid signature from one tenant can't reach another tenant's number. The customer identity is `WaId` (digits, no `+`), the same shape Meta's `from` used, so `customers.phone` is consistent across providers. It replies with empty TwiML and sends the AI reply via the Messages API instead.
+- **Shared pipeline:** everything after "which connection is this?" (pause, plan gate, session, idempotent persist, paused conversation, billing gate, engine, reply, usage, send gate, send-failure handling) lives in `src/lib/whatsapp/inbound.ts`. Both webhooks call it with a provider-specific `sendReply`, so a new gate goes in one place.
+- **Outbound manual replies** (`conversations/[id]/messages`) branch on `provider`. Twilio 401/403 maps to `token_invalid` (connection flips to disconnected). There is no `payment_issue` equivalent on Twilio yet, so the D5 flag and its cron (`provider = 'meta'` only now) never fire for Twilio rows.
+- **Meta-direct paths kept, scoped to `provider = 'meta'`:** the old webhook (`/api/webhooks/whatsapp`, including D8 echoes and history), the eligibility cron, and `manual-connect-test` (which pins `provider: 'meta'`). No coexistence through Twilio (see above), so D8's echo/history handling is legacy-only.
+- Env: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` (parent account, used only to create subaccounts), `META_WHATSAPP_SOLUTION_ID`. Tests point `TWILIO_API_BASE_URL` / `TWILIO_MESSAGING_API_BASE_URL` at `tests/integration/helpers/twilio-api-mock.ts`. Magic values: waba id containing `trigger-sender-failure` / `trigger-sender-creating` / `trigger-sender-verification` (code `000000` is rejected) / `trigger-sender-offline`; the mock also 400s a sender created without `account_type: "ISVSubAccount"`; company name containing `trigger-subaccount-failure`. `GET /__sent?to=` and `/__deleted_senders` expose what the app sent.
 
 ### Telegram channel (Trello O1) — 2026-09-06
 

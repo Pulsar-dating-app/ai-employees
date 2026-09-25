@@ -10,6 +10,7 @@ import { startGoogleOAuthMock } from "./helpers/google-oauth-mock";
 import { startGoogleCalendarMock } from "./helpers/google-calendar-mock";
 import { startStripeApiMock } from "./helpers/stripe-api-mock";
 import { startShopifyApiMock } from "./helpers/shopify-api-mock";
+import { startTwilioApiMock } from "./helpers/twilio-api-mock";
 
 // Boots a real Next.js server, pointed at the already-running local Supabase
 // stack (started/reset by the `test:integration:env:*` npm scripts before
@@ -78,6 +79,7 @@ export default async function setup() {
   const stripeApiMock = await startStripeApiMock();
   // Same reasoning, for the Shopify catalogue connect + sync flow.
   const shopifyApiMock = await startShopifyApiMock();
+  const twilioApiMock = await startTwilioApiMock();
 
   const nextProcess: ChildProcess = spawn(
     "npx",
@@ -121,6 +123,11 @@ export default async function setup() {
         // reuses the same test secret above; only the verify token is its
         // own value.
         WHATSAPP_WEBHOOK_VERIFY_TOKEN: "test-whatsapp-verify-token",
+        META_WHATSAPP_SOLUTION_ID: "test-solution-id",
+        TWILIO_ACCOUNT_SID: "ACtestparent",
+        TWILIO_AUTH_TOKEN: "test-twilio-parent-token",
+        TWILIO_API_BASE_URL: twilioApiMock.url,
+        TWILIO_MESSAGING_API_BASE_URL: twilioApiMock.url,
         // N6's cron route bearer. instagram-token-refresh.test.ts hits the
         // route directly with this value; the pg_cron schedule itself is a
         // production-only concern (guarded on Vault secrets that don't
@@ -183,6 +190,7 @@ export default async function setup() {
     await emailMock.stop();
     await stripeApiMock.stop();
     await shopifyApiMock.stop();
+    await twilioApiMock.stop();
     throw err;
   }
 
@@ -203,6 +211,7 @@ export default async function setup() {
         googleCalendarMockUrl: googleCalendarMock.url,
         shopifyApiMockUrl: shopifyApiMock.url,
         stripeApiMockUrl: stripeApiMock.url,
+        twilioApiMockUrl: twilioApiMock.url,
       },
       null,
       2,
@@ -219,6 +228,7 @@ export default async function setup() {
     await emailMock.stop();
     await stripeApiMock.stop();
     await shopifyApiMock.stop();
+    await twilioApiMock.stop();
     try {
       rmSync(STATE_FILE);
     } catch {

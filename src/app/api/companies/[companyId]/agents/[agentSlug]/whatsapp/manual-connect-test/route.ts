@@ -165,6 +165,10 @@ export async function POST(
         connected_at: new Date().toISOString(),
         has_payment_issue: false,
         payment_issue_detected_at: null,
+        provider: "meta",
+        twilio_sender_sid: null,
+        twilio_sender_id: null,
+        twilio_sender_status: null,
       },
       { onConflict: "company_id,agent_id" },
     )

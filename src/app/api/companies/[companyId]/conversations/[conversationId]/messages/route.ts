@@ -3,7 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { checkCompanyRole } from "@/lib/auth/company-access";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
-import { sendWhatsappMessage } from "@/lib/whatsapp/meta-graph-api";
+import { sendWhatsappMessage, type SendWhatsappMessageResult } from "@/lib/whatsapp/meta-graph-api";
+import { sendTwilioWhatsappMessage } from "@/lib/whatsapp/twilio-api";
+import { getCompanyTwilioCredentials } from "@/lib/whatsapp/twilio-subaccounts";
+import { recordWhatsappSendFailure } from "@/lib/whatsapp/inbound";
 
 // Trello F5 / N10 -- a merchant's manual reply. Sending one *is* taking
 // over: this always flips the conversation to 'paused' (unless already
@@ -125,39 +128,28 @@ async function deliverOverWhatsapp(
   const [{ data: connection }, { data: customer }] = await Promise.all([
     service
       .from("company_whatsapp_connections")
-      .select("access_token, phone_number_id, status")
+      .select("access_token, phone_number_id, status, provider, twilio_sender_id")
       .eq("company_id", companyId)
       .eq("agent_id", agentId)
       .maybeSingle(),
     service.from("customers").select("phone").eq("id", customerId).maybeSingle(),
   ]);
 
-  if (!connection || connection.status !== "connected" || !connection.access_token || !customer?.phone) {
+  if (!connection || connection.status !== "connected" || !customer?.phone) {
     return { ok: false };
   }
 
-  const result = await sendWhatsappMessage(connection.access_token, connection.phone_number_id, customer.phone, text);
-
-  if (!result.ok) {
-    try {
-      if (result.kind === "token_invalid") {
-        await service
-          .from("company_whatsapp_connections")
-          .update({ status: "disconnected", access_token: null, token_expires_at: null })
-          .eq("company_id", companyId)
-          .eq("agent_id", agentId);
-      } else if (result.kind === "payment_issue") {
-        await service
-          .from("company_whatsapp_connections")
-          .update({ has_payment_issue: true, payment_issue_detected_at: new Date().toISOString() })
-          .eq("company_id", companyId)
-          .eq("agent_id", agentId);
-      }
-    } catch {
-      // Nothing further to do.
-    }
+  let result: SendWhatsappMessageResult;
+  if (connection.provider === "twilio") {
+    const credentials = await getCompanyTwilioCredentials(service, companyId).catch(() => null);
+    if (!credentials || !connection.twilio_sender_id) return { ok: false };
+    result = await sendTwilioWhatsappMessage(credentials, connection.twilio_sender_id, customer.phone, text);
+  } else {
+    if (!connection.access_token) return { ok: false };
+    result = await sendWhatsappMessage(connection.access_token, connection.phone_number_id, customer.phone, text);
   }
 
+  await recordWhatsappSendFailure(service, companyId, agentId, result);
   return { ok: result.ok };
 }
 
