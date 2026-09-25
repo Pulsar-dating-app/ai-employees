@@ -1122,14 +1122,20 @@
       "stepTwoDescription": "Depois de conectado, sua equipe responde no WhatsApp automaticamente — dia e noite.",
       "paymentIssueBadge": "Pagamento pendente",
       "paymentIssueDescription": "O WhatsApp não consegue entregar mensagens até que uma forma de pagamento seja adicionada à sua conta no Meta Business Manager.",
-      "billingDisclosureTitle": "Antes de conectar",
-      "billingDisclosurePaymentMethod": "Você vai precisar adicionar uma forma de pagamento na sua conta do WhatsApp Business no Meta Business Manager — sem isso, as mensagens não são entregues mesmo depois de conectado.",
-      "billingDisclosureBilling": "A Meta cobra você diretamente pelo uso do WhatsApp, separado da sua assinatura do Staffra, depois de um certo volume gratuito. Os valores mudam com o tempo, então confira sempre os atuais aqui:",
-      "billingDisclosureLinkText": "tabela de preços oficial da Meta para WhatsApp",
-      "billingAcknowledgeLabel": "Entendo que a Meta cobra separadamente pelo uso do WhatsApp e que preciso adicionar uma forma de pagamento.",
+      "billingIncludedTitle": "O WhatsApp já está incluído no seu plano",
+      "billingIncludedDescription": "As mensagens que sua equipe envia e recebe no WhatsApp já estão cobertas pelo seu plano do Staffra. Você não precisa cadastrar forma de pagamento na Meta nem pagar nada à parte.",
       "addonRequiredTitle": "O WhatsApp não está incluído no seu plano atual",
       "addonRequiredDescription": "Adicione o complemento de WhatsApp ao seu plano para conectar um número e deixar seu time responder os clientes por lá.",
-      "addonRequiredCta": "Adicionar WhatsApp ao meu plano"
+      "addonRequiredCta": "Adicionar WhatsApp ao meu plano",
+      "pendingBadge": "Ativando",
+      "pendingDescription": "Estamos ativando este número no WhatsApp. Costuma levar alguns minutos, e esta página se atualiza sozinha.",
+      "verificationDescription": "O WhatsApp enviou um código por SMS para {number}. Digite aqui para terminar de ativar o número.",
+      "verificationCodePlaceholder": "Código de 6 dígitos",
+      "verificationSubmit": "Confirmar código",
+      "verificationError": "Não conseguimos confirmar esse código. Confira e tente de novo.",
+      "verificationWaitingForAdmin": "Este número está aguardando um código de confirmação. Um proprietário ou administrador precisa digitá-lo aqui.",
+      "activationFailedDescription": "Não conseguimos ativar este número no WhatsApp. Desconecte e conecte de novo.",
+      "activationRetry": "Desconectar e tentar de novo"
     },
     "channelTabs": {
       "tablistLabel": "Formas de os clientes falarem com este funcionário",
@@ -1282,7 +1288,9 @@
         "paymentIssue": "Pagamento pendente na Meta",
         "ready": "Pronto para compartilhar",
         "noSites": "Nenhum site autorizado",
-        "sitesCount": "{count, plural, one {# site autorizado} other {# sites autorizados}}"
+        "sitesCount": "{count, plural, one {# site autorizado} other {# sites autorizados}}",
+        "activating": "Ativando · {detail}",
+        "activationFailed": "Falha na ativação"
       }
     },
     "behavior": {
