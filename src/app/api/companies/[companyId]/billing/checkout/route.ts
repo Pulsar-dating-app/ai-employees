@@ -7,6 +7,7 @@ import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import {
   createBillingPortalSession,
   createCheckoutSession,
+  createPlanSwitchSession,
   getOrCreateStripeCustomer,
 } from "@/lib/stripe/billing";
 
@@ -24,12 +25,15 @@ import {
 //    status 'incomplete', upserted so a concurrent double-submit can't
 //    500); P4's webhook fills in the subscription on completion.
 //  - already subscribed -> a Stripe Billing Portal session, { mode:
-//    "portal", url }, deep-linked to the plan-switch flow. The swap happens
-//    on the Portal (Stripe can't change an existing subscription from
-//    Checkout, and owning the swap ourselves means owning proration /
-//    dunning / idempotency edge cases for a rare action); P4's
-//    customer.subscription.updated reconciles company_billing. `planKey` is
-//    ignored on this path.
+//    "portal", url }. With a valid `planKey` it deep-links to Stripe's
+//    confirm screen for that exact plan (`subscription_update_confirm`, so
+//    any of the 12 self-serve variants picked in the app is one click away);
+//    without one -- or if that session can't be built -- to the Portal's
+//    generic plan-switch list. The swap itself always happens on the Portal
+//    (Stripe can't change an existing subscription from Checkout, and owning
+//    the swap ourselves means owning proration / dunning / idempotency edge
+//    cases for a rare action); P4's customer.subscription.updated reconciles
+//    company_billing.
 //
 // Enterprise is contact-only: 400 pointing at the "fale conosco" CTA.
 //
@@ -144,7 +148,15 @@ export async function POST(
 
   const returnUrl = `${resolveCheckoutBaseUrl()}/dashboard/settings/billing`;
 
-  // --- Already subscribed -> Customer Portal (planKey ignored) -----------
+  const body = (await request.json().catch(() => null)) as { planKey?: unknown; returnTo?: unknown } | null;
+  const planKey = body?.planKey as unknown;
+  // Validated against the self-serve catalog, not a hardcoded key list, so a
+  // future plan (like Intermediate, added 2026-09-14) doesn't need this route
+  // touched again -- it only needs an entry in plans.ts with isSelfServe.
+  const selfServePlans = getSelfServePlans();
+  const plan = selfServePlans.find((p) => p.key === planKey);
+
+  // --- Already subscribed -> Customer Portal ----------------------------
   const hasLiveSubscription =
     !!billing?.stripe_subscription_id &&
     LIVE_SUBSCRIPTION_STATUSES.includes(billing.subscription_status as string);
@@ -171,6 +183,27 @@ export async function POST(
     // through a plan switch instead of ending -- if that's ever turned on,
     // the still-trialing case is what the webhook's same-period branch
     // guards against; see syncBillingFromSubscription.)
+    //
+    // A plan picked on our billing page goes straight to Stripe's confirm
+    // screen for that Price. If that can't be built (already on that plan,
+    // Price missing from the Portal config, any Stripe error) we fall
+    // through to the generic plan-switch list below instead of failing.
+    if (plan?.stripePriceId) {
+      try {
+        const session = await createPlanSwitchSession({
+          customerId: billing!.stripe_customer_id,
+          subscriptionId: billing!.stripe_subscription_id as string,
+          priceId: plan.stripePriceId,
+          returnUrl,
+        });
+        if (session) return NextResponse.json({ ok: true, mode: "portal", url: session.url });
+      } catch (err) {
+        console.error(
+          `billing checkout: plan-switch confirm flow to '${plan.key}' failed for company ${companyId} -- falling back to the Portal plan list. Check that its Price is in the Customer Portal config's plan-switch products.`,
+          err,
+        );
+      }
+    }
     // Deep-link into the Portal's plan-switch flow. That flow needs the
     // "subscription update" feature enabled (with an allowed product list)
     // in the Stripe Customer Portal configuration; if it isn't, Stripe
@@ -208,8 +241,6 @@ export async function POST(
   }
 
   // --- No subscription yet -> Checkout ----------------------------------
-  const body = (await request.json().catch(() => null)) as { planKey?: unknown; returnTo?: unknown } | null;
-  const planKey = body?.planKey as unknown;
   // Allowlisted, never free-form: this rides into a URL Stripe echoes back.
   const returnPath =
     typeof body?.returnTo === "string" && CHECKOUT_RETURN_ALLOWED.includes(body.returnTo)
@@ -225,11 +256,6 @@ export async function POST(
       { status: 400 },
     );
   }
-  // Validated against the self-serve catalog, not a hardcoded key list, so a
-  // future plan (like this one, added 2026-09-14) doesn't need this route
-  // touched again -- it only needs an entry in plans.ts with isSelfServe.
-  const selfServePlans = getSelfServePlans();
-  const plan = selfServePlans.find((p) => p.key === planKey);
   if (!plan) {
     return NextResponse.json(
       {

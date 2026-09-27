@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
-import { capturedCheckoutSession } from "./helpers/stripe-checkout-sessions";
+import { capturedCheckoutSession, capturedPortalSession } from "./helpers/stripe-checkout-sessions";
 import { getPlan, TRIAL_DAYS } from "@/lib/billing/plans";
 import { isBillingActive } from "@/lib/billing/activation";
 
@@ -154,6 +154,73 @@ describe("Plan checkout (Trello P3)", () => {
     );
     expect(res.status).toBe(200);
     expect(res.json.mode).toBe("portal");
+    const session = await capturedPortalSession(res.json.url);
+    expect(session?.flowType).toBe("subscription_update");
+  });
+
+  describe("plan switch picked in the app (subscription_update_confirm)", () => {
+    async function seedSubscriber(name: string, subscriptionId: string, planKey: string) {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, name);
+      await getTestServiceClient().from("company_billing").insert({
+        company_id: companyId,
+        stripe_customer_id: `cus_seed_${companyId}`,
+        stripe_subscription_id: subscriptionId,
+        subscription_status: "active",
+        plan_key: planKey,
+      });
+      return { owner, companyId };
+    }
+
+    // Every cross-variant move the old Portal list couldn't offer: same tier
+    // with WhatsApp, a period change, and tier + period + WhatsApp at once.
+    it.each(["starter_wpp", "starter_annual", "pro_annual_wpp"] as const)(
+      "deep-links a Starter subscriber straight to confirming %s",
+      async (target) => {
+        const { owner, companyId } = await seedSubscriber(`Switch To ${target} Co`, "sub_mock_starter", "starter");
+
+        const res = await checkout(owner.cookieHeader, companyId, target);
+        expect(res.status).toBe(200);
+        expect(res.json.mode).toBe("portal");
+
+        const session = await capturedPortalSession(res.json.url!);
+        expect(session).toMatchObject({
+          flowType: "subscription_update_confirm",
+          subscription: "sub_mock_starter",
+          itemId: "si_mock_1",
+          price: getPlan(target).stripePriceId,
+        });
+        expect(session?.afterCompletionReturnUrl).toMatch(/\/dashboard\/settings\/billing$/);
+
+        // Still only the webhook writes plan_key.
+        const { data: billing } = await getTestServiceClient()
+          .from("company_billing")
+          .select("plan_key")
+          .eq("company_id", companyId)
+          .single();
+        expect(billing?.plan_key).toBe("starter");
+      },
+    );
+
+    it("falls back to the generic plan list when the subscriber is already on that plan", async () => {
+      const { owner, companyId } = await seedSubscriber("Switch Same Plan Co", "sub_mock_starter", "starter");
+
+      const res = await checkout(owner.cookieHeader, companyId, "starter");
+      expect(res.status).toBe(200);
+      const session = await capturedPortalSession(res.json.url!);
+      expect(session?.flowType).toBe("subscription_update");
+    });
+
+    it("falls back to the generic plan list when Stripe rejects the confirm flow", async () => {
+      const subscriptionId = "sub_mock_starter__trigger-confirm-failure";
+      const { owner, companyId } = await seedSubscriber("Switch Rejected Co", subscriptionId, "starter");
+
+      const res = await checkout(owner.cookieHeader, companyId, "pro");
+      expect(res.status).toBe(200);
+      expect(res.json.mode).toBe("portal");
+      const session = await capturedPortalSession(res.json.url!);
+      expect(session).toMatchObject({ flowType: "subscription_update", subscription: subscriptionId });
+    });
   });
 
   it("checkout targets the plan's real BRL price id", () => {

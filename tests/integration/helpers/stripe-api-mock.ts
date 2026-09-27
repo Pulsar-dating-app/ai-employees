@@ -13,7 +13,10 @@ import { getPlan, type PlanKey } from "@/lib/billing/plans";
 //  - checkout session create WITH a `currency` param -> 400 (proves the
 //    route never sets one -- Adaptive Pricing owns presentment)
 //  - billing portal session create -> echoes a hosted url (existing
-//    subscribers are sent here for plan changes, not subscriptions.update)
+//    subscribers are sent here for plan changes, not subscriptions.update).
+//    Its flow_data is captured, readable via GET /__portal_sessions; a
+//    `subscription_update_confirm` flow on a sub id containing
+//    "trigger-confirm-failure" -> 400 (Stripe rejecting the target Price).
 //  - subscription update with `trial_end=now` -> 200, flips status to
 //    `active` (Trello P8's endTrialNow); the sub id containing
 //    "trigger-end-trial-failure" -> 400 instead.
@@ -115,8 +118,18 @@ export type CapturedCheckoutSession = {
   metadata: Record<string, string>;
 };
 
+export type CapturedPortalSession = {
+  id: string;
+  flowType: string | null;
+  subscription: string | null;
+  itemId: string | null;
+  price: string | null;
+  afterCompletionReturnUrl: string | null;
+};
+
 export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
   const capturedCheckoutSessions = new Map<string, CapturedCheckoutSession>();
+  const capturedPortalSessions = new Map<string, CapturedPortalSession>();
 
   const server: Server = createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
@@ -134,6 +147,9 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
       capturedCheckoutSessions.clear();
       res.writeHead(204);
       return res.end();
+    }
+    if (url.pathname === "/__portal_sessions" && req.method === "GET") {
+      return send(200, [...capturedPortalSessions.values()]);
     }
 
     const body = req.method === "GET" ? "" : await readBody(req);
@@ -177,6 +193,22 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
     // --- Billing Portal ------------------------------------------------
     if (req.method === "POST" && url.pathname === "/v1/billing_portal/sessions") {
       const id = randomId("bps_mock");
+      const flowType = params.get("flow_data[type]");
+      const confirmSubscription = params.get("flow_data[subscription_update_confirm][subscription]");
+      // Stands in for Stripe rejecting a confirm flow (e.g. the target Price
+      // isn't in the Portal configuration's plan-switch products).
+      if (flowType === "subscription_update_confirm" && confirmSubscription?.includes("trigger-confirm-failure")) {
+        return fail("price not in the portal configuration's subscription_update products");
+      }
+      capturedPortalSessions.set(id, {
+        id,
+        flowType,
+        subscription:
+          confirmSubscription ?? params.get("flow_data[subscription_update][subscription]") ?? null,
+        itemId: params.get("flow_data[subscription_update_confirm][items][0][id]"),
+        price: params.get("flow_data[subscription_update_confirm][items][0][price]"),
+        afterCompletionReturnUrl: params.get("flow_data[after_completion][redirect][return_url]"),
+      });
       return send(200, {
         id,
         object: "billing_portal.session",

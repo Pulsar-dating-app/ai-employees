@@ -218,12 +218,20 @@ export function PlanTiers({
     const checkoutKey = plan.key as Exclude<PlanKey, "enterprise">;
     if (current) {
       const isUpgrade = TIER_RANK[plan.tier] > TIER_RANK[current.tier];
+      // Same tier, other period/WhatsApp option: "Switch to Starter" would
+      // read as a no-op to someone already on Starter.
+      const label =
+        plan.tier === current.tier
+          ? t("tiers.switchOption")
+          : isUpgrade
+            ? t("upgradeTo", { plan: plan.displayName })
+            : t("switchTo", { plan: plan.displayName });
       return (
         <CheckoutButton
           companyId={companyId}
           planKey={checkoutKey}
           variant={isUpgrade ? "primary" : "secondary"}
-          label={isUpgrade ? t("upgradeTo", { plan: plan.displayName }) : t("switchTo", { plan: plan.displayName })}
+          label={label}
           fullWidth
         />
       );
@@ -242,17 +250,18 @@ export function PlanTiers({
 
   return (
     <div className="flex flex-col gap-8">
-      {current ? null : (
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <PeriodSwitch value={billingPeriod} onChange={setBillingPeriod} savingsPct={savingsPct} />
-            <WhatsAppSwitch value={whatsappIncluded} onChange={setWhatsappIncluded} />
-          </div>
-          <p className="max-w-xl text-balance text-center text-[13px] leading-5 text-on-surface-variant">
-            {t("picker.wppToggleNote")}
-          </p>
+      {/* Shown in change mode too: an existing subscriber can move to any of
+          the 12 variants (period and WhatsApp included), not just another
+          tier of their current one. */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <PeriodSwitch value={billingPeriod} onChange={setBillingPeriod} savingsPct={savingsPct} />
+          <WhatsAppSwitch value={whatsappIncluded} onChange={setWhatsappIncluded} />
         </div>
-      )}
+        <p className="max-w-xl text-balance text-center text-[13px] leading-5 text-on-surface-variant">
+          {t("picker.wppToggleNote")}
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 items-stretch gap-5 pt-3 md:grid-cols-3">
         {plans.map((plan, index) => {

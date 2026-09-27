@@ -2472,7 +2472,8 @@
       "whatsappSeparate": "WhatsApp billed separately by Meta",
       "current": "Your plan",
       "switchTitle": "Switch plans",
-      "switchBody": "Pick another plan. You'll confirm the change on Stripe before anything is charged."
+      "switchBody": "Pick another plan. You'll confirm the change on Stripe before anything is charged.",
+      "switchOption": "Switch to this option"
     },
     "panel": {
       "dayOf": "Day {day} of {total}",

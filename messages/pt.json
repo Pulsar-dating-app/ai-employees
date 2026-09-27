@@ -2472,7 +2472,8 @@
       "whatsappSeparate": "WhatsApp cobrado à parte pela Meta",
       "current": "Seu plano",
       "switchTitle": "Trocar de plano",
-      "switchBody": "Escolha outro plano. Você confirma a mudança na Stripe antes de qualquer cobrança."
+      "switchBody": "Escolha outro plano. Você confirma a mudança na Stripe antes de qualquer cobrança.",
+      "switchOption": "Mudar para esta opção"
     },
     "panel": {
       "dayOf": "Dia {day} de {total}",

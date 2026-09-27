@@ -368,7 +368,7 @@ describe("Stripe webhook (Trello P4)", () => {
     expect(rows).toHaveLength(1); // no rollover -- same period
     expect(rows![0].replies_used).toBe(200); // untouched
     expect(rows![0].reply_limit).toBe(getPlan("pro").trialReplyLimit); // capped at Pro's trial quota...
-    expect(rows![0].reply_limit).not.toBe(getPlan("pro").monthlyReplyLimit); // ...never Pro's full 20k
+    expect(rows![0].reply_limit).not.toBe(getPlan("pro").monthlyReplyLimit); // ...never Pro's full quota
   });
 
   it("is idempotent — a repeat delivery of the same event id is a no-op 200", async () => {

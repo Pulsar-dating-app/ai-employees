@@ -12,6 +12,24 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-27 — Real plan prices and quotas; annual = 15% off
+
+**Decision:** The placeholders are replaced with the owner's real numbers:
+
+| Tier | Replies/month | Monthly | Monthly + WhatsApp |
+|---|---|---|---|
+| Starter | 1,000 | R$96,99 | R$149,99 |
+| Intermediate | 3,000 | R$296,99 | R$449,99 |
+| Pro | 5,000 | R$496,99 | R$749,99 |
+
+Annual = 12 × monthly − 15%, rounded to the cent (e.g. Starter R$989,30/year), derived in `plans.ts` (`annualPriceCents`). Annual quotas stay 12× monthly (the existing "KNOWN GAP" lump sum). The trial stays at 500 replies and 7 days.
+**Why:** Owner's pricing call. Stripe Prices are immutable, so 12 new sandbox Prices were created and the lookup keys moved over with `transfer_lookup_key`; sandbox subscriptions still on the old Prices keep being billed at the old amounts and no longer resolve to a plan via lookup key (the webhook keeps their existing `plan_key`).
+
+## 2026-09-27 — Plan switch: picked in the app, confirmed on Stripe; one Product per WhatsApp variant
+
+**Decision:** An existing subscriber picks any of the 12 self-serve variants on our billing page (the period/WhatsApp toggles now show in change mode too). The checkout route then opens Stripe's `subscription_update_confirm` Portal flow for that exact Price instead of the generic plan list. To make that possible, each tier's WhatsApp variants moved to their own Product ("Staffra <Tier> + WhatsApp"), so the Stripe catalog is 6 Products × (monthly, annual). The Portal config also has `adjustable_quantity` off and schedules `shortening_interval` changes (annual → monthly) at period end, alongside the existing `decreasing_item_amount` rule.
+**Why:** The Customer Portal only allows one Price per interval per Product in its plan-switch list, and in the sandbox it rejects a confirm flow to any Price not on that list. With 4 Prices per Product, moving between "Starter" and "Starter + WhatsApp" was impossible. A fully in-app swap (`subscriptions.update`) was rejected: we'd own proration previews, 3DS/decline handling, and period-end downgrades via Subscription Schedules, all of which the Portal already does. The confirm flow gives the in-app choice at the cost of about one function. Quantity was switchable in the Portal before this, which would have let a merchant pay 2× without `plan_key` changing.
+
 ## 2026-09-24 — Landing demo is real screenshots; value section is a calculator
 
 **Decision:** The landing's `#demo` became a tour of five real dashboard screenshots from a seeded sample account, captioned as sample data. It replaced the hand-built interactive dashboard mock. "Uma funcionária que não tira folga" became weekly coverage bars (44h vs 168h) plus a calculator where visitors enter what they pay attendants today, compared with the recommended plan's price.

@@ -96,7 +96,9 @@ export async function createCheckoutSession(opts: {
 }
 
 // Plan change on an already-live subscription goes through the Stripe
-// Customer Portal, not `subscriptions.update` in our code: Stripe Checkout
+// Customer Portal (this generic list, or `createPlanSwitchSession` below
+// when the merchant already picked a plan in the app), never
+// `subscriptions.update` in our code: Stripe Checkout
 // can't modify an existing subscription, and owning the swap ourselves means
 // owning proration/dunning/idempotency edge cases for a rare action. The
 // Portal (Stripe-hosted, configured in the Dashboard) does the swap; P4's
@@ -122,6 +124,46 @@ export async function createBillingPortalSession(opts: {
           },
         }
       : {}),
+  });
+  return { url: session.url };
+}
+
+// Plan switch picked on our own billing page. The merchant already chose the
+// target plan in the app, so instead of the Portal's generic plan list this
+// deep-links straight to Stripe's confirm screen for that one Price
+// (`subscription_update_confirm`): Stripe still shows the proration preview,
+// charges or schedules the change per the Portal configuration (downgrades
+// and annual -> monthly wait for period end), and handles 3DS / declines.
+// The target Price must be in the Portal configuration's plan-switch product
+// list or Stripe rejects the session -- which is why each WhatsApp variant
+// is its own Product (see plans.ts, 2026-09-27).
+//
+// Returns null when the subscription already sits on `priceId` (nothing to
+// confirm); throws on any Stripe error so the caller can fall back to the
+// generic plan-switch flow.
+export async function createPlanSwitchSession(opts: {
+  customerId: string;
+  subscriptionId: string;
+  priceId: string;
+  returnUrl: string;
+}): Promise<{ url: string } | null> {
+  const stripe = getStripeClient();
+  const subscription = await stripe.subscriptions.retrieve(opts.subscriptionId);
+  const item = subscription.items.data[0];
+  if (!item) throw new Error(`Subscription ${opts.subscriptionId} has no items`);
+  if (item.price.id === opts.priceId) return null;
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: opts.customerId,
+    return_url: opts.returnUrl,
+    flow_data: {
+      type: "subscription_update_confirm",
+      subscription_update_confirm: {
+        subscription: opts.subscriptionId,
+        items: [{ id: item.id, price: opts.priceId, quantity: 1 }],
+      },
+      after_completion: { type: "redirect", redirect: { return_url: opts.returnUrl } },
+    },
   });
   return { url: session.url };
 }
