@@ -2100,6 +2100,7 @@
         "send": "Enviar",
         "sendError": "Algo deu errado ao enviar. Tente novamente.",
         "deliveryFailed": "Sua resposta foi salva, mas não conseguimos entregá-la ao cliente. Isso pode acontecer se já passaram mais de 24 horas desde a última mensagem dele.",
+        "deliveryNoWhatsappAddon": "Sua resposta foi salva, mas seu plano atual não inclui WhatsApp, então ela não foi enviada. Para responder por lá, escolha um plano com WhatsApp em Plano e cobrança.",
         "empty": "Nenhuma mensagem ainda.",
         "loadError": "Não foi possível carregar esta conversa.",
         "retry": "Tentar novamente"

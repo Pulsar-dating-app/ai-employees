@@ -380,6 +380,8 @@ describe("Conversations API", () => {
   it("a merchant reply on a WhatsApp conversation persists, pauses, and is delivered", async () => {
     const owner = await signUpTestUser("owner");
     const company = await createCompany(owner.cookieHeader, "Conv WA Reply Co");
+    // WhatsApp needs a plan that includes it (a _wpp variant).
+    await seedActivePlan(company.id, { planKey: "starter_wpp" });
     await hireMalu(owner.cookieHeader, company.id);
     const conversationId = await seedWhatsappConversation(company.id, "active");
 
@@ -405,6 +407,7 @@ describe("Conversations API", () => {
   it("a WhatsApp reply that Meta rejects is still saved, reports delivery failure, and disconnects a dead token", async () => {
     const owner = await signUpTestUser("owner");
     const company = await createCompany(owner.cookieHeader, "Conv WA Delivery Fail Co");
+    await seedActivePlan(company.id, { planKey: "starter_wpp" });
     await hireMalu(owner.cookieHeader, company.id);
     // "trigger-send-unauthorized" makes the mock Graph API return 401.
     const conversationId = await seedWhatsappConversation(company.id, "paused", "trigger-send-unauthorized");
@@ -436,6 +439,41 @@ describe("Conversations API", () => {
       .eq("company_id", company.id)
       .single();
     expect((connection as { status: string }).status).toBe("disconnected");
+  });
+
+  it("a WhatsApp reply is saved but not sent once the plan no longer includes WhatsApp", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Conv WA No Addon Co");
+    // Plain Starter: the number is still connected (e.g. from before a switch
+    // to a plan without WhatsApp), but the plan doesn't include it.
+    await seedActivePlan(company.id, { planKey: "starter" });
+    await hireMalu(owner.cookieHeader, company.id);
+    const conversationId = await seedWhatsappConversation(company.id, "paused");
+
+    const res = await api<{ message: { content: string }; delivery: { ok: boolean; reason?: string } | null }>(
+      "POST",
+      `/api/companies/${company.id}/conversations/${conversationId}/messages`,
+      owner.cookieHeader,
+      { message: "resposta sem WhatsApp no plano" },
+    );
+    expect(res.status).toBe(201);
+    expect(res.json.delivery).toEqual({ ok: false, reason: "no_addon" });
+
+    const detail = await api<{ messages: { role: string; content: string }[] }>(
+      "GET",
+      `/api/companies/${company.id}/conversations/${conversationId}`,
+      owner.cookieHeader,
+    );
+    expect(detail.json.messages.at(-1)).toMatchObject({ role: "merchant", content: "resposta sem WhatsApp no plano" });
+
+    // Blocked before any send, so the connection is left as it was --
+    // switching back to a WhatsApp plan works without reconnecting.
+    const { data: connection } = await getTestServiceClient()
+      .from("company_whatsapp_connections")
+      .select("status")
+      .eq("company_id", company.id)
+      .single();
+    expect((connection as { status: string }).status).toBe("connected");
   });
 
   // The badge the inbox list shows per row -- same `events` table Metrics'

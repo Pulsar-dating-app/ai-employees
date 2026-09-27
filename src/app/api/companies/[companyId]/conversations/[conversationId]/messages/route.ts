@@ -4,6 +4,8 @@ import { checkCompanyRole } from "@/lib/auth/company-access";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendInstagramMessage } from "@/lib/instagram/meta-instagram-api";
 import { sendWhatsappMessage } from "@/lib/whatsapp/meta-graph-api";
+import { decideWhatsappPlanGate } from "@/lib/whatsapp/enforcement";
+import { findPlan } from "@/lib/billing/plans";
 
 // Trello F5 / N10 -- a merchant's manual reply. Sending one *is* taking
 // over: this always flips the conversation to 'paused' (unless already
@@ -118,9 +120,24 @@ async function deliverOverWhatsapp(
   agentId: string | null,
   customerId: string,
   text: string,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; reason?: "no_addon" }> {
   if (!agentId) return { ok: false };
   const service = createServiceClient();
+
+  // Same entitlement gate as the connect route and the inbound webhook: a
+  // company whose plan no longer includes WhatsApp (e.g. switched to a
+  // non-_wpp plan while the number is still connected) can't send on it,
+  // manually or otherwise.
+  const { data: billing } = await service
+    .from("company_billing")
+    .select("plan_key, subscription_status")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  const planGate = decideWhatsappPlanGate({
+    subscription_status: (billing?.subscription_status as string | null) ?? null,
+    whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
+  });
+  if (!planGate.allow) return { ok: false, reason: "no_addon" };
 
   const [{ data: connection }, { data: customer }] = await Promise.all([
     service
@@ -224,7 +241,7 @@ export async function POST(
 
   // Deliver on the channel. Web chat: nothing to do, the widget polls.
   // Instagram and WhatsApp: an actual outbound send.
-  let delivery: { ok: boolean } | null = null;
+  let delivery: { ok: boolean; reason?: "no_addon" } | null = null;
   if (conversation.channel === "instagram") {
     delivery = await deliverOverInstagram(
       companyId,

@@ -497,6 +497,14 @@ sharing one pure decision function:
   unaffected (out of scope — a merchant with a stale coexistence connection
   syncing old messages isn't "using" the channel the way an AI-generated
   reply is).
+- **Manual inbox reply** (`conversations/[conversationId]/messages/route.ts`'s
+  `deliverOverWhatsapp`, added 2026-09-27) — checked before any send. Blocked
+  → the reply is still persisted (that route never loses merchant text) and
+  returns `delivery: { ok: false, reason: "no_addon" }`, which the inbox shows
+  as `Conversations.inbox.thread.deliveryNoWhatsappAddon`. The connection row is
+  left `connected`, so moving back to a `_wpp` plan works without reconnecting.
+  This closed the one send path the gate didn't cover: a merchant who switched
+  to a plan without WhatsApp could still answer by hand.
 - **UI** (`my-agents/[agentSlug]/page.tsx` → `channel-tabs-card.tsx` →
   `channels-section.tsx`) — the page fetches `company_billing` and computes
   `whatsappEntitled` the same way the connect route does; `false` renders a

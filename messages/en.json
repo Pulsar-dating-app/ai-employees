@@ -2100,6 +2100,7 @@
         "send": "Send",
         "sendError": "Something went wrong sending that. Please try again.",
         "deliveryFailed": "Your reply was saved, but we couldn't deliver it to the customer. This can happen if it's been more than 24 hours since they last messaged.",
+        "deliveryNoWhatsappAddon": "Your reply was saved, but your current plan doesn't include WhatsApp, so it wasn't sent. Switch to a plan with WhatsApp in Plan & billing to reply there.",
         "empty": "No messages yet.",
         "loadError": "We couldn't load this conversation.",
         "retry": "Try again"
