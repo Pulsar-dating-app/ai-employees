@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  annualPriceCents,
   BILLING_PLANS,
   findPlan,
   getPlan,
@@ -82,16 +83,32 @@ describe("billing plan catalog (Trello P1)", () => {
     }
   });
 
-  it("prices the annual and WhatsApp-included variants as fixed multipliers of the plain monthly price", () => {
+  // 2026-09-27 -- the owner's real prices. Literal on purpose: these must
+  // match the Stripe Price amounts, so a change here should be deliberate.
+  it("carries the agreed monthly prices and reply quotas", () => {
+    const expected = {
+      starter: { monthly: 9_699, wpp: 14_999, replies: 1_000 },
+      intermediate: { monthly: 29_699, wpp: 44_999, replies: 3_000 },
+      pro: { monthly: 49_699, wpp: 74_999, replies: 5_000 },
+    };
+    for (const tier of SELF_SERVE_TIERS) {
+      expect(getPlan(tier).priceBrlCents, tier).toBe(expected[tier].monthly);
+      expect(getPlan(`${tier}_wpp` as const).priceBrlCents, tier).toBe(expected[tier].wpp);
+      expect(getPlan(tier).monthlyReplyLimit, tier).toBe(expected[tier].replies);
+    }
+  });
+
+  it("prices each annual variant as 12 months of its monthly price minus 15%", () => {
+    expect(annualPriceCents(9_699)).toBe(98_930);
     for (const tier of SELF_SERVE_TIERS) {
       const monthly = getPlan(tier);
       const annual = getPlan(`${tier}_annual` as const);
       const wpp = getPlan(`${tier}_wpp` as const);
       const annualWpp = getPlan(`${tier}_annual_wpp` as const);
 
-      expect(annual.priceBrlCents, tier).toBe(monthly.priceBrlCents! * 4);
-      expect(wpp.priceBrlCents, tier).toBe(monthly.priceBrlCents! * 2);
-      expect(annualWpp.priceBrlCents, tier).toBe(monthly.priceBrlCents! * 8);
+      expect(annual.priceBrlCents, tier).toBe(Math.round(monthly.priceBrlCents! * 12 * 0.85));
+      expect(annualWpp.priceBrlCents, tier).toBe(Math.round(wpp.priceBrlCents! * 12 * 0.85));
+      expect(wpp.priceBrlCents!, tier).toBeGreaterThan(monthly.priceBrlCents!);
 
       // Annual variants seed a full year's worth of replies in one lump sum
       // (company_message_usage's period is the Stripe subscription's own

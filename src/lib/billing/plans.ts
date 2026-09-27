@@ -12,10 +12,9 @@
 // handoff / silent / errored runs count 0. The monthly allowance is a
 // single pool shared across whichever bots are active (K6 toggle).
 //
-// !! PLACEHOLDERS -- `monthlyReplyLimit` and `priceBrlCents` are NOT final.
-// The Stripe sandbox Prices were created at R$999/mo on purpose: lowering a
-// price later is easy, raising it on live subscriptions is not. The limit
-// that actually gets enforced is a per-company, per-period snapshot on
+// 2026-09-27 -- real prices and quotas (owner's numbers, see BASE below),
+// replacing the R$999/mo-ish placeholders. The limit that actually gets
+// enforced is a per-company, per-period snapshot on
 // `company_message_usage.reply_limit` (Trello P2), seeded from the value
 // here but editable per company at any time.
 //
@@ -27,11 +26,8 @@
 // data migration is needed for companies already on a plan. `tier` groups
 // the four variants of one plan for the picker UI; `billingPeriod` and
 // `whatsappIncluded` are the two independent toggles a merchant picks
-// between. Fictitious placeholder multipliers (owner's ask, 2026-09-16):
-// annual = 4x the monthly price, WhatsApp-included = 2x whichever price
-// (monthly or annual) it's layered on top of -- e.g. annual_wpp = 8x
-// monthly. Real Prices for all 9 new variants exist in the Stripe sandbox
-// (same product per tier, one Price per variant, by lookup_key).
+// between. (The 4x/2x placeholder multipliers from that day were replaced
+// by real prices on 2026-09-27: annual = 12 months minus 15%.)
 //
 // !! KNOWN GAP, not fixed here: `company_message_usage`'s period is the
 // Stripe subscription's own `current_period_start`/`current_period_end`
@@ -96,7 +92,7 @@ export interface BillingPlan {
    */
   stripePriceId: string | null;
   /**
-   * PLACEHOLDER. AI-reply allowance for one Stripe billing period, seeded
+   * AI-reply allowance for one Stripe billing period, seeded
    * into `company_message_usage.reply_limit` (Trello P2) when a period
    * opens -- a month's worth for a monthly variant, a year's worth (12x)
    * for an annual one; see the file-level "KNOWN GAP" note. `null` for
@@ -119,7 +115,7 @@ export interface BillingPlan {
    */
   trialReplyLimit: number | null;
   /**
-   * PLACEHOLDER, display only. The real charge amount/currency comes from
+   * Display only. The real charge amount/currency comes from
    * the Stripe Price plus Adaptive Pricing, not from this field.
    * `null` for contact-us plans -- Enterprise has no fixed price to show.
    */
@@ -128,20 +124,24 @@ export interface BillingPlan {
   isSelfServe: boolean;
 }
 
-// Base monthly figures per tier, kept as one place to derive the annual (x4)
-// and WhatsApp-included (x2) placeholder multipliers from -- see the
-// file-level comment. Matches the live Stripe sandbox Price amounts, not the
-// (slightly stale) BRL figures that used to be hand-typed per plan here.
+// Real monthly prices per tier, without and with WhatsApp (2026-09-27, owner's
+// numbers). Annual prices are derived: 12 months minus ANNUAL_DISCOUNT. These
+// must match the Stripe Price amounts behind each lookup key.
 const BASE = {
-  starter: { priceBrlCents: 93_000, monthlyReplyLimit: 10_000 },
-  intermediate: { priceBrlCents: 95_000, monthlyReplyLimit: 15_000 },
-  pro: { priceBrlCents: 99_900, monthlyReplyLimit: 20_000 },
+  starter: { monthlyBrlCents: 9_699, monthlyWppBrlCents: 14_999, monthlyReplyLimit: 1_000 },
+  intermediate: { monthlyBrlCents: 29_699, monthlyWppBrlCents: 44_999, monthlyReplyLimit: 3_000 },
+  pro: { monthlyBrlCents: 49_699, monthlyWppBrlCents: 74_999, monthlyReplyLimit: 5_000 },
 } as const;
 
-const ANNUAL_MULTIPLIER = 4;
-const WPP_MULTIPLIER = 2;
-// Exported (unlike ANNUAL_MULTIPLIER/WPP_MULTIPLIER) so trial copy can quote
-// the exact number instead of duplicating it as a literal.
+export const ANNUAL_DISCOUNT = 0.15;
+
+/** A year of `monthlyCents` with the annual discount, rounded to the cent. */
+export function annualPriceCents(monthlyCents: number): number {
+  return Math.round(monthlyCents * 12 * (1 - ANNUAL_DISCOUNT));
+}
+
+// Exported so trial copy can quote the exact number instead of duplicating
+// it as a literal.
 export const TRIAL_REPLY_LIMIT = 500;
 
 interface TierPriceIds {
@@ -169,7 +169,7 @@ function tierPlans(
       stripePriceId: priceIds.monthly,
       monthlyReplyLimit: base.monthlyReplyLimit,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
-      priceBrlCents: base.priceBrlCents,
+      priceBrlCents: base.monthlyBrlCents,
       isSelfServe: true,
     },
     {
@@ -183,7 +183,7 @@ function tierPlans(
       // 12 months' worth in one lump sum -- see the file-level "KNOWN GAP" note.
       monthlyReplyLimit: base.monthlyReplyLimit * 12,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
-      priceBrlCents: base.priceBrlCents * ANNUAL_MULTIPLIER,
+      priceBrlCents: annualPriceCents(base.monthlyBrlCents),
       isSelfServe: true,
     },
     {
@@ -196,7 +196,7 @@ function tierPlans(
       stripePriceId: priceIds.monthlyWpp,
       monthlyReplyLimit: base.monthlyReplyLimit,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
-      priceBrlCents: base.priceBrlCents * WPP_MULTIPLIER,
+      priceBrlCents: base.monthlyWppBrlCents,
       isSelfServe: true,
     },
     {
@@ -209,33 +209,42 @@ function tierPlans(
       stripePriceId: priceIds.annualWpp,
       monthlyReplyLimit: base.monthlyReplyLimit * 12,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
-      priceBrlCents: base.priceBrlCents * ANNUAL_MULTIPLIER * WPP_MULTIPLIER,
+      priceBrlCents: annualPriceCents(base.monthlyWppBrlCents),
       isSelfServe: true,
     },
   ];
 }
 
 // All 9 new Prices were created directly in the Stripe sandbox (test mode,
-// account acct_1UBCAoHAg1kV3YLS) via the Stripe MCP, same product per tier
-// as the existing monthly Price -- see this file's 2026-09-16 comment.
+// account acct_1UBCAoHAg1kV3YLS) via the Stripe MCP -- see this file's
+// 2026-09-16 comment.
+//
+// 2026-09-27 -- the WhatsApp variants live on their own Product per tier
+// ("Staffra <Tier> + WhatsApp"), not on the tier's base Product. The Customer
+// Portal allows only one Price per interval per Product in its plan-switch
+// list, and a Price can only be switched to if it's on that list -- so with
+// both monthly Prices on one Product, "Starter" <-> "Starter + WhatsApp" was
+// impossible. Layout now: 6 Products x (monthly, annual). Lookup keys were
+// carried over with `transfer_lookup_key`; the old same-Product WPP Prices
+// are archived.
 export const BILLING_PLANS: readonly BillingPlan[] = [
   ...tierPlans("starter", "Starter", "starter2", {
-    monthly: "price_1UBclEHAg1kV3YLS1ouL6qsM",
-    annual: "price_1UGHMzHAg1kV3YLSXP2fUm37",
-    monthlyWpp: "price_1UGHN1HAg1kV3YLSIv40R36U",
-    annualWpp: "price_1UGHN3HAg1kV3YLSjqZJVFOK",
+    monthly: "price_1UKJWoHAg1kV3YLSOw1odEaj",
+    annual: "price_1UKJWoHAg1kV3YLSrv7pkltd",
+    monthlyWpp: "price_1UKJWpHAg1kV3YLSYMO3QMa3",
+    annualWpp: "price_1UKJWqHAg1kV3YLSI9RW7A4H",
   }),
   ...tierPlans("intermediate", "Intermediate", "intermediate", {
-    monthly: "price_1UFiUfHAg1kV3YLS7Je8CYL3",
-    annual: "price_1UGHN7HAg1kV3YLSCUqC4Rsl",
-    monthlyWpp: "price_1UGHN9HAg1kV3YLSsJFaKEHP",
-    annualWpp: "price_1UGHNBHAg1kV3YLSqsHVYk0v",
+    monthly: "price_1UKJWqHAg1kV3YLS8cZasg0A",
+    annual: "price_1UKJWrHAg1kV3YLSn4ISpch0",
+    monthlyWpp: "price_1UKJXFHAg1kV3YLSV8KYktK6",
+    annualWpp: "price_1UKJXFHAg1kV3YLSeikNAMT2",
   }),
   ...tierPlans("pro", "Pro", "pro", {
-    monthly: "price_1UBD3SHAg1kV3YLSO7xCrO1s",
-    annual: "price_1UGHNDHAg1kV3YLSka4n7XhG",
-    monthlyWpp: "price_1UGHNFHAg1kV3YLSm6OAJy7I",
-    annualWpp: "price_1UGHNIHAg1kV3YLStWySXKW7",
+    monthly: "price_1UKJXGHAg1kV3YLSiHADuuDK",
+    annual: "price_1UKJXHHAg1kV3YLSOvKl7K4m",
+    monthlyWpp: "price_1UKJXIHAg1kV3YLS7SlGKPxI",
+    annualWpp: "price_1UKJXIHAg1kV3YLSxfrJ2HZj",
   }),
   {
     key: "enterprise",

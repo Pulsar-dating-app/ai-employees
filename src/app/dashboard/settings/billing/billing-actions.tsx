@@ -8,9 +8,9 @@ import type { PlanKey } from "@/lib/billing/plans";
 
 // Trello P5 -- every button on the billing page that leaves for Stripe.
 // Each POSTs to one of our billing routes and follows the `url` it returns
-// (a Checkout Session or a Billing Portal session). There is no in-page
-// plan switcher: the change always happens on Stripe, and P4's webhook
-// syncs `company_billing` when it's done.
+// (a Checkout Session or a Billing Portal session). The plan is picked on
+// our page, but the change itself is always confirmed on Stripe, and P4's
+// webhook syncs `company_billing` when it's done.
 
 type Variant = "primary" | "secondary" | "link" | "danger";
 

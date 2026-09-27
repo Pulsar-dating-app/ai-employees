@@ -240,7 +240,7 @@ export function ConversationPane({
     );
     onReplySent(message);
     if (delivery && delivery.ok === false) {
-      setErrorMessage(t("thread.deliveryFailed"));
+      setErrorMessage(delivery.reason === "no_addon" ? t("thread.deliveryNoWhatsappAddon") : t("thread.deliveryFailed"));
     }
   }
 
