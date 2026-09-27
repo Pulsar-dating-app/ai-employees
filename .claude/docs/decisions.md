@@ -12,6 +12,27 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-27 — Malu gets a catalog overview; a card needs a photo, per product
+
+**Decision:** Three changes to how Malu handles the catalog, all small in tokens.
+- **A catalog overview on every turn** (`buildCatalogOverviewSection`):
+  - What it contains: how many active items the catalog has, its top categories (with counts when the sample covered the whole catalog) and up to 8 example names. There are no prices; every price still comes from `search_products`, which grounding checks against.
+  - What it tells the model: the catalog holds whatever the business sells (goods, plans, subscriptions, services, courses), so a question about a price, what's included, a difference or availability is searched before answering, and "I don't have the price" is never said without a search.
+  - How it's loaded: `ProductRepository.catalogOverview` (one query: an exact count plus a 400-row sample) summarized by the pure `summarizeCatalog`. It replaced `loadHasProducts`: `total === 0` is the empty-catalog signal.
+  - Where it sits: in the stable, cached part of the prompt.
+- **Cards are per product:** `selectProductCards` now drops only the chosen products without an image. Before, it was all-or-nothing: no image anywhere meant no cards, and one image meant the imageless ones got carded too. `PRODUCT_CARD_GUIDANCE` says the same thing, so a product whose `image_url` is null has its name and price written in the message.
+- **Direct questions get direct answers:** a price or comparison question ("quanto custa", "com e sem X") is answered with the numbers in the message, even when the products are carded.
+
+**Why:** Found in testing on the Staffra company, whose catalog is 13 plans with no photos:
+- "tenho que pagar extra pelo WhatsApp?" and "vc não tem os preços dos planos??" got "não tenho os valores" twice. The model never searched, because nothing connected "planos" to its catalog.
+- When it finally searched, it carded the plans and, as the card rule said, left the prices out of the text. The server then dropped the cards for having no image, so the customer read "o valor mostrado no cartão" with nothing under it and had to ask again.
+
+Stating the catalog up front follows the pattern that fixed policies and the FAQ (2026-09-21): hand the model the fact instead of instructing it harder to go look.
+
+**Cost:** about 200–350 input tokens per turn, cached; ~5% of a ~7k-token turn, roughly 1% of its cost. The failed exchange cost more than that: two useless turns plus a 37k-token recovery.
+
+---
+
 ## 2026-09-27 — Real plan prices and quotas; annual = 15% off
 
 **Decision:** The placeholders are replaced with the owner's real numbers:
