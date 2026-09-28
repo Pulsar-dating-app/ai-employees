@@ -927,7 +927,7 @@ async function cancel(
   const [{ data: appointment, error }, { data: company, error: companyError }] = await Promise.all([
     client
       .from("appointments")
-      .select("id, status, starts_at, service_id, professional_id, google_event_id, google_calendar_id")
+      .select("id, status, starts_at, ends_at, service_id, professional_id, google_event_id, google_calendar_id")
       .eq("id", appointmentId)
       .eq("company_id", companyId)
       .eq("customer_id", customerId)
@@ -983,9 +983,9 @@ async function cancel(
   await notifyWaitlistForFreedSlot({
     supabase: client,
     companyId,
-    serviceId: (appointment.service_id as string | null) ?? null,
     professionalId: appointment.professional_id as string,
     startsAt: appointment.starts_at as string,
+    endsAt: appointment.ends_at as string,
   });
 
   return { cancelled: true, appointmentId, alreadyCancelled: false };

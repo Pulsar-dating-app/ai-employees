@@ -282,6 +282,102 @@ describe("a cancelled appointment notifies the waitlist", () => {
     expect(waiters![1].notified_at).toBeNull(); // 2027-05-03 entry, still waiting
   });
 
+  // 2026-09-28 -- what frees up is the professional's time, not "a slot of
+  // that service". Found in testing: waiting for a 15-min "pezinho" at 10h,
+  // never told when the 10h 30-min "barba" was cancelled.
+  it("emails a waiter for a DIFFERENT service that fits in the freed time", async () => {
+    const s = await seed("Waitlist Other Service Co");
+    const { data: shortService } = await getTestServiceClient()
+      .from("services")
+      .insert({ company_id: s.companyId, name: "Pezinho", duration_minutes: 15 })
+      .select("id")
+      .single();
+
+    const booked = (await book(s.ctx, s.serviceId, `${BOOKING_DATE}T10:00:00Z`, `booker-${randomUUID()}@example.test`)) as {
+      appointmentId: string;
+    };
+    const waiter = `pezinho-${randomUUID()}@example.test`;
+    await addToWaitlistTool.execute(
+      { serviceId: (shortService as { id: string }).id, from: BOOKING_DATE, to: BOOKING_DATE, email: waiter },
+      await newParty(s),
+    );
+    await clearEmails();
+
+    await cancelAppointmentTool.execute({ appointmentId: booked.appointmentId }, s.ctx);
+
+    const mail = await waitForEmail(waiter);
+    expect(mail.subject).toContain("Pezinho");
+  });
+
+  it("skips a waiter whose service no longer fits in the freed time", async () => {
+    const s = await seed("Waitlist Too Long Co");
+    const { data: longService } = await getTestServiceClient()
+      .from("services")
+      .insert({ company_id: s.companyId, name: "Pacote Completo", duration_minutes: 60 })
+      .select("id")
+      .single();
+
+    // 10:00-10:30 is freed, but 10:30 stays booked: a 60-min service can't
+    // start anywhere inside the freed half hour.
+    const booked = (await book(s.ctx, s.serviceId, `${BOOKING_DATE}T10:00:00Z`, `booker-${randomUUID()}@example.test`)) as {
+      appointmentId: string;
+    };
+    await book(await newParty(s), s.serviceId, `${BOOKING_DATE}T10:30:00Z`, `next-${randomUUID()}@example.test`);
+    const waiter = `long-${randomUUID()}@example.test`;
+    await addToWaitlistTool.execute(
+      { serviceId: (longService as { id: string }).id, from: BOOKING_DATE, to: BOOKING_DATE, email: waiter },
+      await newParty(s),
+    );
+    await clearEmails();
+
+    await cancelAppointmentTool.execute({ appointmentId: booked.appointmentId }, s.ctx);
+
+    await new Promise((r) => setTimeout(r, 400));
+    expect((await sentEmails()).some((e) => e.to === waiter)).toBe(false);
+  });
+
+  // 2026-09-28 -- "precisa ser exatamente às 10h": the entry remembers the
+  // time, and only an opening that starts then notifies them.
+  it("with a desired time, notifies only for an opening that starts at that time", async () => {
+    const s = await seed("Waitlist Exact Time Co");
+    const at14 = (await book(s.ctx, s.serviceId, `${BOOKING_DATE}T14:00:00Z`, `b14-${randomUUID()}@example.test`)) as {
+      appointmentId: string;
+    };
+    const at10 = (await book(await newParty(s), s.serviceId, `${BOOKING_DATE}T10:00:00Z`, `b10-${randomUUID()}@example.test`)) as {
+      appointmentId: string;
+    };
+    const waiter = `ten-${randomUUID()}@example.test`;
+    const waiterCtx = await newParty(s);
+    const added = await addToWaitlistTool.execute(
+      { serviceId: s.serviceId, from: BOOKING_DATE, to: BOOKING_DATE, email: waiter, time: "10:00" },
+      waiterCtx,
+    );
+    expect(added).toMatchObject({ added: true, alreadyWaiting: false });
+    // Same window, another time: a second wish, not a duplicate.
+    const other = await addToWaitlistTool.execute(
+      { serviceId: s.serviceId, from: BOOKING_DATE, to: BOOKING_DATE, email: waiter, time: "15:00" },
+      waiterCtx,
+    );
+    expect(other).toMatchObject({ added: true, alreadyWaiting: false });
+    expect(
+      await addToWaitlistTool.execute(
+        { serviceId: s.serviceId, from: BOOKING_DATE, to: BOOKING_DATE, email: waiter, time: "25:00" },
+        waiterCtx,
+      ),
+    ).toMatchObject({ added: false, reason: "invalid_time" });
+    await clearEmails();
+
+    // 14h opens: not the time they need.
+    await api("DELETE", `/api/companies/${s.companyId}/appointments/${at14.appointmentId}`, owner.cookieHeader);
+    await new Promise((r) => setTimeout(r, 400));
+    expect((await sentEmails()).some((e) => e.to === waiter)).toBe(false);
+
+    // 10h opens: that's the one.
+    await api("DELETE", `/api/companies/${s.companyId}/appointments/${at10.appointmentId}`, owner.cookieHeader);
+    const mail = await waitForEmail(waiter);
+    expect(mail.text).toContain("10:00");
+  });
+
   it("does not email a waiter whose window misses the freed date", async () => {
     const s = await seed("Waitlist Miss Co");
     const booked = (await book(s.ctx, s.serviceId, `${BOOKING_DATE}T10:00:00Z`, `booker-${randomUUID()}@example.test`)) as {
@@ -322,6 +418,6 @@ describe("a cancelled appointment notifies the waitlist", () => {
     expect(res.status).toBe(200);
 
     const mail = await waitForEmail(waiter);
-    expect(mail.text.toLowerCase()).toContain("ordem de chegada");
+    expect(mail.text.toLowerCase()).toContain("quem agendar primeiro garante");
   });
 });

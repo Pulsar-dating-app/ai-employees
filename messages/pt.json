@@ -1731,7 +1731,7 @@
       "saveError": "Não foi possível salvar. Tente novamente.",
       "saved": "Salvo",
       "save": "Salvar",
-      "lastActiveError": "Seu negócio precisa de pelo menos um profissional ativo.",
+      "lastActiveError": "Seu negócio precisa de pelo menos um profissional ativo que atenda clientes.",
       "upcomingError": "{count, plural, one {Este profissional tem # agendamento futuro.} other {Este profissional tem # agendamentos futuros.}} Cancele ou passe para outra pessoa antes.",
       "you": "Você",
       "ownHours": "Horário próprio",
@@ -1789,7 +1789,14 @@
       "remove": "Remover do negócio",
       "removeConfirm": "Remover {name} do negócio? A pessoa perde o acesso na hora e a agenda dela é desativada, então os clientes não conseguem mais agendar com ela. O histórico fica guardado e você pode reativar a agenda depois.",
       "unlinkSelf": "Desvincular minha conta desta agenda",
-      "ownerOnly": "Só o dono pode fazer isso."
+      "ownerOnly": "Só o dono pode fazer isso.",
+      "bookingsTitle": "Atendimentos",
+      "bookingsSubtitle": "Se os clientes podem agendar com esta pessoa.",
+      "takesBookingsLabel": "Atende clientes",
+      "takesBookingsOn": "Os clientes podem agendar com {name}.",
+      "takesBookingsOff": "{name} não é oferecido aos clientes. O acesso, a página e os agendamentos antigos continuam.",
+      "notBookingSubtitle": "Não atende clientes: ninguém consegue agendar com esta pessoa.",
+      "notBookingShort": "Não atende clientes"
     },
     "settings": {
       "pageTitle": "Configurações de agendamento",

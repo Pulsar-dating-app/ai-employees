@@ -103,6 +103,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ com
         isActive: data.is_active,
         position: data.position,
         usesCustomHours: data.uses_custom_hours,
+        takesBookings: true,
         userId: assignment.kind === "link" ? assignment.userId : null,
         inviteEmail: assignment.kind === "invite" ? email : null,
         serviceIds: [],

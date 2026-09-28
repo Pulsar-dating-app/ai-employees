@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CompanyRole } from "@/lib/auth/company-access";
-import { countActiveProfessionals, countUpcomingAppointments } from "@/lib/professionals/repository";
+import { countBookableProfessionals, countUpcomingAppointments } from "@/lib/professionals/repository";
 
 // 2026-09-25 -- who may change whose role (decisions.md "Owners/admins
 // promote; only the owner demotes or removes"). Pure, so the rules are
@@ -45,19 +45,21 @@ export async function removalBlocker(
 ): Promise<RemovalBlocker | null> {
   const { data, error } = await service
     .from("professionals")
-    .select("id")
+    .select("id, takes_bookings")
     .eq("company_id", companyId)
     .eq("user_id", userId)
     .eq("is_active", true);
   if (error) throw error;
-  const ids = (data ?? []).map((row) => row.id as string);
+  const rows = (data ?? []) as { id: string; takes_bookings: boolean }[];
+  const ids = rows.map((row) => row.id);
   if (ids.length === 0) return null;
+  const bookable = rows.filter((row) => row.takes_bookings).length;
 
   let upcoming = 0;
   for (const id of ids) upcoming += await countUpcomingAppointments(service, companyId, id);
   if (upcoming > 0) return { error: "has_upcoming_appointments", count: upcoming };
 
-  if ((await countActiveProfessionals(service, companyId)) - ids.length <= 0) {
+  if (bookable > 0 && (await countBookableProfessionals(service, companyId)) - bookable <= 0) {
     return { error: "last_active_professional" };
   }
   return null;

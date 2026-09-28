@@ -16,6 +16,7 @@ import { GoogleCalendarCard } from "../../settings/google-calendar-card";
 import type { BusinessHourRow } from "../../settings/business-hours-card";
 import { ProfessionalIdentityCard } from "./professional-identity-card";
 import { ProfessionalHoursCard } from "./professional-hours-card";
+import { ProfessionalBookingCard } from "./professional-booking-card";
 
 // 2026-09-24 -- one professional's own schedule: name and login email, the
 // services they perform, their working hours (the establishment's, or their
@@ -128,7 +129,11 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
       <div>
         <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">{professional.name}</h1>
         <p className="mt-1 text-sm text-on-surface-variant">
-          {professional.isActive ? t("detailSubtitle") : t("inactiveSubtitle")}
+          {!professional.isActive
+            ? t("inactiveSubtitle")
+            : professional.takesBookings
+              ? t("detailSubtitle")
+              : t("notBookingSubtitle")}
         </p>
       </div>
 
@@ -144,6 +149,15 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ p
           isSelf={professional.userId === user.id}
           viewerRole={access.role ?? "member"}
         />
+
+        {isAdmin && professional.isActive ? (
+          <ProfessionalBookingCard
+            companyId={company.id}
+            professionalId={professionalId}
+            name={professional.name}
+            initialTakesBookings={professional.takesBookings}
+          />
+        ) : null}
 
         <SettingsBlock id="services" title={t("servicesTitle")} description={t("servicesSubtitle")}>
           {performed.length === 0 ? (

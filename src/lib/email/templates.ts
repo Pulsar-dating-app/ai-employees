@@ -113,7 +113,7 @@ export function renderWaitlistOpeningEmail(data: WaitlistOpeningEmailData): Rend
     : "Responda na conversa onde você pediu, e a gente te agenda.";
   const line =
     `Boa notícia -- uma vaga de ${data.serviceName} acabou de abrir em ${data.businessName}, ` +
-    `em ${data.whenText}. Ela não está reservada, então é por ordem de chegada. ${how}`;
+    `em ${data.whenText}. A vaga não fica reservada: quem agendar primeiro garante. ${how}`;
   return {
     subject: `Uma vaga de ${data.serviceName} abriu em ${data.businessName}`,
     html: shell(

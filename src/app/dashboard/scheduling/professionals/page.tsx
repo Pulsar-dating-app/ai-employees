@@ -66,6 +66,7 @@ export default async function ProfessionalsPage() {
     usesCustomHours: p.usesCustomHours,
     isMe: p.userId === user!.id,
     calendarConnected: connected.has(p.id),
+    takesBookings: p.takesBookings,
     access: p.userId ? "active" : p.inviteEmail ? "pending" : "none",
     role: p.userId ? (roleByUser.get(p.userId) ?? null) : null,
     serviceNames: p.serviceIds.map((id) => serviceNames.get(id)).filter((n): n is string => Boolean(n)),

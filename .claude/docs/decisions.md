@@ -12,6 +12,40 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-28 — The waitlist remembers the time asked for; "as soon as possible" has a defined window; no more "ordem de chegada"
+
+**Decision:**
+- **`appointment_waitlist.desired_time`** (migration `20260928160000`) holds the exact local start time the customer needs, or NULL for any time.
+  - `add_to_waitlist` takes an optional `time` ("HH:MM"). A malformed one returns `invalid_time`.
+  - `notifyWaitlistForFreedSlot` only counts an opening whose start, on the business's clock, equals `desired_time`.
+  - The open-entry dedupe index includes the time: waiting for 10h and for 15h on the same day are two separate wishes.
+- **"The soonest opening, any day, any time"** is spelled out in the tool description:
+  - offer `find_next_available`'s slot first;
+  - if the customer still wants anything sooner, wait from today to that slot's date with no `time`, or 60 days out if nothing was found.
+- **"First come, first served" is now "whoever books first gets it"** in Ana's stored prompt (the same migration), the tool description and the email. In Portuguese that is "A vaga não fica reservada: quem agendar primeiro garante".
+
+**Why:**
+- In testing, a customer who needed "exatamente às 10h" was told they were on the list "para as 10h", but the entry stored only the date, so any opening that day would have emailed them.
+- The owner asked whether Ana could handle "the next opening, whenever". The tools could, but nothing told her how to pick the window.
+- Ana turned "first come, first served" into "por ordem de chegada", which reads as "you'll be served in the order you joined": the opposite of the point, since the opening isn't held for anyone.
+
+---
+
+## 2026-09-28 — Professionals can be marked as not taking bookings; waitlist matches the freed time, not the service
+
+**Decision:**
+- **`professionals.takes_bookings`** (migration `20260928150000`), shown in the dashboard as "Atende clientes":
+  - "Bookable" now means `is_active AND takes_bookings`. `listProfessionals` returns only bookable professionals by default, so Ana, availability, booking forms and `countBookableProfessionals` (which replaced `countActiveProfessionals`) all ignore someone who doesn't take bookings. `resolveProfessionalForService` refuses them, and the single-professional default trigger counts only bookable ones.
+  - The person keeps their login, their page and their past appointments.
+  - Switching it off is admin-only, with the same guards as deactivating: refused for the last bookable professional (`last_active_professional`) and while they have bookings ahead. It is separate from deactivating, which turns the schedule off (and, for a member, their agenda).
+- **Waitlist notices check the freed time against every waiting service.** Before, `notifyWaitlistForFreedSlot` only matched entries for the *same service* as the cancelled appointment. Now it takes the cancelled interval and, for up to 5 of the oldest entries waiting for that professional (or for anyone) on that date, asks the availability engine whether that entry's service can start inside the freed interval. It emails the first entry that fits, naming the actual opening time.
+
+**Why:**
+- Every owner is their company's first professional (2026-09-25), but the owner of a barbershop who doesn't cut hair must not be offered to customers.
+- In testing, a customer on the waitlist for a 15-min "pezinho" with Bruno at 10h was never told when Bruno's 10h 30-min "barba" was cancelled. What frees up is the professional's time, not "a slot of that service".
+
+---
+
 ## 2026-09-27 — Malu gets a catalog overview; a card needs a photo, per product
 
 **Decision:** Three changes to how Malu handles the catalog, all small in tokens.

@@ -8,7 +8,7 @@ import { countUpcomingAppointments } from "@/lib/professionals/repository";
 // 2026-09-24 -- one professional. PATCH is split by who may do what:
 //   - uses_custom_hours: an admin, or the linked team member (it's their own
 //     schedule);
-//   - name, is_active, position, email, unlink: admins only.
+//   - name, is_active, takes_bookings, position, email, unlink: admins only.
 // DELETE deactivates (never hard-deletes -- past appointments keep pointing
 // at the row), refusing to leave the company without an active
 // professional or to strand upcoming appointments.
@@ -24,13 +24,14 @@ import { countUpcomingAppointments } from "@/lib/professionals/repository";
 // was turned off" until it's reactivated or the owner removes them.
 
 const MAX_NAME_LENGTH = 120;
-const COLUMNS = "id, name, is_active, position, uses_custom_hours, user_id, invite_email";
+const COLUMNS = "id, name, is_active, takes_bookings, position, uses_custom_hours, user_id, invite_email";
 
 function toJson(row: Record<string, unknown>) {
   return {
     id: row.id,
     name: row.name,
     isActive: row.is_active,
+    takesBookings: row.takes_bookings ?? true,
     position: row.position,
     usesCustomHours: row.uses_custom_hours,
     userId: row.user_id ?? null,
@@ -63,15 +64,29 @@ function countUpcoming(companyId: string, professionalId: string) {
   return countUpcomingAppointments(createServiceClient(), companyId, professionalId);
 }
 
-async function countOtherActive(companyId: string, professionalId: string) {
+// Taking a professional out of the booking pool -- deactivating them, or
+// turning off "takes bookings" -- is refused when they're the last one
+// customers could book, or while they still have bookings ahead. A
+// professional who already isn't bookable changes nothing, so passes.
+async function bookingPoolBlocker(
+  companyId: string,
+  professional: { id: string; isActive: boolean; takesBookings: boolean },
+): Promise<NextResponse | null> {
+  if (!professional.isActive || !professional.takesBookings) return null;
   const { count, error } = await createServiceClient()
     .from("professionals")
     .select("id", { count: "exact", head: true })
     .eq("company_id", companyId)
     .eq("is_active", true)
-    .neq("id", professionalId);
+    .eq("takes_bookings", true)
+    .neq("id", professional.id);
   if (error) throw new Error(error.message);
-  return count ?? 0;
+  if ((count ?? 0) === 0) return NextResponse.json({ error: "last_active_professional" }, { status: 409 });
+  const upcoming = await countUpcoming(companyId, professional.id);
+  if (upcoming > 0) {
+    return NextResponse.json({ error: "has_upcoming_appointments", count: upcoming }, { status: 409 });
+  }
+  return null;
 }
 
 export async function PATCH(
@@ -88,7 +103,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
   }
 
-  const adminOnly = ["name", "isActive", "position", "email", "unlink"].filter((key) => key in body);
+  const adminOnly = ["name", "isActive", "takesBookings", "position", "email", "unlink"].filter((key) => key in body);
   if (adminOnly.length > 0 && !isAdmin) {
     return NextResponse.json({ error: `Only company owners/admins can change ${adminOnly.join(", ")}` }, { status: 403 });
   }
@@ -115,16 +130,25 @@ export async function PATCH(
     if (typeof body.isActive !== "boolean") {
       return NextResponse.json({ error: "isActive must be a boolean" }, { status: 400 });
     }
-    if (!body.isActive && access.professional.isActive) {
-      if ((await countOtherActive(companyId, professionalId)) === 0) {
-        return NextResponse.json({ error: "last_active_professional" }, { status: 409 });
-      }
-      const upcoming = await countUpcoming(companyId, professionalId);
-      if (upcoming > 0) {
-        return NextResponse.json({ error: "has_upcoming_appointments", count: upcoming }, { status: 409 });
-      }
+    if (!body.isActive) {
+      const blocked = await bookingPoolBlocker(companyId, access.professional);
+      if (blocked) return blocked;
     }
     update.is_active = body.isActive;
+  }
+
+  // 2026-09-28 -- "takes bookings" (see the migration of that date): off
+  // keeps the person and their page, but Ana stops offering them. Same
+  // guards as deactivating.
+  if ("takesBookings" in body) {
+    if (typeof body.takesBookings !== "boolean") {
+      return NextResponse.json({ error: "takesBookings must be a boolean" }, { status: 400 });
+    }
+    if (!body.takesBookings) {
+      const blocked = await bookingPoolBlocker(companyId, access.professional);
+      if (blocked) return blocked;
+    }
+    update.takes_bookings = body.takesBookings;
   }
 
   if ("userId" in body) {
@@ -235,13 +259,8 @@ export async function DELETE(
   }
   if (!access.professional.isActive) return NextResponse.json({ professional: access.professional });
 
-  if ((await countOtherActive(companyId, professionalId)) === 0) {
-    return NextResponse.json({ error: "last_active_professional" }, { status: 409 });
-  }
-  const upcoming = await countUpcoming(companyId, professionalId);
-  if (upcoming > 0) {
-    return NextResponse.json({ error: "has_upcoming_appointments", count: upcoming }, { status: 409 });
-  }
+  const blocked = await bookingPoolBlocker(companyId, access.professional);
+  if (blocked) return blocked;
 
   const { data, error } = await createServiceClient()
     .from("professionals")
