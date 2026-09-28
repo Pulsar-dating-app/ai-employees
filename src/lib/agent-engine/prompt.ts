@@ -546,6 +546,11 @@ export function buildProfessionalChoiceSection(multipleProfessionals: boolean | 
 // Whether a day is open doesn't depend on the service, so check it first
 // (get_business_hours with a date range returns closures and time off) and
 // say so at once. Scheduling agents only.
+//
+// 2026-09-28 -- same for a time: "amanhã às 10h com o Bruno" went through
+// the professional and service questions before Ana learned Bruno had a 10h
+// booking. get_business_hours' `time` returns who is booked at that moment in
+// the same call she already makes for the date, so no extra model round trip.
 export function buildDateFirstSection(canSchedule: boolean | null | undefined): string | null {
   if (!canSchedule) return null;
   return (
@@ -554,7 +559,14 @@ export function buildDateFirstSection(canSchedule: boolean | null | undefined): 
     "date (and `professionalId` if they named a professional). If that date comes back not open -- " +
     "the business doesn't work that day, or it's time off -- tell them right away (with the reason, " +
     "if there is one) and offer the nearest open day. Don't ask which service first, and never " +
-    "imply a day is bookable before you know it's open."
+    "imply a day is bookable before you know it's open.\n" +
+    "If they also gave a time, pass it as `time` in that same call. When `atTime` says the " +
+    "professional they want (or, if they named nobody, everyone) is not free then, tell them right " +
+    "away -- with who is free at that time, or from when that professional is free again " +
+    "(`freeFrom`) -- instead of going on to ask the service. If they name a professional in a later " +
+    "message, use the `atTime` you already have rather than asking the service first. `free: true` " +
+    "only means nobody is booked at that moment: once you know the service, find_available_slots " +
+    "still has the final word, since a longer service can run into a later booking."
   );
 }
 

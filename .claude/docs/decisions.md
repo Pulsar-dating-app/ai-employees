@@ -12,6 +12,17 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-28 — Ana knows a professional is booked from day + time, before the service
+
+**Decision:** `get_business_hours` takes an optional `time` ("HH:MM", used together with `from`) and returns `atTime`.
+- **What `atTime` holds:** for each bookable professional (or just the chosen one), whether they're free at that moment. When they're not, it gives the reason: `busy` with `freeFrom` (the end of back-to-back bookings, or null when the rest of that working window is booked), `not_working` or `time_off`. A single-professional business gets a flat `free`/`reason`.
+- **Where the rule lives:** `statusAtMinute` in `rules.ts` (pure). It reads only our own bookings, hours and time off: no Google call and no service duration.
+- **Prompt:** `buildDateFirstSection` tells Ana to pass the time in the date check she already makes. When the wanted professional (or everyone) is booked at that moment, she says so right away, with who is free or from when, instead of asking the service. `free: true` never promises a service fits; a long service running into a later booking is still caught by `find_available_slots` once the service is known.
+
+**Why:** In testing, "amanhã às 10h" → "Bruno" → "Pezinho" took three turns before Ana said Bruno was booked at 10h, though day, time and professional were enough to know. This rides on a call she already makes, so it adds no model round trip: roughly 25 tokens per professional in one tool result, plus a few lines of prompt. It removes turns rather than adding them.
+
+---
+
 ## 2026-09-28 — The waitlist is removed from the MVP
 
 **Decision:** Ana no longer has a waitlist. This supersedes Trello R5 and the two earlier 2026-09-28 waitlist entries below.
