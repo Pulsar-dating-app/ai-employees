@@ -254,7 +254,6 @@ export function ChannelsSection({
       ? connection.display_phone_number
       : null;
   const needsVerification = isPending && connection?.twilio_sender_status === "PENDING_VERIFICATION";
-  const activationFailed = isPending && connection?.twilio_sender_status === "OFFLINE";
   // D5: a connected number Meta has flagged for a payment issue can't
   // deliver anything -- distinct from "not connected", since the merchant
   // already completed Embedded Signup and needs a different fix (add a
@@ -269,9 +268,7 @@ export function ChannelsSection({
         ? null
         : hasPaymentIssue
           ? { tone: "warn", label: tHub("paymentIssue") }
-          : activationFailed
-            ? { tone: "warn", label: tHub("activationFailed") }
-            : isPending
+          : isPending
             ? {
                 tone: "warn",
                 label: tHub("activating", { detail: connection?.display_phone_number ?? "" }),
@@ -390,24 +387,7 @@ export function ChannelsSection({
                     </span>
                     <span className="text-sm font-medium text-on-surface">{connection?.display_phone_number}</span>
                   </div>
-                  {activationFailed ? (
-                    <>
-                      <p className="text-sm text-on-surface-variant">{t("activationFailedDescription")}</p>
-                      {canEdit ? (
-                        <div>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            isLoading={view === "disconnecting"}
-                            onClick={confirmDisconnect}
-                          >
-                            {t("activationRetry")}
-                          </Button>
-                        </div>
-                      ) : null}
-                    </>
-                  ) : needsVerification ? (
+                  {needsVerification ? (
                     canEdit ? (
                       <form
                         className="flex flex-col gap-2"
