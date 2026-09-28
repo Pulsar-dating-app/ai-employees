@@ -1741,7 +1741,7 @@
       "saveError": "Couldn't save that. Please try again.",
       "saved": "Saved",
       "save": "Save",
-      "lastActiveError": "Your business needs at least one active professional.",
+      "lastActiveError": "Your business needs at least one active professional who takes appointments.",
       "upcomingError": "{count, plural, one {This professional has # upcoming appointment.} other {This professional has # upcoming appointments.}} Cancel or move them to someone else first.",
       "you": "You",
       "ownHours": "Own hours",
@@ -1799,7 +1799,14 @@
       "remove": "Remove from the business",
       "removeConfirm": "Remove {name} from the business? They lose access right away and their schedule is turned off, so customers can no longer book with them. Their history stays, and you can reactivate the schedule later.",
       "unlinkSelf": "Unlink my account from this schedule",
-      "ownerOnly": "Only the owner can do this."
+      "ownerOnly": "Only the owner can do this.",
+      "bookingsTitle": "Appointments",
+      "bookingsSubtitle": "Whether customers can book with this person.",
+      "takesBookingsLabel": "Takes appointments",
+      "takesBookingsOn": "Customers can book with {name}.",
+      "takesBookingsOff": "{name} isn't offered to customers. Their access, page and past appointments stay.",
+      "notBookingSubtitle": "Doesn't take appointments: customers can't book with this person.",
+      "notBookingShort": "Doesn't take appointments"
     },
     "settings": {
       "pageTitle": "Scheduling settings",

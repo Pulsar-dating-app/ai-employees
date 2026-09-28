@@ -16,6 +16,8 @@ export type ProfessionalListItem = {
   isActive: boolean;
   position: number;
   usesCustomHours: boolean;
+  // false = customers can't book them (2026-09-28).
+  takesBookings: boolean;
   // Linked to the signed-in team member ("Você").
   isMe: boolean;
   calendarConnected: boolean;
@@ -259,11 +261,17 @@ export function ProfessionalsManager({
                   ) : null}
                 </p>
                 <p className="mt-0.5 text-[13px] text-on-surface-variant">
-                  {p.usesCustomHours ? t("ownHours") : t("inheritedHours")}
-                  {" · "}
-                  {p.serviceNames.length > 0
-                    ? `${p.serviceNames.slice(0, 3).join(", ")}${p.serviceNames.length > 3 ? "…" : ""}`
-                    : t("allServices")}
+                  {p.takesBookings ? (
+                    <>
+                      {p.usesCustomHours ? t("ownHours") : t("inheritedHours")}
+                      {" · "}
+                      {p.serviceNames.length > 0
+                        ? `${p.serviceNames.slice(0, 3).join(", ")}${p.serviceNames.length > 3 ? "…" : ""}`
+                        : t("allServices")}
+                    </>
+                  ) : (
+                    t("notBookingShort")
+                  )}
                 </p>
               </div>
             </div>

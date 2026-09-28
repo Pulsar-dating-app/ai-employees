@@ -10,13 +10,20 @@ type AddToWaitlistArgs = {
   to: string;
   email?: string;
   professionalId?: string;
+  time?: string;
 };
 
 // Trello R5 -- the waitlist. Ana offers this when find_available_slots came
 // back empty for the customer's preferred window (nothing open, or the whole
 // window is time off) and the customer wants to be told if something frees
 // up. The customer, conversation and agent are attached from ctx. There is
-// no auto-hold: a freed slot just triggers an email, first come first served.
+// no auto-hold: a freed slot just triggers an email, and whoever books first
+// gets it.
+//
+// 2026-09-28 -- `time` pins the exact start time the customer needs (only an
+// opening at that time notifies them), and the description spells out the
+// "any day, any time, as soon as possible" case: the window runs from today
+// to the day of the earliest slot find_next_available found.
 export const addToWaitlistTool: AgentTool = {
   name: "add_to_waitlist",
   description:
@@ -28,6 +35,15 @@ export const addToWaitlistTool: AgentTool = {
     "(YYYY-MM-DD, `to` inclusive) -- use the same window you just searched, or the narrower one " +
     "the customer actually cares about. The customer and this conversation are attached " +
     "automatically.\n\n" +
+    "`time` (\"HH:MM\", the business's local time) is only for a customer who needs that exact " +
+    "start time (\"precisa ser às 10h\"): then only an opening starting at that time notifies " +
+    "them. Leave it out when any time in the window works -- never fill it in with a time the " +
+    "customer merely mentioned as a first try.\n\n" +
+    "When the customer just wants the soonest opening, any day and any time (\"o que abrir " +
+    "primeiro\", \"o quanto antes\"): call find_next_available first and offer that slot. If they " +
+    "still want to be told about anything sooner, use `from` = today and `to` = the date of that " +
+    "earliest slot, with no `time` -- or, if find_next_available found nothing, `to` = 60 days " +
+    "from today. Tell them in plain words that you'll email them if anything opens before that.\n\n" +
     "The waitlist needs an email to notify. Pass `email` if you've collected one this " +
     "conversation; otherwise the customer's existing email on file is used. If neither exists " +
     "the result is `{ added: false, reason: \"email_required\" }` -- ask the customer for their " +
@@ -36,8 +52,10 @@ export const addToWaitlistTool: AgentTool = {
     "\"invalid_range\"` means the dates were backwards or malformed.\n\n" +
     "On success `added` is true. `alreadyWaiting: true` means they were already on this exact " +
     "list -- reassure them they're still in line, don't add a duplicate. Tell the customer " +
-    "plainly that the spot isn't held and it's first come, first served, and that you can't " +
-    "promise anything will open up.\n\n" +
+    "plainly that you'll email them when something opens, that the spot isn't held for them -- " +
+    "whoever books first gets it (in Portuguese: \"a vaga não fica reservada: quem agendar " +
+    "primeiro garante\"; never \"ordem de chegada\") -- and that you can't promise anything will " +
+    "open up. `reason: \"invalid_time\"` means `time` wasn't HH:MM.\n\n" +
     "When the business has several professionals, pass the `professionalId` the customer is " +
     "waiting for, or leave it out if any professional would do.",
   parameters: {
@@ -56,6 +74,11 @@ export const addToWaitlistTool: AgentTool = {
           "whatever is already on file.",
       },
       professionalId: PROFESSIONAL_ID_PARAM,
+      time: {
+        type: "string",
+        description:
+          "Optional. The exact local start time the customer needs, HH:MM (e.g. \"10:00\"). Omit when any time works.",
+      },
     },
     required: ["serviceId", "from", "to"],
     additionalProperties: false,
@@ -129,6 +152,7 @@ export const addToWaitlistTool: AgentTool = {
         to: args.to,
         email: typeof args.email === "string" ? args.email : null,
         professionalId,
+        time: typeof args.time === "string" ? args.time : null,
       },
       ctx.supabase,
     );

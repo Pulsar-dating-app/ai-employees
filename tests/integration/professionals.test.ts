@@ -159,6 +159,66 @@ describe("managing professionals", () => {
     expect((await addProfessional(s.companyId, "Email Ruim", owner.cookieHeader, "not-an-email")).status).toBe(400);
   });
 
+  // 2026-09-28 -- an owner who only runs the place: still a professional (and
+  // still linked to their login), but never offered to customers.
+  it("a professional who doesn't take bookings is never offered or booked", async () => {
+    const s = await seed("Owner Doesnt Cut Co");
+    const joao = await addProfessional(s.companyId, "João");
+
+    // The last bookable professional can't be switched off...
+    const offOwner = await api("PATCH", `/api/companies/${s.companyId}/professionals/${s.first}`, owner.cookieHeader, {
+      takesBookings: false,
+    });
+    expect(offOwner.status).toBe(200);
+    const lastOne = await api<{ error: string }>(
+      "PATCH",
+      `/api/companies/${s.companyId}/professionals/${joao.id}`,
+      owner.cookieHeader,
+      { takesBookings: false },
+    );
+    expect(lastOne.status).toBe(409);
+    expect(lastOne.json.error).toBe("last_active_professional");
+
+    // ...and with only João bookable, Ana treats it as a one-professional
+    // business: nobody named, and a booking with no preference lands on him.
+    const slots = (await findAvailableSlotsTool.execute({ serviceId: s.serviceId, from: DATE, to: DATE }, ctxFor(s))) as {
+      slots: Record<string, unknown>[];
+    };
+    expect(slots.slots.length).toBeGreaterThan(0);
+    expect(slots.slots[0]).not.toHaveProperty("professionals");
+    expect(((await book(s, {})) as { booked: boolean }).booked).toBe(true);
+    const { data: rows } = await getTestServiceClient()
+      .from("appointments")
+      .select("professional_id")
+      .eq("company_id", s.companyId);
+    expect(rows?.map((r) => r.professional_id)).toEqual([joao.id]);
+
+    // Naming the owner explicitly is refused like an unknown professional.
+    const other = await createCustomer(s.companyId);
+    const named = (await book(s, { professionalId: s.first, startsAt: `${DATE}T11:00:00.000Z` }, other)) as {
+      booked: boolean;
+    };
+    expect(named.booked).toBe(false);
+
+    // The admin list still shows the owner, marked as not taking bookings.
+    const list = await api<{ professionals: { id: string; takesBookings: boolean }[] }>(
+      "GET",
+      `/api/companies/${s.companyId}/professionals`,
+      owner.cookieHeader,
+    );
+    expect(list.json.professionals.find((p) => p.id === s.first)?.takesBookings).toBe(false);
+  });
+
+  it("only owners/admins can switch off a professional's bookings", async () => {
+    const s = await seed("Bookings Admin Only Co");
+    const member = await signUpTestUser("member");
+    const joao = await addProfessional(s.companyId, "João", owner.cookieHeader, member.email);
+    const res = await api("PATCH", `/api/companies/${s.companyId}/professionals/${joao.id}`, member.cookieHeader, {
+      takesBookings: false,
+    });
+    expect(res.status).toBe(403);
+  });
+
   it("won't deactivate the last active professional, or one with upcoming appointments", async () => {
     const s = await seed("Deactivate Co");
     const last = await api<{ error: string }>("DELETE", `/api/companies/${s.companyId}/professionals/${s.first}`, owner.cookieHeader);

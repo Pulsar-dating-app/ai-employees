@@ -17,6 +17,9 @@ export type Professional = {
   id: string;
   name: string;
   isActive: boolean;
+  // false = never offered to customers (e.g. an owner who only runs the
+  // place). "Bookable" is isActive && takesBookings -- see listProfessionals.
+  takesBookings: boolean;
   position: number;
   usesCustomHours: boolean;
   userId: string | null;
@@ -27,13 +30,14 @@ export type Professional = {
 
 export type ProfessionalWithServices = Professional & { serviceIds: string[] };
 
-const PROFESSIONAL_COLUMNS = "id, name, is_active, position, uses_custom_hours, user_id, invite_email";
+const PROFESSIONAL_COLUMNS = "id, name, is_active, takes_bookings, position, uses_custom_hours, user_id, invite_email";
 
 function toProfessional(row: Record<string, unknown>): Professional {
   return {
     id: row.id as string,
     name: row.name as string,
     isActive: row.is_active as boolean,
+    takesBookings: (row.takes_bookings as boolean | undefined) ?? true,
     position: row.position as number,
     usesCustomHours: row.uses_custom_hours as boolean,
     userId: (row.user_id as string | null) ?? null,
@@ -41,6 +45,9 @@ function toProfessional(row: Record<string, unknown>): Professional {
   };
 }
 
+// By default only the BOOKABLE professionals -- active and taking bookings
+// (2026-09-28): what Ana offers, availability computes, and booking forms
+// list. `includeInactive` returns everyone (the admin's Professionals list).
 export async function listProfessionals(
   client: SupabaseClient,
   companyId: string,
@@ -52,7 +59,7 @@ export async function listProfessionals(
     .eq("company_id", companyId)
     .order("position", { ascending: true })
     .order("created_at", { ascending: true });
-  if (!includeInactive) query = query.eq("is_active", true);
+  if (!includeInactive) query = query.eq("is_active", true).eq("takes_bookings", true);
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []).map(toProfessional);
@@ -120,8 +127,8 @@ export type ResolvedProfessional =
   | { ok: false; reason: "professional_not_found" | "professional_not_for_service" };
 
 // Validates a professional chosen by a caller (Ana's tool args, a dashboard
-// form) for a given service: it must belong to the company, be active, and
-// perform that service.
+// form) for a given service: it must belong to the company, be bookable
+// (active and taking bookings), and perform that service.
 export async function resolveProfessionalForService(
   client: SupabaseClient,
   companyId: string,
@@ -132,19 +139,23 @@ export async function resolveProfessionalForService(
     getProfessional(client, companyId, professionalId),
     linkedProfessionalIds(client, serviceId),
   ]);
-  if (!professional || !professional.isActive) return { ok: false, reason: "professional_not_found" };
+  if (!professional || !professional.isActive || !professional.takesBookings) {
+    return { ok: false, reason: "professional_not_found" };
+  }
   if (eligibleProfessionals([professional], linked).length === 0) {
     return { ok: false, reason: "professional_not_for_service" };
   }
   return { ok: true, professional };
 }
 
-export async function countActiveProfessionals(client: SupabaseClient, companyId: string): Promise<number> {
+// Professionals customers can book (active and taking bookings).
+export async function countBookableProfessionals(client: SupabaseClient, companyId: string): Promise<number> {
   const { count, error } = await client
     .from("professionals")
     .select("id", { count: "exact", head: true })
     .eq("company_id", companyId)
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .eq("takes_bookings", true);
   if (error) throw new Error(error.message);
   return count ?? 0;
 }

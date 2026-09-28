@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/email/client";
 import { formatWhen } from "@/lib/email/appointments";
 import { renderWaitlistOpeningEmail } from "@/lib/email/templates";
 import { resolveProfessionalForService } from "@/lib/professionals/repository";
+import { loadAvailableSlots } from "@/lib/availability/load";
 
 // Trello R5 -- the waitlist ("let me know if something opens up on Friday").
 // Two halves, mirroring how R3/R4 split write-time hooks from the send:
@@ -23,6 +24,17 @@ import { resolveProfessionalForService } from "@/lib/professionals/repository";
 // waiting for A or for anyone -- never someone waiting for B.
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_HH_MM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// A UTC instant as HH:MM on the business's wall clock.
+function localTime(timezone: string, instant: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(instant));
+}
 
 function one<T>(v: T | T[] | null): T | null {
   return Array.isArray(v) ? (v[0] ?? null) : v;
@@ -33,6 +45,7 @@ export type AddToWaitlistResult =
       added: false;
       reason:
         | "invalid_range"
+        | "invalid_time"
         | "service_not_found"
         | "invalid_email"
         | "email_required"
@@ -52,6 +65,7 @@ async function addToWaitlist(
     to,
     email,
     professionalId,
+    time,
   }: {
     companyId: string;
     customerId: string;
@@ -65,6 +79,9 @@ async function addToWaitlist(
     email: string | null;
     // The professional the customer wants to wait for; omitted/null = anyone.
     professionalId?: string | null;
+    // 2026-09-28 -- the exact local start time they need ("HH:MM"), or
+    // omitted/null for any time in the window.
+    time?: string | null;
   },
   supabaseClient?: SupabaseClient,
 ): Promise<AddToWaitlistResult> {
@@ -73,6 +90,8 @@ async function addToWaitlist(
   if (!DATE_ONLY.test(from) || !DATE_ONLY.test(to) || to < from) {
     return { added: false, reason: "invalid_range" };
   }
+  const desiredTime = typeof time === "string" && time.trim() ? time.trim() : null;
+  if (desiredTime && !TIME_HH_MM.test(desiredTime)) return { added: false, reason: "invalid_time" };
 
   const [{ data: service, error: serviceError }, { data: customer, error: customerError }] =
     await Promise.all([
@@ -130,6 +149,7 @@ async function addToWaitlist(
       agent_id: agentId,
       desired_from: from,
       desired_to: to,
+      desired_time: desiredTime,
     })
     .select("id")
     .single();
@@ -150,6 +170,7 @@ async function addToWaitlist(
       dupeQuery = professionalId
         ? dupeQuery.eq("professional_id", professionalId)
         : dupeQuery.is("professional_id", null);
+      dupeQuery = desiredTime ? dupeQuery.eq("desired_time", desiredTime) : dupeQuery.is("desired_time", null);
       const { data: dupe } = await dupeQuery.maybeSingle();
       return { added: true, alreadyWaiting: true, waitlistId: (dupe?.id as string) ?? "" };
     }
@@ -159,32 +180,79 @@ async function addToWaitlist(
   return { added: true, alreadyWaiting: false, waitlistId: inserted.id as string };
 }
 
+// How many waiting entries one cancel looks at before giving up. Each one
+// costs an availability computation, so this stays small.
+const MAX_WAITLIST_CANDIDATES = 5;
+
+// The earliest bookable start for `serviceId` with `professionalId` inside
+// the freed interval [freedStart, freedEnd) -- at exactly `desiredTime`
+// (local HH:MM) when the entry asked for one -- or null. Uses the real
+// availability engine, so a shorter service fits a longer freed slot (a
+// 15-min "pezinho" in a cancelled 30-min "barba"), and one that no longer fits
+// -- too long, not performed by that professional, service turned off -- is
+// skipped rather than emailed about.
+async function freedStartFor(
+  supabase: SupabaseClient,
+  companyId: string,
+  serviceId: string,
+  professionalId: string,
+  slotDate: string,
+  freedStart: number,
+  freedEnd: number,
+  timezone: string,
+  desiredTime: string | null,
+): Promise<string | null> {
+  try {
+    const { slots } = await loadAvailableSlots({
+      supabase,
+      companyId,
+      serviceId,
+      professionalId,
+      from: slotDate,
+      to: slotDate,
+    });
+    const hit = slots.find((slot) => {
+      const at = new Date(slot.start).getTime();
+      if (at < freedStart || at >= freedEnd) return false;
+      return !desiredTime || localTime(timezone, slot.start) === desiredTime;
+    });
+    return hit?.start ?? null;
+  } catch {
+    // ServiceNotFoundError / ProfessionalNotAvailableError: this entry can't
+    // use the opening.
+    return null;
+  }
+}
+
 // Best-effort, void, never throws -- called from every cancel path
 // (AppointmentRepository.cancel, the H3 PATCH/DELETE routes) right after the
-// status write lands. Finds the single oldest still-waiting entry whose
-// window covers the freed slot's local date, emails that customer, and
-// stamps notified_at on a successful send (guarded on notified_at IS NULL so
-// two near-simultaneous cancels can't both claim it). A send failure leaves
-// the entry waiting for the next opening.
+// status write lands. Emails the oldest still-waiting customer whose window
+// covers the freed slot's local date AND whose service can actually be
+// booked in the freed time, then stamps notified_at on a successful send
+// (guarded on notified_at IS NULL so two near-simultaneous cancels can't both
+// claim it). A send failure leaves the entry waiting for the next opening.
+//
+// 2026-09-28 -- no longer requires the SAME service as the cancelled
+// appointment. Found in testing: a customer waiting for a "pezinho" with
+// Bruno at 10h was never told when Bruno's 10h "barba" was cancelled, because
+// the match was `service_id = cancelled service`. What frees up is the
+// professional's time, so every waiting service is checked against it.
 export async function notifyWaitlistForFreedSlot({
   supabase,
   companyId,
-  serviceId,
   professionalId,
   startsAt,
+  endsAt,
 }: {
   supabase: SupabaseClient;
   companyId: string;
-  // Null when the cancelled row had lost its service (on delete set null) --
-  // nothing service-scoped can match it.
-  serviceId: string | null;
   // The professional whose slot was freed.
   professionalId: string;
+  // The cancelled appointment's interval (ends_at includes its buffer).
   startsAt: string;
+  endsAt: string;
 }): Promise<void> {
   try {
-    if (!serviceId) return;
-
     const { data: company } = await supabase
       .from("companies")
       .select("name, email, phone, timezone")
@@ -194,44 +262,61 @@ export async function notifyWaitlistForFreedSlot({
 
     const tz = company.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
     const slotDate = localDate(tz, new Date(startsAt));
+    const freedStart = new Date(startsAt).getTime();
+    const freedEnd = new Date(endsAt).getTime();
 
-    const { data: match } = await supabase
+    const { data: candidates } = await supabase
       .from("appointment_waitlist")
-      .select("id, customers(email), services(name)")
+      .select("id, service_id, desired_time, customers(email), services(name)")
       .eq("company_id", companyId)
-      .eq("service_id", serviceId)
       .or(`professional_id.is.null,professional_id.eq.${professionalId}`)
       .is("notified_at", null)
       .lte("desired_from", slotDate)
       .gte("desired_to", slotDate)
       .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (!match) return;
+      .limit(MAX_WAITLIST_CANDIDATES);
 
-    const to = one(match.customers as { email: string | null } | { email: string | null }[] | null)
-      ?.email?.trim();
-    if (!to) return;
+    for (const match of candidates ?? []) {
+      const to = one(match.customers as { email: string | null } | { email: string | null }[] | null)
+        ?.email?.trim();
+      if (!to || !match.service_id) continue;
 
-    const serviceName =
-      one(match.services as { name: string } | { name: string }[] | null)?.name ?? "agendamento";
-    const contactBits = [company.email, company.phone].filter(Boolean) as string[];
+      const openingStart = await freedStartFor(
+        supabase,
+        companyId,
+        match.service_id as string,
+        professionalId,
+        slotDate,
+        freedStart,
+        freedEnd,
+        tz,
+        // Postgres `time` comes back as HH:MM:SS.
+        typeof match.desired_time === "string" ? match.desired_time.slice(0, 5) : null,
+      );
+      if (!openingStart) continue;
 
-    const rendered = renderWaitlistOpeningEmail({
-      businessName: company.name,
-      serviceName,
-      whenText: formatWhen(startsAt, tz),
-      contact: contactBits.length > 0 ? `${company.name} (${contactBits.join(" / ")})` : null,
-    });
+      const serviceName =
+        one(match.services as { name: string } | { name: string }[] | null)?.name ?? "agendamento";
+      const contactBits = [company.email, company.phone].filter(Boolean) as string[];
 
-    const result = await sendEmail({ to, ...rendered });
-    if (!result.ok) return;
+      const rendered = renderWaitlistOpeningEmail({
+        businessName: company.name,
+        serviceName,
+        whenText: formatWhen(openingStart, tz),
+        contact: contactBits.length > 0 ? `${company.name} (${contactBits.join(" / ")})` : null,
+      });
 
-    await supabase
-      .from("appointment_waitlist")
-      .update({ notified_at: new Date().toISOString() })
-      .eq("id", match.id)
-      .is("notified_at", null);
+      const result = await sendEmail({ to, ...rendered });
+      if (!result.ok) return;
+
+      await supabase
+        .from("appointment_waitlist")
+        .update({ notified_at: new Date().toISOString() })
+        .eq("id", match.id)
+        .is("notified_at", null);
+      // One opening, one notice: the oldest waiter who can use it.
+      return;
+    }
   } catch (err) {
     console.error("notifyWaitlistForFreedSlot failed", err);
   }

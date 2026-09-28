@@ -307,9 +307,9 @@ export async function PATCH(
     await notifyWaitlistForFreedSlot({
       supabase: createServiceClient(),
       companyId,
-      serviceId: (data.service_id as string | null) ?? null,
       professionalId: data.professional_id as string,
       startsAt: data.starts_at as string,
+      endsAt: data.ends_at as string,
     });
   }
 
@@ -415,9 +415,9 @@ export async function DELETE(
     await notifyWaitlistForFreedSlot({
       supabase: createServiceClient(),
       companyId,
-      serviceId: (data.service_id as string | null) ?? null,
       professionalId: data.professional_id as string,
       startsAt: data.starts_at as string,
+      endsAt: data.ends_at as string,
     });
   }
 

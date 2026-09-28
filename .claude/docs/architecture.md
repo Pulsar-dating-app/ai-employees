@@ -1130,7 +1130,7 @@ The no-show-reduction story R2 unblocked (Ana now collects a required email). Al
 Supersedes the company-wide assumptions in the H2/H3/I1/I2/I3/J3 sections below wherever they say "the company's" hours, calendar or overlap (see decisions.md, same date).
 
 - **Data** (migration `20260924120000_professionals.sql`):
-  - `professionals`: `name`, `is_active`, `position` (the order Ana names them in), `uses_custom_hours`, `user_id` (the login that owns this schedule), and `invite_email` (pending, until someone signs up with it — see "Team roles" below). RLS lets members read; writes are service-role only. `private.seed_default_professional` runs on company insert, so every company has at least one.
+  - `professionals`: `name`, `is_active`, `takes_bookings` (2026-09-28: off = never offered to customers; "bookable" = active and taking bookings, which is what `listProfessionals` returns by default), `position` (the order Ana names them in), `uses_custom_hours`, `user_id` (the login that owns this schedule), and `invite_email` (pending, until someone signs up with it — see "Team roles" below). RLS lets members read; writes are service-role only. `private.seed_default_professional` runs on company insert, so every company has at least one.
   - `professional_services(professional_id, service_id)`.
   - `professional_id` added to `appointments` (not null, with a before-insert trigger that fills it when the company has exactly one active professional), `business_hours`, `company_time_off`, `appointment_waitlist` and `company_calendar_connections`. Every one of those foreign keys is composite `(professional_id, company_id)`, so a row can never point at another company's professional.
   - Overlap: `appointments_professional_overlap_excl`.
