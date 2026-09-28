@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { resolveLocale } from "@/i18n/request";
+import { resolveLocale, type Locale } from "@/i18n/request";
 
 // Trello F3 follow-up — a downloadable starter file matching exactly the
 // columns Trello B4's import route expects (see ../import/route.ts's
@@ -51,7 +51,24 @@ function csvEscape(value: string): string {
   return value;
 }
 
-function buildExampleRows(locale: "en" | "pt"): string[][] {
+function buildExampleRows(locale: Locale): string[][] {
+  if (locale === "it") {
+    return [
+      [
+        "T-shirt Esempio",
+        "T-shirt 100% cotone, girocollo, vestibilità leggermente aderente. Disponibile nei colori blu e rosso, taglie S, M e L — indica colore e taglia quando chiedi della disponibilità.",
+        "29.90",
+        "EUR",
+        "10",
+        "https://example.com/immagine.jpg",
+        "https://example.com/prodotto",
+        "Abbigliamento",
+        "SKU-001",
+      ],
+      ["Tazza Esempio", "", "", "", "", "", "", "", ""],
+    ];
+  }
+
   if (locale === "pt") {
     return [
       [

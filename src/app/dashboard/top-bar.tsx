@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/locales";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { BillingPastDueAlert, type SilenceReason } from "./billing-alert";
 
@@ -25,7 +26,7 @@ export function TopBar({
   locale,
   silence,
 }: {
-  locale: "en" | "pt";
+  locale: Locale;
   silence: SilenceReason | null;
 }) {
   const pathname = usePathname();

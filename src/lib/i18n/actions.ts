@@ -1,10 +1,10 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { SUPPORTED_LOCALES, type Locale } from "@/i18n/request";
+import { isSupportedLocale, type Locale } from "@/i18n/locales";
 
 export async function setLocale(locale: Locale) {
-  if (!SUPPORTED_LOCALES.includes(locale)) return;
+  if (!isSupportedLocale(locale)) return;
 
   const store = await cookies();
   store.set("locale", locale, {

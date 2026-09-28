@@ -1,9 +1,9 @@
 import Image from "next/image";
 import { getLocale } from "next-intl/server";
 import { StepRail } from "./step-rail";
-import { LocaleToggle } from "./onboarding-form";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import logoIcon from "../../../public/logo-icon.png";
-import type { Locale } from "@/i18n/request";
+import type { Locale } from "@/i18n/locales";
 
 // The first session runs outside the dashboard shell: no sidebar, no top bar,
 // nothing to navigate away into. One centred column on the Stitch onboarding
@@ -43,7 +43,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
         {children}
 
         <div className="mt-12 flex justify-center">
-          <LocaleToggle currentLocale={locale as Locale} />
+          <LanguageSwitcher currentLocale={locale as Locale} />
         </div>
       </div>
     </main>

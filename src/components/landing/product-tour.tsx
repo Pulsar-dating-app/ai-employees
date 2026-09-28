@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/locales";
 import clsx from "clsx";
 import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 
 const STEPS = ["conversations", "channels", "products", "schedule", "performance"] as const;
 type StepKey = (typeof STEPS)[number];
 const ADVANCE_MS = 7000;
+const SCREENSHOT_LOCALE: Record<Locale, "en" | "pt"> = { en: "en", pt: "pt", it: "en" };
 const MOBILE_CROP: Record<StepKey, { x: number; y: number; w: number }> = {
   conversations: { x: 0.46, y: 0.2, w: 0.54 },
   channels: { x: 0.19, y: 0.08, w: 0.74 },
@@ -17,7 +19,7 @@ const MOBILE_CROP: Record<StepKey, { x: number; y: number; w: number }> = {
   performance: { x: 0.19, y: 0.04, w: 0.8 },
 };
 
-export function ProductTour({ locale }: { locale: "pt" | "en" }) {
+export function ProductTour({ locale }: { locale: Locale }) {
   const t = useTranslations("LandingV2.tour");
   const [active, setActive] = useState<StepKey>("conversations");
   const [autoplay, setAutoplay] = useState(true);
@@ -158,7 +160,7 @@ export function ProductTour({ locale }: { locale: "pt" | "en" }) {
               return (
                 <Image
                   key={step}
-                  src={`/landing-v2/tour/${locale}/${step}.webp`}
+                  src={`/landing-v2/tour/${SCREENSHOT_LOCALE[locale]}/${step}.webp`}
                   alt={t(`steps.${step}.alt`)}
                   width={1920}
                   height={1200}

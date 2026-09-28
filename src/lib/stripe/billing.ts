@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { Locale } from "@/i18n/request";
+import type { Locale } from "@/i18n/locales";
 import { getStripeClient } from "./client";
 
 // Trello P3 -- the Stripe side of plan checkout. Thin wrappers over the SDK
@@ -13,8 +13,10 @@ import { getStripeClient } from "./client";
 // on an English browser got English trial/billing copy. Pass the app's own
 // resolved locale instead. Product name/description are Stripe data and
 // don't change with this -- they render exactly as stored on the Product.
-function stripeLocale(locale: Locale): "pt-BR" | "en" {
-  return locale === "pt" ? "pt-BR" : "en";
+const STRIPE_LOCALES = { en: "en", pt: "pt-BR", it: "it" } as const satisfies Record<Locale, string>;
+
+function stripeLocale(locale: Locale): (typeof STRIPE_LOCALES)[Locale] {
+  return STRIPE_LOCALES[locale];
 }
 
 // Reuse the company's existing Stripe Customer if we already recorded one;

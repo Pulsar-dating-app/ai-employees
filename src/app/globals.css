@@ -198,6 +198,50 @@ select:not(:disabled) {
   }
 }
 
+/* Language switcher (src/components/language-switcher.tsx) — the menu
+   pops from its trigger corner, each greeting rises in turn, the trigger
+   label swaps with a small lift, and the globe turns while the switch
+   is in flight. Reduced motion keeps only the fades. */
+@keyframes lang-menu-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.lang-menu-in {
+  animation: lang-menu-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes lang-item-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.lang-item-in {
+  animation: lang-item-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes lang-label-in {
+  from { opacity: 0; transform: translateY(40%); }
+  to { opacity: 1; transform: none; }
+}
+.lang-label-in {
+  display: inline-block;
+  animation: lang-label-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes lang-globe-spin {
+  from { transform: rotate(20deg); }
+  to { transform: rotate(380deg); }
+}
+.lang-globe-spin {
+  animation: lang-globe-spin 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lang-menu-in,
+  .lang-item-in,
+  .lang-label-in {
+    animation-name: auth-backdrop-in;
+  }
+  .lang-globe-spin {
+    animation: none;
+  }
+}
+
 /* The one authored motion moment: a staggered rise-and-fade for grid/list
    items on the marketplace and my-team surfaces (animation-delay set per
    item from JS), not scattered per-element hover effects. */

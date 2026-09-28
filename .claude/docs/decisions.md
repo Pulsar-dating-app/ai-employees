@@ -10,6 +10,13 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-09-28 — Italian as a third language; a greeting menu replaces the EN/PT toggle
+
+**Decision:** Added `it` to `SUPPORTED_LOCALES` with a full `messages/it.json` (legal pages included). The segmented EN/PT pill became a small menu: each option greets you in its own language ("Hello!" / "Olá!" / "Ciao!", with the endonym below), and the trigger shows the new greeting for a moment after a switch. The onboarding footer's separate `LocaleToggle` was removed in favour of the same component. Accept-Language detection now follows q-weighted order instead of a `pt` substring check. Stripe Checkout/Portal get `it`. Where no Italian asset exists (landing tour screenshots), Italian uses the English one. Prices stay in BRL.
+**Why:** A three-way segmented control crowds every header it sits in and doesn't scale to a fourth language; a menu does. The greeting keeps the switcher charming without flags, which map to countries rather than languages (Portuguese is not only Brazil's). A unit test checks that every message file has the same keys as `en.json`. With three files, a key forgotten in one fails CI instead of showing up as a raw `Namespace.key` on screen. The Italian copy was written by Claude and hasn't been reviewed by a native speaker. The legal pages in particular should get that review before relying on them with Italian customers.
+
+---
+
 ## 2026-09-28 — Plan prices in whole reais, annual rounded up
 
 **Decision:** Every price drops the ,99: monthly R$97 / R$297 / R$497, with WhatsApp R$150 / R$450 / R$750. Annual is still 12 × monthly − 15%, but now rounded **up** to a whole real (`annualPriceCents`, integer math): R$990 / R$3.030 / R$5.070, with WhatsApp R$1.530 / R$4.590 / R$7.650. Supersedes the price table in the 2026-09-27 entry below.

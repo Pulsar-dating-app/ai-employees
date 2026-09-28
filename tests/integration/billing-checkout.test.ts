@@ -109,6 +109,7 @@ describe("Plan checkout (Trello P3)", () => {
   it.each([
     ["pt", "pt-BR"],
     ["en", "en"],
+    ["it", "it"],
   ])("opens Checkout in the app's language (locale cookie %s -> %s)", async (cookieLocale, stripeLocale) => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, `Checkout Locale ${cookieLocale} Co`);

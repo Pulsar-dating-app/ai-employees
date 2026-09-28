@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
+import type { Locale } from "@/i18n/locales";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { landingV2Sans } from "./fonts";
 import { BrandLogo } from "./brand-logos";
@@ -66,7 +67,7 @@ export async function LandingPageV2() {
   const agents = t.raw("workforce.agents") as Agent[];
   const steps = t.raw("rag.steps") as Step[];
   const sources = t.raw("rag.sources") as Source[];
-  const locale = (await getLocale()) as "en" | "pt";
+  const locale = (await getLocale()) as Locale;
   const faqs = t.raw("faq.items") as Faq[];
   const heroChat = t.raw("hero.chat") as HeroChatCopy;
   const footerCols = t.raw("footer.columns") as FooterCol[];

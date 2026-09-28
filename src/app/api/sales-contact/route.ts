@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getClientIp } from "@/lib/web-chat/rate-limit";
 import { SALES_LEAD_INTERESTS, SALES_LEAD_REFERRALS } from "@/lib/sales-leads/options";
+import { SUPPORTED_LOCALES } from "@/i18n/locales";
 
 // Public, unauthenticated surface behind the landing page's "Talk to a
 // specialist" modal -- slug-free and outside the merchant-authenticated
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
   const companyName = str(body.companyName, 160);
   const message = str(body.message, 4000);
   const referralSource = body.referralSource == null ? null : oneOf(body.referralSource, SALES_LEAD_REFERRALS);
-  const locale = oneOf(body.locale, ["en", "pt"] as const);
+  const locale = oneOf(body.locale, SUPPORTED_LOCALES);
 
   const interests = Array.isArray(body.interests)
     ? Array.from(

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { intlTag } from "@/i18n/locales";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "@/components/ui/icons";
@@ -25,14 +26,14 @@ export function PlanPicker({
   const locale = useLocale();
   const money = useMemo(
     () =>
-      new Intl.NumberFormat(locale === "pt" ? "pt-BR" : "en-US", {
+      new Intl.NumberFormat(intlTag(locale), {
         style: "currency",
         currency: "BRL",
         maximumFractionDigits: 0,
       }),
     [locale],
   );
-  const count = useMemo(() => new Intl.NumberFormat(locale === "pt" ? "pt-BR" : "en-US"), [locale]);
+  const count = useMemo(() => new Intl.NumberFormat(intlTag(locale)), [locale]);
 
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
   const [whatsappIncluded, setWhatsappIncluded] = useState(false);

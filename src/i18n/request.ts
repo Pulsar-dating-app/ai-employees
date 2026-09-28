@@ -1,18 +1,14 @@
 import { cookies, headers } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
+import { isSupportedLocale, localeFromAcceptLanguage, type Locale } from "./locales";
 
-export const SUPPORTED_LOCALES = ["en", "pt"] as const;
-export type Locale = (typeof SUPPORTED_LOCALES)[number];
-
-function isSupportedLocale(value: string | undefined): value is Locale {
-  return !!value && (SUPPORTED_LOCALES as readonly string[]).includes(value);
-}
+export { SUPPORTED_LOCALES, type Locale } from "./locales";
 
 // Cookie-based, no [locale] URL segment — an explicit choice (the "locale"
 // cookie, set by the language switcher) always wins; otherwise we detect
-// from the browser's Accept-Language header. No cookie is set until the
-// user actively picks a language, so detection stays live off the browser
-// until then.
+// from the browser's Accept-Language header, honouring its q-weighted order.
+// No cookie is set until the user actively picks a language, so detection
+// stays live off the browser until then.
 //
 // Exported (not just used inline below) so Route Handlers that generate
 // locale-aware content outside the message-bundle system (e.g. the product
@@ -24,10 +20,7 @@ export async function resolveLocale(): Promise<Locale> {
   if (isSupportedLocale(cookieLocale)) {
     return cookieLocale;
   }
-  if ((await headers()).get("accept-language")?.toLowerCase().includes("pt")) {
-    return "pt";
-  }
-  return "en";
+  return localeFromAcceptLanguage((await headers()).get("accept-language"));
 }
 
 export default getRequestConfig(async () => {

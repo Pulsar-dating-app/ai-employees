@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/locales";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { SignUpForm } from "./sign-up-form";
 import logo from "../../../public/logo.png";
@@ -30,7 +31,7 @@ export function SignUpPanel() {
             {t("loginLink")}
           </Link>
         </p>
-        <LanguageSwitcher currentLocale={locale as "en" | "pt"} />
+        <LanguageSwitcher currentLocale={locale as Locale} />
       </div>
     </div>
   );

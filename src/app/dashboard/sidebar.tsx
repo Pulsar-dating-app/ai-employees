@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/locales";
 import clsx from "clsx";
 import { logout } from "@/lib/auth/actions";
 import {
@@ -343,7 +344,7 @@ export function Sidebar({
 }: {
   companyName: string | null;
   email: string | null;
-  locale: "en" | "pt";
+  locale: Locale;
   hiredAgentSlugs: string[];
   silence: SilenceReason | null;
   usage: UsageSummary | null;

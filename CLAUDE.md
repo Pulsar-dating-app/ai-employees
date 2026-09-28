@@ -31,12 +31,12 @@ This project keeps living documentation under [.claude/docs/](.claude/docs/):
 
 ## Internationalization
 
-- This app supports English and Portuguese (`next-intl`, cookie-based — no `[locale]` URL segment; see `.claude/docs/architecture.md#internationalization-enpt`). Every new user-facing string in a page or component must go through this system.
-- **Never hardcode a UI string.** Add it to both `messages/en.json` and `messages/pt.json` under the appropriate namespace, then read it with `getTranslations` (Server Components/Actions) or `useTranslations` (Client Components) — not a literal string in JSX.
+- This app supports English, Portuguese and Italian (`next-intl`, cookie-based — no `[locale]` URL segment; see `.claude/docs/architecture.md#internationalization-enptit`). Every new user-facing string in a page or component must go through this system.
+- **Never hardcode a UI string.** Add it to every message file — `messages/en.json`, `messages/pt.json` and `messages/it.json` — under the appropriate namespace (`tests/unit/i18n/locales.test.ts` fails if their keys drift apart), then read it with `getTranslations` (Server Components/Actions) or `useTranslations` (Client Components) — not a literal string in JSX.
 - Interpolate dynamic values with ICU placeholders (`"Hire {name}"`), never string concatenation.
 - **Exception — don't translate data, only copy around it.** Agent names/roles (`agents.slug`/`role`), company names, and other merchant-entered or DB-sourced content are data, not UI chrome — they stay as stored, in whichever language they were entered in. Only the surrounding interface text (labels, buttons, headings, instructions) goes through the message files.
   - **Agent marketing descriptions are the exception to the exception:** the marketplace/detail/my-team blurb is authored per slug in `messages/*.json` under `Agents.descriptions` and localised via `resolveAgentDescription` (`src/lib/agents/copy.ts`), which falls back to the `agents.description` column only for an agent with no authored copy. Reversed 2026-09-03 (see decisions.md) — it's product copy, not merchant data.
-- Adding a third language later: a third `messages/<locale>.json` file plus one entry in `SUPPORTED_LOCALES` (`src/i18n/request.ts`) — no routing changes needed.
+- Adding another language: a new `messages/<locale>.json` file plus one entry in `SUPPORTED_LOCALES` and `LOCALE_META` (`src/i18n/locales.ts`) — no routing changes needed. Then check the few per-locale branches outside the message files: Stripe's locale map (`src/lib/stripe/billing.ts`), the product import template's example rows, and the landing tour screenshots (`SCREENSHOT_LOCALE` in `product-tour.tsx`).
 - Merchant-facing copy (translated or not) must still follow the product-language rules in `Staffra_MVP_Specification.md` §4/§28 — never expose "agent," "prompt," "LLM," "AI," "embeddings," or similar implementation jargon, in either language.
 
 ## Testing

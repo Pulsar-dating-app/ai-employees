@@ -2044,7 +2044,8 @@
     }
   },
   "LanguageSwitcher": {
-    "label": "Idioma"
+    "label": "Idioma",
+    "trigger": "Idioma: {language}"
   },
   "Conversations": {
     "pageTitle": "Conversas",

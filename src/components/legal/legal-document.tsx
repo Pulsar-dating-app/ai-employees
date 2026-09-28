@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
+import type { Locale } from "@/i18n/locales";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { landingV2Sans } from "@/components/landing/fonts";
 import logo from "../../../public/logo.png";
@@ -44,7 +45,7 @@ export async function LegalDocument({ doc }: { doc: LegalDoc }) {
             <Image src={logo} alt="Staffra" className="h-11 w-auto" priority />
           </Link>
           <div className="flex items-center gap-4">
-            <LanguageSwitcher currentLocale={locale as "en" | "pt"} />
+            <LanguageSwitcher currentLocale={locale as Locale} />
             <Link
               href="/"
               className="text-[14px] font-medium text-[#464555] transition-colors hover:text-[#3525cd]"

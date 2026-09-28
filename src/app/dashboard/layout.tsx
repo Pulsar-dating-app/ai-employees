@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAccess } from "@/lib/auth/company-access";
 import { claimPendingInvite } from "@/lib/team/invites";
@@ -108,7 +109,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Sidebar
             companyName={access.company.name}
             email={user?.email ?? null}
-            locale={locale as "en" | "pt"}
+            locale={locale as Locale}
             hiredAgentSlugs={hiredSlugs(hired)}
             silence={null}
             usage={null}
@@ -120,7 +121,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             }}
           />
           <div className="relative z-10 sm:pl-64">
-            <TopBar locale={locale as "en" | "pt"} silence={null} />
+            <TopBar locale={locale as Locale} silence={null} />
             <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
               {access.professional?.is_active ? children : <DeactivatedMember />}
             </main>
@@ -211,7 +212,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar
           companyName={companies?.[0]?.name ?? null}
           email={user?.email ?? null}
-          locale={locale as "en" | "pt"}
+          locale={locale as Locale}
           hiredAgentSlugs={hiredAgentSlugs}
           silence={silence}
           usage={usage}
@@ -219,7 +220,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           setupSteps={setupSteps}
         />
         <div className="relative z-10 sm:pl-64">
-          <TopBar locale={locale as "en" | "pt"} silence={silence} />
+          <TopBar locale={locale as Locale} silence={silence} />
           <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">{children}</main>
         </div>
       </div>

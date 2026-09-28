@@ -1,0 +1,2536 @@
+{
+  "Seo": {
+    "siteName": "Staffra",
+    "defaultTitle": "Staffra — Assumi dipendenti IA che vendono, assistono e prenotano 24/7",
+    "description": "Malu vende e Ana prenota appuntamenti su WhatsApp, Instagram e sul tuo sito, a qualsiasi ora, con i tuoi prezzi, le tue scorte e i tuoi orari reali. Pronta in pochi minuti, senza codice."
+  },
+  "Auth": {
+    "close": "Chiudi",
+    "login": {
+      "title": "Accedi",
+      "subtitle": "Bentornato su Staffra.",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "submit": "Accedi",
+      "noAccount": "Non hai un account?",
+      "signUpLink": "Registrati",
+      "forgotPasswordLink": "Password dimenticata?"
+    },
+    "signUp": {
+      "title": "Registrati",
+      "subtitle": "Crea il tuo account Staffra.",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordHint": "Almeno 6 caratteri.",
+      "submit": "Registrati",
+      "checkEmail": "Controlla la tua email per confermare l'account prima di accedere.",
+      "haveAccount": "Hai già un account?",
+      "loginLink": "Accedi"
+    },
+    "forgotPassword": {
+      "title": "Reimposta la password",
+      "subtitle": "Inserisci la tua email e ti invieremo un link per reimpostarla.",
+      "emailLabel": "Email",
+      "submit": "Invia link di reimpostazione",
+      "checkEmail": "Se esiste un account con questa email, ti abbiamo inviato un link per reimpostare la password.",
+      "backToLogin": "Torna all'accesso"
+    },
+    "resetPassword": {
+      "title": "Imposta una nuova password",
+      "subtitle": "Scegli una nuova password per il tuo account.",
+      "passwordLabel": "Nuova password",
+      "passwordHint": "Almeno 6 caratteri.",
+      "submit": "Aggiorna password"
+    },
+    "errors": {
+      "invalidCredentials": "Email o password non corretti.",
+      "emailNotConfirmed": "Conferma la tua email prima di accedere.",
+      "userExists": "Esiste già un account con questa email.",
+      "passwordTooShort": "La password deve avere almeno 6 caratteri.",
+      "resetLinkInvalid": "Questo link di reimpostazione non è valido o è scaduto. Richiedine uno nuovo."
+    }
+  },
+  "Agents": {
+    "descriptions": {
+      "malu": "{name} gestisce le conversazioni del tuo negozio dal primo saluto fino al checkout. Impara il tuo catalogo, capisce cosa cerca davvero ogni cliente e consiglia i prodotti più adatti — rispondendo su prezzi, disponibilità e condizioni esattamente come le hai indicato, senza mai tirare a indovinare. Calorosa e attenta, accompagna chi è pronto all'acquisto verso il checkout senza mai essere invadente.",
+      "ana": "{name} ti toglie di mezzo le prenotazioni. Verifica la disponibilità reale in base ai tuoi orari di apertura, agli appuntamenti già fissati e al calendario collegato, poi propone ai clienti orari davvero liberi. Raccoglie i dati che ti servono prima di confermare, gestisce subito spostamenti e disdette e inserisce le persone in lista d'attesa quando sei al completo — sempre con un tono calmo, puntuale e in linea con il tuo marchio."
+    }
+  },
+  "Onboarding": {
+    "title": "Per cominciare, come si chiama la tua attività?",
+    "subtitle": "Userà questo nome quando parla con i tuoi clienti.",
+    "nameLabel": "Nome dell'attività",
+    "namePlaceholder": "es. Azienda ABC",
+    "nameMissing": "Inserisci il nome della tua attività.",
+    "continue": "Continua",
+    "error": "Si è verificato un errore durante la creazione della tua attività. Riprova.",
+    "rail": {
+      "label": "La tua prima sessione",
+      "company": "La tua attività",
+      "hire": "La tua assunzione",
+      "setup": "Cosa le serve",
+      "ready": "Guardala al lavoro",
+      "plan": "Il tuo piano",
+      "profile": "Tu"
+    },
+    "hire": {
+      "title": "Chi assumi per {company}?",
+      "subtitle": "Ognuna fa un lavoro diverso. Potrai assumere l'altra più avanti, dalla pagina del tuo team.",
+      "groupLabel": "Scegli chi assumere",
+      "cta": "Assumi {name}",
+      "error": "Si è verificato un errore. Riprova.",
+      "errorPlan": "Il tuo piano deve essere attivo prima di poter assumere.",
+      "ctaEmpty": "Prima scegli qualcuno"
+    },
+    "setup": {
+      "catalog": {
+        "title": "Dai a {name} il tuo catalogo",
+        "subtitle": "Può parlare solo dei prodotti che riesce davvero a consultare. Caricali una volta ed è pronta.",
+        "groupLabel": "Da dove arriva il tuo catalogo",
+        "shopifyTitle": "Il mio negozio Shopify",
+        "shopifyHint": "Lo leggiamo direttamente da Shopify — nomi, prezzi e foto esatti.",
+        "shopifyPlaceholder": "tuo-negozio.myshopify.com",
+        "shopifyCta": "Collega",
+        "fileTitle": "Un foglio di calcolo",
+        "fileHint": "CSV o Excel, fino a 2000 prodotti. Serve solo il nome.",
+        "fileCta": "Scegli file",
+        "fileTemplate": "Scarica il modello",
+        "manualTitle": "Aggiungi un prodotto",
+        "manualHint": "Basta per farle rispondere nel prossimo passaggio.",
+        "manualNameLabel": "Nome del prodotto",
+        "manualNamePlaceholder": "Es. T-shirt Tie Dye",
+        "manualPriceLabel": "Prezzo",
+        "manualPricePrefix": "R$",
+        "manualPricePlaceholder": "0,00",
+        "manualCta": "Aggiungi",
+        "feedOpening": "Apertura di {file}",
+        "feedRows": "{count} righe lette",
+        "feedSkipped": "{count} saltate — senza nome",
+        "feedSaving": "Salvataggio nel tuo catalogo",
+        "feedProducts": "{count, plural, one {# prodotto pronto} other {# prodotti pronti}}",
+        "feedReady": "{name} può iniziare a vendere",
+        "errorTooBig": "Il file supera i 3 MB. Prova a dividerlo in due.",
+        "errorImport": "Non siamo riusciti a leggere il file. Confrontalo con il modello e riprova.",
+        "errorManual": "Non siamo riusciti a salvare il prodotto. Riprova.",
+        "errorSlow": "Ci sta mettendo più del solito. I tuoi prodotti potrebbero essere ancora in importazione — controlla la pagina Prodotti tra un momento.",
+        "retry": "Prova un altro file"
+      },
+      "services": {
+        "title": "Di cosa si occupa la tua attività?",
+        "subtitle": "Scegli il tuo settore e prepariamo noi la lista. Togli ciò che non fai, correggi ciò che è diverso.",
+        "tradeLabel": "Il tuo settore",
+        "tradeCount": "{count} per iniziare",
+        "tradeEmpty": "parti da zero",
+        "trades": {
+          "salon": "Parrucchiere",
+          "barber": "Barbiere",
+          "aesthetics": "Estetica e benessere",
+          "clinic": "Studio o clinica",
+          "studio": "Studio di tatuaggi",
+          "other": "Altro"
+        },
+        "presets": {
+          "salon": {
+            "cut": "Taglio donna",
+            "blowout": "Piega",
+            "colour": "Colore",
+            "manicure": "Manicure",
+            "brows": "Sopracciglia"
+          },
+          "barber": {
+            "cut": "Taglio",
+            "beard": "Barba",
+            "cutBeard": "Taglio e barba",
+            "lineup": "Rifinitura"
+          },
+          "aesthetics": {
+            "facial": "Trattamento viso",
+            "massage": "Massaggio",
+            "waxing": "Ceretta",
+            "drainage": "Linfodrenaggio"
+          },
+          "clinic": {
+            "consultation": "Visita",
+            "followUp": "Controllo",
+            "assessment": "Valutazione"
+          },
+          "studio": {
+            "quote": "Preventivo",
+            "smallSession": "Sessione breve",
+            "largeSession": "Sessione completa"
+          },
+          "other": {}
+        },
+        "listTitle": "Cosa offri",
+        "changeTrade": "Cambia settore",
+        "nameLabel": "Nome del servizio",
+        "durationLabel": "Durata in minuti",
+        "minutes": "min",
+        "priceLabel": "Prezzo",
+        "pricePlaceholder": "Facoltativo",
+        "pricePrefix": "R$",
+        "remove": "Rimuovi {name}",
+        "addService": "Aggiungine un altro",
+        "hoursTitle": "Quando sei aperto",
+        "days": {
+          "0": "Dom",
+          "1": "Lun",
+          "2": "Mar",
+          "3": "Mer",
+          "4": "Gio",
+          "5": "Ven",
+          "6": "Sab"
+        },
+        "fromLabel": "Apre alle",
+        "toLabel": "Chiude alle",
+        "until": "alle",
+        "closed": "Chiuso",
+        "laterHint": "Potrai perfezionare tutto più avanti",
+        "cta": "Salva e continua",
+        "feedSaving": "Salvataggio dei tuoi servizi",
+        "feedSavingHours": "Salvataggio degli orari di apertura",
+        "feedServices": "{count} servizi pronti",
+        "feedHours": "{count} giorni di apertura",
+        "feedReady": "{name} può iniziare a prenotare",
+        "errorSaving": "Non siamo riusciti a salvare i tuoi servizi. Riprova.",
+        "errorHours": "I tuoi servizi sono stati salvati, ma gli orari di apertura no. Prova a impostarli di nuovo.",
+        "skip": "Lo configuro più tardi"
+      }
+    },
+    "ready": {
+      "title": "{name} è pronta. Mettila alla prova.",
+      "subtitle": "Risponde con i tuoi dati reali, non con una demo.",
+      "opener": "Ciao! Chiedimi qualcosa come se fossi uno dei tuoi clienti 😊",
+      "placeholder": "Scrivi come farebbe un cliente…",
+      "send": "Invia",
+      "suggestPrice": "Quanto costa {name}?",
+      "suggestPriceGeneric": "Cosa avete in vendita?",
+      "suggestBrowse": "Cosa mi consigli?",
+      "suggestBook": "Vorrei prenotare {name}",
+      "suggestBookGeneric": "Vorrei prenotare un appuntamento",
+      "suggestHours": "A che ora aprite?",
+      "error": "Si è verificato un errore. Riprova.",
+      "errorSilent": "{name} non ha risposto. Se continua a succedere, controlla la sezione Fatturazione nella tua dashboard.",
+      "logLabel": "Conversazione con {name}",
+      "typing": "{name} sta scrivendo",
+      "continue": "Continua",
+      "continueHint": "Prossimo passo: scegli un piano così può iniziare a servire i clienti",
+      "askFirstHint": "Chiedi qualcosa a {name} per continuare",
+      "skip": "La provo più tardi"
+    },
+    "plan": {
+      "title": "Metti {name} al lavoro",
+      "subtitle": "È configurata e l'hai vista rispondere. Scegli un piano e inizia a servire i tuoi clienti.",
+      "groupLabel": "Scegli un piano",
+      "trialNote": "I primi {days} giorni sono gratuiti, fino a {limit, number} risposte. Al raggiungimento del primo dei due limiti l'abbonamento si attiva automaticamente — e puoi disdire quando vuoi.",
+      "cancelled": "Nessun problema — non è stato addebitato nulla. Scegli un piano quando sei pronto.",
+      "perMonth": "{price}/mese",
+      "perYear": "{price}/anno",
+      "replyLimit": "{count} risposte al mese",
+      "replyLimitAnnual": "{count} risposte all'anno",
+      "featureChannels": "WhatsApp, Instagram, Telegram e il tuo sito",
+      "featureTeam": "Tutto il tuo team, senza postazioni extra",
+      "featureHistory": "Ogni conversazione e i suoi numeri",
+      "recommended": "Il più scelto",
+      "picker": {
+        "period": {
+          "monthly": "Mensile",
+          "annual": "Annuale"
+        },
+        "wppToggleLabel": "Includi WhatsApp nel piano",
+        "wppToggleNote": "Senza questa opzione il piano non include WhatsApp: le risposte funzionano su Instagram, Telegram, chat del sito e link diretto. Puoi aggiungere WhatsApp più avanti nelle Impostazioni."
+      },
+      "cta": "Scegli il piano",
+      "ctaTrial": "Inizia gratis",
+      "later": "Decido più tardi",
+      "error": "Non siamo riusciti ad aprire il checkout. Riprova."
+    },
+    "profile": {
+      "title": "Per cominciare, come ti chiami?",
+      "subtitle": "È il nome con cui ti chiameranno il tuo team e i messaggi della tua attività.",
+      "nameLabel": "Il tuo nome",
+      "namePlaceholder": "es. Giulia Rossi",
+      "nameMissing": "Inserisci il tuo nome.",
+      "nameTooLong": "Usa al massimo {max} caratteri.",
+      "error": "Si è verificato un errore nel salvare il tuo nome. Riprova."
+    }
+  },
+  "CheckoutLink": {
+    "title": "Questo link non è più disponibile",
+    "body": "Il link che hai aperto non è valido o è scaduto. Scrivi di nuovo al negozio e te ne invieranno uno nuovo."
+  },
+  "LandingV2": {
+    "header": {
+      "navAgents": "Dipendenti",
+      "navChannels": "Canali e WhatsApp",
+      "navPricing": "Piani e prezzi",
+      "navDemo": "Demo",
+      "trial": "Prova gratis per 7 giorni",
+      "login": "Accedi"
+    },
+    "hero": {
+      "headlinePre": "Vendi e prenota appuntamenti su WhatsApp",
+      "headlineHighlight": "a qualsiasi ora",
+      "sub": "Assumi Malu per vendere e Ana per gestire la tua agenda. Rispondono con i tuoi prezzi, le tue scorte e i tuoi orari reali, e non si inventano mai nulla. Pronte in pochi minuti, senza codice.",
+      "ctaPrimary": "Prova gratis per 7 giorni",
+      "ctaSecondary": "Guardale all'opera",
+      "ctaSales": "Parla con un esperto",
+      "trust1": "WhatsApp ufficiale di Meta",
+      "trust2": "Instagram, Telegram e il tuo sito",
+      "trust3": "Disdici quando vuoi",
+      "chat": {
+        "tablistLabel": "Scegli cosa vedere",
+        "sample": "Chat di esempio",
+        "status": "Online su WhatsApp",
+        "sales": {
+          "tab": "Vendite",
+          "name": "Malu",
+          "role": "Vendite",
+          "customer1": "Ciao! Cerco un regalo per mia moglie, adora la skincare. Fino a circa 50 €.",
+          "agent1": "Ecco un'opzione che corrisponde a quello che mi hai descritto:",
+          "productName": "Kit Viso Idratante",
+          "productPrice": "44 €",
+          "productStock": "Disponibile",
+          "agent2": "Arriva entro 3 giorni nella tua zona. Vuoi il link per completare l'acquisto?",
+          "customer2": "Sì, grazie!",
+          "agent3": "Fatto! Ecco il link per completare l'acquisto:",
+          "checkoutHost": "iltuonegozio.it/checkout"
+        },
+        "scheduling": {
+          "tab": "Appuntamenti",
+          "name": "Ana",
+          "role": "Appuntamenti",
+          "customer1": "Ciao! Avete un posto per un taglio domani pomeriggio?",
+          "agent1": "Sì! Domani pomeriggio questi orari sono liberi:",
+          "slot1": "14:00",
+          "slot2": "16:30",
+          "customer2": "Le 16:30, grazie.",
+          "appointmentService": "Taglio donna",
+          "appointmentWhen": "Domani, 16:30",
+          "appointmentStatus": "Confermato",
+          "agent2": "Perfetto! Riceverai un promemoria via email prima dell'appuntamento."
+        }
+      }
+    },
+    "socialProof": {
+      "title": "Funziona con gli strumenti che usi già",
+      "logos": [
+        {
+          "name": "WhatsApp"
+        },
+        {
+          "name": "Instagram"
+        },
+        {
+          "name": "Telegram"
+        },
+        {
+          "name": "Shopify"
+        },
+        {
+          "name": "Google"
+        },
+        {
+          "name": "Meta"
+        }
+      ]
+    },
+    "channels": {
+      "heading": "Una dipendente, tutti i tuoi canali",
+      "sub": "Collegati a WhatsApp ufficiale, Instagram, Telegram e al tuo sito. Stessa dipendente, stessa memoria, ovunque.",
+      "tablistLabel": "Seleziona il canale",
+      "cta": "Inizia la prova gratuita di 7 giorni",
+      "items": [
+        {
+          "key": "whatsapp",
+          "brand": "WhatsApp",
+          "name": "WhatsApp",
+          "headline": "Vendi su WhatsApp ufficiale",
+          "caption": "La tua dipendente risponde sul numero WhatsApp ufficiale del tuo marchio — con audio, immagini e cronologia.",
+          "points": [
+            "Connessione ufficiale tramite Meta",
+            "Consiglia i prodotti e invia il link di pagamento",
+            "Passa la conversazione a qualcuno del tuo team quando serve"
+          ]
+        },
+        {
+          "key": "instagram",
+          "brand": "Instagram",
+          "name": "Instagram",
+          "headline": "Rispondi ai tuoi Direct di Instagram",
+          "caption": "La stessa dipendente e la stessa memoria, ora anche nelle tue conversazioni su Instagram.",
+          "points": [
+            "Account professionale collegato in pochi minuti",
+            "Cronologia unificata con gli altri canali",
+            "Dal primo “ciao” al checkout"
+          ]
+        },
+        {
+          "key": "telegram",
+          "brand": "Telegram",
+          "name": "Telegram",
+          "headline": "Rispondi su Telegram",
+          "caption": "Un link e sei online. Nessuna configurazione, nessun server, nessuna app in più.",
+          "points": [
+            "Un link diretto per ogni dipendente",
+            "Funziona nella stessa dashboard",
+            "Zero configurazione"
+          ]
+        },
+        {
+          "key": "site",
+          "brand": "Site",
+          "name": "Sito web",
+          "headline": "Mettila sul tuo sito",
+          "caption": "Un widget di chat con i tuoi colori e il tuo avatar, in una sola riga di codice.",
+          "points": [
+            "Una riga di <script>",
+            "Colori, logo e saluto personalizzati",
+            "Modalità pop-up o a schermo intero"
+          ]
+        },
+        {
+          "key": "shopify",
+          "brand": "Shopify",
+          "name": "Shopify",
+          "headline": "Collegala al tuo negozio Shopify",
+          "caption": "Collega il negozio una volta e la tua dipendente vende dal tuo catalogo sempre aggiornato — niente esportazioni, niente fogli di calcolo.",
+          "points": [
+            "Il catalogo si sincronizza da solo — prezzi, scorte e nuovi prodotti",
+            "Risponde dal tuo catalogo reale e rimanda al checkout di Shopify",
+            "Aggiungi il widget di chat al tuo negozio con una riga di codice"
+          ]
+        },
+        {
+          "key": "hosted",
+          "brand": "Chat",
+          "name": "Link alla chat",
+          "headline": "Condividi un link alla chat",
+          "caption": "Una pagina di chat ospitata da Staffra, pronta da mettere nella bio, in un QR code o ovunque — senza bisogno di un sito.",
+          "points": [
+            "Un link pronto da condividere",
+            "Niente da installare o ospitare",
+            "Stessa memoria degli altri canali"
+          ]
+        }
+      ],
+      "teamCaption": "Lo stesso team, su ogni canale"
+    },
+    "workforce": {
+      "heading": "Due dipendenti, ognuna con il suo lavoro",
+      "sub": "Malu si occupa delle vendite e Ana della tua agenda. Assumi solo chi ti serve, oppure entrambe: sono incluse in ogni piano.",
+      "agents": [
+        {
+          "name": "Malu",
+          "role": "Vendite",
+          "sub": "WhatsApp, Instagram e il tuo sito",
+          "desc": "Capisce cosa vuole il cliente, consiglia i prodotti giusti dal tuo catalogo e risponde su prezzi, scorte e condizioni in base a ciò che hai configurato. Porta chi è pronto all'acquisto al checkout del tuo negozio senza essere invadente."
+        },
+        {
+          "name": "Ana",
+          "role": "Appuntamenti",
+          "sub": "Collegata a Google Calendar",
+          "desc": "Propone solo orari davvero liberi, in base ai tuoi orari di apertura, alle prenotazioni e al tuo calendario. Sposta e disdice al momento, e inserisce le persone in lista d'attesa quando sei al completo."
+        }
+      ],
+      "handoffTitle": "Quando conta, coinvolge te",
+      "handoffDesc": "Se lo consenti, quando un cliente chiede di parlare con una persona o la conversazione va oltre ciò che sa, la passa a qualcuno del tuo team, con tutta la cronologia a portata di mano.",
+      "handoffCta": "Chiedi a un esperto",
+      "hireCta": "Assumi {name}"
+    },
+    "rag": {
+      "heading": "Non si inventa mai prezzi, scorte o tempi di consegna",
+      "sub": "Malu e Ana rispondono solo con ciò che è configurato in Staffra. Quando l'informazione manca, non tira a indovinare: chiede conferma a qualcuno del tuo team.",
+      "steps": [
+        {
+          "title": "Raccontaci la tua attività",
+          "desc": "Descrizione, metodi di pagamento, consegna, resi e domande frequenti, tutto in testo semplice."
+        },
+        {
+          "title": "Porta i tuoi prodotti o servizi",
+          "desc": "Importa il catalogo da un foglio di calcolo o da Shopify, oppure aggiungi i tuoi servizi e gli orari di apertura."
+        },
+        {
+          "title": "Collega un canale",
+          "desc": "WhatsApp, Instagram, Telegram, la chat del tuo sito o un link diretto."
+        }
+      ],
+      "cardTitle": "Da dove arrivano le risposte",
+      "cardBadge": "Solo i tuoi dati",
+      "sources": [
+        {
+          "title": "Catalogo",
+          "sub": "Foglio di calcolo o manuale"
+        },
+        {
+          "title": "Shopify",
+          "sub": "Sincronizzazione automatica"
+        },
+        {
+          "title": "La tua attività",
+          "sub": "Descrizione e contatti"
+        },
+        {
+          "title": "Condizioni",
+          "sub": "Consegna, resi, pagamento"
+        },
+        {
+          "title": "Domande frequenti",
+          "sub": "Scritte da te"
+        },
+        {
+          "title": "Servizi e agenda",
+          "sub": "Durata, prezzo e orari"
+        }
+      ],
+      "demo": {
+        "customer": "Riuscite a consegnare a Palermo entro venerdì?",
+        "agent": "Non ho ancora i tempi di consegna per Palermo. Verifico con il team e ti faccio sapere.",
+        "sourcesLabel": "Risponde da:"
+      }
+    },
+    "pricing": {
+      "heading": "Piani semplici, con Malu e Ana in tutti",
+      "sub": "Tra un piano e l'altro cambia solo quante risposte può inviare il tuo team.",
+      "trialNote": "7 giorni gratis. Chiediamo una carta all'inizio ma addebitiamo solo dopo 7 giorni o 500 risposte, a seconda di cosa arriva prima.",
+      "featuredBadge": "Consigliato",
+      "periodToggle": {
+        "monthly": "Mensile",
+        "annual": "Annuale"
+      },
+      "periodLabel": "Periodo di fatturazione",
+      "savings": "−{pct}%",
+      "wppToggleLabel": "Con WhatsApp",
+      "wppToggleNote": "Senza WhatsApp: Instagram, Telegram, chat del sito e link diretto. Attivalo per vedere i prezzi con WhatsApp ufficiale.",
+      "perMonth": "/ mese",
+      "perYear": "/ anno",
+      "perDay": "≈ {price} al giorno",
+      "annualSavings": "≈ {monthly} al mese · risparmi {saved}",
+      "repliesMonthly": "{count} risposte al mese",
+      "repliesAnnual": "{count} risposte all'anno",
+      "repliesNote": "Ogni messaggio che il tuo team invia a un cliente conta come una risposta.",
+      "includedTitle": "Tutto questo in ogni piano",
+      "included": [
+        "Malu per le vendite e Ana per gli appuntamenti",
+        "Instagram, Telegram, chat del sito e link diretto, più WhatsApp ufficiale nei piani con WhatsApp",
+        "Catalogo da foglio di calcolo o sincronizzato con Shopify",
+        "Agenda con Google Calendar, lista d'attesa e approvazione",
+        "Risposte solo dai tuoi dati, mai inventate",
+        "Passa le conversazioni al tuo team quando serve",
+        "Casella delle conversazioni e report sulle prestazioni",
+        "Nome e foto per ogni dipendente, come preferisci",
+        "Utenti della dashboard illimitati"
+      ],
+      "plans": [
+        {
+          "tier": "Starter",
+          "name": "Per iniziare",
+          "desc": "Professionisti e piccole attività.",
+          "cta": "Prova gratis per 7 giorni"
+        },
+        {
+          "tier": "Intermediate",
+          "name": "In crescita",
+          "desc": "Per attività già molto attive su WhatsApp.",
+          "cta": "Prova gratis per 7 giorni"
+        },
+        {
+          "tier": "Pro",
+          "name": "Alto volume",
+          "desc": "Tante conversazioni al giorno, su più canali.",
+          "cta": "Prova gratis per 7 giorni"
+        },
+        {
+          "tier": "Enterprise",
+          "name": "Su misura",
+          "desc": "Più sedi o volumi molto alti, a condizioni concordate.",
+          "price": "Parliamone",
+          "priceNote": "Progetti a partire da R$ 3.900/mese",
+          "cta": "Contatta le vendite"
+        }
+      ],
+      "wppToggleNoteOn": "Include WhatsApp ufficiale, con le tariffe di Meta già comprese nel prezzo."
+    },
+    "salesContact": {
+      "title": "Parla con un esperto",
+      "subtitle": "Ci vuole 1 minuto. Il nostro team ti contatta subito dopo.",
+      "steps": {
+        "you": "Su di te",
+        "interests": "Di cosa hai bisogno",
+        "company": "La tua azienda"
+      },
+      "next": "Continua",
+      "back": "Indietro",
+      "submit": "Invia",
+      "submitting": "Invio in corso…",
+      "close": "Chiudi",
+      "errorRequired": "Compila i campi obbligatori.",
+      "errorSubmit": "Si è verificato un errore. Riprova.",
+      "successTitle": "Grazie — abbiamo ricevuto tutto!",
+      "successBody": "Il nostro team ti contatterà a breve all'email o al WhatsApp che ci hai indicato.",
+      "fields": {
+        "name": "Nome",
+        "namePlaceholder": "Il tuo nome e cognome",
+        "email": "Email di lavoro",
+        "emailPlaceholder": "tu@iltuonegozio.it",
+        "whatsapp": "WhatsApp",
+        "whatsappPlaceholder": "+39 333 000 0000",
+        "companyName": "Nome dell'azienda",
+        "companyNamePlaceholder": "Il nome della tua azienda",
+        "message": "Messaggio",
+        "messagePlaceholder": "Raccontaci cosa stai cercando.",
+        "referralSource": "Come hai conosciuto Staffra?",
+        "referralSourcePlaceholder": "Seleziona… (facoltativo)"
+      },
+      "interestsHint": "Cosa ti interessa? Puoi sceglierle entrambe.",
+      "interests": {
+        "sales": {
+          "label": "Vendite (Malu)",
+          "desc": "Risponde e vende su tutti i tuoi canali, giorno e notte."
+        },
+        "scheduling": {
+          "label": "Appuntamenti (Ana)",
+          "desc": "Prenota, sposta e ricorda gli appuntamenti ai clienti in automatico."
+        }
+      },
+      "referrals": {
+        "google": "Ricerca su Google",
+        "referral": "Un passaparola",
+        "social": "Social media",
+        "agency": "Un'agenzia",
+        "influencer": "Un influencer",
+        "other": "Altro"
+      }
+    },
+    "faq": {
+      "heading": "Domande frequenti",
+      "items": [
+        {
+          "q": "Come fanno Malu e Ana a conoscere la mia attività?",
+          "a": "Compili le informazioni sulla tua attività (descrizione, pagamenti, consegna, resi e domande frequenti), porti il catalogo da un foglio di calcolo o da Shopify e, per Ana, aggiungi servizi e orari. Rispondono solo in base a questo."
+        },
+        {
+          "q": "E se un cliente chiede qualcosa che non sa?",
+          "a": "Non se lo inventa. Se l'informazione non è configurata, chiede conferma a qualcuno del tuo team oppure, se lo consenti, passa la conversazione a una persona con tutta la cronologia a portata di mano."
+        },
+        {
+          "q": "Come funziona la prova gratuita?",
+          "a": "Sono 7 giorni gratis. Chiediamo una carta all'inizio e l'addebito avviene solo dopo 7 giorni o 500 risposte, a seconda di cosa arriva prima. Se disdici prima, non paghi nulla."
+        },
+        {
+          "q": "Usate WhatsApp ufficiale? Posso tenere il mio numero?",
+          "a": "Sì. Ci colleghiamo tramite la connessione ufficiale di Meta e puoi usare il numero che hai già nell'app WhatsApp Business oppure uno nuovo. WhatsApp è incluso nei piani con WhatsApp e le tariffe di Meta sono già comprese nel prezzo."
+        },
+        {
+          "q": "C'è un contratto o un costo di attivazione?",
+          "a": "Non c'è alcun costo di attivazione. Disdici dalla dashboard quando vuoi, senza dover parlare con nessuno, e il piano resta attivo fino alla fine del periodo già pagato. Con il piano annuale, disdire significa fermare il rinnovo successivo."
+        },
+        {
+          "q": "Quanto ci vuole per iniziare?",
+          "a": "Di solito meno di 30 minuti. La dashboard mostra una guida passo passo che si spunta da sola man mano che configuri."
+        }
+      ]
+    },
+    "finalCta": {
+      "heading": "Il tuo prossimo cliente potrebbe scriverti alle 23. Chi risponderà?",
+      "sub": "Assumi Malu e Ana oggi e lascia che WhatsApp risponda mentre tu pensi a tutto il resto.",
+      "ctaPrimary": "Prova gratis per 7 giorni",
+      "fine": "Disdici quando vuoi · Nessun costo di attivazione"
+    },
+    "footer": {
+      "blurb": "Dipendenti che vendono e prenotano appuntamenti su WhatsApp, Instagram e sul tuo sito.",
+      "columns": [
+        {
+          "title": "Soluzioni",
+          "links": [
+            {
+              "label": "Dipendenti",
+              "href": "#workforce"
+            },
+            {
+              "label": "Canali e WhatsApp",
+              "href": "#canais"
+            },
+            {
+              "label": "Demo",
+              "href": "#demo"
+            }
+          ]
+        },
+        {
+          "title": "Risorse e prezzi",
+          "links": [
+            {
+              "label": "Piani e prezzi",
+              "href": "#planos"
+            },
+            {
+              "label": "Centro assistenza e FAQ",
+              "href": "#faq"
+            },
+            {
+              "label": "Prova gratis",
+              "href": "/?auth=signup"
+            }
+          ]
+        },
+        {
+          "title": "Sicurezza e note legali",
+          "links": [
+            {
+              "label": "Termini di servizio",
+              "href": "/terms"
+            },
+            {
+              "label": "Privacy e LGPD",
+              "href": "/privacy"
+            }
+          ]
+        }
+      ],
+      "rights": "© 2026 Pulsar LTDA. Tutti i diritti riservati."
+    },
+    "value": {
+      "heading": "Una dipendente che non si prende mai un giorno libero",
+      "sub": "Fai i conti per la tua attività.",
+      "compare": {
+        "title": "Assumere qualcuno o usare Staffra",
+        "personHead": "Dipendente a tempo pieno",
+        "personSub": "Contratto CLT",
+        "staffraHead": "Con Staffra",
+        "staffraSub": "Malu e Ana",
+        "hoursLabel": "Ore di risposta a settimana",
+        "hours": "{hours} h",
+        "rows": [
+          {
+            "label": "Notti, weekend e festivi",
+            "person": "Fuori orario",
+            "staffra": "Risponde sempre"
+          },
+          {
+            "label": "Tempo di risposta",
+            "person": "Dipende dalla coda",
+            "staffra": "Secondi"
+          },
+          {
+            "label": "Conversazioni in contemporanea",
+            "person": "Una alla volta",
+            "staffra": "Tutte quelle che arrivano"
+          },
+          {
+            "label": "Prezzo e scorte",
+            "person": "Deve verificare",
+            "staffra": "Sempre quello che hai impostato"
+          },
+          {
+            "label": "Giorni liberi, ferie e assenze",
+            "person": "Serve un sostituto",
+            "staffra": "Nessuno"
+          }
+        ],
+        "note": "La legge sul lavoro brasiliana (CLT) limita la settimana lavorativa a 44 ore. Una settimana ne ha 168."
+      },
+      "calc": {
+        "title": "Quale piano fa per te",
+        "sub": "Inserisci quanto spendi oggi e quante conversazioni ricevi. Il calcolo avviene qui nella pagina, non viene inviato nulla.",
+        "costLabel": "Quanto spendi oggi per l'assistenza clienti, al mese",
+        "costPlaceholder": "es. 2.800",
+        "costHint": "Somma stipendio, tasse e benefit di chi risponde ai tuoi clienti.",
+        "volumeLabel": "Conversazioni con i clienti al mese",
+        "volumeHint": "Stimiamo circa {replies} risposte per conversazione.",
+        "decrease": "Diminuisci",
+        "increase": "Aumenta",
+        "wppLabel": "Rispondo ai clienti su WhatsApp",
+        "resultLabel": "Piano consigliato",
+        "perMonth": "{price}/mese",
+        "planFits": "Fino a {replies} risposte al mese, circa {conversations} conversazioni.",
+        "planFitsWpp": "Con WhatsApp. Fino a {replies} risposte al mese, circa {conversations} conversazioni.",
+        "usage": "Useresti circa il {pct}% del piano.",
+        "customBody": "Con questo volume, creiamo un piano su misura per la tua attività.",
+        "customCta": "Parla con noi",
+        "today": "Oggi, al mese",
+        "todaySub": "Solo durante l'orario del team",
+        "withStaffra": "Con Staffra, al mese",
+        "withStaffraSub": "24 ore su 24, tutti i giorni",
+        "empty": "Inserisci quanto spendi oggi per vedere la differenza.",
+        "saving": "Spendi {amount} in meno al mese e rispondi a qualsiasi ora.",
+        "extra": "Sono {amount} in più al mese, e i tuoi clienti ricevono risposta a qualsiasi ora.",
+        "disclaimer": "Staffra non deve sostituire nessuno: risponde quando il tuo team non può e ti coinvolge quando conta."
+      },
+      "cta": "Vedi i piani"
+    },
+    "tour": {
+      "heading": "Guarda la dashboard dall'interno",
+      "sub": "Sono le schermate reali che userai ogni giorno.",
+      "tablistLabel": "Schermate della dashboard",
+      "sampleNote": "Schermate reali della dashboard, con dati di esempio.",
+      "steps": {
+        "channels": {
+          "tab": "Canali",
+          "title": "Collegati dove sono i tuoi clienti",
+          "body": "WhatsApp, Instagram, Telegram, la chat del tuo sito e un link diretto. Ogni canale mostra se è pronto.",
+          "alt": "Pagina di Malu con i canali collegati"
+        },
+        "products": {
+          "tab": "Catalogo",
+          "title": "Il tuo catalogo, sempre aggiornato",
+          "body": "Importa da un foglio di calcolo o da Shopify. Malu indica prezzi e scorte solo in base a quello che c'è qui.",
+          "alt": "Elenco prodotti con scorte e prezzi"
+        },
+        "schedule": {
+          "tab": "Agenda",
+          "title": "L'agenda di oggi, in ordine",
+          "body": "Gli appuntamenti confermati da Ana compaiono sulla linea del tempo della giornata, con il prossimo in evidenza.",
+          "alt": "Schermata degli appuntamenti di oggi"
+        },
+        "conversations": {
+          "tab": "Conversazioni",
+          "title": "Ogni conversazione in un unico posto",
+          "body": "Guarda cosa hanno risposto su ogni canale, chi è pronto a comprare, e intervieni quando vuoi.",
+          "alt": "Casella delle conversazioni con una conversazione aperta"
+        },
+        "performance": {
+          "tab": "Prestazioni",
+          "title": "Risultati che puoi seguire",
+          "body": "Conversazioni, consigli e clic sul checkout, confrontati con il periodo precedente.",
+          "alt": "Dashboard delle prestazioni con un grafico delle conversazioni"
+        }
+      }
+    }
+  },
+  "Dashboard": {
+    "logout": "Esci",
+    "workspaceLabel": "Area di lavoro",
+    "billingPastDueAlert": "Pagamento non riuscito — team in pausa",
+    "tabs": {
+      "myAgents": "Il mio team",
+      "products": "Prodotti",
+      "scheduling": "Agenda",
+      "conversations": "Conversazioni",
+      "metrics": "Prestazioni",
+      "settings": "Impostazioni",
+      "locked": "bloccato",
+      "needsAttention": "richiede attenzione",
+      "more": "Altro",
+      "needsSetup": "Da configurare",
+      "agenda": "Appuntamenti",
+      "mySchedule": "La mia agenda"
+    },
+    "locked": {
+      "title": "{name} non fa ancora parte del tuo team",
+      "body": "Questa pagina fa parte del lavoro di {name}. Assumi {name} per sbloccarla.",
+      "cta": "Conosci {name}",
+      "metricsTitle": "Assumi qualcuno per vedere come sta andando",
+      "metricsBody": "Quando avrai assunto un membro del team, qui potrai seguirne le prestazioni.",
+      "metricsCta": "Esplora il marketplace"
+    },
+    "noPlanAlert": "Scegli un piano per metterla al lavoro",
+    "setup": {
+      "entry": "Primi passi",
+      "progress": "{done} di {total}",
+      "next": "Prossimo: {step}",
+      "title": "Primi passi",
+      "close": "Chiudi",
+      "doneLabel": "Fatto",
+      "description": "Ogni passaggio si spunta da solo appena è completato.",
+      "steps": {
+        "plan": {
+          "title": "Scegli un piano",
+          "body": "Il tuo team risponde ai clienti quando un piano è attivo."
+        },
+        "business": {
+          "title": "Raccontaci la tua attività",
+          "body": "Descrizione, pagamenti, domande frequenti: ciò che il tuo team usa per rispondere ai clienti."
+        },
+        "products": {
+          "title": "Aggiungi i tuoi prodotti",
+          "body": "Il tuo team consiglia solo ciò che è nel tuo catalogo."
+        },
+        "hours": {
+          "title": "Imposta gli orari di apertura",
+          "body": "Gli orari che possono essere proposti ai clienti per gli appuntamenti."
+        },
+        "services": {
+          "title": "Aggiungi i tuoi servizi",
+          "body": "Cosa possono prenotare i clienti, con durata e prezzo."
+        },
+        "calendar": {
+          "title": "Collega Google Calendar",
+          "body": "Evita di prenotare negli orari in cui sei già occupato."
+        },
+        "channel": {
+          "title": "Collega un canale",
+          "body": "WhatsApp, Instagram, la chat del tuo sito o un link diretto: dove i clienti parleranno con il tuo team. Con il link diretto, il passaggio si spunta alla prima conversazione."
+        }
+      }
+    },
+    "member": {
+      "deactivatedTitle": "La tua agenda è stata disattivata",
+      "deactivatedBody": "L'attività ha disattivato la tua agenda, quindi per ora non c'è niente da gestire qui. Parlane con loro se si tratta di un errore."
+    }
+  },
+  "Metrics": {
+    "pageTitle": "Prestazioni",
+    "pageSubtitle": "Guarda come sta andando il tuo team e dove i clienti si avvicinano all'acquisto.",
+    "overviewTitle": "Panoramica delle metriche principali",
+    "overviewSubtitle": "Attività e coinvolgimento nel periodo selezionato.",
+    "range": {
+      "label": "Periodo",
+      "last7Days": "Ultimi 7 giorni",
+      "last30Days": "Ultimi 30 giorni",
+      "last90Days": "Ultimi 90 giorni"
+    },
+    "metrics": {
+      "conversations": {
+        "label": "Conversazioni",
+        "caption": "Conversazioni totali in questo periodo"
+      },
+      "messages": {
+        "label": "Messaggi",
+        "caption": "Messaggi totali in questo periodo"
+      },
+      "customers": {
+        "label": "Clienti",
+        "caption": "Persone con cui ha parlato il tuo team"
+      },
+      "productRecommendations": {
+        "label": "Prodotti consigliati",
+        "caption": "Prodotti suggeriti dal tuo team"
+      },
+      "buyingIntent": {
+        "label": "Intenzione d'acquisto",
+        "caption": "Segnali chiari che un cliente voleva comprare"
+      },
+      "checkoutClicks": {
+        "label": "Clic sul checkout",
+        "caption": "Tocchi su un link verso il tuo negozio"
+      },
+      "appointmentsBooked": {
+        "label": "Appuntamenti",
+        "caption": "Prenotati in questo periodo"
+      },
+      "appointmentsCompleted": {
+        "label": "Completati",
+        "caption": "Ora segnati come completati"
+      },
+      "appointmentsCancelled": {
+        "label": "Annullati",
+        "caption": "Ora annullati"
+      },
+      "appointmentsNoShow": {
+        "label": "Mancate presenze",
+        "caption": "Segnati come non presentati"
+      },
+      "waitlistAdded": {
+        "label": "Lista d'attesa",
+        "caption": "Clienti aggiunti in questo periodo"
+      }
+    },
+    "notASale": "Un clic sul checkout significa che un cliente ha aperto il tuo negozio, non che la vendita sia stata conclusa.",
+    "health": {
+      "healthyTitle": "{name} è al lavoro",
+      "healthyBody": "{name} ha gestito {conversations} conversazioni in questo periodo e funziona normalmente.",
+      "waitingTitle": "{name} è pronta",
+      "waitingBody": "{name} è configurata e collegata. I numeri inizieranno a comparire qui quando i clienti ti scriveranno.",
+      "pausedTitle": "{name} è in pausa",
+      "pausedBody": "{name} non risponderà ai clienti finché non la riattivi da Il mio team.",
+      "notHiredTitle": "Nessuno è ancora al lavoro",
+      "notHiredBody": "Assumi {name} dal marketplace per iniziare a vedere qui conversazioni e segnali d'acquisto.",
+      "notHiredCta": "Vai al marketplace"
+    },
+    "noCompany": "Crea la tua attività per iniziare a monitorare le prestazioni.",
+    "browseMarketplace": "Esplora il marketplace",
+    "agentSelectLabel": "Membro del team",
+    "reliability": {
+      "title": "Affidabilità",
+      "subtitle": "{name} può indicare solo un prezzo o una quantità in magazzino che risalgono al tuo catalogo. Ciò che non riesce a confermare viene riscritto o trattenuto.",
+      "empty": "Ancora niente da segnalare per {name} in questo periodo. I numeri compaiono qui quando risponde a una domanda su un prezzo o sulle quantità disponibili.",
+      "scope": "Conta le risposte che hanno effettivamente indicato un prezzo o una quantità in magazzino. Una risposta senza cifre non ha nulla da verificare e non viene conteggiata qui.",
+      "regeneratedLabel": "Corrette prima dell'invio",
+      "blockedLabel": "In attesa di conferma",
+      "cta": "Guarda chi aspetta una conferma",
+      "verifiedLabel": "Risposte con una cifra verificata"
+    },
+    "view": {
+      "current": "Questo periodo",
+      "previous": "{days} giorni precedenti",
+      "deltaUp": "{pct}% in più rispetto ai {days} giorni precedenti",
+      "deltaDown": "{pct}% in meno rispetto ai {days} giorni precedenti",
+      "deltaFlat": "Come nei {days} giorni precedenti",
+      "noPrevious": "Niente da confrontare nei {days} giorni precedenti",
+      "messages": "{count, plural, one {# messaggio scambiato} other {# messaggi scambiati}}",
+      "weekOf": "{start} – {end}",
+      "deltaFrom": "In aumento da {previous} nei {days} giorni precedenti",
+      "chartEmpty": "Ancora nessuna conversazione in questo periodo.",
+      "tableCaption": "Conversazioni per {unit, select, week {settimana} other {giorno}}",
+      "tableDate": "Data",
+      "salesFunnelTitle": "Dalla conversazione al checkout",
+      "salesFunnelBody": "Fin dove sono arrivati i clienti nel periodo selezionato.",
+      "schedulingFunnelTitle": "Appuntamenti presi",
+      "schedulingFunnelBody": "Prenotazioni fatte nel periodo selezionato e quante sono state completate.",
+      "stepRate": "{pct}% del passaggio precedente",
+      "outcomesTitle": "Altri risultati",
+      "reliabilityTitle": "Cifre verificate con il tuo catalogo"
+    }
+  },
+  "AgentDetail": {
+    "shouldTitle": "Cosa fa {name}",
+    "neverTitle": "Cosa {name} non farà mai",
+    "should": {
+      "askFollowUp": "Fa domande naturali per capire di cosa hanno bisogno i clienti",
+      "explainFit": "Spiega perché un consiglio è adatto prima di proporlo",
+      "handleObjections": "Gestisce le obiezioni con calma, senza pressioni",
+      "guideCheckout": "Accompagna i clienti al checkout quando sono pronti"
+    },
+    "never": {
+      "pushAggressively": "Spingere i prodotti in modo aggressivo",
+      "inventInfo": "Inventare prezzi, scorte o condizioni",
+      "soundGeneric": "Sembrare un chatbot qualunque"
+    },
+    "includedInPlan": "Incluso nel tuo piano",
+    "hireButton": "Assumi {name}",
+    "confirming": "Assunzione in corso…",
+    "needsPlanTitle": "Scegli un piano per assumere il tuo team",
+    "needsPlanBody": "Per assumere {name} serve un piano attivo — copre ogni membro del team che metti al lavoro. Scegline uno e {name} può iniziare subito.",
+    "goToBilling": "Vai alla fatturazione",
+    "hiredBadge": "{name} è assunta",
+    "hiredDescription": "{name} fa parte del tuo team — vai alle impostazioni per insegnarle tutto sulla tua attività e scegliere dove parlerà con i tuoi clienti.",
+    "goToSettings": "Vai alle impostazioni",
+    "hireError": "Si è verificato un errore durante l'assunzione di {name}. Riprova."
+  },
+  "Settings": {
+    "pageTitle": "Impostazioni dell'attività",
+    "readOnlyBanner": "Hai accesso in sola lettura — chiedi a un proprietario o a un amministratore di apportare le modifiche.",
+    "pastDueAlert": {
+      "title": "Pagamento non riuscito",
+      "body": "Tutto il tuo team è in pausa e non risponde a nessun cliente finché il problema non viene risolto.",
+      "action": "Aggiorna il pagamento"
+    },
+    "lowCompletenessAlert": {
+      "title": "Le informazioni sulla tua attività sono quasi vuote",
+      "body": "{filled, plural, =0 {Nessuna delle {total} sezioni è ancora compilata.} other {Solo # delle {total} sezioni sono compilate.}} Compilane almeno {min} così il tuo team avrà abbastanza informazioni per rispondere bene ai clienti."
+    },
+    "nav": {
+      "label": "Sezioni delle impostazioni",
+      "progress": "{filled} di {total} compilate",
+      "about": "L'attività",
+      "contact": "Contatti e sede",
+      "payments": "Pagamenti",
+      "faq": "FAQ",
+      "other": "Altre informazioni",
+      "billing": "Piano e fatturazione",
+      "filled": "Compilata",
+      "missing": "Mancante",
+      "notCounted": "Facoltativa"
+    },
+    "blocks": {
+      "aboutTitle": "L'attività",
+      "aboutDescription": "Cosa vendi e come lavori. Il tuo team lo usa per presentare la tua attività ai clienti.",
+      "contactTitle": "Contatti e sede",
+      "contactDescription": "Come e dove i clienti possono raggiungerti."
+    },
+    "faq": {
+      "untitled": "Nuova domanda",
+      "saveChanges": "Salva le domande",
+      "unsaved": "Modifiche non salvate",
+      "count": "{count, plural, =0 {Ancora nessuna domanda} one {# domanda} other {# domande}}"
+    }
+  },
+  "MyAgents": {
+    "pageTitle": "Il mio team",
+    "pageSubtitle": "Chi lavora per la tua attività e cosa aspetta una tua azione.",
+    "pastDueBanner": {
+      "title": "Pagamento non riuscito",
+      "body": "Tutto il tuo team è in pausa e non risponde a nessun cliente, su nessun canale, finché il problema non viene risolto.",
+      "action": "Aggiorna il pagamento"
+    },
+    "overLimitBanner": {
+      "title": "Hai esaurito le risposte di questo periodo",
+      "body": "Il tuo team continua a rispondere per un breve periodo di tolleranza, poi si ferma. Passa a un piano superiore per aumentare il limite.",
+      "action": "Vedi il piano"
+    },
+    "nearLimitBanner": {
+      "title": "Stai per esaurire le risposte",
+      "body": "{left, plural, one {# risposta rimasta} other {# risposte rimaste}} in questo periodo.",
+      "action": "Vedi il piano"
+    },
+    "configure": "Configura",
+    "backToMyAgents": "Torna al mio team",
+    "availableBadge": "Disponibile",
+    "viewDetails": "Vedi dettagli",
+    "includedInPlan": "Incluso nel tuo piano",
+    "needsPlan": "Serve un piano",
+    "filterAll": "Tutti",
+    "filterActive": "Attivi",
+    "filterPaused": "In pausa",
+    "filterAvailable": "Disponibili",
+    "traits": {
+      "warm": "Calorosa",
+      "attentive": "Attenta",
+      "persuasive": "Persuasiva, mai invadente",
+      "knowledgeable": "Competente",
+      "proactive": "Proattiva"
+    },
+    "connectionsTitle": "Collegamenti",
+    "tutorial": {
+      "title": "Sei nuovo? Guarda una presentazione di 2 minuti",
+      "description": "Guarda tutto ciò che c'è in questa pagina in azione, dalla configurazione di {name} alla condivisione con i clienti.",
+      "watch": "Guarda il tutorial",
+      "close": "Chiudi"
+    },
+    "notHired": "Non hai ancora assunto questo membro del team.",
+    "viewAgent": "Vedi {name}",
+    "conversationsToday": "Conversazioni di oggi",
+    "activeBadge": "Attiva",
+    "pausedBadge": "In pausa",
+    "name": {
+      "title": "Nome",
+      "description": "Come chiami questo membro del team. Viene usato in tutta la dashboard, nella sua pagina di chat e nelle conversazioni.",
+      "label": "Nome visualizzato",
+      "placeholder": "es. {default}",
+      "saveButton": "Salva",
+      "savedStatus": "Salvato",
+      "emptyError": "Dai un nome a questo membro del team.",
+      "updateError": "Si è verificato un errore. Riprova."
+    },
+    "availability": {
+      "title": "Assistenza clienti",
+      "description": "Attiva o disattiva {name} su tutti i canali contemporaneamente. Mentre è in pausa, {name} smette di rispondere ai clienti ovunque.",
+      "activeStatus": "Risponde ai clienti su tutti i canali",
+      "pausedStatus": "In pausa — non risponde da nessuna parte",
+      "pauseButton": "Metti in pausa",
+      "activateButton": "Riattiva",
+      "pauseConfirm": "Mettere in pausa {name}? Smetterà di rispondere su tutti i canali finché non la riattivi.",
+      "pauseConfirmButton": "Sì, metti in pausa",
+      "cancel": "Annulla",
+      "updateError": "Si è verificato un errore. Riprova.",
+      "planRequired": "Per riattivare {name} serve un piano attivo.",
+      "goToBilling": "Vai alla fatturazione",
+      "responding": "Risponde ai clienti"
+    },
+    "humanHandoff": {
+      "title": "Passaggio a una persona",
+      "description": "Se {name} — e ogni altra dipendente che assumi — può proporre di coinvolgere qualcuno della tua attività quando un cliente ha bisogno di una persona.",
+      "toggleLabel": "Consenti il passaggio a una persona",
+      "toggleHelp": "Se attivo, le tue dipendenti possono proporre di coinvolgere qualcuno della tua attività e puoi intervenire tu stesso in una conversazione dalla pagina Conversazioni. Se disattivo, gestiscono sempre le conversazioni da sole.",
+      "saveError": "Si è verificato un errore nel salvare l'impostazione. Riprova."
+    },
+    "channels": {
+      "title": "WhatsApp",
+      "description": "Collega il tuo numero WhatsApp Business così i clienti possono iniziare a scrivere.",
+      "loading": "Caricamento…",
+      "connectedBadge": "Collegato",
+      "notConnected": "Non ancora collegato.",
+      "connectButton": "Collega WhatsApp",
+      "connecting": "Collegamento in corso…",
+      "disconnectButton": "Scollega",
+      "disconnectConfirm": "Scollegare questo numero WhatsApp?",
+      "disconnectConfirmButton": "Sì, scollega",
+      "cancel": "Annulla",
+      "connectError": "Si è verificato un errore durante il collegamento di WhatsApp. Riprova.",
+      "disconnectError": "Si è verificato un errore durante lo scollegamento. Riprova.",
+      "sdkNotReady": "Ancora in caricamento — riprova tra un momento.",
+      "stepOneTitle": "Collega il tuo numero WhatsApp Business",
+      "stepTwoTitle": "Inizia a parlare con i clienti",
+      "stepTwoDescription": "Una volta collegato, il tuo team risponde su WhatsApp in automatico — giorno e notte.",
+      "paymentIssueBadge": "Pagamento richiesto",
+      "paymentIssueDescription": "WhatsApp non può consegnare i messaggi finché non aggiungi un metodo di pagamento al tuo account in Meta Business Manager.",
+      "billingIncludedTitle": "WhatsApp è incluso nel tuo piano",
+      "billingIncludedDescription": "I messaggi che il tuo team invia e riceve su WhatsApp sono già coperti dal tuo piano Staffra. Non devi aggiungere un metodo di pagamento su Meta né pagare nulla a parte.",
+      "addonRequiredTitle": "WhatsApp non è incluso nel tuo piano attuale",
+      "addonRequiredDescription": "Aggiungi l'opzione WhatsApp al tuo piano per collegare un numero e lasciare che il tuo team risponda lì ai clienti.",
+      "addonRequiredCta": "Aggiungi WhatsApp al tuo piano",
+      "pendingBadge": "In attivazione",
+      "pendingDescription": "Stiamo attivando questo numero su WhatsApp. Di solito ci vogliono pochi minuti e questa pagina si aggiorna da sola.",
+      "verificationDescription": "WhatsApp ha inviato un codice via SMS al numero {number}. Inseriscilo qui per completare l'attivazione.",
+      "verificationCodePlaceholder": "Codice di 6 cifre",
+      "verificationSubmit": "Conferma il codice",
+      "verificationError": "Non siamo riusciti a confermare il codice. Controllalo e riprova.",
+      "verificationWaitingForAdmin": "Questo numero è in attesa di un codice di conferma. Deve inserirlo qui un proprietario o un amministratore.",
+      "reconnectDescription": "{name} ha già usato il numero {number}. Ricollegalo oppure collega un numero diverso.",
+      "reconnectButton": "Ricollega {number}",
+      "connectAnotherButton": "Collega un altro numero",
+      "pendingCancel": "Annulla il collegamento",
+      "reconnectTwoFactorTitle": "Prima di ricollegare",
+      "reconnectTwoFactorIntro": "WhatsApp consente di ricollegare questo numero solo se la verifica in due passaggi è disattivata. Fallo prima, altrimenti il ricollegamento non andrà a buon fine:",
+      "reconnectTwoFactorStepOpen": "Apri WhatsApp Manager in Meta Business Suite",
+      "reconnectTwoFactorStepNumber": "In Numeri di telefono, clicca su {number} e apri le Impostazioni",
+      "reconnectTwoFactorStepDisable": "Disattiva la verifica in due passaggi",
+      "reconnectTwoFactorStepWait": "Attendi circa 5 minuti, poi torna qui",
+      "reconnectTwoFactorConfirm": "Ho disattivato la verifica in due passaggi per questo numero e ho atteso qualche minuto.",
+      "reconnectNowButton": "Ricollega ora"
+    },
+    "channelTabs": {
+      "tablistLabel": "Come i clienti possono raggiungere questa dipendente",
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram",
+      "telegram": "Telegram",
+      "embed": "Incorpora",
+      "link": "Link",
+      "previewLabel": "Come la vedranno i clienti",
+      "previewMessage": "Ciao! Sono {name}. Come posso aiutarti oggi?"
+    },
+    "telegram": {
+      "title": "Telegram",
+      "description": "Condividi questo link così i clienti possono iniziare a scrivere a {name} su Telegram — nessuna configurazione da parte tua.",
+      "copyLinkButton": "Copia link",
+      "copiedButton": "Copiato!"
+    },
+    "instagram": {
+      "title": "Instagram",
+      "description": "Collega il tuo account professionale Instagram così i clienti possono iniziare a scrivere.",
+      "loading": "Caricamento…",
+      "connectedBadge": "Collegato",
+      "connectedNoUsername": "Collegato",
+      "connectedBanner": "Instagram collegato.",
+      "notConnected": "Non ancora collegato.",
+      "prereqProfessional": "Il tuo account Instagram deve essere un account professionale (aziendale o creator).",
+      "prereqAllowMessages": "Nell'app di Instagram, attiva Impostazioni → Messaggi → Strumenti collegati → Consenti l'accesso ai messaggi.",
+      "connectButton": "Collega Instagram",
+      "disconnectButton": "Scollega",
+      "disconnectConfirm": "Scollegare questo account Instagram?",
+      "disconnectConfirmButton": "Sì, scollega",
+      "cancel": "Annulla",
+      "connectError": "Si è verificato un errore durante il collegamento di Instagram. Riprova.",
+      "disconnectError": "Si è verificato un errore durante lo scollegamento. Riprova."
+    },
+    "photo": {
+      "title": "Foto",
+      "description": "Scegli la foto di {name} che vedono i clienti — nella dashboard, in chat e ovunque compaia.",
+      "defaultLabel": "Opzione {number}",
+      "customLabel": "Personalizzata",
+      "chooseFileButton": "Scegli file",
+      "noFileChosen": "Nessun file selezionato",
+      "currentFileHint": "Viene usata una foto caricata in precedenza.",
+      "saveButton": "Salva",
+      "savingButton": "Salvataggio…",
+      "saved": "Salvato",
+      "chooseFileError": "Scegli una foto da caricare.",
+      "unsupportedFile": "Usa un file PNG, JPEG, WebP o GIF.",
+      "fileTooLarge": "La foto deve essere di 2 MB o meno.",
+      "saveError": "Si è verificato un errore nel salvare l'impostazione. Riprova."
+    },
+    "widgetCustomize": {
+      "title": "Personalizza il tuo widget",
+      "description": "Scegli l'aspetto della bolla di chat di {name} e cosa dice quando saluta un visitatore.",
+      "launcherSectionTitle": "Aspetto del pulsante",
+      "launcherDefault": "Animazione predefinita",
+      "launcherDefaultHint": "Il personaggio animato di {name}.",
+      "launcherPhoto": "Immagine predefinita",
+      "launcherPhotoHint": "La foto del profilo di {name}.",
+      "launcherImage": "Immagine personalizzata",
+      "launcherImageHint": "PNG, JPEG, WebP o GIF, fino a 2 MB.",
+      "chooseFileButton": "Scegli file",
+      "noFileChosen": "Nessun file selezionato",
+      "currentFileHint": "Viene usato un file caricato in precedenza.",
+      "positionSectionTitle": "Posizione della bolla",
+      "positionBottomRight": "In basso a destra",
+      "positionBottomLeft": "In basso a sinistra",
+      "offsetLabel": "Distanza dal bordo inferiore",
+      "offsetHint": "Alza la bolla se copre qualcosa sul tuo sito, come una barra di navigazione in basso.",
+      "greetingLabel": "Messaggio di benvenuto",
+      "greetingPlaceholder": "Ciao! 👋 Ti serve aiuto per trovare quello che cerchi?",
+      "greetingHint": "Compare in un fumetto accanto al pulsante qualche secondo dopo l'arrivo di un visitatore. È precompilato con un messaggio predefinito -- modificalo o lascialo così.",
+      "previewTitle": "Anteprima dal vivo",
+      "saveButton": "Salva",
+      "savingButton": "Salvataggio…",
+      "saved": "Salvato",
+      "chooseFileError": "Scegli un file da caricare.",
+      "unsupportedFileImage": "Usa un file PNG, JPEG, WebP o GIF.",
+      "fileTooLargeImage": "L'immagine deve essere di 2 MB o meno.",
+      "saveError": "Si è verificato un errore nel salvare l'impostazione. Riprova."
+    },
+    "webChat": {
+      "title": "Chat del sito",
+      "description": "Condividi un link diretto o incorpora una bolla di chat direttamente nel tuo sito."
+    },
+    "shareEmbed": {
+      "directLinkLabel": "Link diretto",
+      "directLinkDescription": "Condividi questo link direttamente con i clienti per chattare con {name}.",
+      "copyLinkButton": "Copia link",
+      "copiedButton": "Copiato!",
+      "embedSectionLabel": "Incorpora nel tuo sito",
+      "htmlSnippetLabel": "Snippet HTML",
+      "copyScriptButton": "Copia script",
+      "embedInfoText": "Incolla questo codice nel tuo sito, subito prima del tag di chiusura del body, per iniziare a condividere la chat di {name}. La bolla comparirà automaticamente nell'angolo in basso a destra.",
+      "openLink": "Apri il link"
+    },
+    "embedDomains": {
+      "title": "Siti autorizzati a incorporare la chat",
+      "description": "Aggiungi i domini in cui il widget di chat può comparire. Finché non ne aggiungi uno, il widget incorporato non funzionerà da nessuna parte — il link diretto alla chat funziona comunque.",
+      "sharedScopeNote": "Vale per il widget incorporato di ogni membro del team assunto, non solo di {name} — c'è un'unica lista condivisa per tutto il tuo sito.",
+      "domainLabel": "Dominio",
+      "domainPlaceholder": "esempio.it",
+      "addButton": "Aggiungi dominio",
+      "removeButton": "Rimuovi",
+      "emptyStateWarning": "Nessun dominio aggiunto — il widget incorporato è bloccato ovunque finché non ne aggiungi almeno uno."
+    },
+    "tour": {
+      "nameTitle": "Rendila tua",
+      "nameDescription": "Rinomina {name} in linea con il tuo marchio — i clienti vedono questo nome ovunque parli con loro.",
+      "humanHandoffTitle": "Coinvolgi una persona",
+      "humanHandoffDescription": "Attiva questa opzione così tu o il tuo team potete intervenire in una conversazione ogni volta che {name} deve passarla a una persona.",
+      "channelsTitle": "Raggiungi i clienti ovunque",
+      "channelsDescription": "Collega {name} a WhatsApp o Instagram, configura la chat per il tuo sito o condividi un link diretto. Ogni scheda mostra se quel canale è pronto."
+    },
+    "identity": {
+      "photoLabel": "Foto"
+    },
+    "team": {
+      "title": "Il tuo team",
+      "answering": "Risponde ai clienti",
+      "paused": "In pausa",
+      "conversations": "{count, plural, one {conversazione} other {conversazioni}} negli ultimi 7 giorni",
+      "needsYou": "{count, plural, one {# conversazione ha bisogno di te} other {# conversazioni hanno bisogno di te}}",
+      "allClear": "Niente in attesa di te",
+      "manage": "Gestisci {name}",
+      "emptyTitle": "Ancora nessuno nel tuo team",
+      "emptyBody": "Assumi qualcuno qui sotto. Inizia ad aiutare i tuoi clienti appena è configurata.",
+      "hireTitle": "Disponibili per l'assunzione",
+      "hireCta": "Conosci {name}",
+      "silenced": "Non risponde — controlla la fatturazione",
+      "billingIssue": "Il tuo pagamento richiede attenzione"
+    },
+    "hero": {
+      "editProfile": "Modifica profilo",
+      "editTitle": "Modifica il profilo di {name}",
+      "close": "Chiudi"
+    },
+    "channelHub": {
+      "title": "Dove {name} parla con i clienti",
+      "description": "Scegli un canale per collegarlo o cambiarne l'aspetto.",
+      "drawerTitle": "Canali di {name}",
+      "close": "Chiudi",
+      "status": {
+        "connected": "Collegato",
+        "connectedTo": "Collegato · {detail}",
+        "notConnected": "Non collegato",
+        "notInPlan": "Non incluso nel piano",
+        "paymentIssue": "Problema di pagamento con Meta",
+        "ready": "Pronto da condividere",
+        "noSites": "Ancora nessun sito autorizzato",
+        "sitesCount": "{count, plural, one {# sito autorizzato} other {# siti autorizzati}}",
+        "activating": "In attivazione · {detail}"
+      }
+    },
+    "behavior": {
+      "title": "Come lavora {name}",
+      "description": "Le modifiche si salvano automaticamente."
+    },
+    "schedulingSetup": {
+      "title": "Agenda di {name}",
+      "progress": "{done} di {total} pronti",
+      "finish": "Completa la configurazione",
+      "allReady": "Pronta a ricevere prenotazioni",
+      "open": "Apri Agenda",
+      "rows": {
+        "hours": "Orari di apertura",
+        "services": "Servizi",
+        "calendar": "Google Calendar",
+        "approval": "Approvazione delle prenotazioni",
+        "intake": "Domande preliminari",
+        "professionals": "Professionisti"
+      },
+      "status": {
+        "hoursOpen": "{count, plural, one {Aperto # giorno a settimana} other {Aperto # giorni a settimana}}",
+        "hoursNone": "Ancora nessun giorno di apertura",
+        "servicesCount": "{count, plural, one {# servizio} other {# servizi}}",
+        "servicesNone": "Ancora nessun servizio aggiunto",
+        "calendarConnected": "Collegato",
+        "calendarNotConnected": "Non collegato",
+        "approvalOn": "Approvi tu ogni prenotazione",
+        "approvalOff": "Le prenotazioni si confermano subito",
+        "intakeCount": "{count, plural, one {# domanda posta} other {# domande poste}}",
+        "professionalsCount": "{count, plural, one {# professionista} other {# professionisti}}",
+        "professionalsWithCalendars": "{count} professionisti · {connected} con Google Calendar"
+      },
+      "rulesHeading": "Regole",
+      "descriptionBlocked": "{name} propone solo orari compatibili con quanto configurato in Agenda. I clienti possono prenotare quando orari di apertura e servizi sono impostati.",
+      "descriptionCalendar": "I clienti possono già prenotare. Collega Google Calendar così {name} evita gli orari in cui sei impegnato altrove.",
+      "descriptionReady": "{name} propone orari in base ai tuoi orari di apertura, ai servizi e al calendario."
+    }
+  },
+  "Teach": {
+    "save": "Salva",
+    "saving": "Salvataggio…",
+    "saved": "Salvato",
+    "saveError": "Si è verificato un errore. Riprova.",
+    "autosaveSaved": "Modifiche salvate",
+    "autosaveError": "Impossibile salvare — modifica di nuovo il campo per riprovare.",
+    "businessInfo": {
+      "title": "Informazioni sull'attività",
+      "description": "Nome, indirizzo della tua azienda e come i clienti possono contattarti.",
+      "nameLabel": "Nome dell'attività",
+      "descriptionLabel": "Descrizione",
+      "descriptionPlaceholder": "Cosa vendi, cosa ti distingue e le regole generali che i clienti dovrebbero conoscere.",
+      "emailLabel": "Email di contatto",
+      "phoneLabel": "Telefono di contatto",
+      "websiteLabel": "Sito web",
+      "addressLabel": "Indirizzo",
+      "addressPlaceholder": "Via, numero civico, città, provincia",
+      "countryLabel": "Paese",
+      "countryPlaceholder": "Seleziona un paese",
+      "countrySearchPlaceholder": "Cerca un paese…",
+      "countryNoResults": "Nessun paese corrispondente",
+      "industryLabel": "Settore",
+      "industryPlaceholder": "es. Abbigliamento, Cosmetica, Elettronica",
+      "currencyLabel": "Valuta",
+      "currencyPlaceholder": "Seleziona una valuta",
+      "currencyOptions": {
+        "USD": "USD — Dollaro statunitense",
+        "BRL": "BRL — Real brasiliano",
+        "EUR": "EUR — Euro"
+      },
+      "timezoneLabel": "Fuso orario",
+      "timezonePlaceholder": "Seleziona un fuso orario",
+      "timezoneHint": "Usato per gli orari degli appuntamenti. Le nuove aziende usano per impostazione predefinita l'ora di Brasília.",
+      "timezoneOptions": {
+        "America/Sao_Paulo": "Brasília / San Paolo / Nordest (GMT-3)",
+        "America/Manaus": "Manaus / Cuiabá / Campo Grande (GMT-4)",
+        "America/Noronha": "Fernando de Noronha (GMT-2)",
+        "America/Rio_Branco": "Rio Branco / Acre (GMT-5)",
+        "America/New_York": "New York (GMT-5/-4)",
+        "Europe/Lisbon": "Lisbona (GMT+0/+1)",
+        "UTC": "UTC"
+      }
+    },
+    "shipping": {
+      "title": "Spedizioni",
+      "description": "Metodi di spedizione, costi, tempi di consegna e dove spedisci.",
+      "label": "Condizioni di spedizione",
+      "placeholder": "es. Spediamo in tutta Italia con [corriere], 3-5 giorni lavorativi, gratis sopra i 50 €…"
+    },
+    "returns": {
+      "title": "Resi",
+      "description": "Le tue condizioni per resi, cambi e rimborsi.",
+      "label": "Condizioni di reso",
+      "placeholder": "es. Reso entro 30 giorni, i prodotti devono essere inutilizzati e con l'etichetta…"
+    },
+    "payments": {
+      "title": "Pagamenti",
+      "description": "Metodi di pagamento accettati, rateizzazioni e altri dettagli sui pagamenti.",
+      "label": "Condizioni di pagamento",
+      "placeholder": "es. Accettiamo carta di credito, PayPal e bonifico. Pagamento in 3 rate…"
+    },
+    "faq": {
+      "title": "FAQ",
+      "description": "Le domande più comuni dei tuoi clienti, con le risposte.",
+      "questionLabel": "Domanda",
+      "answerLabel": "Risposta",
+      "addButton": "Aggiungi una domanda",
+      "removeButton": "Rimuovi",
+      "emptyState": "Ancora nessuna domanda — aggiungine una per iniziare."
+    },
+    "other": {
+      "title": "Altre informazioni",
+      "description": "Tutto ciò che il tuo team dovrebbe sapere e che non rientra nelle sezioni sopra.",
+      "label": "Altre informazioni",
+      "placeholder": "Qualsiasi altra cosa utile da sapere…"
+    }
+  },
+  "Products": {
+    "pageTitle": "Catalogo prodotti",
+    "pageSubtitle": "I prodotti che il tuo team consiglia ai clienti.",
+    "noCompany": "Assumi il primo membro del team per iniziare a gestire il catalogo prodotti.",
+    "browseMarketplace": "Esplora il marketplace",
+    "readOnlyBanner": "Hai accesso in sola lettura — chiedi a un proprietario o a un amministratore di apportare le modifiche.",
+    "emptyAlert": {
+      "title": "Il tuo catalogo è vuoto",
+      "body": "Il tuo team non può consigliare né vendere nulla finché non aggiungi almeno un prodotto."
+    },
+    "save": "Salva",
+    "saving": "Salvataggio…",
+    "saved": "Salvato",
+    "saveError": "Si è verificato un errore. Riprova.",
+    "closeDialogLabel": "Chiudi",
+    "filters": {
+      "searchLabel": "Cerca per nome",
+      "searchPlaceholder": "Cerca prodotti…",
+      "searchButton": "Cerca",
+      "categoryLabel": "Categoria",
+      "categoryPlaceholder": "Filtra per categoria…",
+      "includeInactiveLabel": "Mostra i prodotti disattivati",
+      "previousPage": "Precedente",
+      "nextPage": "Successiva",
+      "pageOf": "Pagina {page} di {totalPages}",
+      "emptyState": "Nessun prodotto corrisponde ai filtri."
+    },
+    "form": {
+      "addButton": "Aggiungi prodotto",
+      "editButton": "Modifica",
+      "editDialogTitle": "Modifica prodotto",
+      "cancelButton": "Annulla",
+      "nameLabel": "Nome",
+      "descriptionLabel": "Descrizione",
+      "descriptionHint": "Sii specifico: taglia, materiale, colore, peso, cosa è incluso. Il tuo team può dire ai clienti solo ciò che è scritto qui, quindi \"bella maglietta\" non basta, ma \"100% cotone, vestibilità regolare, lavabile in lavatrice\" sì.",
+      "priceLabel": "Prezzo",
+      "currencyLabel": "Valuta",
+      "currencyPlaceholder": "Seleziona una valuta",
+      "currencyOptions": {
+        "USD": "USD — Dollaro statunitense",
+        "BRL": "BRL — Real brasiliano",
+        "EUR": "EUR — Euro"
+      },
+      "stockLabel": "Scorte",
+      "stockPlaceholder": "Lascia vuoto se non lo monitori",
+      "imageUrlLabel": "URL dell'immagine",
+      "productUrlLabel": "URL della pagina prodotto",
+      "categoryLabel": "Categoria",
+      "skuLabel": "SKU",
+      "nameRequired": "Il nome è obbligatorio.",
+      "namePlaceholder": "es. Abito midi in lino",
+      "categoryPlaceholder": "es. Abiti",
+      "pricePlaceholder": "0,00",
+      "priceInvalid": "Inserisci un prezzo valido.",
+      "currencyRequiredWithPrice": "Scegli una valuta per questo prezzo.",
+      "stockInvalid": "Le scorte devono essere un numero intero.",
+      "detailsHeading": "Dettagli",
+      "priceHeading": "Prezzo e scorte",
+      "linksHeading": "Link",
+      "createButton": "Aggiungi prodotto"
+    },
+    "list": {
+      "nameColumn": "Nome",
+      "priceColumn": "Prezzo",
+      "stockColumn": "Scorte",
+      "categoryColumn": "Categoria",
+      "statusColumn": "Stato",
+      "actionsColumn": "Azioni",
+      "activeLabel": "Attivo",
+      "inactiveLabel": "Inattivo",
+      "noStock": "—"
+    },
+    "delete": {
+      "deactivateButton": "Disattiva",
+      "confirmButton": "Clicca di nuovo per disattivare — lo nasconde ai clienti e ne conserva lo storico degli ordini",
+      "cancelButton": "Annulla",
+      "reactivateButton": "Riattiva"
+    },
+    "addTabs": {
+      "cardTitle": "Aggiungi prodotti",
+      "tablistLabel": "Modi per aggiungere prodotti",
+      "manual": "Singolo",
+      "csv": "Foglio di calcolo",
+      "shopify": "Shopify"
+    },
+    "import": {
+      "title": "Importazione in blocco",
+      "description": "Carica un file CSV o Excel per aggiungere molti prodotti in una volta.",
+      "formatTitle": "Formato del file",
+      "formatDescription": "La prima riga deve contenere queste intestazioni di colonna: name, description, price, currency, stock, image, product_url, category, sku. Solo name è obbligatorio — lascia vuoto il resto se non hai quelle informazioni.",
+      "formatPriceHint": "Se indichi un prezzo, indica anche la sua valuta (es. BRL, USD, EUR) — un prezzo senza valuta verrà saltato.",
+      "formatDescriptionHint": "Inserisci in description tutto ciò che un cliente potrebbe chiedere: taglia, materiale, colore, peso, cosa è incluso. È l'unico posto da cui il tuo team ricava questi dettagli, quindi poche parole spesso non bastano. Scarica il modello per un esempio.",
+      "formatSizeHint": "Dimensione massima del file: 3 MB.",
+      "downloadTemplateButton": "Scarica il modello",
+      "chooseFileButton": "Scegli file",
+      "noFileChosen": "Nessun file selezionato",
+      "importButton": "Importa",
+      "importingButton": "Importazione…",
+      "importAnotherButton": "Importa un altro file",
+      "progressLabel": "Importazione… {percent}%",
+      "succeededSummary": "{count, plural, one {# prodotto importato correttamente.} other {# prodotti importati correttamente.}}",
+      "failedSummary": "L'importazione non è riuscita — non è stato salvato nulla. Riprova.",
+      "skippedTableRowHeader": "Riga",
+      "skippedTableReasonHeader": "Motivo",
+      "genericError": "Si è verificato un errore durante l'importazione del file. Riprova.",
+      "fileRequired": "Prima scegli un file.",
+      "fileTooLarge": "Questo file supera i 3 MB. Dividilo in file più piccoli e importali uno alla volta.",
+      "dropTitle": "Trascina qui il tuo foglio di calcolo",
+      "dropBody": "oppure clicca per scegliere un file CSV o Excel (fino a 3 MB)",
+      "formatToggle": "Come deve essere il file?"
+    },
+    "shopify": {
+      "title": "Collega il tuo negozio Shopify",
+      "description": "Porta automaticamente i tuoi prodotti Shopify nel catalogo, poi tienili aggiornati con un clic.",
+      "disconnectedHint": "Collega il tuo negozio e importiamo noi i prodotti per te — nessun foglio di calcolo necessario.",
+      "shopLabel": "L'indirizzo del tuo negozio Shopify",
+      "shopPlaceholder": "tuo-negozio.myshopify.com",
+      "connectButton": "Collega il negozio",
+      "adminOnlyHint": "Chiedi a un proprietario o a un amministratore di collegare il negozio.",
+      "statusConnected": "Collegato",
+      "lastSynced": "Ultimo aggiornamento {when}",
+      "neverSynced": "Non ancora importato — avvia la prima importazione qui sotto.",
+      "syncButton": "Sincronizza ora",
+      "syncFullButton": "Risincronizzazione completa",
+      "syncingButton": "Sincronizzazione…",
+      "syncRunning": "Importazione in corso — con un catalogo grande può richiedere qualche minuto. Clicca di nuovo Sincronizza ora per riprendere da dove si è fermata.",
+      "syncResult": "{synced} prodotti aggiornati, {deactivated} rimossi, {skipped} saltati",
+      "syncResultDelta": "{synced} prodotti aggiornati, {skipped} saltati",
+      "truncated": "Sono stati importati solo i primi {max} prodotti — contatta l'assistenza se il tuo catalogo è più grande.",
+      "skippedProductHeader": "Prodotto",
+      "skippedReasonHeader": "Motivo",
+      "syncError": "Si è verificato un errore durante la sincronizzazione del negozio. Riprova.",
+      "reauthError": "Il collegamento al negozio è scaduto. Collega di nuovo il negozio per mantenerlo sincronizzato.",
+      "disconnectButton": "Scollega",
+      "confirmDisconnectButton": "Clicca di nuovo per scollegare",
+      "cancelButton": "Annulla",
+      "banner": {
+        "connected": "Il tuo negozio Shopify è collegato. Avvia una sincronizzazione per importare i prodotti.",
+        "invalid_state": "Il link di collegamento è scaduto. Riprova.",
+        "denied": "Il negozio non è stato collegato. Riprova.",
+        "invalid_hmac": "Non siamo riusciti a verificare la risposta di Shopify. Riprova.",
+        "not_admin": "Solo un proprietario o un amministratore può collegare il negozio.",
+        "connected_elsewhere": "Questo negozio Shopify è già collegato a un altro account.",
+        "connect_failed": "Non siamo riusciti a collegare il tuo negozio. Riprova."
+      }
+    },
+    "catalog": {
+      "label": "Catalogo prodotti",
+      "search": "Cerca per nome…",
+      "clearSearch": "Cancella la ricerca",
+      "categoriesLabel": "Filtra per categoria",
+      "all": "Tutti",
+      "showInactive": "Mostra disattivati",
+      "count": "{count, plural, one {# prodotto} other {# prodotti}}",
+      "range": "{from}–{to} di {total}",
+      "previousPage": "Pagina precedente",
+      "nextPage": "Pagina successiva",
+      "add": "Aggiungi prodotti",
+      "addTitle": "Aggiungi prodotti",
+      "editTitle": "Modifica {name}",
+      "noMatch": "Nessun risultato per “{query}”.",
+      "noMatchFilters": "Nessun prodotto in questa vista.",
+      "stockUntracked": "Scorte non monitorate",
+      "stockOut": "Esaurito",
+      "stockLow": "{count, plural, one {Ne resta solo uno} other {Ne restano solo #}}",
+      "stockIn": "{count} disponibili",
+      "noPrice": "Senza prezzo",
+      "deactivatedBadge": "Disattivato",
+      "edit": "Modifica {name}",
+      "deactivate": "Disattiva {name}",
+      "deactivatePrompt": "Disattivare questo prodotto? I clienti non lo vedranno più e il suo storico verrà conservato.",
+      "deactivateConfirm": "Disattiva",
+      "cancel": "Annulla",
+      "reactivate": "Riattiva",
+      "actionError": "Impossibile aggiornare questo prodotto. Riprova.",
+      "loadError": "Impossibile caricare i prodotti. Riprova.",
+      "readOnlyTitle": "Sola lettura",
+      "emptyTitle": "Aggiungi i tuoi primi prodotti",
+      "emptyBody": "Scegli come caricarli. Puoi combinare tutti e tre i modi.",
+      "methods": {
+        "csv": {
+          "title": "Foglio di calcolo",
+          "body": "Carica un file CSV o Excel con tutto il catalogo in una volta."
+        },
+        "shopify": {
+          "title": "Shopify",
+          "body": "Collega il tuo negozio e tieni i prodotti sincronizzati con un clic."
+        },
+        "manual": {
+          "title": "Uno alla volta",
+          "body": "Inserisci tu stesso i dettagli di un prodotto."
+        }
+      },
+      "methodsLabel": "Modi per aggiungere prodotti",
+      "noMatchIn": "Nessun risultato per “{query}” in {category}.",
+      "noMatchCategory": "Nessun prodotto in {category} per questa vista.",
+      "clearFilters": "Cancella i filtri",
+      "viewImport": "Vedi l'importazione",
+      "dismiss": "Ignora"
+    }
+  },
+  "Services": {
+    "pageTitle": "Catalogo servizi",
+    "pageSubtitle": "I servizi che il tuo team può prenotare per i clienti.",
+    "noCompany": "Assumi il primo membro del team per iniziare a gestire i tuoi servizi.",
+    "browseMarketplace": "Esplora il marketplace",
+    "readOnlyBanner": "Hai accesso in sola lettura — chiedi a un proprietario o a un amministratore di apportare le modifiche.",
+    "emptyAlert": {
+      "title": "Ancora nessun servizio",
+      "body": "Finché non aggiungi i servizi che offri davvero, il tuo team può prenotare solo un appuntamento generico. Aggiungili uno per uno con durata e prezzo."
+    },
+    "default": {
+      "title": "Servizio predefinito",
+      "description": "Un'unica voce per le richieste che non hai elencato come servizio a sé.",
+      "explainer": "Se lo attivi, quando un cliente chiede di prenotare qualcosa che non hai configurato come servizio a sé — purché rientri in ciò che fa la tua attività — il tuo team lo prenota qui, annotando cosa ha chiesto. Se lo disattivi, si possono prenotare solo i servizi elencati.",
+      "onLabel": "Attivo",
+      "offLabel": "Disattivo",
+      "toggleAria": "Usa un servizio predefinito per le richieste non elencate",
+      "nameLabel": "Nome",
+      "descriptionLabel": "Descrizione",
+      "descriptionHint": "Cosa comprende davvero, in una o due frasi. Il tuo team la legge per decidere se una richiesta è adatta (così il servizio predefinito di uno studio dentistico non verrà prenotato per un taglio di capelli) e non la ripete mai al cliente.",
+      "durationLabel": "Durata (minuti)",
+      "saved": "Salvato",
+      "saveError": "Si è verificato un errore nel salvataggio. Riprova."
+    },
+    "save": "Salva",
+    "saving": "Salvataggio…",
+    "saveError": "Si è verificato un errore. Riprova.",
+    "closeDialogLabel": "Chiudi",
+    "form": {
+      "addButton": "Aggiungi servizio",
+      "editButton": "Modifica",
+      "editDialogTitle": "Modifica servizio",
+      "cancelButton": "Annulla",
+      "nameLabel": "Nome",
+      "namePlaceholder": "es. Taglio",
+      "descriptionLabel": "Descrizione",
+      "durationLabel": "Durata (minuti)",
+      "durationPlaceholder": "es. 30",
+      "bufferLabel": "Pausa (minuti)",
+      "bufferPlaceholder": "es. 10",
+      "bufferHint": "Tempo extra bloccato dopo ogni prenotazione — per pulizia, note o spostamenti. Lascia vuoto se non serve.",
+      "priceLabel": "Prezzo",
+      "pricePlaceholder": "Lascia vuoto se varia",
+      "currencyLabel": "Valuta",
+      "currencyPlaceholder": "Seleziona una valuta",
+      "categoryLabel": "Categoria",
+      "categoryPlaceholder": "es. Capelli",
+      "nameRequired": "Il nome è obbligatorio.",
+      "durationRequired": "La durata è obbligatoria e deve essere un numero intero di minuti maggiore di zero.",
+      "bufferInvalid": "La pausa deve essere un numero intero di minuti, oppure vuota.",
+      "priceInvalid": "Il prezzo deve essere un numero pari o superiore a zero.",
+      "currencyRequiredWithPrice": "Scegli una valuta da associare al prezzo.",
+      "currencyOptions": {
+        "USD": "USD — Dollaro statunitense",
+        "BRL": "BRL — Real brasiliano",
+        "EUR": "EUR — Euro"
+      },
+      "professionalsLabel": "Chi lo esegue",
+      "professionalsAll": "Tutti",
+      "professionalsHint": "I clienti possono prenotare questo servizio solo con i professionisti selezionati qui."
+    },
+    "menu": {
+      "search": "Cerca servizi",
+      "clearSearch": "Cancella la ricerca",
+      "all": "Tutti",
+      "uncategorized": "Altro",
+      "count": "{count, plural, one {# servizio} other {# servizi}}",
+      "add": "Aggiungi servizio",
+      "addTitle": "Nuovo servizio",
+      "editTitle": "Modifica {name}",
+      "edit": "Modifica {name}",
+      "deactivate": "Disattiva {name}",
+      "deactivatePrompt": "I clienti non potranno più prenotarlo. Le prenotazioni esistenti restano.",
+      "deactivateConfirm": "Disattiva",
+      "cancel": "Annulla",
+      "reactivate": "Riattiva",
+      "deactivated": "Disattivati ({count})",
+      "priceVaries": "Prezzo variabile",
+      "duration": "{minutes} min",
+      "buffer": "+{minutes} min dopo",
+      "noMatch": "Nessun servizio corrisponde a “{query}”.",
+      "emptyTitle": "Il tuo menu è vuoto",
+      "defaultEdit": "Modifica",
+      "defaultClose": "Fatto",
+      "actionError": "Non è andata a buon fine. Riprova."
+    }
+  },
+  "Scheduling": {
+    "tabs": {
+      "ariaLabel": "Sezioni dell'agenda",
+      "appointments": "Appuntamenti",
+      "services": "Servizi",
+      "professionals": "Professionisti",
+      "settings": "Impostazioni"
+    },
+    "professionals": {
+      "pageTitle": "Professionisti",
+      "noCompany": "Crea prima la tua attività per configurare i professionisti.",
+      "browseMarketplace": "Vai alla dashboard",
+      "title": "Professionisti",
+      "subtitle": "Tutte le persone che seguono i clienti, ognuna con la propria agenda. Quando sono più di una, i clienti scelgono con chi prenotare.",
+      "addButton": "Aggiungi professionista",
+      "singleTitle": "Più persone seguono i clienti qui?",
+      "singleBody": "Aggiungile tutte (barbieri, medici, parrucchieri…). Ognuna ha la propria agenda, orario di lavoro, assenze e Google Calendar, e i clienti possono scegliere con chi prenotare.",
+      "nameLabel": "Nome",
+      "namePlaceholder": "es. Marco",
+      "addConfirm": "Aggiungi",
+      "cancel": "Annulla",
+      "nameRequired": "Inserisci un nome.",
+      "saveError": "Impossibile salvare. Riprova.",
+      "saved": "Salvato",
+      "save": "Salva",
+      "lastActiveError": "La tua attività deve avere almeno un professionista attivo.",
+      "upcomingError": "{count, plural, one {Questo professionista ha # appuntamento in programma.} other {Questo professionista ha # appuntamenti in programma.}} Annullali o spostali prima a qualcun altro.",
+      "you": "Tu",
+      "ownHours": "Orario proprio",
+      "inheritedHours": "Orari di apertura",
+      "allServices": "Tutti i servizi",
+      "googleConnected": "Google collegato",
+      "googleNotConnected": "Google non collegato",
+      "moveUp": "Sposta {name} su",
+      "moveDown": "Sposta {name} giù",
+      "deactivate": "Rimuovi",
+      "manage": "Gestisci",
+      "showInactive": "{count, plural, one {Mostra # professionista rimosso} other {Mostra # professionisti rimossi}}",
+      "hideInactive": "Nascondi i professionisti rimossi",
+      "reactivate": "Ripristina",
+      "backToList": "Torna ai professionisti",
+      "detailSubtitle": "La sua agenda: orario di lavoro, assenze e Google Calendar.",
+      "inactiveSubtitle": "Rimosso — i clienti non possono più prenotare con questo professionista.",
+      "identityTitle": "Profilo",
+      "identitySubtitle": "Il nome che i clienti vedono quando scelgono con chi prenotare e l'email con cui questa persona accede.",
+      "servicesTitle": "Servizi",
+      "servicesSubtitle": "Cosa possono prenotare i clienti con questo professionista.",
+      "noServices": "Ancora nessun servizio.",
+      "editServicesLink": "Scegli chi esegue ogni servizio in Servizi",
+      "hoursTitle": "Orario di lavoro",
+      "inheritedHoursSubtitle": "Segue gli orari di apertura. Passa a un orario proprio se lavora in giorni o orari diversi.",
+      "ownHoursSubtitle": "Il suo orario settimanale, indipendente dagli orari di apertura.",
+      "noEstablishmentHours": "Gli orari di apertura non sono ancora impostati.",
+      "useOwnHours": "Usa un orario proprio",
+      "useEstablishmentHours": "Segui di nuovo gli orari di apertura",
+      "timeOffTitle": "Assenze",
+      "timeOffSubtitle": "Giorni in cui solo questo professionista è assente. I clienti possono comunque prenotare con tutti gli altri.",
+      "googleSubtitle": "Collega il Google Calendar di {name}: i suoi impegni vengono rispettati e i suoi appuntamenti finiscono lì.",
+      "backToAgenda": "Torna agli appuntamenti",
+      "emailLabel": "Email di accesso",
+      "emailPlaceholder": "nome@esempio.it",
+      "emailRequired": "Inserisci la sua email.",
+      "emailInvalid": "Questa email non sembra corretta.",
+      "emailInOtherCompany": "Questa email appartiene già a un'altra attività su Staffra. Usane una diversa.",
+      "emailTaken": "Questa email è già usata da un altro professionista qui.",
+      "addEmailHint": "Chiedigli di creare un account Staffra con questa email. Andrà direttamente ai suoi appuntamenti e alla sua agenda.",
+      "accessActive": "Account attivo",
+      "accessPending": "Invito in sospeso",
+      "pendingHint": "Chiedi a {name} di creare un account Staffra con questa email per vedere i propri appuntamenti.",
+      "noEmailHint": "Aggiungi l'email di {name} così potrà accedere e vedere i propri appuntamenti.",
+      "unlinkSelfConfirm": "Scollegare il tuo account da questa agenda? Mantieni l'accesso completo all'attività.",
+      "roles": {
+        "owner": "Proprietario",
+        "admin": "Amministratore",
+        "member": "Membro"
+      },
+      "promote": "Rendi amministratore",
+      "promoteConfirm": "Rendere {name} amministratore? Vedrà e gestirà tutta l'attività, come te.",
+      "demote": "Rendi di nuovo membro",
+      "demoteConfirm": "Rendere di nuovo {name} un membro? Vedrà solo i propri appuntamenti e la propria agenda.",
+      "remove": "Rimuovi dall'attività",
+      "removeConfirm": "Rimuovere {name} dall'attività? Perde subito l'accesso e la sua agenda viene disattivata, quindi i clienti non potranno più prenotare con lui. Lo storico resta e potrai riattivare l'agenda più avanti.",
+      "unlinkSelf": "Scollega il mio account da questa agenda",
+      "ownerOnly": "Solo il proprietario può farlo."
+    },
+    "settings": {
+      "pageTitle": "Impostazioni dell'agenda",
+      "pageSubtitle": "Imposta quando il tuo team è disponibile per le prenotazioni e come vengono gestite le nuove richieste di appuntamento.",
+      "noCompany": "Assumi il primo membro del team per iniziare a ricevere prenotazioni.",
+      "browseMarketplace": "Esplora il marketplace",
+      "readOnlyBanner": "Hai accesso in sola lettura — chiedi a un proprietario o a un amministratore di apportare le modifiche.",
+      "businessHours": {
+        "title": "Orari di apertura",
+        "subtitle": "Imposta la tua disponibilità settimanale per gli appuntamenti.",
+        "closed": "Chiuso",
+        "to": "alle",
+        "openLabel": "{day} aperto",
+        "rangeStartAria": "{day} fascia oraria {position} — apre alle",
+        "rangeEndAria": "{day} fascia oraria {position} — chiude alle",
+        "addRange": "Aggiungi orario",
+        "save": "Salva gli orari di apertura",
+        "saving": "Salvataggio…",
+        "saved": "Orari di apertura salvati.",
+        "invalidRange": "Ogni fascia oraria deve finire dopo il suo inizio.",
+        "overlap": "Le fasce orarie di {day} non possono sovrapporsi.",
+        "saveError": "Si è verificato un errore nel salvare gli orari. Riprova.",
+        "days": {
+          "monday": "Lunedì",
+          "tuesday": "Martedì",
+          "wednesday": "Mercoledì",
+          "thursday": "Giovedì",
+          "friday": "Venerdì",
+          "saturday": "Sabato",
+          "sunday": "Domenica"
+        },
+        "unsaved": "Modifiche non salvate",
+        "addRangeAria": "Aggiungi orario a {day}",
+        "removeRangeAria": "Rimuovi la fascia oraria {position} di {day}"
+      },
+      "approval": {
+        "title": "Controllo degli appuntamenti",
+        "subtitle": "Gestisci le regole per le richieste di prenotazione in arrivo.",
+        "toggleLabel": "Richiedi approvazione prima di confermare gli appuntamenti",
+        "toggleHelp": "Se attivo, le nuove prenotazioni restano in attesa finché non le confermi tu.",
+        "leadTimeLabel": "Con quanto anticipo va fatta una prenotazione",
+        "leadTimeHelp": "Il momento più vicino in cui un cliente può prenotare, a partire da adesso. Esempio: 120 minuti significa che chi scrive alle 15:00 non può prendere un orario prima delle 17:00. Imposta 0 per consentire la prenotazione del primo orario libero.",
+        "cancelCutoffLabel": "Quando i clienti non possono più disdire da soli",
+        "cancelCutoffHelp": "Quando mancano queste ore all'appuntamento, il cliente non può più disdirlo da solo — il tuo team gli chiede di contattarti. Esempio: 24 significa che la disdetta autonoma si chiude un giorno prima dell'inizio. Imposta 0 per consentirla sempre.",
+        "minutesUnit": "minuti",
+        "hoursUnit": "ore",
+        "saveError": "Si è verificato un errore nel salvare l'impostazione. Riprova.",
+        "saving": "Salvataggio…",
+        "saved": "Modifiche salvate"
+      },
+      "timeOff": {
+        "title": "Assenze e chiusure",
+        "subtitle": "Blocca interi giorni in cui nessuno è disponibile per appuntamenti — festività, viaggi, qualsiasi cosa.",
+        "empty": "Nessuna assenza in programma.",
+        "startLabel": "Dal",
+        "endLabel": "Al",
+        "reasonLabel": "Motivo (facoltativo)",
+        "reasonPlaceholder": "es. Festività",
+        "reasonHint": "Se indichi un motivo, potrebbe essere comunicato al cliente che chiede di una data bloccata.",
+        "addButton": "Aggiungi assenza",
+        "adding": "Aggiunta…",
+        "removeLabel": "Rimuovi questa assenza",
+        "rangeSeparator": "–",
+        "missingDates": "Scegli una data di inizio e una di fine.",
+        "invalidRange": "La data di fine non può essere precedente a quella di inizio.",
+        "overlap": "Queste date si sovrappongono a una voce già presente ({range}). Rimuovila prima, o scegli date al di fuori.",
+        "saveError": "Si è verificato un errore. Riprova.",
+        "dayCount": "{count, plural, one {# giorno} other {# giorni}}",
+        "addHeading": "Aggiungi una chiusura"
+      },
+      "googleCalendar": {
+        "title": "Google Calendar",
+        "subtitle": "Collega un Google Calendar così il tuo team controlla i conflitti prima di prenotare.",
+        "loading": "Caricamento…",
+        "notConfigured": "Google Calendar non è ancora configurato per questa area di lavoro.",
+        "connectedSince": "Collegato il {date}",
+        "notConnected": "Ancora nessun calendario collegato.",
+        "adminOnly": "Chiedi a un proprietario o a un amministratore — o a questo professionista — di collegare un calendario.",
+        "connectButton": "Collega Google Calendar",
+        "connecting": "Apertura di Google…",
+        "disconnectButton": "Scollega",
+        "disconnectConfirm": "Scollegare questo Google Calendar?",
+        "disconnectConfirmButton": "Sì, scollega",
+        "cancel": "Annulla",
+        "connectError": "Si è verificato un errore durante il collegamento di Google Calendar. Riprova.",
+        "disconnectError": "Si è verificato un errore durante lo scollegamento. Riprova.",
+        "sdkNotReady": "Ancora in caricamento — riprova tra un momento.",
+        "stepOneTitle": "Collega il tuo account Google",
+        "stepTwoTitle": "Le prenotazioni rispettano il tuo calendario",
+        "stepTwoDescription": "Una volta collegato, quando propone gli orari il tuo team salta quelli in cui sei già impegnato su Google Calendar.",
+        "privacyNotice": "I dati del tuo Google Calendar vengono usati solo per verificare la disponibilità e gestire gli appuntamenti, secondo la nostra",
+        "privacyNoticeLink": "Informativa sulla privacy",
+        "calendarTitle": "Scegli il calendario",
+        "calendarHint": "Gli appuntamenti finiscono in questo calendario e i suoi impegni bloccano le nuove prenotazioni.",
+        "calendarLabel": "Calendario",
+        "primaryCalendar": "calendario principale",
+        "createCalendar": "Crea un calendario solo per questo",
+        "calendarSaved": "Calendario aggiornato.",
+        "calendarCreated": "Creato “{name}” e selezionato.",
+        "calendarError": "Impossibile aggiornare il calendario. Riprova.",
+        "multiSubtitle": "Ogni professionista collega il proprio Google Calendar. Guarda chi è collegato:",
+        "manageLink": "Gestisci"
+      },
+      "intake": {
+        "title": "Domande preliminari",
+        "subtitle": "Informazioni da raccogliere dal cliente prima di prenotare un appuntamento.",
+        "hint": "I campi standard coprono le basi — attiva quelli che un cliente deve fornire prima di prenotare. Aggiungi qui sotto domande extra per qualsiasi cosa specifica; inserisci solo un'etichetta breve e il tuo team la chiederà con parole sue.",
+        "standardHeading": "Campi standard",
+        "extraHeading": "Domande extra",
+        "alwaysOn": "sempre obbligatorio",
+        "standardLabels": {
+          "email": "Email",
+          "full_name": "Nome e cognome",
+          "phone": "Telefono",
+          "cpf": "CPF",
+          "date_of_birth": "Data di nascita"
+        },
+        "empty": "Nessuna domanda extra — vengono raccolti solo i campi standard qui sopra.",
+        "labelPlaceholder": "es. Motivo della visita",
+        "labelAria": "Etichetta della domanda {position}",
+        "required": "Obbligatoria",
+        "requiredAria": "Rendi \"{label}\" obbligatoria",
+        "thisQuestion": "questa domanda",
+        "moveUp": "Sposta la domanda su",
+        "moveDown": "Sposta la domanda giù",
+        "removeLabel": "Rimuovi questa domanda",
+        "add": "Aggiungi domanda",
+        "save": "Salva le modifiche",
+        "saving": "Salvataggio…",
+        "saved": "Domande preliminari salvate.",
+        "cancel": "Annulla",
+        "unsaved": "Modifiche non salvate",
+        "blankLabel": "Dai un nome a ogni domanda, oppure rimuovi quelle vuote.",
+        "saveError": "Si è verificato un errore nel salvare le domande. Riprova."
+      },
+      "nav": {
+        "label": "Sezioni delle impostazioni dell'agenda",
+        "needsAttention": "Richiede attenzione",
+        "hoursOpen": "{count, plural, one {Aperto # giorno a settimana} other {Aperto # giorni a settimana}}",
+        "hoursClosed": "Ancora nessun giorno di apertura",
+        "approvalOn": "Approvi tu ogni prenotazione",
+        "approvalOff": "Le prenotazioni si confermano subito",
+        "timeOffNone": "Niente in programma",
+        "timeOffCount": "{count, plural, one {# chiusura in programma} other {# chiusure in programma}}",
+        "intakeCount": "{count, plural, one {# domanda posta} other {# domande poste}}",
+        "calendarConnected": "Collegato",
+        "calendarNotConnected": "Non collegato",
+        "calendarsConnected": "{connected} di {total} collegati",
+        "calendarUnavailable": "Non disponibile",
+        "readOnlyTitle": "Sola lettura"
+      }
+    },
+    "appointments": {
+      "pageTitle": "Appuntamenti",
+      "pageSubtitle": "Tutto ciò che il tuo team ha prenotato e ciò che è già passato.",
+      "noCompany": "Assumi il primo membro del team per iniziare a ricevere prenotazioni.",
+      "browseMarketplace": "Esplora il marketplace",
+      "readOnlyBanner": "Hai accesso in sola lettura — chiedi a un proprietario o a un amministratore di apportare le modifiche.",
+      "scopeLabel": "Intervallo di tempo",
+      "scope": {
+        "upcoming": "In programma",
+        "past": "Passati"
+      },
+      "calendarView": "Vista calendario",
+      "listView": "Vista elenco",
+      "previousMonth": "Mese precedente",
+      "nextMonth": "Mese successivo",
+      "statusFilterLabel": "Stato",
+      "statusFilterAll": "Tutti gli stati",
+      "emptyState": "Ancora niente prenotato in questo intervallo.",
+      "emptyHint": "Le nuove prenotazioni arrivano qui nel momento in cui il tuo team le prende.",
+      "loading": "Caricamento…",
+      "status": {
+        "requested": "In attesa di approvazione",
+        "confirmed": "Confermato",
+        "cancelled": "Annullato",
+        "completed": "Completato",
+        "no_show": "Non presentato"
+      },
+      "alerts": {
+        "businessHoursTitle": "Nessun orario di apertura impostato",
+        "businessHoursBody": "Il tuo team non sa quando sei aperto, quindi non può ancora proporre orari reali ai clienti.",
+        "businessHoursAction": "Imposta gli orari di apertura",
+        "intakeTitle": "Nessuna domanda preliminare impostata",
+        "intakeBody": "Aggiungi cosa deve chiedere il tuo team prima di prenotare (es. \"Quale servizio?\", \"Qualche allergia?\") così non sfugge nulla di importante.",
+        "intakeAction": "Aggiungi domande preliminari",
+        "calendarTitle": "Google Calendar non è collegato",
+        "calendarBody": "Collegalo così il tuo team controlla il tuo calendario reale ed evita doppie prenotazioni.",
+        "calendarAction": "Collega Google Calendar"
+      },
+      "list": {
+        "serviceLabel": "Servizio:",
+        "serviceRemoved": "Servizio rimosso",
+        "unnamedCustomer": "Senza nome",
+        "summaryLabel": "Di cosa si tratta",
+        "intakeToggle": "{count, plural, one {# informazione dal cliente} other {# informazioni dal cliente}}"
+      },
+      "actions": {
+        "approve": "Approva",
+        "decline": "Rifiuta",
+        "declinePrompt": "Rifiutare questa richiesta? L'orario del cliente torna libero.",
+        "declineReasonPlaceholder": "Motivo (facoltativo, interno)",
+        "confirmDecline": "Rifiuta",
+        "complete": "Segna come completato",
+        "noShow": "Non presentato",
+        "cancel": "Annulla",
+        "cancelPrompt": "Annullare questa prenotazione? L'orario del cliente torna libero.",
+        "confirmCancel": "Sì, annulla",
+        "keep": "Mantieni"
+      },
+      "board": {
+        "today": "Oggi",
+        "tomorrow": "Domani",
+        "todayCount": "{count, plural, =0 {Niente prenotato oggi} one {# appuntamento oggi} other {# appuntamenti oggi}}",
+        "completedCount": "{count, plural, one {# completato} other {# completati}}",
+        "next": "Prossimo",
+        "now": "In corso",
+        "noneLeft": "Nient'altro prenotato per oggi",
+        "teamTaking": "{name} sta ricevendo prenotazioni",
+        "teamPaused": "{name} è in pausa",
+        "pendingTitle": "In attesa della tua approvazione",
+        "agendaTitle": "Agenda",
+        "loadMore": "Carica altri",
+        "details": "Dettagli",
+        "hideDetails": "Nascondi dettagli",
+        "viewLabel": "Vista",
+        "list": "Elenco",
+        "calendar": "Calendario",
+        "timelineLabel": "Linea del tempo di oggi",
+        "teamNoHours": "{name} non può ancora proporre orari",
+        "noHoursTimeline": "Imposta gli orari di apertura per vedere la linea del tempo di oggi."
+      },
+      "professionalFilterLabel": "Filtra per professionista",
+      "professionalFilterAll": "Tutti i professionisti"
+    }
+  },
+  "LanguageSwitcher": {
+    "label": "Lingua",
+    "trigger": "Lingua: {language}"
+  },
+  "Conversations": {
+    "pageTitle": "Conversazioni",
+    "pageSubtitle": "Guarda cosa dice il tuo team ai clienti e intervieni quando serve.",
+    "noCompany": "Assumi il primo membro del team per iniziare a vedere le conversazioni.",
+    "browseMarketplace": "Esplora il marketplace",
+    "channel": {
+      "whatsapp": "WhatsApp",
+      "web_chat": "Chat del sito",
+      "instagram": "Instagram",
+      "telegram": "Telegram"
+    },
+    "filters": {
+      "status": {
+        "all": "Tutte",
+        "paused": "Richiedono attenzione",
+        "active": "Attive",
+        "closed": "Risolte"
+      },
+      "searchHint": "La ricerca trova solo il nome o il telefono di un cliente — la maggior parte dei clienti non li ha ancora condivisi, quindi finché non lo fanno troverà poco."
+    },
+    "detail": {
+      "withAgent": "In chat con {name}",
+      "grounding": {
+        "regeneratedTitle": "Corretta prima dell'invio",
+        "regeneratedBody": "Questa risposta citava una cifra non verificata con il tuo catalogo, quindi è stata riscritta. Il cliente ha visto solo la versione corretta.",
+        "blockedTitle": "Trattenuta — questo cliente è ancora in attesa",
+        "blockedBody": "Una cifra non ha potuto essere confermata con il tuo catalogo, quindi al cliente è stato chiesto di attendere una conferma invece di ricevere un numero non verificato.",
+        "discarded": "Cifra scartata: {figures}",
+        "verified": "{count, plural, =1 {Cifra verificata con il tuo catalogo} other {# cifre verificate con il tuo catalogo}}"
+      }
+    },
+    "pending": {
+      "rowBadge": "In attesa di conferma"
+    },
+    "hot": {
+      "rowBadgeClick": "Ha cliccato il link",
+      "rowBadgeIntent": "Vuole comprare"
+    },
+    "inbox": {
+      "groups": {
+        "needsYou": "Serve il tuo intervento",
+        "hot": "Pronti a comprare",
+        "rest": "Tutto il resto"
+      },
+      "tabs": {
+        "all": "Tutte",
+        "paused": "Con te",
+        "active": "Attive",
+        "closed": "Risolte"
+      },
+      "search": {
+        "placeholder": "Cerca clienti",
+        "clear": "Cancella la ricerca"
+      },
+      "awaiting": "In attesa di conferma · {count}",
+      "loadMore": "Carica altre",
+      "you": "Tu",
+      "yesterday": "Ieri",
+      "today": "Oggi",
+      "empty": {
+        "title": "Ancora nessuna conversazione",
+        "body": "Quando un cliente scrive al tuo team su un qualsiasi canale collegato, la conversazione compare qui in tempo reale.",
+        "filteredTitle": "Nessun risultato con questi filtri",
+        "clearFilters": "Cancella i filtri"
+      },
+      "overview": {
+        "needsYou": "{count, plural, =1 {# conversazione ha bisogno di te} other {# conversazioni hanno bisogno di te}}",
+        "needsYouBody": "I clienti che aspettano te sono fissati in cima all'elenco.",
+        "hot": "{count, plural, =1 {# cliente è pronto a comprare} other {# clienti sono pronti a comprare}}",
+        "caughtUp": "Sei in pari",
+        "caughtUpBody": "Il tuo team sta gestendo tutte le conversazioni. Scegline una per vedere cosa dice ai clienti.",
+        "openFirst": "Apri la prima",
+        "keyboard": "Usa ↑ e ↓ per spostarti tra le conversazioni"
+      },
+      "thread": {
+        "back": "Torna alle conversazioni",
+        "status": {
+          "active": "{name} sta rispondendo",
+          "paused": "La stai gestendo tu",
+          "closed": "Risolta"
+        },
+        "handbackBody": "{name} non risponderà finché gestisci tu questa conversazione.",
+        "handbackButton": "Restituisci a {name}",
+        "composerHint": "Inviare una risposta mette in pausa {name} qui finché non gliela restituisci.",
+        "teamFallback": "il tuo team",
+        "placeholder": "Scrivi una risposta…",
+        "send": "Invia",
+        "sendError": "Si è verificato un errore durante l'invio. Riprova.",
+        "deliveryFailed": "La tua risposta è stata salvata, ma non siamo riusciti a consegnarla al cliente. Può succedere se sono passate più di 24 ore dal suo ultimo messaggio.",
+        "deliveryNoWhatsappAddon": "La tua risposta è stata salvata, ma il tuo piano attuale non include WhatsApp, quindi non è stata inviata. Passa a un piano con WhatsApp in Piano e fatturazione per rispondere lì.",
+        "empty": "Ancora nessun messaggio.",
+        "loadError": "Non siamo riusciti a caricare questa conversazione.",
+        "retry": "Riprova"
+      },
+      "details": {
+        "open": "Dettagli della conversazione",
+        "close": "Chiudi i dettagli",
+        "title": "Dettagli",
+        "channel": "Canale",
+        "handledBy": "Gestita da",
+        "status": "Stato",
+        "started": "Iniziata",
+        "lastActivity": "Ultima attività",
+        "messages": "Messaggi",
+        "signals": "Segnali",
+        "noSignals": "Ancora nessun segnale d'acquisto",
+        "noAgent": "Nessuno assegnato"
+      }
+    }
+  },
+  "Chat": {
+    "inputPlaceholder": "Rispondi a {name}…",
+    "sendButton": "Invia",
+    "poweredBy": "Powered by Staffra",
+    "emptyState": "Invia un messaggio per iniziare la conversazione.",
+    "welcomePrompt": "Fai una domanda o di' a {name} cosa stai cercando.",
+    "activeNow": "Attiva ora",
+    "typing": "{name} sta scrivendo…",
+    "today": "Oggi",
+    "yesterday": "Ieri",
+    "unavailableTitle": "Questa chat al momento non è disponibile.",
+    "unavailableBody": "Riprova più tardi o contatta direttamente {companyName}.",
+    "errorRateLimited": "Stai inviando messaggi un po' troppo in fretta — riprova tra un momento.",
+    "errorGeneric": "Si è verificato un errore. Riprova.",
+    "closeButton": "Chiudi la chat",
+    "unavailableHere": "Questa chat non è ancora configurata per comparire su questo sito.",
+    "teamJoined": "Un membro del team si è unito alla chat"
+  },
+  "Legal": {
+    "nav": {
+      "back": "Torna alla home",
+      "home": "Home"
+    },
+    "toc": "In questa pagina",
+    "lastUpdated": "Ultimo aggiornamento: {date}",
+    "privacy": {
+      "title": "Informativa sulla privacy",
+      "date": "14 settembre 2026",
+      "intro": "La presente Informativa sulla privacy spiega come Pulsar LTDA (\"Pulsar\", \"noi\"), la società che gestisce la piattaforma Staffra (\"Staffra\", il \"Servizio\"), raccoglie, utilizza, condivide e protegge le informazioni personali quando utilizzi il nostro sito web, la dashboard e i nostri servizi (insieme, il \"Servizio\"). Descrive inoltre le scelte a tua disposizione riguardo alle tue informazioni. Ti invitiamo a leggerla insieme ai nostri Termini di servizio.",
+      "sections": [
+        {
+          "heading": "1. A chi si applica questa informativa",
+          "paragraphs": [
+            "La presente informativa si applica a due gruppi. In primo luogo, le aziende e i membri dei loro team che creano un account Staffra per assumere e gestire dipendenti IA (\"Clienti\"). In secondo luogo, i clienti finali di tali aziende che scambiano messaggi con un dipendente IA tramite canali come Instagram o un widget di chat sul sito web (\"Utenti finali\").",
+            "Per le informazioni sull'account e sull'azienda che un Cliente ci fornisce direttamente, Pulsar è il titolare del trattamento di tali informazioni. Per i dati degli Utenti finali trattati tramite un dipendente IA, l'azienda che gestisce il dipendente IA è il titolare del trattamento e Pulsar agisce come suo responsabile del trattamento; l'informativa sulla privacy di tale azienda disciplina il modo in cui utilizza i dati delle conversazioni raccolti tramite Staffra."
+          ]
+        },
+        {
+          "heading": "2. Informazioni che raccogliamo",
+          "paragraphs": [
+            "Informazioni sull'account: nome, indirizzo email, password (conservata solo come hash sicuro dal nostro fornitore di autenticazione), nome dell'azienda e ruolo, forniti quando un Cliente si registra o viene invitato in un team.",
+            "Informazioni sull'azienda: descrizioni, condizioni, catalogo prodotti, prezzi, orari di apertura, servizi prenotabili e altri contenuti che un Cliente aggiunge affinché i suoi dipendenti IA possano rispondere correttamente alle domande.",
+            "Contenuto delle conversazioni: i messaggi, gli allegati e gli identificativi di contatto (come un indirizzo email, un numero di telefono o un nome utente social) scambiati tra un Utente finale e un dipendente IA, insieme a eventuali appuntamenti, ordini o link di pagamento generati durante una conversazione.",
+            "Dati di collegamento: token di accesso e identificativi di account che conserviamo quando un Cliente collega un canale o uno strumento di terzi, come una piattaforma di messaggistica (WhatsApp, Instagram, Telegram) o un calendario (Google Calendar).",
+            "Informazioni di fatturazione: per gli abbonamenti a pagamento, il piano scelto dal Cliente e gli identificativi di cliente e abbonamento restituiti dal nostro fornitore di servizi di pagamento. Non riceviamo né conserviamo i numeri completi delle carte.",
+            "Dati di utilizzo e del dispositivo: dati di log, indirizzo IP, tipo di browser, pagine visualizzate e azioni compiute nella dashboard, raccolti automaticamente per gestire e proteggere il Servizio.",
+            "Cookie: utilizziamo cookie strettamente necessari per mantenerti connesso e ricordare la tua preferenza di lingua. Non utilizziamo cookie pubblicitari."
+          ]
+        },
+        {
+          "heading": "3. Come utilizziamo le informazioni",
+          "paragraphs": [
+            "Per fornire, mantenere e migliorare il Servizio, incluso consentire ai dipendenti IA di rispondere alle domande, prenotare appuntamenti e creare link di pagamento per conto di un Cliente.",
+            "Per inviare messaggi transazionali agli Utenti finali per conto di un Cliente quando forniscono i propri recapiti a tale scopo, come la conferma di un appuntamento o un promemoria via email.",
+            "Per autenticare gli utenti, proteggere gli account, prevenire frodi e abusi, fatturare gli abbonamenti a pagamento e far rispettare i nostri Termini di servizio.",
+            "Per fornire assistenza, rispondere alle richieste e inviare comunicazioni relative al servizio, come avvisi di sicurezza e modifiche ai nostri termini o alle nostre informative.",
+            "Per analizzare l'utilizzo in forma aggregata, così da capire quali funzionalità sono utili e migliorare prestazioni e affidabilità.",
+            "Per adempiere a obblighi di legge e per accertare, esercitare o difendere un diritto in sede giudiziaria."
+          ]
+        },
+        {
+          "heading": "4. Trattamento automatizzato da parte dei fornitori di IA",
+          "paragraphs": [
+            "I dipendenti IA generano le risposte utilizzando modelli linguistici su larga scala gestiti da fornitori terzi affidabili. Per produrre una risposta, il contenuto della conversazione pertinente e le informazioni aziendali necessarie per il contesto vengono inviati a tale fornitore per il trattamento e restituiti a Staffra.",
+            "In base ai nostri accordi con questi fornitori, essi possono trattare tali dati solo per generare la risposta e non possono utilizzarli per addestrare i propri modelli di uso generale. Non vendiamo informazioni personali e non utilizziamo il contenuto delle conversazioni a fini pubblicitari.",
+            "Quando un Cliente collega un Google Calendar, il nostro accesso alle informazioni ricevute tramite le API di Google e il loro utilizzo rispettano le Norme sui dati utente dei servizi API di Google, inclusi i requisiti di Utilizzo limitato. Utilizziamo i dati di Google Calendar solo per verificare la disponibilità e per creare, aggiornare o annullare appuntamenti per conto del Cliente, e li eliminiamo quando il Cliente scollega il calendario o chiude il proprio account. Non utilizziamo i dati utente di Google a fini pubblicitari, non li trasferiamo a intermediari di dati, non li utilizziamo per valutare il merito creditizio o a fini di prestito e non li utilizziamo per addestrare modelli di IA o di apprendimento automatico generalizzati (non personalizzati)."
+          ]
+        },
+        {
+          "heading": "5. Come condividiamo le informazioni",
+          "paragraphs": [
+            "Fornitori di servizi: hosting cloud, database, invio di email, monitoraggio degli errori e i fornitori di modelli di IA descritti sopra, ciascuno dei quali agisce secondo le nostre istruzioni in base a un accordo sul trattamento dei dati.",
+            "Piattaforme di messaggistica e calendario: quando un Cliente collega un canale come Instagram, o un calendario, scambiamo i dati necessari per inviare e ricevere messaggi o gestire eventi tramite tale piattaforma, nel rispetto dei termini della piattaforma stessa.",
+            "Fornitori di servizi di pagamento: i pagamenti degli abbonamenti e gli eventuali pagamenti effettuati tramite un link di pagamento sono gestiti da un fornitore di servizi di pagamento terzo (come Stripe). Pulsar non raccoglie né conserva i numeri completi delle carte e non è parte di una transazione tramite link di pagamento tra un Cliente e il suo Utente finale.",
+            "All'interno del team di un Cliente: i dati dell'account e delle conversazioni sono visibili agli altri membri autorizzati dello stesso account aziendale, in base al loro ruolo.",
+            "Obblighi legali e sicurezza: potremmo divulgare informazioni se richiesto da leggi, regolamenti o procedimenti giudiziari, o per tutelare i diritti, i beni o la sicurezza di Pulsar, dei nostri Clienti o del pubblico.",
+            "Operazioni societarie: se Pulsar è coinvolta in una fusione, un'acquisizione o una cessione di beni, le informazioni potrebbero essere trasferite nell'ambito di tale operazione, nel rispetto della presente informativa."
+          ]
+        },
+        {
+          "heading": "6. Trasferimenti internazionali",
+          "paragraphs": [
+            "Pulsar ha sede in Brasile e gestisce il Servizio da lì, utilizzando infrastrutture e fornitori che possono trovarsi in altri paesi, inclusi gli Stati Uniti e l'Unione europea. Quando le informazioni personali vengono trasferite all'estero, ci basiamo su garanzie adeguate come le clausole contrattuali standard e le tutele offerte dai nostri fornitori."
+          ]
+        },
+        {
+          "heading": "7. Conservazione dei dati",
+          "paragraphs": [
+            "Conserviamo le informazioni sull'account e sull'azienda finché l'account di un Cliente è attivo. I dati delle conversazioni vengono conservati finché sono necessari per il funzionamento del Servizio e per un periodo ragionevole successivo a fini di sicurezza, risoluzione delle controversie e adempimento degli obblighi di legge.",
+            "Un Cliente può eliminare i contenuti aziendali e scollegare i canali in qualsiasi momento dalla dashboard. Alla chiusura di un account, eliminiamo o rendiamo anonime le informazioni personali associate entro un periodo ragionevole, salvo quando dobbiamo conservarle per adempiere a un obbligo di legge."
+          ]
+        },
+        {
+          "heading": "8. Sicurezza",
+          "paragraphs": [
+            "Proteggiamo le informazioni con la crittografia in transito, controlli di accesso e policy del database a livello di riga che isolano i dati di ciascun account aziendale. Le credenziali sensibili delle piattaforme collegate sono conservate con accesso limitato al solo server.",
+            "Nessun metodo di trasmissione o conservazione è completamente sicuro. Se veniamo a conoscenza di un incidente di sicurezza che riguarda le tue informazioni personali, informeremo te e le autorità competenti come previsto dalla legge."
+          ]
+        },
+        {
+          "heading": "9. I tuoi diritti e le tue scelte",
+          "paragraphs": [
+            "A seconda di dove vivi, potresti avere il diritto di ottenere conferma che trattiamo le tue informazioni personali e di accedervi, rettificarle, cancellarle, renderle anonime o riceverne una copia portabile, di opporti a determinati trattamenti o di limitarli, di ricevere informazioni sui soggetti con cui le condividiamo e di revocare il consenso. Gli utenti brasiliani godono di questi diritti ai sensi della LGPD; gli utenti dello Spazio economico europeo e del Regno Unito godono di diritti equivalenti ai sensi del GDPR.",
+            "I Clienti possono esercitare la maggior parte di questi diritti direttamente nella dashboard. Per qualsiasi altra richiesta, o se sei un Utente finale, contattaci utilizzando i recapiti nella sezione \"Contattaci\" e ti risponderemo entro i termini previsti dalla legge applicabile. Hai inoltre il diritto di proporre reclamo all'autorità di protezione dei dati del tuo paese — in Brasile, l'Autoridade Nacional de Proteção de Dados (ANPD); in Italia, il Garante per la protezione dei dati personali."
+          ]
+        },
+        {
+          "heading": "10. Minori",
+          "paragraphs": [
+            "Il Servizio è destinato alle aziende e non è rivolto a bambini o adolescenti. Non raccogliamo consapevolmente informazioni personali da persone di età inferiore ai 18 anni. Se ritieni che una persona di età inferiore ai 18 anni ci abbia fornito informazioni, contattaci e le elimineremo."
+          ]
+        },
+        {
+          "heading": "11. Modifiche alla presente informativa",
+          "paragraphs": [
+            "Potremmo aggiornare la presente informativa di tanto in tanto. In caso di modifiche sostanziali, informeremo i Clienti via email o tramite la dashboard prima che entrino in vigore. La data di \"ultimo aggiornamento\" in alto indica quando è stata pubblicata questa versione."
+          ]
+        },
+        {
+          "heading": "12. Contattaci",
+          "paragraphs": [
+            "Pulsar LTDA gestisce la piattaforma Staffra. Per domande sulla privacy o per esercitare i tuoi diritti sui dati, scrivi a app.pulsar.contato@gmail.com.",
+            "Questo indirizzo raggiunge anche il nostro Responsabile della protezione dei dati (Encarregado pelo Tratamento de Dados Pessoais ai sensi della LGPD)."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "title": "Termini di servizio",
+      "date": "2 settembre 2026",
+      "intro": "I presenti Termini di servizio (\"Termini\") costituiscono un accordo vincolante tra Pulsar LTDA (\"Pulsar\", \"noi\"), la società che gestisce la piattaforma Staffra (\"Staffra\", il \"Servizio\"), e l'azienda o la persona che utilizza il nostro sito web, la dashboard e i nostri servizi (insieme, il \"Servizio\"). Creando un account o utilizzando il Servizio, accetti i presenti Termini. Se li accetti per conto di una società, dichiari di essere autorizzato a vincolarla.",
+      "sections": [
+        {
+          "heading": "1. Il Servizio",
+          "paragraphs": [
+            "Staffra consente a un'azienda di assumere dipendenti IA preconfigurati che parlano con i suoi clienti per suo conto su canali come Instagram e un widget di chat sul sito web. A seconda del ruolo, un dipendente IA può rispondere alle domande utilizzando le informazioni fornite dall'azienda, prenotare appuntamenti e creare link di pagamento, e Staffra può inviare conferme o promemoria correlati per conto dell'azienda.",
+            "Nel tempo potremmo aggiungere, modificare o rimuovere funzionalità e canali supportati. Non ridurremo in modo sostanziale il Servizio principale per un piano a pagamento attivo senza un ragionevole preavviso."
+          ]
+        },
+        {
+          "heading": "2. Account e requisiti",
+          "paragraphs": [
+            "Devi avere almeno 18 anni ed essere in grado di concludere un contratto vincolante. Sei responsabile dell'esattezza delle informazioni di registrazione e di tutte le attività svolte con il tuo account.",
+            "Sei responsabile della sicurezza delle tue credenziali di accesso e delle azioni di ogni membro del team che inviti. Comunicaci tempestivamente qualsiasi utilizzo non autorizzato."
+          ]
+        },
+        {
+          "heading": "3. Le tue responsabilità",
+          "paragraphs": [
+            "Sei responsabile delle informazioni aziendali che fornisci e di verificare come i tuoi dipendenti IA rappresentano la tua azienda. Mantieni aggiornati condizioni, prezzi, servizi e disponibilità.",
+            "Devi disporre di una base giuridica per inviare messaggi ai tuoi clienti e ottenere qualsiasi consenso richiesto dalla legge prima che un dipendente IA, o una conferma o un promemoria inviati tramite Staffra, li contattino. Sei responsabile del rispetto delle richieste di disiscrizione.",
+            "Devi rispettare le regole di qualsiasi piattaforma di terzi che colleghi, incluse le norme di Meta (Instagram) su messaggistica e commercio e i termini di qualsiasi fornitore di servizi di pagamento.",
+            "Non devi utilizzare il Servizio per inviare spam o contenuti illeciti, ingannevoli, molesti o dannosi, né per trattare categorie di dati sensibili per le quali il Servizio non è progettato."
+          ]
+        },
+        {
+          "heading": "4. Contenuti generati dall'IA",
+          "paragraphs": [
+            "Le risposte prodotte da un dipendente IA sono generate automaticamente e possono essere inesatte, incomplete o non adatte a ogni situazione. Non costituiscono consulenza professionale, legale, medica o finanziaria.",
+            "Sei responsabile dei messaggi inviati dai tuoi dipendenti IA. Ti consigliamo di monitorare le conversazioni, di tenere una persona disponibile a intervenire e di mettere in pausa un dipendente IA se non si comporta come previsto. Pulsar non è responsabile delle decisioni prese o delle azioni compiute sulla base di contenuti generati dall'IA."
+          ]
+        },
+        {
+          "heading": "5. I tuoi contenuti e dati",
+          "paragraphs": [
+            "Mantieni tutti i diritti sulle informazioni aziendali, sul catalogo e sui dati delle conversazioni forniti da te e dai tuoi clienti (\"Contenuti del Cliente\"). Concedi a Pulsar una licenza mondiale e non esclusiva per ospitare, trattare e trasmettere i Contenuti del Cliente al solo scopo di gestire e migliorare il Servizio per te, incluso l'invio ai fornitori di IA descritti nella nostra Informativa sulla privacy.",
+            "Dichiari di disporre dei diritti necessari per fornire i Contenuti del Cliente e che questi non violano i diritti di terzi né alcuna legge."
+          ]
+        },
+        {
+          "heading": "6. Servizi di terzi",
+          "paragraphs": [
+            "Il Servizio si integra con piattaforme di terzi come Meta, fornitori di calendari e fornitori di servizi di pagamento. L'utilizzo di tali piattaforme è disciplinato dai rispettivi termini e informative sulla privacy, e non siamo responsabili della loro disponibilità, delle loro modifiche o delle loro azioni.",
+            "Una piattaforma di terzi può sospendere o limitare l'accesso alle proprie API in qualsiasi momento, il che può influire sul Servizio. Non siamo responsabili di tali interruzioni."
+          ]
+        },
+        {
+          "heading": "7. Tariffe e pagamento",
+          "paragraphs": [
+            "I piani a pagamento, se applicabili al tuo account, vengono fatturati in anticipo secondo il ciclo indicato al momento del pagamento tramite il nostro fornitore di servizi di pagamento (come Stripe) e non sono rimborsabili salvo ove previsto dalla legge. Possiamo modificare i prezzi con un preavviso di almeno 30 giorni prima del rinnovo successivo.",
+            "Gli importi addebitati ai tuoi clienti tramite link di pagamento sono elaborati da un fornitore di servizi di pagamento terzo e accreditati a te secondo i termini di tale fornitore. Pulsar non è parte di tali transazioni e non detiene i tuoi fondi."
+          ]
+        },
+        {
+          "heading": "8. Uso consentito",
+          "paragraphs": [
+            "Non devi: decompilare o tentare di estrarre i modelli sottostanti o il codice sorgente; rivendere o fornire il Servizio a terzi, ad eccezione dei tuoi clienti finali; sondare o violare le misure di sicurezza o di autenticazione; utilizzare il Servizio per sviluppare un prodotto concorrente; oppure superare i limiti di utilizzo o imporre un carico irragionevole alla nostra infrastruttura.",
+            "Possiamo limitare, sospendere o interrompere l'accesso in caso di condotte che violano i presenti Termini o che minacciano la sicurezza o l'integrità del Servizio."
+          ]
+        },
+        {
+          "heading": "9. Proprietà intellettuale",
+          "paragraphs": [
+            "Pulsar e i suoi licenzianti detengono tutti i diritti sul Servizio, inclusi il software, il design dei dipendenti IA, i modelli che forniamo e i nomi e i loghi Staffra e Pulsar. I presenti Termini non ti concedono alcun diritto di utilizzare i nostri marchi senza previa autorizzazione scritta.",
+            "I feedback che ci invii sul Servizio possono essere da noi utilizzati senza restrizioni né obblighi nei tuoi confronti."
+          ]
+        },
+        {
+          "heading": "10. Esclusione di garanzie",
+          "paragraphs": [
+            "Il Servizio è fornito \"così com'è\" e \"come disponibile\", senza garanzie di alcun tipo, espresse o implicite, incluse le garanzie implicite di commerciabilità, idoneità a uno scopo particolare e non violazione. Non garantiamo che il Servizio sarà ininterrotto o privo di errori, né che i contenuti generati dall'IA saranno accurati o adatti ai tuoi scopi."
+          ]
+        },
+        {
+          "heading": "11. Limitazione di responsabilità",
+          "paragraphs": [
+            "Nella misura massima consentita dalla legge, Pulsar non sarà responsabile di alcun danno indiretto, incidentale, speciale, consequenziale o punitivo, né della perdita di profitti, ricavi, dati o avviamento, derivanti dal Servizio o ad esso connessi.",
+            "La nostra responsabilità complessiva per qualsiasi pretesa derivante dal Servizio o ad esso connessa non supererà il maggiore tra l'importo che ci hai pagato per il Servizio nei 12 mesi precedenti l'evento che ha dato origine alla pretesa e R$ 500 (cinquecento real brasiliani). Nulla nei presenti Termini limita una responsabilità che non può essere limitata ai sensi della legge applicabile, incluso il Codice brasiliano di tutela dei consumatori ove applicabile."
+          ]
+        },
+        {
+          "heading": "12. Manleva",
+          "paragraphs": [
+            "Ti impegni a difendere, manlevare e tenere indenne Pulsar da qualsiasi pretesa, perdita o spesa (incluse ragionevoli spese legali) derivante dai tuoi Contenuti del Cliente, dal tuo utilizzo del Servizio, dalla tua violazione dei presenti Termini o dalla tua violazione di qualsiasi legge o dei diritti di terzi, inclusi i tuoi clienti."
+          ]
+        },
+        {
+          "heading": "13. Sospensione e risoluzione",
+          "paragraphs": [
+            "Puoi smettere di utilizzare il Servizio e chiudere il tuo account in qualsiasi momento dalla dashboard. Possiamo sospendere o interrompere il tuo accesso in caso di violazione sostanziale dei presenti Termini, di mancato pagamento, oppure se richiesto dalla legge o da una piattaforma di terzi.",
+            "Alla risoluzione, il tuo diritto di utilizzare il Servizio cessa. Renderemo disponibili i Contenuti del Cliente per l'esportazione per un periodo limitato e successivamente li elimineremo in conformità con la nostra Informativa sulla privacy, salvo che la legge ci imponga di conservarli."
+          ]
+        },
+        {
+          "heading": "14. Modifiche ai presenti Termini",
+          "paragraphs": [
+            "Potremmo aggiornare i presenti Termini di tanto in tanto. In caso di modifica sostanziale, ti informeremo via email o tramite la dashboard prima che entri in vigore. Continuare a utilizzare il Servizio dopo tale momento significa accettare i Termini aggiornati."
+          ]
+        },
+        {
+          "heading": "15. Legge applicabile",
+          "paragraphs": [
+            "I presenti Termini sono disciplinati dalle leggi della Repubblica Federativa del Brasile, senza riguardo alle norme sui conflitti di legge. Il foro della Comarca di San Paolo, Stato di San Paolo, Brasile, avrà competenza esclusiva, salvo i casi in cui norme imperative a tutela dei consumatori ti riconoscano il diritto di agire nel tuo luogo di residenza."
+          ]
+        },
+        {
+          "heading": "16. Contattaci",
+          "paragraphs": [
+            "Le domande sui presenti Termini possono essere inviate a Pulsar LTDA all'indirizzo app.pulsar.contato@gmail.com."
+          ]
+        }
+      ]
+    }
+  },
+  "Tour": {
+    "stepCounter": "Passaggio {current} di {total}",
+    "back": "Indietro",
+    "next": "Avanti",
+    "done": "Fatto",
+    "close": "Chiudi"
+  },
+  "Billing": {
+    "pageTitle": "Fatturazione",
+    "pageSubtitle": "Il tuo piano, l'utilizzo e i pagamenti.",
+    "readOnly": "Puoi consultare la fatturazione, ma solo proprietari e amministratori possono apportare modifiche.",
+    "perMonth": "/ mese",
+    "perYear": "/ anno",
+    "renewsOn": "Si rinnova il {date}",
+    "endsOn": "Termina il {date}",
+    "noRenewalDate": "Data di rinnovo in attesa",
+    "upgradeTo": "Passa a {plan}",
+    "switchTo": "Cambia in {plan}",
+    "manageBilling": "Gestisci la fatturazione",
+    "choosePlan": "Scegli {plan}",
+    "startTrial": "Prova {plan} gratis",
+    "endTrialNow": "Termina la prova e attiva {plan}",
+    "actionError": "Si è verificato un errore. Riprova.",
+    "status": {
+      "active": "Attivo",
+      "trialing": "In prova",
+      "past_due": "Pagamento scaduto",
+      "unpaid": "Non pagato",
+      "canceled": "Annullato",
+      "incomplete": "In attesa di pagamento",
+      "incomplete_expired": "Pagamento scaduto",
+      "paused": "In pausa"
+    },
+    "banner": {
+      "pastDue": {
+        "title": "Pagamento non riuscito — il tuo team è in pausa",
+        "body": "Aggiorna la tua carta per rimettere online il tuo team.",
+        "action": "Aggiorna il pagamento"
+      },
+      "overLimit": {
+        "title": "Hai esaurito le risposte di questo periodo",
+        "body": "Il tuo team continua a rispondere per un breve periodo di tolleranza. Passa a un piano superiore per aumentare il limite.",
+        "bodyMaxPlan": "Il tuo team continua a rispondere per un breve periodo di tolleranza. Hai già il nostro piano più alto — contattaci per avere più capacità.",
+        "action": "Passa a un piano superiore",
+        "actionContact": "Contattaci"
+      },
+      "trialOverLimit": {
+        "title": "Hai esaurito le risposte della prova gratuita",
+        "body": "Stiamo attivando automaticamente il tuo abbonamento così il servizio non si interrompe. Se l'addebito non va a buon fine, puoi attivarlo manualmente.",
+        "action": "Attiva ora"
+      },
+      "nearLimit": {
+        "title": "Stai per esaurire le risposte",
+        "body": "{left, plural, one {# risposta rimasta} other {# risposte rimaste}} in questo periodo.",
+        "action": "Passa a un piano superiore",
+        "actionContact": "Contattaci"
+      },
+      "canceled": {
+        "title": "Il tuo piano è terminato il {date}",
+        "body": "Il tuo team ha smesso di rispondere. Scegli un piano per riattivarlo."
+      }
+    },
+    "usage": {
+      "label": "Risposte in questo periodo",
+      "count": "{used, number} di {limit, number} risposte",
+      "resetsIn": "{days, plural, one {Si azzera tra # giorno} other {Si azzera tra # giorni}}",
+      "overNote": "Oltre il limite del piano — risponde con un margine di tolleranza."
+    },
+    "plan": {
+      "replies": "{limit, number} risposte al mese",
+      "repliesAnnual": "{limit, number} risposte all'anno",
+      "custom": "Prezzo su misura"
+    },
+    "picker": {
+      "period": {
+        "monthly": "Mensile",
+        "annual": "Annuale"
+      },
+      "wppToggleLabel": "Includi WhatsApp nel piano",
+      "wppToggleNote": "Senza questa opzione il piano non include WhatsApp: le risposte funzionano su Instagram, Telegram, chat del sito e link diretto. Per rispondere su WhatsApp, scegli un piano con WhatsApp.",
+      "wppBadge": "WhatsApp incluso",
+      "recommended": "Consigliato"
+    },
+    "enterprise": {
+      "title": "Ti servono volumi più alti o condizioni su misura?",
+      "body": "I piani Enterprise si concordano con il nostro team.",
+      "cta": "Contattaci"
+    },
+    "hero": {
+      "title": "Metti al lavoro il tuo team",
+      "reactivateTitle": "Riattiva il tuo team",
+      "body": "Scegli quanto risponde il tuo team ogni mese. Puoi cambiare piano in qualsiasi momento.",
+      "reactivateBody": "Scegli un piano e il tuo team ricomincia a rispondere ai clienti.",
+      "readyOne": "{name} è pronta a iniziare",
+      "readyMany": "{names} sono pronte a iniziare"
+    },
+    "trial": {
+      "days": "{days} giorni gratis",
+      "replies": "Fino a {limit, number} risposte durante la prova",
+      "converts": "Diventa il tuo piano alla fine della prova o quando le risposte finiscono",
+      "checkoutNote": "La prova gratuita include fino a {limit, number} risposte. L'addebito avviene solo dopo {days} giorni o quando finiscono quelle {limit, number} risposte, a seconda di cosa arriva prima."
+    },
+    "tiers": {
+      "monthlyEquivalent": "≈ {price} al mese",
+      "annualSavings": "≈ {monthly} al mese · risparmi {saved}",
+      "includedTitle": "Tutto questo in ogni piano",
+      "included": [
+        "Malu per le vendite e Ana per gli appuntamenti",
+        "Instagram, Telegram, chat del sito e link diretto, più WhatsApp ufficiale nei piani con WhatsApp",
+        "Catalogo da foglio di calcolo o sincronizzato con Shopify",
+        "Agenda con Google Calendar, lista d'attesa e approvazione",
+        "Risposte solo dai tuoi dati, mai inventate",
+        "Passa le conversazioni al tuo team quando serve",
+        "Casella delle conversazioni e report sulle prestazioni",
+        "Nome e foto per ogni dipendente, come preferisci",
+        "Utenti della dashboard illimitati"
+      ],
+      "current": "Il tuo piano",
+      "switchTitle": "Cambia piano",
+      "switchBody": "Scegli un altro piano. Confermerai la modifica su Stripe prima di qualsiasi addebito.",
+      "switchOption": "Passa a questa opzione"
+    },
+    "panel": {
+      "dayOf": "Giorno {day} di {total}",
+      "usedPct": "{pct}% utilizzato",
+      "of": "di {limit, number}",
+      "replies": "risposte",
+      "noUsage": "Ancora nessuna risposta conteggiata in questo periodo.",
+      "trialEndsOn": "La prova termina il {date}",
+      "paymentPending": "In attesa di un pagamento riuscito",
+      "teamReplies": "Risposte inviate dal tuo team in questo periodo"
+    }
+  },
+  "AccessRemoved": {
+    "title": "Non hai più accesso a {company}",
+    "body": "Il responsabile di {company} ha rimosso il tuo accesso. Se si tratta di un errore, parlane con lui: può aggiungerti di nuovo con questa stessa email. Puoi anche creare una tua attività.",
+    "startOwn": "Crea la mia attività",
+    "logout": "Esci"
+  }
+}

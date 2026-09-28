@@ -1,13 +1,9 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import clsx from "clsx";
 import { createCompany, type OnboardingState } from "@/lib/companies/actions";
-import { setLocale } from "@/lib/i18n/actions";
 import { OnboardingLoader } from "./onboarding-loader";
-import type { Locale } from "@/i18n/request";
 
 const INITIAL: OnboardingState = { error: null };
 
@@ -54,46 +50,5 @@ export function OnboardingForm() {
         {t("continue")}
       </button>
     </form>
-  );
-}
-
-// The Stitch "EN | PT" footer — a real locale switch (cookie + refresh),
-// styled as the design draws it rather than reusing the dashboard's pill.
-export function LocaleToggle({ currentLocale }: { currentLocale: Locale }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  function pick(next: Locale) {
-    if (next === currentLocale || isPending) return;
-    startTransition(async () => {
-      await setLocale(next);
-      router.refresh();
-    });
-  }
-
-  return (
-    <div
-      className={clsx(
-        "flex items-center gap-2 text-label-sm font-semibold transition-opacity",
-        isPending && "opacity-60",
-      )}
-    >
-      {(["en", "pt"] as const).map((loc, i) => (
-        <span key={loc} className="flex items-center gap-2">
-          {i > 0 ? <span className="h-4 w-px bg-outline-variant" /> : null}
-          <button
-            type="button"
-            onClick={() => pick(loc)}
-            aria-pressed={loc === currentLocale}
-            className={clsx(
-              "uppercase tracking-wide transition-colors hover:text-primary",
-              loc === currentLocale ? "text-on-surface-variant" : "text-outline-variant",
-            )}
-          >
-            {loc}
-          </button>
-        </span>
-      ))}
-    </div>
   );
 }
