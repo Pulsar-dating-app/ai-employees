@@ -12,6 +12,22 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-28 — The waitlist is removed from the MVP
+
+**Decision:** Ana no longer has a waitlist. This supersedes Trello R5 and the two earlier 2026-09-28 waitlist entries below.
+- **Code removed:**
+  - `add_to_waitlist` (tool, registry and tool set);
+  - `src/lib/appointments/waitlist.ts` and every freed-slot notice on cancel (Ana's cancel tool and the dashboard PATCH/DELETE);
+  - the "vaga abriu" email template;
+  - the "Waitlist" tile and `waitlist_added` metric on the Performance page;
+  - `tests/integration/waitlist.test.ts`.
+- **Ana's stored prompt** (migration `20260928170000`) drops the capability bullet and the waitlist paragraph. When nothing is available she offers the nearest slot from `find_next_available`, or suggests a later date, and says there is no waitlist. `find_available_slots`' description says the same, so the rule holds even if the stored prompt drifts.
+- **The `appointment_waitlist` table is dropped** (migration `20260928180000`, at the owner's request). Nothing referenced it and it held only test entries; a future waitlist starts from a new design.
+
+**Why:** The owner found it not working well enough in testing (wrong service matching, no stored time, confusing wording) and chose to leave it for after the MVP rather than keep patching it.
+
+---
+
 ## 2026-09-28 — The waitlist remembers the time asked for; "as soon as possible" has a defined window; no more "ordem de chegada"
 
 **Decision:**

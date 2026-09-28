@@ -530,7 +530,7 @@ export function buildProfessionalChoiceSection(multipleProfessionals: boolean | 
     "Once you know which service the customer wants, ask which professional they would like, " +
     "naming only the ones who perform that service (skip the question when only one does). " +
     "If they name someone, pass that professional's `professionalId` to find_available_slots, " +
-    "find_next_available, book_appointment and add_to_waitlist. " +
+    "find_next_available and book_appointment. " +
     "Only if the customer says explicitly that any professional is fine, leave `professionalId` " +
     "out: then say who each time you offer is with, and book without it (a free professional is " +
     "assigned). If they ask for someone who doesn't perform that service, say who does. " +

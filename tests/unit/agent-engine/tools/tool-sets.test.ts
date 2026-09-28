@@ -65,7 +65,6 @@ describe("resolveToolsForAgent", () => {
         "cancel_appointment",
         "list_my_appointments",
         "reschedule_appointment",
-        "add_to_waitlist",
       ]),
     );
   });

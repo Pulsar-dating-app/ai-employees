@@ -59,9 +59,8 @@ export const AGENT_TOOL_SETS: Record<string, readonly string[]> = {
     // to a new time in a single write instead of cancel-then-rebook.
     "list_my_appointments",
     "reschedule_appointment",
-    // Trello R5 -- when nothing's available for the customer's window, add
-    // them to the waitlist to be emailed if a slot frees up.
-    "add_to_waitlist",
+    // 2026-09-28 -- add_to_waitlist removed: the waitlist is out of the MVP
+    // (see decisions.md). Ana offers the nearest open slot instead.
   ],
 };
 

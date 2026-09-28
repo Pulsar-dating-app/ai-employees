@@ -95,35 +95,6 @@ export function renderDeclinedEmail(data: AppointmentEmailData): RenderedEmail {
   };
 }
 
-// Trello R5 -- "a spot opened up". No details block: the waitlist is
-// window-level and the slot is not held, so this is a nudge to come back to
-// the chat and grab it, not a confirmation of anything.
-export type WaitlistOpeningEmailData = {
-  businessName: string;
-  serviceName: string;
-  // The freed slot's start, already formatted in the business timezone.
-  whenText: string;
-  // How the customer gets back to the business to claim it.
-  contact: string | null;
-};
-
-export function renderWaitlistOpeningEmail(data: WaitlistOpeningEmailData): RenderedEmail {
-  const how = data.contact
-    ? `Entre em contato para garantir: ${data.contact}.`
-    : "Responda na conversa onde você pediu, e a gente te agenda.";
-  const line =
-    `Boa notícia -- uma vaga de ${data.serviceName} acabou de abrir em ${data.businessName}, ` +
-    `em ${data.whenText}. A vaga não fica reservada: quem agendar primeiro garante. ${how}`;
-  return {
-    subject: `Uma vaga de ${data.serviceName} abriu em ${data.businessName}`,
-    html: shell(
-      "Uma vaga acabou de abrir 🎉",
-      `<p style="font-size:14px;margin:0">${escapeHtml(line)}</p>`,
-    ),
-    text: line,
-  };
-}
-
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")

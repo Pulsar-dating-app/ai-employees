@@ -200,11 +200,6 @@ export default async function MetricsPage({
             label: label("appointmentsNoShow"),
             value: total("appointments_no_show"),
           },
-          {
-            key: "waitlist_added",
-            label: label("waitlistAdded"),
-            value: total("waitlist_added"),
-          },
         ]
       : [];
 

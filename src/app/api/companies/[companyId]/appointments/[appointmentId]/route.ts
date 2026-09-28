@@ -8,8 +8,6 @@ import {
   calendarVisibleEndsAt,
 } from "@/lib/google-calendar/appointment-sync";
 import { notifyAppointmentConfirmed, notifyAppointmentDeclined } from "@/lib/email/appointments";
-import { notifyWaitlistForFreedSlot } from "@/lib/appointments/waitlist";
-import { createServiceClient } from "@/lib/supabase/service";
 import { isValidTimeZone } from "@/lib/analytics/load";
 import {
   fitsProfessionalSchedule,
@@ -299,20 +297,6 @@ export async function PATCH(
     await notifyAppointmentDeclined(supabase, appointmentId);
   }
 
-  // Trello R5 -- a cancel here (merchant cancelling, or declining a pending
-  // request) frees the slot: notify the oldest matching waitlist entry.
-  // Best-effort, before the Google-sync branches since those can return
-  // early. Not on a reschedule -- the customer still holds a slot then.
-  if (update.status === "cancelled" && preUpdateStatus !== "cancelled") {
-    await notifyWaitlistForFreedSlot({
-      supabase: createServiceClient(),
-      companyId,
-      professionalId: data.professional_id as string,
-      startsAt: data.starts_at as string,
-      endsAt: data.ends_at as string,
-    });
-  }
-
   // Moving to another professional: the event leaves the old professional's
   // calendar; the "confirmed without an event" branch below then creates it
   // in the new one's.
@@ -406,19 +390,6 @@ export async function DELETE(
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // Trello R5 -- freed a slot (unless it was already cancelled): notify the
-  // oldest matching waitlist entry. Best-effort, before the Google-sync
-  // branch since that can return early.
-  if (appointmentLookup.appointment.status !== "cancelled") {
-    await notifyWaitlistForFreedSlot({
-      supabase: createServiceClient(),
-      companyId,
-      professionalId: data.professional_id as string,
-      startsAt: data.starts_at as string,
-      endsAt: data.ends_at as string,
-    });
   }
 
   const preUpdateGoogleEventId = appointmentLookup.appointment.google_event_id as string | null;
