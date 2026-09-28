@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { SendIcon, XIcon } from "@/components/ui/icons";
 import { LinkifiedText } from "@/components/chat/linkified-text";
 import { ProductCardList } from "@/components/chat/product-card-list";
+import { EmbedCloseButton } from "./embed-close-button";
 import { readMessageMetadata, type MessageMetadata } from "@/lib/chat/product-cards";
 
 // F5 -- 'merchant' is a human teammate replying manually from the
@@ -275,15 +276,6 @@ export function ChatWidget({
     if (reply) setView((prev) => withArrivals(prev, [...(prev?.list ?? []), reply]));
   }
 
-  // "*" as the target origin is correct here, not a shortcut -- the widget
-  // is embedded on an arbitrary third-party site it can't know in advance
-  // (same reasoning embed-authorization.ts documents for why the domain
-  // check itself has to work this way), and the payload carries nothing
-  // sensitive.
-  function handleClose() {
-    window.parent.postMessage({ type: "staffra-chat:close" }, "*");
-  }
-
   const list = view?.list ?? [];
   const dayLabels = list.map((m) => dayLabel(m.created_at, locale, t("today"), t("yesterday")));
   const firstMerchantIndex = list.findIndex((m) => m.role === "merchant");
@@ -303,16 +295,7 @@ export function ChatWidget({
             <p className="mt-0.5 truncate text-label-sm font-medium text-on-surface-variant">{t("activeNow")}</p>
           </div>
         </div>
-        {isEmbedded ? (
-          <button
-            type="button"
-            onClick={handleClose}
-            aria-label={t("closeButton")}
-            className="-mr-1 shrink-0 rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <XIcon className="h-5 w-5" />
-          </button>
-        ) : null}
+        <EmbedCloseButton className="-mr-1" />
       </header>
 
       {isBlockedHere ? (

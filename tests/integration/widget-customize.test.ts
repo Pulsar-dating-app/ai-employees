@@ -93,6 +93,42 @@ describe("Widget customization POST /api/companies/:id/agents/malu/widget", () =
     expect(result.status).toBe(400);
   });
 
+  it("rejects the retired custom video launcher", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Widget Video Retired Co");
+    await hireMalu(owner.cookieHeader, companyId);
+
+    const result = await saveWidget(owner.cookieHeader, companyId, { launcherType: "video" });
+    expect(result.status).toBe(400);
+  });
+
+  it("saves the profile-photo launcher with no file and removes a previous upload", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Widget Photo Co");
+    await hireMalu(owner.cookieHeader, companyId);
+
+    const uploaded = await saveWidget(owner.cookieHeader, companyId, { launcherType: "image", file: pngFile() });
+    const uploadedUrl = uploaded.json.companyAgent?.widget_launcher_asset_url;
+
+    const result = await saveWidget(owner.cookieHeader, companyId, { launcherType: "photo" });
+    expect(result.status).toBe(200);
+    expect(result.json.companyAgent?.widget_launcher_type).toBe("photo");
+    expect(result.json.companyAgent?.widget_launcher_asset_url).toBeNull();
+
+    const stillThere = await fetch(uploadedUrl!);
+    expect(stillThere.status).not.toBe(200);
+  });
+
+  it("ignores a file sent with the profile-photo launcher", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Widget Photo File Co");
+    await hireMalu(owner.cookieHeader, companyId);
+
+    const result = await saveWidget(owner.cookieHeader, companyId, { launcherType: "photo", file: pngFile() });
+    expect(result.status).toBe(200);
+    expect(result.json.companyAgent?.widget_launcher_asset_url).toBeNull();
+  });
+
   it("saves a greeting with the default launcher and no file", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Widget Default Co");

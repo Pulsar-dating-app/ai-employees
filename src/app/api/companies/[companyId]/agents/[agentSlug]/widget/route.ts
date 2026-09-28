@@ -12,13 +12,7 @@ import { checkCompanyRole } from "@/lib/auth/company-access";
 // product or a policy field), not a security-sensitive toggle the way
 // pause/activate or the human-handoff switch are.
 
-const MAX_VIDEO_BYTES = 4 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-
-const VIDEO_MIME_EXT: Record<string, string> = {
-  "video/webm": "webm",
-  "video/mp4": "mp4",
-};
 
 const IMAGE_MIME_EXT: Record<string, string> = {
   "image/png": "png",
@@ -27,7 +21,7 @@ const IMAGE_MIME_EXT: Record<string, string> = {
   "image/gif": "gif",
 };
 
-const VALID_LAUNCHER_TYPES = ["default", "video", "image"] as const;
+const VALID_LAUNCHER_TYPES = ["default", "photo", "image"] as const;
 type LauncherType = (typeof VALID_LAUNCHER_TYPES)[number];
 
 const VALID_POSITIONS = ["bottom-right", "bottom-left"] as const;
@@ -140,15 +134,14 @@ export async function POST(
   const previousAssetUrl = existing.widget_launcher_asset_url as string | null;
   let newAssetUrl: string | null = previousAssetUrl;
 
-  if (launcherType === "default") {
+  if (launcherType !== "image") {
     newAssetUrl = null;
   } else if (file instanceof File) {
-    const mimeMap = launcherType === "video" ? VIDEO_MIME_EXT : IMAGE_MIME_EXT;
-    const maxBytes = launcherType === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-    const ext = mimeMap[file.type];
+    const ext = IMAGE_MIME_EXT[file.type];
+    const maxBytes = MAX_IMAGE_BYTES;
 
     if (!ext) {
-      const allowed = Object.keys(mimeMap).join(", ");
+      const allowed = Object.keys(IMAGE_MIME_EXT).join(", ");
       return NextResponse.json({ error: `Unsupported file type. Allowed: ${allowed}` }, { status: 400 });
     }
     if (file.size > maxBytes) {
@@ -170,9 +163,9 @@ export async function POST(
 
     newAssetUrl = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   } else if (!previousAssetUrl) {
-    // Chose "video"/"image" but never uploaded anything and nothing exists
-    // to fall back on -- e.g. selecting the option without picking a file.
-    return NextResponse.json({ error: "Upload an image or video first" }, { status: 400 });
+    // Chose "image" but never uploaded anything and nothing exists to fall
+    // back on -- e.g. selecting the option without picking a file.
+    return NextResponse.json({ error: "Upload an image first" }, { status: 400 });
   }
 
   const { data: updated, error: updateError } = await supabase

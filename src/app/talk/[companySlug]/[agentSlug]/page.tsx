@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { resolveAgentPhoto } from "@/lib/agents/media";
 import { ChatWidget } from "./chat-widget";
+import { EmbedCloseButton } from "./embed-close-button";
 
 // Trello M4 -- the standalone hosted chat page a merchant links to instead
 // of a WhatsApp number (bio, email signature, a QR code on a receipt).
@@ -99,7 +101,10 @@ export default async function TalkPage({
   if (resolved.kind === "unavailable") {
     const t = await getTranslations("Chat");
     return (
-      <main className="flex h-screen flex-col items-center justify-center gap-2 bg-surface px-6 text-center">
+      <main className="relative flex h-screen flex-col items-center justify-center gap-2 bg-surface px-6 text-center">
+        <Suspense fallback={null}>
+          <EmbedCloseButton className="absolute right-3 top-3" />
+        </Suspense>
         <h1 className="font-headline-md text-headline-md text-on-surface">{t("unavailableTitle")}</h1>
         <p className="max-w-sm text-body-md text-on-surface-variant">
           {t("unavailableBody", { companyName: resolved.companyName })}
