@@ -57,7 +57,7 @@ export async function createWhatsappSender(
     headers: { Authorization: authHeader(credentials), "content-type": "application/json" },
     body: JSON.stringify({
       sender_id: input.senderId,
-      configuration: { waba_id: input.wabaId, account_type: "ISVSubAccount" },
+      configuration: { waba_id: input.wabaId },
       webhook: { callback_url: input.callbackUrl, callback_method: "POST" },
     }),
   });

@@ -83,7 +83,7 @@ Annual = 12 × monthly − 15%, rounded to the cent (e.g. Starter R$989,30/year)
 - Senders usually go straight to `ONLINE` but can land in `PENDING_VERIFICATION`, so an in-app SMS-code step was added.
 - There is no sender-status webhook, so we poll.
 - `profile.name` is not needed for ESU numbers.
-- `configuration.account_type` must be `ISVSubAccount`.
+- `configuration.account_type` must be `ISVSubAccount`. **Wrong:** the first real connect (2026-09-28) failed with 63100 "account_type must be one of ['' ISV]". The field is now omitted, as in Twilio's integration guide.
 
 The connect screen's "Meta bills you directly / add a payment method at Meta" disclosure and its acknowledgment checkbox were replaced by an "included in your plan" note at the user's request: only `_wpp` plans reach that screen, and those already include Meta's fees.
 
