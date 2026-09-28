@@ -1147,7 +1147,10 @@
       "verificationError": "Não conseguimos confirmar esse código. Confira e tente de novo.",
       "verificationWaitingForAdmin": "Este número está aguardando um código de confirmação. Um proprietário ou administrador precisa digitá-lo aqui.",
       "activationFailedDescription": "Não conseguimos ativar este número no WhatsApp. Desconecte e conecte de novo.",
-      "activationRetry": "Desconectar e tentar de novo"
+      "activationRetry": "Desconectar e tentar de novo",
+      "reconnectDescription": "{name} já usou o número {number}. Reconecte esse número ou conecte outro.",
+      "reconnectButton": "Reconectar {number}",
+      "connectAnotherButton": "Conectar outro número"
     },
     "channelTabs": {
       "tablistLabel": "Formas de os clientes falarem com este funcionário",

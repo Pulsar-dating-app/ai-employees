@@ -391,6 +391,94 @@ describe("WhatsApp connection (GET/DELETE .../whatsapp, POST .../whatsapp/connec
     expect(write.error).not.toBeNull();
   });
 
+  it("reconnects the last disconnected number without Embedded Signup", async () => {
+    const owner = await signUpTestUser("owner");
+    const member = await signUpTestUser("member");
+    const companyId = await createCompany(owner.cookieHeader, "Reconnect WA Co");
+    await hireAgent(owner.cookieHeader, companyId, "malu");
+    await addMember(owner.cookieHeader, companyId, member.userId);
+    const body = connectBody();
+
+    const neverConnected = await api<{ error: string }>("POST", connectPath(companyId, "malu"), owner.cookieHeader, {
+      reconnect: true,
+    });
+    expect(neverConnected.status).toBe(409);
+    expect(neverConnected.json.error).toBe("nothing_to_reconnect");
+
+    await api("POST", connectPath(companyId, "malu"), owner.cookieHeader, body);
+    const firstSid = (await connectionRow(companyId)).twilio_sender_sid;
+
+    const whileConnected = await api("POST", connectPath(companyId, "malu"), owner.cookieHeader, { reconnect: true });
+    expect(whileConnected.status).toBe(409);
+
+    await api("DELETE", statusPath(companyId, "malu"), owner.cookieHeader);
+
+    expect((await api("POST", connectPath(companyId, "malu"), member.cookieHeader, { reconnect: true })).status).toBe(403);
+
+    const reconnected = await api<{
+      connection: { status: string; phone_number_id: string; waba_id: string; display_phone_number: string; provider: string };
+    }>("POST", connectPath(companyId, "malu"), owner.cookieHeader, { reconnect: true });
+    expect(reconnected.status).toBe(200);
+    expect(reconnected.json.connection).toMatchObject({
+      status: "connected",
+      provider: "twilio",
+      phone_number_id: body.phoneNumberId,
+      waba_id: body.wabaId,
+      display_phone_number: "+55 11 91234-5678",
+    });
+
+    const row = await connectionRow(companyId);
+    expect(row.twilio_sender_id).toBe("whatsapp:+5511912345678");
+    expect(row.twilio_sender_sid).toMatch(/^XE/);
+    expect(row.twilio_sender_sid).not.toBe(firstSid);
+  });
+
+  it("refuses to reconnect a number another agent has taken since, unless forced", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Reconnect Taken WA Co");
+    await hireAgent(owner.cookieHeader, companyId, "malu");
+    await api("POST", `/api/companies/${companyId}/agents/ana`, owner.cookieHeader);
+    const body = connectBody();
+
+    await api("POST", connectPath(companyId, "malu"), owner.cookieHeader, body);
+    await api("DELETE", statusPath(companyId, "malu"), owner.cookieHeader);
+    expect((await api("POST", connectPath(companyId, "ana"), owner.cookieHeader, body)).status).toBe(200);
+
+    const blocked = await api<{ error: string; agentSlug: string }>(
+      "POST",
+      connectPath(companyId, "malu"),
+      owner.cookieHeader,
+      { reconnect: true },
+    );
+    expect(blocked.status).toBe(409);
+    expect(blocked.json).toMatchObject({ error: "whatsapp_number_connected_to_other_agent", agentSlug: "ana" });
+
+    const forced = await api<{ connection: { status: string } }>("POST", connectPath(companyId, "malu"), owner.cookieHeader, {
+      reconnect: true,
+      force: true,
+    });
+    expect(forced.status).toBe(200);
+    expect(forced.json.connection.status).toBe("connected");
+
+    const ana = await api<{ connection: { status: string } }>("GET", statusPath(companyId, "ana"), owner.cookieHeader);
+    expect(ana.json.connection.status).toBe("disconnected");
+  });
+
+  it("blocks reconnecting once the plan no longer includes WhatsApp", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Reconnect No Addon WA Co");
+    await hireAgent(owner.cookieHeader, companyId, "malu");
+    await api("POST", connectPath(companyId, "malu"), owner.cookieHeader, connectBody());
+    await api("DELETE", statusPath(companyId, "malu"), owner.cookieHeader);
+    await service.from("company_billing").update({ plan_key: "starter" }).eq("company_id", companyId);
+
+    const result = await api<{ error: string }>("POST", connectPath(companyId, "malu"), owner.cookieHeader, {
+      reconnect: true,
+    });
+    expect(result.status).toBe(403);
+    expect(result.json.error).toBe("whatsapp_addon_required");
+  });
+
   it("disconnects: deletes the Twilio sender, flips status, and is a no-op when nothing was connected", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Disconnect WA Co");

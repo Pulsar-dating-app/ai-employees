@@ -34,9 +34,17 @@ type Connection = {
   has_payment_issue: boolean;
   payment_issue_detected_at: string | null;
   twilio_sender_status: string | null;
+  provider: "meta" | "twilio";
 };
 
-type ViewState = "loading" | "idle" | "connecting" | "disconnecting" | "confirmingDisconnect" | "verifying";
+type ViewState =
+  | "loading"
+  | "idle"
+  | "connecting"
+  | "reconnecting"
+  | "disconnecting"
+  | "confirmingDisconnect"
+  | "verifying";
 
 // The real merchant-facing WhatsApp connect screen — Meta Embedded Signup
 // (D1's backend), presented with a two-step setup guide. Connect/disconnect
@@ -164,6 +172,24 @@ export function ChannelsSection({
       });
   }
 
+  async function reconnect() {
+    setErrorMessage(null);
+    setView("reconnecting");
+    const res = await fetch(`${statusUrl}/connect`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reconnect: true }),
+    }).catch(() => null);
+    if (!res?.ok) {
+      setErrorMessage(t("connectError"));
+      setView("idle");
+      return;
+    }
+    const { connection: updated } = await res.json();
+    setConnection(updated);
+    setView("idle");
+  }
+
   function startSignup() {
     if (!window.FB) {
       setErrorMessage(t("sdkNotReady"));
@@ -223,6 +249,10 @@ export function ChannelsSection({
   }
 
   const isConnected = connection?.status === "connected";
+  const reconnectableNumber =
+    connection?.status === "disconnected" && connection.provider === "twilio"
+      ? connection.display_phone_number
+      : null;
   const needsVerification = isPending && connection?.twilio_sender_status === "PENDING_VERIFICATION";
   const activationFailed = isPending && connection?.twilio_sender_status === "OFFLINE";
   // D5: a connected number Meta has flagged for a payment issue can't
@@ -421,15 +451,44 @@ export function ChannelsSection({
                       <Alert variant="info" title={t("billingIncludedTitle")}>
                         {t("billingIncludedDescription")}
                       </Alert>
-                      <div>
-                        <Button
-                          type="button"
-                          isLoading={view === "connecting"}
-                          onClick={startSignup}
-                        >
-                          {view === "connecting" ? t("connecting") : t("connectButton")}
-                        </Button>
-                      </div>
+                      {reconnectableNumber ? (
+                        <div className="flex flex-col gap-3">
+                          <p className="text-sm text-on-surface-variant">
+                            {t("reconnectDescription", { name: agentName, number: reconnectableNumber })}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <Button
+                              type="button"
+                              isLoading={view === "reconnecting"}
+                              disabled={view === "connecting"}
+                              onClick={reconnect}
+                            >
+                              {view === "reconnecting"
+                                ? t("connecting")
+                                : t("reconnectButton", { number: reconnectableNumber })}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              isLoading={view === "connecting"}
+                              disabled={view === "reconnecting"}
+                              onClick={startSignup}
+                            >
+                              {view === "connecting" ? t("connecting") : t("connectAnotherButton")}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <Button
+                            type="button"
+                            isLoading={view === "connecting"}
+                            onClick={startSignup}
+                          >
+                            {view === "connecting" ? t("connecting") : t("connectButton")}
+                          </Button>
+                        </div>
+                      )}
                     </>
                   ) : null}
                 </div>
