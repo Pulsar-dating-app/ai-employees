@@ -287,6 +287,7 @@ describe("list_services", () => {
         startsAt: `${BOOKING_DATE}T09:00:00Z`,
         summary: "Customer asked to book for a chipped front tooth.",
         intakeAnswers: { email: TEST_EMAIL, full_name: "Test Customer" },
+        language: "it",
       },
       toolCtxFor(seed),
     )) as { booked: boolean; appointmentId: string };
@@ -294,12 +295,13 @@ describe("list_services", () => {
 
     const { data: row } = await svc
       .from("appointments")
-      .select("service_id, summary")
+      .select("service_id, summary, language")
       .eq("id", booked.appointmentId)
       .single();
     expect(row).toMatchObject({
       service_id: def!.id,
       summary: "Customer asked to book for a chipped front tooth.",
+      language: "it",
     });
   });
 

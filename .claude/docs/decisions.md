@@ -10,6 +10,13 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-09-28 — Appointment emails go out in the conversation's language
+
+**Decision:** `book_appointment` takes a required `language` (`pt`/`en`/`it`; any other language → `en`). The model sets it from the conversation. It is stored in the new `appointments.language` column. The confirmation, reminder and declined emails (`src/lib/email/templates.ts`) render in that language, including the date format. Null (dashboard bookings, older rows) means Portuguese, as before.
+**Why:** With the Italian launch, a business outside Brazil was sending Portuguese emails to its customers. The language is stored on the row because the reminder and the declined email are sent later, outside the conversation. The model reports the language instead of a detector: a detector was tried and misread short Portuguese messages as Spanish.
+
+---
+
 ## 2026-09-28 — Italian as a third language; a greeting menu replaces the EN/PT toggle
 
 **Decision:** Added `it` to `SUPPORTED_LOCALES` with a full `messages/it.json` (legal pages included). The segmented EN/PT pill became a small menu: each option greets you in its own language ("Hello!" / "Olá!" / "Ciao!", with the endonym below), and the trigger shows the new greeting for a moment after a switch. The onboarding footer's separate `LocaleToggle` was removed in favour of the same component. Accept-Language detection now follows q-weighted order instead of a `pt` substring check. Stripe Checkout/Portal get `it`. Where no Italian asset exists (landing tour screenshots), Italian uses the English one. Prices stay in BRL.

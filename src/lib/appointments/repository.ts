@@ -621,6 +621,7 @@ async function book(
     summary,
     intakeAnswers,
     professionalId,
+    language,
   }: {
     companyId: string;
     serviceId: string;
@@ -642,6 +643,7 @@ async function book(
     // questions, keyed by question label. Null/omitted when the business has
     // none configured.
     intakeAnswers: Record<string, unknown> | null;
+    language?: "pt" | "en" | "it" | null;
   },
   supabaseClient?: SupabaseClient,
 ): Promise<BookResult> {
@@ -832,6 +834,7 @@ async function book(
         notes: notes ?? null,
         summary: summary?.trim() ? summary.trim() : null,
         intake_answers: storedIntakeAnswers,
+        language: language ?? null,
       })
       .select()
       .single();

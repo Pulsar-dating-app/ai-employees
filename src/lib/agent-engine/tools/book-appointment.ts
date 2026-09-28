@@ -10,6 +10,7 @@ type BookAppointmentArgs = {
   summary?: string;
   intakeAnswers?: Record<string, unknown>;
   professionalId?: string;
+  language?: string;
 };
 
 // Trello J3, tool #3 -- writes the appointments row. The customer, this
@@ -97,8 +98,15 @@ export const bookAppointmentTool: AgentTool = {
         additionalProperties: { type: "string" },
       },
       professionalId: PROFESSIONAL_ID_PARAM,
+      language: {
+        type: "string",
+        enum: ["pt", "en", "it"],
+        description:
+          "The language you and the customer are speaking in this conversation. The confirmation " +
+          "and reminder emails are sent in it. For any other language, pass \"en\".",
+      },
     },
-    required: ["serviceId", "startsAt"],
+    required: ["serviceId", "startsAt", "language"],
     additionalProperties: false,
   },
   async execute(rawArgs, ctx) {
@@ -128,6 +136,7 @@ export const bookAppointmentTool: AgentTool = {
           startsAt: args.startsAt,
           notes: typeof args.notes === "string" ? args.notes : null,
           summary: typeof args.summary === "string" ? args.summary : null,
+          language: args.language === "en" || args.language === "it" || args.language === "pt" ? args.language : null,
           intakeAnswers:
             args.intakeAnswers && typeof args.intakeAnswers === "object" ? args.intakeAnswers : null,
         },

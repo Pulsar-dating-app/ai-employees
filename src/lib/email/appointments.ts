@@ -5,8 +5,11 @@ import {
   renderConfirmationEmail,
   renderReminderEmail,
   renderDeclinedEmail,
+  fallbackServiceName,
   type AppointmentEmailData,
+  type EmailLanguage,
 } from "./templates";
+import { intlTag } from "@/i18n/locales";
 
 // Trello R3/R4 -- turns an appointment row into an email and sends it.
 // Every function here is best-effort: it loads what it needs, sends, and
@@ -14,11 +17,12 @@ import {
 // no-op, never a thrown error. The booking / approval / cron that calls it
 // is never blocked by mail.
 
-type EmailContext = { to: string; data: AppointmentEmailData };
+type EmailContext = { to: string; data: AppointmentEmailData; language: EmailLanguage };
 
 // Shared row shape from the joined select below.
 type Row = {
   starts_at: string;
+  language?: string | null;
   services: { name: string } | { name: string }[] | null;
   professionals?: { name: string } | { name: string }[] | null;
   customers: { email: string | null } | { email: string | null }[] | null;
@@ -39,9 +43,13 @@ function one<T>(v: T | T[] | null): T | null {
   return Array.isArray(v) ? (v[0] ?? null) : v;
 }
 
-export function formatWhen(startsAt: string, timezone: string | null): string {
+function emailLanguage(value: string | null | undefined): EmailLanguage {
+  return value === "en" || value === "it" ? value : "pt";
+}
+
+export function formatWhen(startsAt: string, timezone: string | null, language: EmailLanguage = "pt"): string {
   const tz = timezone && isValidTimeZone(timezone) ? timezone : "UTC";
-  return new Intl.DateTimeFormat("pt-BR", {
+  return new Intl.DateTimeFormat(intlTag(language), {
     timeZone: tz,
     weekday: "long",
     day: "numeric",
@@ -60,13 +68,15 @@ function contextFromRow(row: Row): EmailContext | null {
 
   const contactBits = [company.email, company.phone].filter(Boolean) as string[];
   const multipleProfessionals = (company.professionals ?? []).filter((p) => p.is_active).length > 1;
+  const language = emailLanguage(row.language);
   return {
     to,
+    language,
     data: {
       businessName: company.name,
-      serviceName: service?.name ?? "seu agendamento",
+      serviceName: service?.name ?? fallbackServiceName(language),
       professionalName: multipleProfessionals ? (one(row.professionals ?? null)?.name ?? null) : null,
-      whenText: formatWhen(row.starts_at, company.timezone),
+      whenText: formatWhen(row.starts_at, company.timezone, language),
       businessNote: null,
       contact: contactBits.length > 0 ? `${company.name} (${contactBits.join(" / ")})` : null,
     },
@@ -74,7 +84,7 @@ function contextFromRow(row: Row): EmailContext | null {
 }
 
 const APPOINTMENT_EMAIL_SELECT =
-  "starts_at, services(name), professionals(name), customers(email), companies(name, email, phone, timezone, professionals(is_active))";
+  "starts_at, language, services(name), professionals(name), customers(email), companies(name, email, phone, timezone, professionals(is_active))";
 
 async function loadContext(
   supabase: SupabaseClient,
@@ -98,7 +108,7 @@ export async function notifyAppointmentConfirmed(
   try {
     const ctx = await loadContext(supabase, appointmentId);
     if (!ctx) return;
-    const email = renderConfirmationEmail(ctx.data);
+    const email = renderConfirmationEmail(ctx.data, ctx.language);
     await sendEmail({ to: ctx.to, ...email });
   } catch (err) {
     console.error("notifyAppointmentConfirmed failed", err);
@@ -114,7 +124,7 @@ export async function notifyAppointmentDeclined(
   try {
     const ctx = await loadContext(supabase, appointmentId);
     if (!ctx) return;
-    const email = renderDeclinedEmail(ctx.data);
+    const email = renderDeclinedEmail(ctx.data, ctx.language);
     await sendEmail({ to: ctx.to, ...email });
   } catch (err) {
     console.error("notifyAppointmentDeclined failed", err);
@@ -133,7 +143,7 @@ export async function sendReminderForRow(row: Row): Promise<"sent" | "skipped" |
   try {
     const ctx = contextFromRow(row);
     if (!ctx) return "skipped";
-    const email = renderReminderEmail(ctx.data);
+    const email = renderReminderEmail(ctx.data, ctx.language);
     const result = await sendEmail({ to: ctx.to, ...email });
     return result.ok ? "sent" : "failed";
   } catch (err) {

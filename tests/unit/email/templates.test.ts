@@ -49,4 +49,13 @@ describe("appointment email templates", () => {
     const e = renderConfirmationEmail({ ...data, contact: null });
     expect(e.text).toContain("responder na conversa");
   });
+
+  it("writes every email in the conversation's language", () => {
+    expect(renderConfirmationEmail(data, "en").subject).toBe("Your appointment with Studio Aurora is confirmed");
+    expect(renderReminderEmail(data, "it").subject).toBe("Promemoria: il tuo appuntamento con Studio Aurora si avvicina");
+    expect(renderDeclinedEmail(data, "it").text).toContain("Purtroppo Studio Aurora");
+    expect(renderConfirmationEmail(data, "en").text).toContain("Service: Consulta inicial");
+    expect(renderConfirmationEmail({ ...data, contact: null }, "it").text).toContain("Rispondi nella conversazione");
+    expect(renderConfirmationEmail(data).subject).toBe(renderConfirmationEmail(data, "pt").subject);
+  });
 });
