@@ -34,8 +34,7 @@ async function seed(owner: Awaited<ReturnType<typeof signUpTestUser>>, name: str
     .single();
   if (customerError) throw customerError;
 
-  // Every company is created with a default service ("Avaliação") -- reuse it
-  // for the waitlist rows (that FK is NOT NULL).
+  // Every company is created with a default service ("Avaliação").
   const { data: service, error: serviceError } = await owner.client
     .from("services")
     .select("id")
@@ -50,21 +49,6 @@ async function seed(owner: Awaited<ReturnType<typeof signUpTestUser>>, name: str
     customerId: customer.id as string,
     serviceId: service.id as string,
   };
-}
-
-async function insertWaitlist(
-  owner: Awaited<ReturnType<typeof signUpTestUser>>,
-  args: { companyId: string; serviceId: string; customerId: string; createdAt: string; desired: string },
-) {
-  const { error } = await owner.client.from("appointment_waitlist").insert({
-    company_id: args.companyId,
-    service_id: args.serviceId,
-    customer_id: args.customerId,
-    desired_from: args.desired,
-    desired_to: args.desired,
-    created_at: args.createdAt,
-  });
-  if (error) throw error;
 }
 
 async function insertConversation(
@@ -143,9 +127,9 @@ function total(
 }
 
 describe("loadSchedulingAnalytics", () => {
-  it("counts conversations, appointments (split by status), no-shows and waitlist adds in the window", async () => {
+  it("counts conversations, appointments (split by status) and no-shows in the window", async () => {
     const owner = await signUpTestUser("owner");
-    const { companyId, anaId, customerId, serviceId } = await seed(owner, "Sched Metrics Co");
+    const { companyId, anaId, customerId } = await seed(owner, "Sched Metrics Co");
 
     for (const day of ["05", "12", "20"]) {
       const conv = await insertConversation(owner, companyId, anaId, customerId, `2026-06-${day}T12:00:00.000Z`);
@@ -161,12 +145,6 @@ describe("loadSchedulingAnalytics", () => {
     await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "cancelled", createdAt: "2026-06-15T09:00:00.000Z", slotDay: 4 });
     await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "requested", createdAt: "2026-06-18T09:00:00.000Z", slotDay: 5 });
     await insertAppointment(owner, { companyId, agentId: anaId, customerId, status: "no_show", createdAt: "2026-06-20T09:00:00.000Z", slotDay: 6 });
-
-    // Two waitlist adds in the window (distinct windows — the open-entry
-    // dedupe index is per customer+service+range) + one outside it.
-    await insertWaitlist(owner, { companyId, serviceId, customerId, createdAt: "2026-06-09T10:00:00.000Z", desired: "2026-06-20" });
-    await insertWaitlist(owner, { companyId, serviceId, customerId, createdAt: "2026-06-11T10:00:00.000Z", desired: "2026-06-21" });
-    await insertWaitlist(owner, { companyId, serviceId, customerId, createdAt: "2026-05-25T10:00:00.000Z", desired: "2026-06-22" });
 
     const res = await loadSchedulingAnalytics({
       supabase: owner.client,
@@ -184,7 +162,6 @@ describe("loadSchedulingAnalytics", () => {
     expect(total(res, "appointments_completed")).toBe(1);
     expect(total(res, "appointments_cancelled")).toBe(1);
     expect(total(res, "appointments_no_show")).toBe(1);
-    expect(total(res, "waitlist_added")).toBe(2); // the May 25 one is out of range
   });
 
   it("mirrors a real account: one completed + one cancelled + one still-future all count", async () => {

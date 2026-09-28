@@ -42,17 +42,18 @@ export const findAvailableSlotsTool: AgentTool = {
     "block ends.\n\n" +
     "`closedDates` lists dates in the window the business simply does not open on -- a weekday " +
     "it never works, not a one-off block. If the customer asked about one of these, say the " +
-    "business does not open that day (name the day) rather than \"nothing is available\", and " +
-    "never offer the waitlist for it: no slot can free up on a day nobody works. Offer the " +
-    "nearest day that is open instead.\n\n" +
+    "business does not open that day (name the day) rather than \"nothing is available\". " +
+    "Offer the nearest day that is open instead.\n\n" +
     "If the list is empty and there's no `timeOff` or `closedDates` explaining it, say nothing " +
-    "is open in that range and offer to try another -- never invent a slot that isn't in the " +
-    "result. " +
+    "is open in that range and offer the nearest open slot (find_next_available) or another " +
+    "range -- never invent a slot that isn't in the result. There is no waitlist: never offer " +
+    "to put the customer on a list, to email or notify them if something opens up, or to keep " +
+    "an eye out for cancellations -- nothing in this system can do that. " +
     "`available: false` with `reason: \"service_not_found\"` means that service isn't something " +
     "this business offers. With `reason: \"no_business_hours\"` the business hasn't set its opening " +
     "hours yet, so there is nothing to offer for any date: tell the customer \"Ainda não temos " +
     "horários definidos por aqui\" (in their language) and offer the team if you can -- never say " +
-    "the business is closed, never suggest other dates or the waitlist.\n\n" +
+    "the business is closed, never suggest other dates.\n\n" +
     "`intakeQuestions` lists customer details this business wants before a booking. Each has a " +
     "`key` (an id -- key your `intakeAnswers` object by this), a `label` (phrase the question " +
     "from this, in your own words), a `fieldType` (`email` / `phone` / `cpf` / `date` / `name` " +

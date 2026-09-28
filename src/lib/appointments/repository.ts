@@ -36,7 +36,6 @@ import {
   type IntakeFieldType,
 } from "@/lib/appointments/intake-fields";
 import { notifyAppointmentConfirmed } from "@/lib/email/appointments";
-import { notifyWaitlistForFreedSlot } from "@/lib/appointments/waitlist";
 
 // Trello J3 -- the abstraction Ana's scheduling tools (list_services /
 // find_available_slots / book_appointment / cancel_appointment) call
@@ -977,16 +976,6 @@ async function cancel(
       (appointment.google_calendar_id as string | null) ?? null,
     );
   }
-
-  // Trello R5 -- this cancel just freed a slot; notify the oldest waitlist
-  // entry whose window covers it. Best-effort, never throws.
-  await notifyWaitlistForFreedSlot({
-    supabase: client,
-    companyId,
-    professionalId: appointment.professional_id as string,
-    startsAt: appointment.starts_at as string,
-    endsAt: appointment.ends_at as string,
-  });
 
   return { cancelled: true, appointmentId, alreadyCancelled: false };
 }

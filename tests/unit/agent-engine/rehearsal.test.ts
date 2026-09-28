@@ -9,7 +9,6 @@ const WRITERS = [
   "book_appointment",
   "cancel_appointment",
   "reschedule_appointment",
-  "add_to_waitlist",
   "flag_buying_intent",
   "request_human",
   "create_checkout_link",

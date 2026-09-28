@@ -37,7 +37,6 @@ export const SCHEDULING_METRIC_ORDER = [
   { key: "appointments_completed", i18n: "appointmentsCompleted" },
   { key: "appointments_cancelled", i18n: "appointmentsCancelled" },
   { key: "appointments_no_show", i18n: "appointmentsNoShow" },
-  { key: "waitlist_added", i18n: "waitlistAdded" },
 ] as const;
 
 export type GenericMetricSeries = {
@@ -76,8 +75,6 @@ type SchedulingLoadOptions = Pick<
 //   `appointments_booked` ≥ completed + cancelled + no_show, a still-future
 //   booking sits in `booked` only, and a no_show / completion marked this
 //   month for a booking taken last month counts in *last* month's bucket.
-// - **Waitlist adds** (`appointment_waitlist`) are company-scoped and bucket
-//   on `created_at` (when the customer asked to be waitlisted), same shape.
 // - **Conversations stay agent-scoped** (bucketed on `created_at`) — those
 //   genuinely are this agent's threads.
 export async function loadSchedulingAnalytics(
@@ -87,7 +84,7 @@ export async function loadSchedulingAnalytics(
   const localDateOf = makeLocalDateFn(timezone);
   const buckets = bucketKeysInRange(from, to, granularity);
 
-  const [conv, msgs, appt, wait] = await Promise.all([
+  const [conv, msgs, appt] = await Promise.all([
     opts.supabase
       .from("conversations")
       .select("created_at")
@@ -103,18 +100,9 @@ export async function loadSchedulingAnalytics(
       .eq("company_id", opts.companyId)
       .gte("created_at", startUtc)
       .lt("created_at", endUtc),
-    // Waitlist entries are company-scoped and bucket on `created_at` (when
-    // the customer asked to be waitlisted), same shape as appointments.
-    opts.supabase
-      .from("appointment_waitlist")
-      .select("created_at")
-      .eq("company_id", opts.companyId)
-      .gte("created_at", startUtc)
-      .lt("created_at", endUtc),
   ]);
   if (conv.error) throw new Error(conv.error.message);
   if (appt.error) throw new Error(appt.error.message);
-  if (wait.error) throw new Error(wait.error.message);
 
   const zeroed = () => new Map<string, number>(buckets.map((b) => [b, 0]));
   const counts: Record<string, Map<string, number>> = {
@@ -124,7 +112,6 @@ export async function loadSchedulingAnalytics(
     appointments_completed: zeroed(),
     appointments_cancelled: zeroed(),
     appointments_no_show: zeroed(),
-    waitlist_added: zeroed(),
   };
 
   const tally = (instant: string, metric: string) => {
@@ -147,9 +134,6 @@ export async function loadSchedulingAnalytics(
     if (r.status === "completed") tally(r.created_at, "appointments_completed");
     if (r.status === "cancelled") tally(r.created_at, "appointments_cancelled");
     if (r.status === "no_show") tally(r.created_at, "appointments_no_show");
-  }
-  for (const r of (wait.data ?? []) as { created_at: string }[]) {
-    tally(r.created_at, "waitlist_added");
   }
 
   const metrics: GenericMetricSeries[] = Object.keys(counts).map((metric) => {

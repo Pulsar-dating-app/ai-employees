@@ -113,7 +113,6 @@ describe("per-agent tool sets (J2)", () => {
         "cancel_appointment",
         "list_my_appointments",
         "reschedule_appointment",
-        "add_to_waitlist",
       ]),
     );
   });

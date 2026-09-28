@@ -16,7 +16,6 @@ const REHEARSED: Record<string, unknown> = {
   book_appointment: { booked: true },
   cancel_appointment: { cancelled: true },
   reschedule_appointment: { rescheduled: true },
-  add_to_waitlist: { added: true },
   flag_buying_intent: { recorded: true },
   request_human: { handoffRequested: true },
 };

@@ -920,10 +920,6 @@
       "appointmentsNoShow": {
         "label": "No-shows",
         "caption": "Marked as a no-show"
-      },
-      "waitlistAdded": {
-        "label": "Waitlist",
-        "caption": "Customers added in this period"
       }
     },
     "notASale": "A checkout click means a customer opened your store, not that a sale was completed.",
