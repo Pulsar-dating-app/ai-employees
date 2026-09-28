@@ -30,6 +30,19 @@ Annual = 12 × monthly − 15%, rounded to the cent (e.g. Starter R$989,30/year)
 **Decision:** An existing subscriber picks any of the 12 self-serve variants on our billing page (the period/WhatsApp toggles now show in change mode too). The checkout route then opens Stripe's `subscription_update_confirm` Portal flow for that exact Price instead of the generic plan list. To make that possible, each tier's WhatsApp variants moved to their own Product ("Staffra <Tier> + WhatsApp"), so the Stripe catalog is 6 Products × (monthly, annual). The Portal config also has `adjustable_quantity` off and schedules `shortening_interval` changes (annual → monthly) at period end, alongside the existing `decreasing_item_amount` rule.
 **Why:** The Customer Portal only allows one Price per interval per Product in its plan-switch list, and in the sandbox it rejects a confirm flow to any Price not on that list. With 4 Prices per Product, moving between "Starter" and "Starter + WhatsApp" was impossible. A fully in-app swap (`subscriptions.update`) was rejected: we'd own proration previews, 3DS/decline handling, and period-end downgrades via Subscription Schedules, all of which the Portal already does. The confirm flow gives the in-app choice at the cost of about one function. Quantity was switchable in the Portal before this, which would have let a merchant pay 2× without `plan_key` changing.
 
+## 2026-09-25 — WhatsApp moves to Twilio's Partner Solution (reverses 2026-08-26)
+
+**Decision:** New WhatsApp connections go through Twilio as the Partner Solution in Meta's Tech Provider program. Embedded Signup carries Twilio's `solutionID`, each company gets a Twilio subaccount, the number is registered as a Twilio sender (Senders API v2), and messages flow through Twilio's webhook and Messages API. The Meta-direct connect path is gone. Existing rows are dev data (no real users) and stay `provider = 'meta'`; the Meta webhook, send path and eligibility cron keep serving them.
+**Why:** The user accepted Twilio's Partner Solution in Meta for Developers. With a Partner Solution, Twilio registers the number and holds the messaging credit line, so registering or sending through Cloud API ourselves would conflict with it. The shared inbound pipeline (`src/lib/whatsapp/inbound.ts`) keeps both providers on identical gates. One subaccount per company (not per agent) follows Twilio's "a subaccount for each new business" guidance while agents keep their own numbers.
+**Twilio's answers (support ticket, 2026-09-25):**
+- No coexistence for Tech Provider numbers. Embedded Signup dropped `featureType: "whatsapp_business_app_onboarding"`, and a number on the WhatsApp Business app must migrate to the API.
+- Senders usually go straight to `ONLINE` but can land in `PENDING_VERIFICATION`, so an in-app SMS-code step was added.
+- There is no sender-status webhook, so we poll.
+- `profile.name` is not needed for ESU numbers.
+- `configuration.account_type` must be `ISVSubAccount`.
+
+The connect screen's "Meta bills you directly / add a payment method at Meta" disclosure and its acknowledgment checkbox were replaced by an "included in your plan" note at the user's request: only `_wpp` plans reach that screen, and those already include Meta's fees.
+
 ## 2026-09-24 — Landing demo is real screenshots; value section is a calculator
 
 **Decision:** The landing's `#demo` became a tour of five real dashboard screenshots from a seeded sample account, captioned as sample data. It replaced the hand-built interactive dashboard mock. "Uma funcionária que não tira folga" became weekly coverage bars (44h vs 168h) plus a calculator where visitors enter what they pay attendants today, compared with the recommended plan's price.

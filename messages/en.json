@@ -1122,14 +1122,20 @@
       "stepTwoDescription": "Once connected, your team answers on WhatsApp automatically — day and night.",
       "paymentIssueBadge": "Payment needed",
       "paymentIssueDescription": "WhatsApp can't deliver messages until a payment method is added to your account in Meta Business Manager.",
-      "billingDisclosureTitle": "Before you connect",
-      "billingDisclosurePaymentMethod": "You'll need to add a payment method to your WhatsApp Business account in Meta Business Manager — without it, messages won't be delivered even after connecting.",
-      "billingDisclosureBilling": "Meta charges you directly for WhatsApp usage, separately from your Staffra subscription, once you go past a free allowance. Rates change over time, so always check the current ones here:",
-      "billingDisclosureLinkText": "Meta's official WhatsApp pricing",
-      "billingAcknowledgeLabel": "I understand Meta bills me separately for WhatsApp usage and that I need to add a payment method.",
+      "billingIncludedTitle": "WhatsApp is included in your plan",
+      "billingIncludedDescription": "Messages your team sends and receives on WhatsApp are already covered by your Staffra plan. You don't need to add a payment method at Meta or pay anything separately.",
       "addonRequiredTitle": "WhatsApp isn't included in your current plan",
       "addonRequiredDescription": "Add the WhatsApp add-on to your plan to connect a number and let your team answer customers there.",
-      "addonRequiredCta": "Add WhatsApp to your plan"
+      "addonRequiredCta": "Add WhatsApp to your plan",
+      "pendingBadge": "Activating",
+      "pendingDescription": "We're activating this number on WhatsApp. It usually takes a few minutes, and this page updates on its own.",
+      "verificationDescription": "WhatsApp sent a code by text message to {number}. Enter it here to finish activating the number.",
+      "verificationCodePlaceholder": "6-digit code",
+      "verificationSubmit": "Confirm code",
+      "verificationError": "We couldn't confirm that code. Check it and try again.",
+      "verificationWaitingForAdmin": "This number is waiting for a confirmation code. An owner or admin needs to enter it here.",
+      "activationFailedDescription": "We couldn't activate this number on WhatsApp. Disconnect it and connect again.",
+      "activationRetry": "Disconnect and try again"
     },
     "channelTabs": {
       "tablistLabel": "Ways customers can reach this employee",
@@ -1282,7 +1288,9 @@
         "paymentIssue": "Payment issue with Meta",
         "ready": "Ready to share",
         "noSites": "No sites allowed yet",
-        "sitesCount": "{count, plural, one {# site allowed} other {# sites allowed}}"
+        "sitesCount": "{count, plural, one {# site allowed} other {# sites allowed}}",
+        "activating": "Activating · {detail}",
+        "activationFailed": "Activation failed"
       }
     },
     "behavior": {

@@ -140,6 +140,7 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
           whatsappEntitled={whatsappEntitled}
           metaAppId={process.env.META_APP_ID ?? ""}
           metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
+          metaSolutionId={process.env.META_WHATSAPP_SOLUTION_ID ?? ""}
           chatUrl={chatUrl}
           embedSnippet={embedSnippet}
           telegramLink={telegramLink}
