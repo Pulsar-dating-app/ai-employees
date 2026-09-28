@@ -512,4 +512,31 @@ describe("get_business_hours dates", () => {
     };
     expect(holiday.dates[0]).toMatchObject({ open: false, reason: "time_off" });
   });
+
+  // 2026-09-28 -- "amanhã às 10h com o Bruno": who is booked at that moment
+  // is known before the service is.
+  it("with `time`, says who is booked at that moment and when they're free again", async () => {
+    const s = await seed("At Time Co");
+    const joao = await addProfessional(s.companyId, "João");
+    // The seeded professional is booked 10:00-10:30 and 10:30-11:00 (UTC).
+    expect(((await book(s, { professionalId: s.first })) as { booked: boolean }).booked).toBe(true);
+    const next = await createCustomer(s.companyId);
+    expect(
+      ((await book(s, { professionalId: s.first, startsAt: `${DATE}T10:30:00.000Z` }, next)) as { booked: boolean }).booked,
+    ).toBe(true);
+
+    type AtTime = { professionals: { id: string; free: boolean; reason?: string; freeFrom?: string | null }[] };
+    const at10 = (await getBusinessHoursTool.execute({ from: DATE, to: DATE, time: "10:00" }, ctxFor(s))) as {
+      atTime: AtTime;
+    };
+    const byId = new Map(at10.atTime.professionals.map((p) => [p.id, p]));
+    expect(byId.get(s.first)).toMatchObject({ free: false, reason: "busy", freeFrom: "11:00" });
+    expect(byId.get(joao.id!)).toMatchObject({ free: true });
+
+    // Outside the 09:00-12:00 hours: nobody works then.
+    const at13 = (await getBusinessHoursTool.execute({ from: DATE, to: DATE, time: "13:00" }, ctxFor(s))) as {
+      atTime: AtTime;
+    };
+    expect(at13.atTime.professionals.every((p) => p.reason === "not_working")).toBe(true);
+  });
 });

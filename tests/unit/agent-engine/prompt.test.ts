@@ -882,6 +882,15 @@ describe("buildDateFirstSection", () => {
     expect(section).toContain("first call get_business_hours");
     expect(section).toContain("Don't ask which service first");
   });
+
+  // 2026-09-28 -- a named time and professional are enough to know they're
+  // booked; the service only matters for a long one.
+  it("checks a named time too, and says who's free before asking the service", () => {
+    const section = buildDateFirstSection(true)!;
+    expect(section).toContain("pass it as `time`");
+    expect(section).toContain("instead of going on to ask the service");
+    expect(section).toContain("a longer service can run into a later booking");
+  });
 });
 
 describe("buildNoBusinessHoursSection", () => {

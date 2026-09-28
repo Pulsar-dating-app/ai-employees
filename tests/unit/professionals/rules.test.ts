@@ -5,8 +5,58 @@ import {
   eligibleProfessionals,
   mergeSlotsAcrossProfessionals,
   orderForAutoAssignment,
+  statusAtMinute,
+  minutesOfDay,
   type HoursRow,
 } from "@/lib/professionals/rules";
+
+// 2026-09-28 -- is a professional booked at one moment, and from when are
+// they free again (minutes of the day on the business's clock).
+describe("statusAtMinute", () => {
+  const windows = [[minutesOfDay("09:00"), minutesOfDay("12:00")], [minutesOfDay("14:00"), minutesOfDay("18:00")]] as const;
+  const at = (time: string) => minutesOfDay(time);
+
+  it("is free inside working hours with nothing booked", () => {
+    expect(statusAtMinute({ at: at("10:00"), windows, busy: [], timeOff: false })).toEqual({ free: true });
+  });
+
+  it("follows back-to-back bookings to the first gap", () => {
+    const busy = [
+      [at("10:00"), at("10:30")],
+      [at("10:30"), at("11:15")],
+    ] as const;
+    expect(statusAtMinute({ at: at("10:00"), windows, busy, timeOff: false })).toEqual({
+      free: false,
+      reason: "busy",
+      freeFrom: at("11:15"),
+    });
+    // Mid-booking counts as busy too.
+    expect(statusAtMinute({ at: at("10:45"), windows, busy, timeOff: false })).toMatchObject({ reason: "busy" });
+    // A booking ending exactly at the asked time doesn't block it.
+    expect(statusAtMinute({ at: at("11:15"), windows, busy, timeOff: false })).toEqual({ free: true });
+  });
+
+  it("has no freeFrom when the rest of that working window is booked", () => {
+    const busy = [[at("11:00"), at("12:00")]] as const;
+    expect(statusAtMinute({ at: at("11:00"), windows, busy, timeOff: false })).toEqual({
+      free: false,
+      reason: "busy",
+      freeFrom: null,
+    });
+  });
+
+  it("is not_working outside every window, and time_off wins over everything", () => {
+    expect(statusAtMinute({ at: at("13:00"), windows, busy: [], timeOff: false })).toEqual({
+      free: false,
+      reason: "not_working",
+    });
+    expect(statusAtMinute({ at: at("12:00"), windows, busy: [], timeOff: false })).toMatchObject({ reason: "not_working" });
+    expect(statusAtMinute({ at: at("10:00"), windows, busy: [], timeOff: true })).toEqual({
+      free: false,
+      reason: "time_off",
+    });
+  });
+});
 
 // 2026-09-24 -- the pure rules behind one schedule per professional.
 const ESTABLISHMENT: HoursRow[] = [

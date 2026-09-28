@@ -88,3 +88,44 @@ export function orderForAutoAssignment<T extends { id: string; position: number 
     (a, b) => (bookingsThatDay.get(a.id) ?? 0) - (bookingsThatDay.get(b.id) ?? 0) || a.position - b.position,
   );
 }
+
+// 2026-09-28 -- is a professional free at one moment of a day, and if not,
+// from when? What Ana needs the moment a customer names a day, a time and a
+// professional -- before the service is known, so no duration is involved:
+// it says "someone is booked at 10:00", never "a 60-minute service fits".
+// Minutes are minutes-of-day on the business's clock.
+//   - `windows`: that weekday's working hours, [start, end) each.
+//   - `busy`: that day's live bookings, [start, end) each (end includes the
+//     booking's buffer), already clipped to the day.
+// A time outside every window is "not_working"; time off wins over all.
+// `freeFrom` follows back-to-back bookings to the first gap, and is null when
+// the rest of that working window is booked.
+export type StatusAt =
+  | { free: true }
+  | { free: false; reason: "time_off" | "not_working" }
+  | { free: false; reason: "busy"; freeFrom: number | null };
+
+export function statusAtMinute(input: {
+  at: number;
+  windows: readonly (readonly [number, number])[];
+  busy: readonly (readonly [number, number])[];
+  timeOff: boolean;
+}): StatusAt {
+  if (input.timeOff) return { free: false, reason: "time_off" };
+  const window = input.windows.find(([start, end]) => input.at >= start && input.at < end);
+  if (!window) return { free: false, reason: "not_working" };
+
+  let t = input.at;
+  for (;;) {
+    const blocking = input.busy.find(([start, end]) => start <= t && t < end);
+    if (!blocking) break;
+    t = blocking[1];
+  }
+  if (t === input.at) return { free: true };
+  return { free: false, reason: "busy", freeFrom: t < window[1] ? t : null };
+}
+
+// "HH:MM" or "HH:MM:SS" -> minutes of the day.
+export function minutesOfDay(time: string): number {
+  return Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+}
