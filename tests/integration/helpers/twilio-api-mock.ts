@@ -18,7 +18,30 @@ function basicAuthUser(req: IncomingMessage): string {
 }
 
 export function startTwilioApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
-  const senders = new Map<string, { senderId: string; accountSid: string; status: string }>();
+  const senders = new Map<string, { senderId: string; accountSid: string; status: string; numberKey: string }>();
+  const twoFactorOn = new Set<string>();
+  const registrationFailedReasons = [
+    { code: "410", message: "Something went wrong. Please create a support ticket" },
+    {
+      code: "63112",
+      message: "The Meta and/or WhatsApp Business Accounts connected to this Sender were disabled by Meta",
+    },
+  ];
+  const describe = (sid: string) => {
+    const sender = senders.get(sid)!;
+    const failed = sender.status === "FAILED_TWO_FACTOR";
+    return {
+      sid,
+      sender_id: sender.senderId,
+      status: failed ? "OFFLINE" : sender.status,
+      offline_reasons: failed ? registrationFailedReasons : [],
+    };
+  };
+  const settle = (sid: string, status: string) => {
+    const sender = senders.get(sid)!;
+    sender.status = status;
+    if (status === "ONLINE") twoFactorOn.add(sender.numberKey);
+  };
   const deletedSenders: string[] = [];
   const sentMessages: SentTwilioMessage[] = [];
 
@@ -35,6 +58,12 @@ export function startTwilioApiMock(): Promise<{ url: string; stop: () => Promise
 
     if (url.pathname === "/__deleted_senders" && req.method === "GET") {
       return send(200, deletedSenders);
+    }
+
+    if (url.pathname === "/__disable_two_factor" && req.method === "POST") {
+      const wabaId = url.searchParams.get("waba_id") ?? "";
+      for (const key of [...twoFactorOn]) if (key.startsWith(`${wabaId}|`)) twoFactorOn.delete(key);
+      return send(204);
     }
 
     if (url.pathname === "/2010-04-01/Accounts.json" && req.method === "POST") {
@@ -67,21 +96,19 @@ export function startTwilioApiMock(): Promise<{ url: string; stop: () => Promise
         return send(400, { code: 63100, message: "account_type must be one of ['' ISV]" });
       }
       const sid = `XE${randomUUID().replace(/-/g, "")}`;
-      const status = wabaId.includes("trigger-sender-creating")
+      const numberKey = `${wabaId}|${body.sender_id}`;
+      const status = twoFactorOn.has(numberKey)
+        ? "FAILED_TWO_FACTOR"
+        : wabaId.includes("trigger-sender-creating")
         ? "CREATING"
         : wabaId.includes("trigger-sender-verification")
           ? "PENDING_VERIFICATION"
           : wabaId.includes("trigger-sender-offline")
             ? "OFFLINE"
             : "ONLINE";
-      senders.set(sid, { senderId: body.sender_id, accountSid: basicAuthUser(req), status });
-      return send(201, {
-        sid,
-        sender_id: body.sender_id,
-        status,
-        configuration: body.configuration,
-        webhook: body.webhook,
-      });
+      senders.set(sid, { senderId: body.sender_id, accountSid: basicAuthUser(req), status, numberKey });
+      settle(sid, status);
+      return send(201, { ...describe(sid), configuration: body.configuration, webhook: body.webhook });
     }
 
     const senderMatch = url.pathname.match(/^\/v2\/Channels\/Senders\/([^/]+)$/);
@@ -98,12 +125,12 @@ export function startTwilioApiMock(): Promise<{ url: string; stop: () => Promise
         if (sender.status !== "PENDING_VERIFICATION" || code === "000000") {
           return send(400, { code: 63105, message: "mock: invalid verification code" });
         }
-        sender.status = "VERIFYING";
-        return send(200, { sid: senderMatch[1], sender_id: sender.senderId, status: "VERIFYING" });
+        settle(senderMatch[1], "VERIFYING");
+        return send(200, describe(senderMatch[1]));
       }
       const next: Record<string, string> = { CREATING: "ONLINE", VERIFYING: "ONLINE", OFFLINE: "ONLINE" };
-      sender.status = next[sender.status] ?? sender.status;
-      return send(200, { sid: senderMatch[1], sender_id: sender.senderId, status: sender.status });
+      settle(senderMatch[1], next[sender.status] ?? sender.status);
+      return send(200, describe(senderMatch[1]));
     }
 
     send(404, { code: 20404, message: "mock: unknown endpoint" });

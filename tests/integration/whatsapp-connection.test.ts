@@ -15,6 +15,12 @@ import { getTestServiceClient } from "./helpers/service-client";
 describe("WhatsApp connection (GET/DELETE .../whatsapp, POST .../whatsapp/connect)", () => {
   const service = getTestServiceClient();
 
+  async function disableTwoFactor(wabaId: string) {
+    await fetch(`${getTestEnv().twilioApiMockUrl}/__disable_two_factor?waba_id=${encodeURIComponent(wabaId)}`, {
+      method: "POST",
+    });
+  }
+
   async function connectionRow(companyId: string) {
     const { data } = await service
       .from("company_whatsapp_connections")
@@ -416,6 +422,21 @@ describe("WhatsApp connection (GET/DELETE .../whatsapp, POST .../whatsapp/connec
 
     expect((await api("POST", connectPath(companyId, "malu"), member.cookieHeader, { reconnect: true })).status).toBe(403);
 
+    const withTwoFactorOn = await api<{ connection: { status: string; twilio_sender_status: string } }>(
+      "POST",
+      connectPath(companyId, "malu"),
+      owner.cookieHeader,
+      { reconnect: true },
+    );
+    expect(withTwoFactorOn.json.connection).toMatchObject({ status: "pending", twilio_sender_status: "OFFLINE" });
+    const stillStuck = await api<{ connection: { status: string } }>("GET", statusPath(companyId, "malu"), owner.cookieHeader);
+    expect(stillStuck.json.connection.status).toBe("pending");
+
+    const cancelled = await api<{ connection: { status: string } }>("DELETE", statusPath(companyId, "malu"), owner.cookieHeader);
+    expect(cancelled.json.connection.status).toBe("disconnected");
+
+    await disableTwoFactor(body.wabaId);
+
     const reconnected = await api<{
       connection: { status: string; phone_number_id: string; waba_id: string; display_phone_number: string; provider: string };
     }>("POST", connectPath(companyId, "malu"), owner.cookieHeader, { reconnect: true });
@@ -443,6 +464,7 @@ describe("WhatsApp connection (GET/DELETE .../whatsapp, POST .../whatsapp/connec
 
     await api("POST", connectPath(companyId, "malu"), owner.cookieHeader, body);
     await api("DELETE", statusPath(companyId, "malu"), owner.cookieHeader);
+    await disableTwoFactor(body.wabaId);
     expect((await api("POST", connectPath(companyId, "ana"), owner.cookieHeader, body)).status).toBe(200);
 
     const blocked = await api<{ error: string; agentSlug: string }>(
@@ -454,6 +476,7 @@ describe("WhatsApp connection (GET/DELETE .../whatsapp, POST .../whatsapp/connec
     expect(blocked.status).toBe(409);
     expect(blocked.json).toMatchObject({ error: "whatsapp_number_connected_to_other_agent", agentSlug: "ana" });
 
+    await disableTwoFactor(body.wabaId);
     const forced = await api<{ connection: { status: string } }>("POST", connectPath(companyId, "malu"), owner.cookieHeader, {
       reconnect: true,
       force: true,

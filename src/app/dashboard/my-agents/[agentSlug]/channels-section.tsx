@@ -12,6 +12,8 @@ import { useReportChannelStatus } from "./channel-status";
 
 const PENDING_POLL_MS = 5000;
 
+const WHATSAPP_MANAGER_PHONE_NUMBERS_URL = "https://business.facebook.com/wa/manage/phone-numbers/";
+
 declare global {
   interface Window {
     FB?: {
@@ -41,6 +43,7 @@ type ViewState =
   | "loading"
   | "idle"
   | "connecting"
+  | "confirmingReconnect"
   | "reconnecting"
   | "disconnecting"
   | "confirmingDisconnect"
@@ -87,6 +90,7 @@ export function ChannelsSection({
   const [view, setView] = useState<ViewState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
+  const [twoFactorDisabled, setTwoFactorDisabled] = useState(false);
   const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
   const statusUrl = `/api/companies/${companyId}/agents/${agentSlug}/whatsapp`;
 
@@ -170,6 +174,12 @@ export function ChannelsSection({
         setErrorMessage(t("connectError"));
         setView("idle");
       });
+  }
+
+  function startReconnect() {
+    setErrorMessage(null);
+    setTwoFactorDisabled(false);
+    setView("confirmingReconnect");
   }
 
   async function reconnect() {
@@ -421,6 +431,20 @@ export function ChannelsSection({
                   ) : (
                     <p className="text-sm text-on-surface-variant">{t("pendingDescription")}</p>
                   )}
+                  {canEdit ? (
+                    <div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        isLoading={view === "disconnecting"}
+                        disabled={view === "verifying"}
+                        onClick={confirmDisconnect}
+                      >
+                        {t("pendingCancel")}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
@@ -431,27 +455,67 @@ export function ChannelsSection({
                       <Alert variant="info" title={t("billingIncludedTitle")}>
                         {t("billingIncludedDescription")}
                       </Alert>
-                      {reconnectableNumber ? (
+                      {reconnectableNumber && (view === "confirmingReconnect" || view === "reconnecting") ? (
+                        <div className="flex flex-col gap-3">
+                          <Alert variant="warning" title={t("reconnectTwoFactorTitle")}>
+                            {t("reconnectTwoFactorIntro")}
+                          </Alert>
+                          <ol className="list-decimal space-y-1 pl-5 text-sm text-on-surface-variant">
+                            <li>
+                              <a
+                                href={WHATSAPP_MANAGER_PHONE_NUMBERS_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline"
+                              >
+                                {t("reconnectTwoFactorStepOpen")}
+                              </a>
+                            </li>
+                            <li>{t("reconnectTwoFactorStepNumber", { number: reconnectableNumber })}</li>
+                            <li>{t("reconnectTwoFactorStepDisable")}</li>
+                            <li>{t("reconnectTwoFactorStepWait")}</li>
+                          </ol>
+                          <label className="flex items-start gap-2 text-sm text-on-surface-variant">
+                            <input
+                              type="checkbox"
+                              className="mt-0.5"
+                              checked={twoFactorDisabled}
+                              onChange={(e) => setTwoFactorDisabled(e.target.checked)}
+                            />
+                            {t("reconnectTwoFactorConfirm")}
+                          </label>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <Button
+                              type="button"
+                              isLoading={view === "reconnecting"}
+                              disabled={!twoFactorDisabled}
+                              onClick={reconnect}
+                            >
+                              {view === "reconnecting" ? t("connecting") : t("reconnectNowButton")}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              disabled={view === "reconnecting"}
+                              onClick={() => setView("idle")}
+                            >
+                              {t("cancel")}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : reconnectableNumber ? (
                         <div className="flex flex-col gap-3">
                           <p className="text-sm text-on-surface-variant">
                             {t("reconnectDescription", { name: agentName, number: reconnectableNumber })}
                           </p>
                           <div className="flex flex-wrap items-center gap-3">
-                            <Button
-                              type="button"
-                              isLoading={view === "reconnecting"}
-                              disabled={view === "connecting"}
-                              onClick={reconnect}
-                            >
-                              {view === "reconnecting"
-                                ? t("connecting")
-                                : t("reconnectButton", { number: reconnectableNumber })}
+                            <Button type="button" disabled={view === "connecting"} onClick={startReconnect}>
+                              {t("reconnectButton", { number: reconnectableNumber })}
                             </Button>
                             <Button
                               type="button"
                               variant="secondary"
                               isLoading={view === "connecting"}
-                              disabled={view === "reconnecting"}
                               onClick={startSignup}
                             >
                               {view === "connecting" ? t("connecting") : t("connectAnotherButton")}

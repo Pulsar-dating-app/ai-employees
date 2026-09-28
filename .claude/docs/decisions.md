@@ -60,6 +60,7 @@ Stating the catalog up front follows the pattern that fixed policies and the FAQ
 
 **Decision:** Disconnect still deletes the Twilio sender. A disconnected number comes back through a "Reconnect {number}" action that re-registers the sender from the stored WABA/number, without Embedded Signup. "Connect another number" stays on Embedded Signup.
 **Why:** Live test: after disconnecting, Embedded Signup listed the number as not eligible ("this number can't be shared with this app"), even after turning off two-step verification. The WABA stays shared with our app and Twilio's solution after the sender is deleted. Pausing instead of deleting was rejected: Twilio bills every inbound message while a sender exists, even if we ignore it, and the customer would get silence.
+**Update (same day):** reconnecting also requires the merchant to turn off two-step verification in WhatsApp Manager and wait a few minutes. Twilio's registration re-enables it, and re-registering with it on fails as 410/63112. The reconnect flow walks the admin through this and requires a confirmation first. Messages customers send while disconnected are **not** lost, contrary to Twilio support's answer: they were delivered in a burst about 27 s after the reconnect went ONLINE, which means Twilio billed them and the AI answered them.
 
 ## 2026-09-27 — Real plan prices and quotas; annual = 15% off
 
