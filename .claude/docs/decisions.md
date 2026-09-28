@@ -10,6 +10,11 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-09-28 — Plan prices in whole reais, annual rounded up
+
+**Decision:** Every price drops the ,99: monthly R$97 / R$297 / R$497, with WhatsApp R$150 / R$450 / R$750. Annual is still 12 × monthly − 15%, but now rounded **up** to a whole real (`annualPriceCents`, integer math): R$990 / R$3.030 / R$5.070, with WhatsApp R$1.530 / R$4.590 / R$7.650. Supersedes the price table in the 2026-09-27 entry below.
+**Why:** Owner's call: no centavos anywhere. Rounding the annual up (never down) keeps the discount at ≤ 15%. In the Stripe sandbox, 12 new Prices were created, lookup keys moved with `transfer_lookup_key`, the Portal plan-switch list and Pro's `default_price` repointed, and the 12 old Prices **archived**. Archiving only blocks new purchases; sandbox subscriptions already on them keep billing.
+
 ---
 
 ## 2026-09-27 — Malu gets a catalog overview; a card needs a photo, per product

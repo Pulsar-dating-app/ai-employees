@@ -5,12 +5,13 @@ import clsx from "clsx";
 import { useTranslations } from "next-intl";
 import {
   findPlan,
+  fullYearPriceCents,
   getSelfServePlansForVariant,
   type BillingPeriod,
   type BillingPlan,
   type PlanKey,
 } from "@/lib/billing/plans";
-import { CheckIcon, WhatsAppIcon } from "@/components/ui/icons";
+import { ChatIcon, CheckIcon, WhatsAppIcon } from "@/components/ui/icons";
 import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 import { CheckoutButton } from "./billing-actions";
 
@@ -96,15 +97,10 @@ function WhatsAppSwitch({ value, onChange }: { value: boolean; onChange: (next: 
   );
 }
 
-function Feature({ children, muted }: { children: React.ReactNode; muted?: boolean }) {
+function Feature({ children }: { children: React.ReactNode }) {
   return (
-    <li className={clsx("flex items-start gap-2.5 text-sm", muted ? "text-outline" : "text-on-surface-variant")}>
-      <span
-        className={clsx(
-          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full",
-          muted ? "bg-surface-container" : "bg-primary-fixed text-primary",
-        )}
-      >
+    <li className="flex items-start gap-2.5 text-sm leading-6 text-on-surface-variant">
+      <span className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary-fixed text-primary">
         <CheckIcon className="h-2.5 w-2.5" />
       </span>
       {children}
@@ -128,6 +124,7 @@ function TierCard({
   const t = useTranslations("Billing");
   const isAnnual = plan.billingPeriod === "annual";
   const price = plan.priceBrlCents ?? 0;
+  const fullYear = isAnnual ? fullYearPriceCents(plan) : null;
 
   return (
     <div className="billing-card-in h-full" style={{ "--i": index } as React.CSSProperties}>
@@ -148,32 +145,35 @@ function TierCard({
         <h3 className="text-base font-semibold text-on-surface">{plan.displayName}</h3>
 
         <div key={plan.key} className="billing-price-in mt-4">
+          {fullYear ? (
+            <p className="mb-1.5 text-[15px] font-medium text-outline line-through tabular-nums">
+              {BRL.format(fullYear / 100)}
+            </p>
+          ) : null}
           <div className="flex items-baseline gap-1.5">
             <span className="text-[40px] font-semibold leading-none tracking-[-0.03em] text-on-surface tabular-nums">
               {BRL.format(price / 100)}
             </span>
             <span className="text-sm text-on-surface-variant">{isAnnual ? t("perYear") : t("perMonth")}</span>
           </div>
-          {isAnnual ? (
-            <p className="mt-2 text-[13px] text-on-surface-variant">
-              {t("tiers.monthlyEquivalent", { price: BRL_WHOLE.format(Math.round(price / 1200)) })}
+          {fullYear ? (
+            <p className="mt-2 text-[13px] font-medium text-success-500">
+              {t("tiers.annualSavings", {
+                monthly: BRL_WHOLE.format(Math.round(price / 1200)),
+                saved: BRL_WHOLE.format(Math.round((fullYear - price) / 100)),
+              })}
             </p>
           ) : null}
         </div>
 
-        <ul className="mt-5 flex flex-1 flex-col gap-3 border-t border-outline-variant/50 pt-5">
-          <Feature>
-            <span className="font-semibold text-on-surface">
-              {isAnnual
-                ? t("plan.repliesAnnual", { limit: plan.monthlyReplyLimit ?? 0 })
-                : t("plan.replies", { limit: plan.monthlyReplyLimit ?? 0 })}
-            </span>
-          </Feature>
-          <Feature>{t("plan.teammates")}</Feature>
-          <Feature muted={!plan.whatsappIncluded}>
-            {plan.whatsappIncluded ? t("tiers.whatsappIncluded") : t("tiers.whatsappSeparate")}
-          </Feature>
-        </ul>
+        {/* Only the reply quota differs between tiers; everything else is in
+            the shared "included in every plan" list below the cards. */}
+        <p className="mt-5 flex flex-1 items-start gap-2.5 border-t border-outline-variant/50 pt-5 text-[15px] font-semibold text-on-surface">
+          <ChatIcon className="mt-0.5 h-[18px] w-[18px] shrink-0 text-primary" />
+          {isAnnual
+            ? t("plan.repliesAnnual", { limit: plan.monthlyReplyLimit ?? 0 })
+            : t("plan.replies", { limit: plan.monthlyReplyLimit ?? 0 })}
+        </p>
 
         <div className="mt-7">{action}</div>
       </div>
@@ -193,6 +193,7 @@ export function PlanTiers({
   currentPlanKey?: PlanKey;
 }) {
   const t = useTranslations("Billing");
+  const included = t.raw("tiers.included") as string[];
   const current = findPlan(currentPlanKey);
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>(current?.billingPeriod ?? "monthly");
   const [whatsappIncluded, setWhatsappIncluded] = useState(current?.whatsappIncluded ?? false);
@@ -279,6 +280,15 @@ export function PlanTiers({
             />
           );
         })}
+      </div>
+
+      <div className="rounded-[24px] bg-surface-container-lowest/80 p-6 shadow-[0_1px_2px_rgba(25,28,29,0.04)] ring-1 ring-outline-variant/60 sm:p-7">
+        <h3 className="text-base font-semibold text-on-surface">{t("tiers.includedTitle")}</h3>
+        <ul className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+          {included.map((item) => (
+            <Feature key={item}>{item}</Feature>
+          ))}
+        </ul>
       </div>
     </div>
   );

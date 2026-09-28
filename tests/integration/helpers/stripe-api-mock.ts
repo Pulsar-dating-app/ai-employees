@@ -116,6 +116,8 @@ export type CapturedCheckoutSession = {
   id: string;
   trialPeriodDays: number | null;
   metadata: Record<string, string>;
+  locale: string | null;
+  submitMessage: string | null;
 };
 
 export type CapturedPortalSession = {
@@ -125,6 +127,7 @@ export type CapturedPortalSession = {
   itemId: string | null;
   price: string | null;
   afterCompletionReturnUrl: string | null;
+  locale: string | null;
 };
 
 export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
@@ -179,6 +182,8 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
         id,
         trialPeriodDays: trialPeriodDaysRaw ? Number(trialPeriodDaysRaw) : null,
         metadata: extractMetadata(params, "subscription_data[metadata]"),
+        locale: params.get("locale"),
+        submitMessage: params.get("custom_text[submit][message]"),
       });
       return send(200, {
         id,
@@ -208,6 +213,7 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
         itemId: params.get("flow_data[subscription_update_confirm][items][0][id]"),
         price: params.get("flow_data[subscription_update_confirm][items][0][price]"),
         afterCompletionReturnUrl: params.get("flow_data[after_completion][redirect][return_url]"),
+        locale: params.get("locale"),
       });
       return send(200, {
         id,

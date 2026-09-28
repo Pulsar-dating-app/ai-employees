@@ -104,6 +104,36 @@ describe("Plan checkout (Trello P3)", () => {
     expect(second?.stripe_customer_id).toBe(first?.stripe_customer_id);
   });
 
+  // Without an explicit locale Stripe renders in the browser's language, so a
+  // merchant who picked Portuguese in the app still saw English trial copy.
+  it.each([
+    ["pt", "pt-BR"],
+    ["en", "en"],
+  ])("opens Checkout in the app's language (locale cookie %s -> %s)", async (cookieLocale, stripeLocale) => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, `Checkout Locale ${cookieLocale} Co`);
+
+    const res = await checkout(`${owner.cookieHeader}; locale=${cookieLocale}`, companyId, "starter");
+    expect(res.status).toBe(200);
+    expect((await capturedCheckoutSession(res.json.url!))?.locale).toBe(stripeLocale);
+  });
+
+  it("opens the Billing Portal in the app's language", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Portal Locale Co");
+    await getTestServiceClient().from("company_billing").insert({
+      company_id: companyId,
+      stripe_customer_id: "cus_seed_portal_locale",
+      stripe_subscription_id: "sub_mock_starter",
+      subscription_status: "active",
+      plan_key: "starter",
+    });
+
+    const res = await checkout(`${owner.cookieHeader}; locale=pt`, companyId, "pro");
+    expect(res.json.mode).toBe("portal");
+    expect((await capturedPortalSession(res.json.url!))?.locale).toBe("pt-BR");
+  });
+
   it("sends an existing subscriber to the Stripe Billing Portal, leaving company_billing untouched", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Checkout Portal Co");
@@ -387,6 +417,19 @@ describe("Plan checkout (Trello P3)", () => {
       },
     );
 
+    // Stripe's generated trial headline only mentions days; the reply cap is
+    // ours to state, via the note above the pay button, in the app's language.
+    it("tells the buyer about the trial's reply limit on Checkout", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Trial Checkout Note Co");
+
+      const res = await checkout(`${owner.cookieHeader}; locale=pt`, companyId, "starter");
+      const session = await capturedCheckoutSession(res.json.url!);
+      const limit = getPlan("starter").trialReplyLimit!;
+      expect(session?.submitMessage).toContain(`${limit} respostas`);
+      expect(session?.submitMessage).toContain(`${TRIAL_DAYS} dias`);
+    });
+
     it("does not grant a second trial once the user's trial_used_at is set", async () => {
       const owner = await signUpTestUser("owner");
       const companyId = await createCompany(owner.cookieHeader, "Trial Already Used Co");
@@ -400,6 +443,7 @@ describe("Plan checkout (Trello P3)", () => {
       const session = await capturedCheckoutSession(res.json.url!);
       expect(session?.trialPeriodDays).toBeNull();
       expect(session?.metadata.trialUserId).toBeUndefined();
+      expect(session?.submitMessage).toBeNull();
     });
 
     // The trial is one per account, not one per plan -- using it on Starter

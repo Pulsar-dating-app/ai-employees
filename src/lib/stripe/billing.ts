@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { Locale } from "@/i18n/request";
 import { getStripeClient } from "./client";
 
 // Trello P3 -- the Stripe side of plan checkout. Thin wrappers over the SDK
@@ -6,6 +7,15 @@ import { getStripeClient } from "./client";
 // No `currency` is ever set: the Prices are BRL-based and Adaptive Pricing
 // (enabled in the Dashboard, P1) makes Checkout detect the buyer's country
 // by IP and present a converted local price -- Staffra still settles BRL.
+
+// Stripe-hosted pages (Checkout, Billing Portal) otherwise pick their UI
+// language from the browser, so a merchant who chose Portuguese in the app
+// on an English browser got English trial/billing copy. Pass the app's own
+// resolved locale instead. Product name/description are Stripe data and
+// don't change with this -- they render exactly as stored on the Product.
+function stripeLocale(locale: Locale): "pt-BR" | "en" {
+  return locale === "pt" ? "pt-BR" : "en";
+}
 
 // Reuse the company's existing Stripe Customer if we already recorded one;
 // otherwise create it. The idempotency key guards against a double-submitted
@@ -68,17 +78,26 @@ export async function createCheckoutSession(opts: {
   trialPeriodDays?: number;
   trialUserId?: string;
   /**
+   * Shown above Checkout's pay button (`custom_text.submit`). Stripe's own
+   * trial headline only knows the day count, not our reply cap, so the route
+   * passes a localized note about the trial's reply limit here.
+   */
+  submitMessage?: string;
+  /**
    * Where Stripe returns the merchant. Defaults to the billing settings page.
    * Only ever an allowlisted path (see CHECKOUT_RETURN_ALLOWED in the checkout
    * route) -- this ends up in a URL Stripe echoes back, so an
    * attacker-controlled value would be an open redirect.
    */
   returnPath?: string;
+  locale: Locale;
 }): Promise<{ url: string | null }> {
   const stripe = getStripeClient();
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: opts.customerId,
+    locale: stripeLocale(opts.locale),
+    ...(opts.submitMessage ? { custom_text: { submit: { message: opts.submitMessage } } } : {}),
     line_items: [{ price: opts.priceId, quantity: 1 }],
     metadata: { companyId: opts.companyId, planKey: opts.planKey },
     subscription_data: {
@@ -111,11 +130,13 @@ export async function createBillingPortalSession(opts: {
   customerId: string;
   returnUrl: string;
   subscriptionId?: string | null;
+  locale: Locale;
 }): Promise<{ url: string }> {
   const stripe = getStripeClient();
   const session = await stripe.billingPortal.sessions.create({
     customer: opts.customerId,
     return_url: opts.returnUrl,
+    locale: stripeLocale(opts.locale),
     ...(opts.subscriptionId
       ? {
           flow_data: {
@@ -146,6 +167,7 @@ export async function createPlanSwitchSession(opts: {
   subscriptionId: string;
   priceId: string;
   returnUrl: string;
+  locale: Locale;
 }): Promise<{ url: string } | null> {
   const stripe = getStripeClient();
   const subscription = await stripe.subscriptions.retrieve(opts.subscriptionId);
@@ -156,6 +178,7 @@ export async function createPlanSwitchSession(opts: {
   const session = await stripe.billingPortal.sessions.create({
     customer: opts.customerId,
     return_url: opts.returnUrl,
+    locale: stripeLocale(opts.locale),
     flow_data: {
       type: "subscription_update_confirm",
       subscription_update_confirm: {
