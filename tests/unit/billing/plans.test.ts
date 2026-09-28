@@ -87,9 +87,9 @@ describe("billing plan catalog (Trello P1)", () => {
   // match the Stripe Price amounts, so a change here should be deliberate.
   it("carries the agreed monthly prices and reply quotas", () => {
     const expected = {
-      starter: { monthly: 9_699, wpp: 14_999, replies: 1_000 },
-      intermediate: { monthly: 29_699, wpp: 44_999, replies: 3_000 },
-      pro: { monthly: 49_699, wpp: 74_999, replies: 5_000 },
+      starter: { monthly: 9_700, wpp: 15_000, replies: 1_000 },
+      intermediate: { monthly: 29_700, wpp: 45_000, replies: 3_000 },
+      pro: { monthly: 49_700, wpp: 75_000, replies: 5_000 },
     };
     for (const tier of SELF_SERVE_TIERS) {
       expect(getPlan(tier).priceBrlCents, tier).toBe(expected[tier].monthly);
@@ -98,16 +98,31 @@ describe("billing plan catalog (Trello P1)", () => {
     }
   });
 
-  it("prices each annual variant as 12 months of its monthly price minus 15%", () => {
-    expect(annualPriceCents(9_699)).toBe(98_930);
+  it("prices each annual variant as 12 months of its monthly price minus 15%, rounded up to a whole real", () => {
+    expect(annualPriceCents(9_700)).toBe(99_000); // R$989,40 -> R$990
+    expect(annualPriceCents(15_000)).toBe(153_000); // already whole: not bumped to R$1.531
+    // The Stripe Price amounts behind the lookup keys (2026-09-28).
+    const annualKeys = [
+      "starter_annual",
+      "starter_annual_wpp",
+      "intermediate_annual",
+      "intermediate_annual_wpp",
+      "pro_annual",
+      "pro_annual_wpp",
+    ] as const;
+    expect(annualKeys.map((k) => getPlan(k).priceBrlCents)).toEqual([
+      99_000, 153_000, 303_000, 459_000, 507_000, 765_000,
+    ]);
     for (const tier of SELF_SERVE_TIERS) {
       const monthly = getPlan(tier);
       const annual = getPlan(`${tier}_annual` as const);
       const wpp = getPlan(`${tier}_wpp` as const);
       const annualWpp = getPlan(`${tier}_annual_wpp` as const);
 
-      expect(annual.priceBrlCents, tier).toBe(Math.round(monthly.priceBrlCents! * 12 * 0.85));
-      expect(annualWpp.priceBrlCents, tier).toBe(Math.round(wpp.priceBrlCents! * 12 * 0.85));
+      expect(annual.priceBrlCents, tier).toBe(annualPriceCents(monthly.priceBrlCents!));
+      expect(annualWpp.priceBrlCents, tier).toBe(annualPriceCents(wpp.priceBrlCents!));
+      expect(annual.priceBrlCents! % 100, tier).toBe(0);
+      expect(annualWpp.priceBrlCents! % 100, tier).toBe(0);
       expect(wpp.priceBrlCents!, tier).toBeGreaterThan(monthly.priceBrlCents!);
 
       // Annual variants seed a full year's worth of replies in one lump sum

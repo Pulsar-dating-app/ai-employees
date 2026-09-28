@@ -492,7 +492,7 @@
     "pricing": {
       "heading": "Planos simples, com a Malu e a Ana em todos",
       "sub": "O que muda entre os planos é quantas respostas sua equipe pode enviar.",
-      "trialNote": "7 dias grátis. Pedimos o cartão no início, mas só cobramos depois de 7 dias ou de 500 respostas, o que vier primeiro. Cancele antes e não paga nada.",
+      "trialNote": "7 dias grátis. Pedimos o cartão no início, mas só cobramos depois de 7 dias ou de 500 respostas, o que vier primeiro.",
       "featuredBadge": "Recomendado",
       "periodToggle": {
         "monthly": "Mensal",
@@ -505,6 +505,7 @@
       "perMonth": "/ mês",
       "perYear": "/ ano",
       "perDay": "≈ {price} por dia",
+      "annualSavings": "≈ {monthly} por mês · você economiza {saved}",
       "repliesMonthly": "{count} respostas por mês",
       "repliesAnnual": "{count} respostas por ano",
       "repliesNote": "Cada mensagem que sua equipe envia para um cliente conta como uma resposta.",
@@ -2454,7 +2455,6 @@
     "plan": {
       "replies": "{limit, number} respostas por mês",
       "repliesAnnual": "{limit, number} respostas por ano",
-      "teammates": "Membros ilimitados na sua conta",
       "custom": "Preço personalizado"
     },
     "picker": {
@@ -2483,12 +2483,24 @@
     "trial": {
       "days": "{days} dias grátis",
       "replies": "Até {limit, number} respostas no teste",
-      "converts": "Vira seu plano quando o teste acaba ou as respostas terminam"
+      "converts": "Vira seu plano quando o teste acaba ou as respostas terminam",
+      "checkoutNote": "Seu teste grátis inclui até {limit, number} respostas. A cobrança só começa depois de {days} dias ou quando as {limit, number} respostas acabarem, o que vier primeiro."
     },
     "tiers": {
       "monthlyEquivalent": "≈ {price} por mês",
-      "whatsappIncluded": "Custos do WhatsApp inclusos",
-      "whatsappSeparate": "WhatsApp cobrado à parte pela Meta",
+      "annualSavings": "≈ {monthly} por mês · você economiza {saved}",
+      "includedTitle": "Tudo isso em todos os planos",
+      "included": [
+        "Malu para vendas e Ana para agendamentos",
+        "Instagram, Telegram, chat no site e link direto, e o WhatsApp oficial nos planos com WhatsApp",
+        "Catálogo por planilha ou sincronizado com o Shopify",
+        "Agenda com Google Calendar, lista de espera e aprovação",
+        "Respostas só com os seus dados, sem inventar",
+        "Passa a conversa para o seu time quando precisar",
+        "Caixa de conversas e relatórios de desempenho",
+        "Nome e foto de cada funcionária do seu jeito",
+        "Usuários ilimitados no painel"
+      ],
       "current": "Seu plano",
       "switchTitle": "Trocar de plano",
       "switchBody": "Escolha outro plano. Você confirma a mudança na Stripe antes de qualquer cobrança.",

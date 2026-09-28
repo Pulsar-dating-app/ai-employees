@@ -125,19 +125,37 @@ export interface BillingPlan {
 }
 
 // Real monthly prices per tier, without and with WhatsApp (2026-09-27, owner's
-// numbers). Annual prices are derived: 12 months minus ANNUAL_DISCOUNT. These
-// must match the Stripe Price amounts behind each lookup key.
+// numbers; 2026-09-28 rounded up from R$X,99 to whole reais). Annual prices
+// are derived: 12 months minus ANNUAL_DISCOUNT, rounded up to a whole real.
+// These must match the Stripe Price amounts behind each lookup key.
 const BASE = {
-  starter: { monthlyBrlCents: 9_699, monthlyWppBrlCents: 14_999, monthlyReplyLimit: 1_000 },
-  intermediate: { monthlyBrlCents: 29_699, monthlyWppBrlCents: 44_999, monthlyReplyLimit: 3_000 },
-  pro: { monthlyBrlCents: 49_699, monthlyWppBrlCents: 74_999, monthlyReplyLimit: 5_000 },
+  starter: { monthlyBrlCents: 9_700, monthlyWppBrlCents: 15_000, monthlyReplyLimit: 1_000 },
+  intermediate: { monthlyBrlCents: 29_700, monthlyWppBrlCents: 45_000, monthlyReplyLimit: 3_000 },
+  pro: { monthlyBrlCents: 49_700, monthlyWppBrlCents: 75_000, monthlyReplyLimit: 5_000 },
 } as const;
 
 export const ANNUAL_DISCOUNT = 0.15;
 
-/** A year of `monthlyCents` with the annual discount, rounded to the cent. */
+/**
+ * A year of `monthlyCents` with the annual discount, rounded UP to a whole
+ * real -- prices never show centavos (R$989,40 -> R$990). Integer math on
+ * purpose: `x * 0.85` can land a hair above a whole number in floating
+ * point and ceil would then add a real.
+ */
 export function annualPriceCents(monthlyCents: number): number {
-  return Math.round(monthlyCents * 12 * (1 - ANNUAL_DISCOUNT));
+  const discountPct = Math.round(ANNUAL_DISCOUNT * 100);
+  return Math.ceil((monthlyCents * 12 * (100 - discountPct)) / 10_000) * 100;
+}
+
+/**
+ * What a year of `plan`'s monthly variant would cost -- the struck-through
+ * "full price" shown next to an annual plan. Null for a plan without a
+ * catalog price (enterprise).
+ */
+export function fullYearPriceCents(plan: Pick<BillingPlan, "tier" | "whatsappIncluded">): number | null {
+  if (!(plan.tier in BASE)) return null;
+  const base = BASE[plan.tier as keyof typeof BASE];
+  return (plan.whatsappIncluded ? base.monthlyWppBrlCents : base.monthlyBrlCents) * 12;
 }
 
 // Exported so trial copy can quote the exact number instead of duplicating
@@ -215,6 +233,11 @@ function tierPlans(
   ];
 }
 
+// 2026-09-28 -- all 12 Prices re-created at whole-real amounts (R$97 instead
+// of R$96,99, etc.); lookup keys moved with `transfer_lookup_key`, the
+// Customer Portal's plan-switch list repointed to the new ids, old Prices
+// archived.
+//
 // All 9 new Prices were created directly in the Stripe sandbox (test mode,
 // account acct_1UBCAoHAg1kV3YLS) via the Stripe MCP -- see this file's
 // 2026-09-16 comment.
@@ -229,22 +252,22 @@ function tierPlans(
 // are archived.
 export const BILLING_PLANS: readonly BillingPlan[] = [
   ...tierPlans("starter", "Starter", "starter2", {
-    monthly: "price_1UKJWoHAg1kV3YLSOw1odEaj",
-    annual: "price_1UKJWoHAg1kV3YLSrv7pkltd",
-    monthlyWpp: "price_1UKJWpHAg1kV3YLSYMO3QMa3",
-    annualWpp: "price_1UKJWqHAg1kV3YLSI9RW7A4H",
+    monthly: "price_1UKfWbHAg1kV3YLStDz0WwaL",
+    annual: "price_1UKfWbHAg1kV3YLSmdFDaIC3",
+    monthlyWpp: "price_1UKfWcHAg1kV3YLS2s20CJbP",
+    annualWpp: "price_1UKfWdHAg1kV3YLS0J238LvZ",
   }),
   ...tierPlans("intermediate", "Intermediate", "intermediate", {
-    monthly: "price_1UKJWqHAg1kV3YLS8cZasg0A",
-    annual: "price_1UKJWrHAg1kV3YLSn4ISpch0",
-    monthlyWpp: "price_1UKJXFHAg1kV3YLSV8KYktK6",
-    annualWpp: "price_1UKJXFHAg1kV3YLSeikNAMT2",
+    monthly: "price_1UKfWdHAg1kV3YLSwCGLzKjF",
+    annual: "price_1UKfWeHAg1kV3YLSS2vRo6Jm",
+    monthlyWpp: "price_1UKfWfHAg1kV3YLSGj1b0nfN",
+    annualWpp: "price_1UKfWgHAg1kV3YLSnopnKEiV",
   }),
   ...tierPlans("pro", "Pro", "pro", {
-    monthly: "price_1UKJXGHAg1kV3YLSiHADuuDK",
-    annual: "price_1UKJXHHAg1kV3YLSOvKl7K4m",
-    monthlyWpp: "price_1UKJXIHAg1kV3YLS7SlGKPxI",
-    annualWpp: "price_1UKJXIHAg1kV3YLSxfrJ2HZj",
+    monthly: "price_1UKfWgHAg1kV3YLSVNOXlbNS",
+    annual: "price_1UKfWhHAg1kV3YLS58i4Lwkt",
+    monthlyWpp: "price_1UKfWiHAg1kV3YLSRYT7cZW5",
+    annualWpp: "price_1UKfWjHAg1kV3YLSevx5mjs3",
   }),
   {
     key: "enterprise",

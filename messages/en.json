@@ -492,7 +492,7 @@
     "pricing": {
       "heading": "Simple plans, with Malu and Ana in all of them",
       "sub": "What changes between plans is how many replies your team can send.",
-      "trialNote": "7 days free. We ask for a card up front but only charge after 7 days or 500 replies, whichever comes first. Cancel before and you pay nothing.",
+      "trialNote": "7 days free. We ask for a card up front but only charge after 7 days or 500 replies, whichever comes first.",
       "featuredBadge": "Recommended",
       "periodToggle": {
         "monthly": "Monthly",
@@ -505,6 +505,7 @@
       "perMonth": "/ month",
       "perYear": "/ year",
       "perDay": "≈ {price} a day",
+      "annualSavings": "≈ {monthly} per month · you save {saved}",
       "repliesMonthly": "{count} replies a month",
       "repliesAnnual": "{count} replies a year",
       "repliesNote": "Every message your team sends a customer counts as one reply.",
@@ -2454,7 +2455,6 @@
     "plan": {
       "replies": "{limit, number} replies per month",
       "repliesAnnual": "{limit, number} replies per year",
-      "teammates": "Unlimited teammates on your account",
       "custom": "Custom pricing"
     },
     "picker": {
@@ -2483,12 +2483,24 @@
     "trial": {
       "days": "{days} days free",
       "replies": "Up to {limit, number} replies while you try",
-      "converts": "Turns into your plan when the trial ends or the replies run out"
+      "converts": "Turns into your plan when the trial ends or the replies run out",
+      "checkoutNote": "Your free trial includes up to {limit, number} replies. You're only charged after {days} days or once those {limit, number} replies run out, whichever comes first."
     },
     "tiers": {
       "monthlyEquivalent": "≈ {price} per month",
-      "whatsappIncluded": "WhatsApp costs included",
-      "whatsappSeparate": "WhatsApp billed separately by Meta",
+      "annualSavings": "≈ {monthly} per month · you save {saved}",
+      "includedTitle": "All of this in every plan",
+      "included": [
+        "Malu for sales and Ana for appointments",
+        "Instagram, Telegram, website chat and direct link, plus official WhatsApp on WhatsApp plans",
+        "Catalog from a spreadsheet or synced with Shopify",
+        "Calendar with Google Calendar, waitlist and approval",
+        "Answers only from your data, never made up",
+        "Hands conversations to your team when needed",
+        "Conversation inbox and performance reports",
+        "Name and photo for each employee, your way",
+        "Unlimited dashboard users"
+      ],
       "current": "Your plan",
       "switchTitle": "Switch plans",
       "switchBody": "Pick another plan. You'll confirm the change on Stripe before anything is charged.",

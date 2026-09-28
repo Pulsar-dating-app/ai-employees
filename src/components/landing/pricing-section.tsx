@@ -4,7 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
-import { getSelfServePlansForVariant, type BillingPeriod, type PlanTier } from "@/lib/billing/plans";
+import {
+  fullYearPriceCents,
+  getSelfServePlansForVariant,
+  type BillingPeriod,
+  type PlanTier,
+} from "@/lib/billing/plans";
 import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 import { SalesContactDialog } from "./sales-contact-dialog";
 import { CascadeText } from "./cascade-text";
@@ -141,7 +146,8 @@ export function PricingSection() {
               ? null
               : selfServePlans.find((p) => p.tier === (plan.tier.toLowerCase() as PlanTier));
             const cents = catalogPlan?.priceBrlCents ?? 0;
-            const perDayCents = billingPeriod === "annual" ? cents / 365 : cents / 30;
+            const fullYearCents =
+              catalogPlan?.billingPeriod === "annual" ? fullYearPriceCents(catalogPlan) : null;
             const replies = catalogPlan?.monthlyReplyLimit ?? 0;
 
             return (
@@ -172,6 +178,11 @@ export function PricingSection() {
                       </>
                     ) : (
                       <>
+                        {fullYearCents ? (
+                          <p className="mb-1.5 text-[15px] font-medium text-[#94a3b8] line-through tabular-nums">
+                            {BRL.format(fullYearCents / 100)}
+                          </p>
+                        ) : null}
                         <p className="flex items-baseline gap-1.5">
                           <span className="text-[36px] font-semibold leading-none tracking-[-0.025em] text-[#0f172a] tabular-nums">
                             {BRL.format(cents / 100)}
@@ -180,9 +191,18 @@ export function PricingSection() {
                             {billingPeriod === "annual" ? t("perYear") : t("perMonth")}
                           </span>
                         </p>
-                        <p className="mt-2 text-[13px] font-medium text-[#3525cd]">
-                          {t("perDay", { price: BRL_WHOLE.format(Math.ceil(perDayCents / 100)) })}
-                        </p>
+                        {fullYearCents ? (
+                          <p className="mt-2 text-[13px] font-medium text-[#047857]">
+                            {t("annualSavings", {
+                              monthly: BRL_WHOLE.format(Math.round(cents / 1200)),
+                              saved: BRL_WHOLE.format(Math.round((fullYearCents - cents) / 100)),
+                            })}
+                          </p>
+                        ) : (
+                          <p className="mt-2 text-[13px] font-medium text-[#3525cd]">
+                            {t("perDay", { price: BRL_WHOLE.format(Math.ceil(cents / 30 / 100)) })}
+                          </p>
+                        )}
                       </>
                     )}
                   </div>

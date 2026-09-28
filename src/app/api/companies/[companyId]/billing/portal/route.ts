@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
+import { resolveLocale } from "@/i18n/request";
 import { createBillingPortalSession } from "@/lib/stripe/billing";
 
 // Trello P5 -- POST /api/companies/[companyId]/billing/portal
@@ -73,6 +74,7 @@ export async function POST(
   const { url } = await createBillingPortalSession({
     customerId: billing.stripe_customer_id,
     returnUrl: `${resolveCheckoutBaseUrl()}/dashboard/settings/billing`,
+    locale: await resolveLocale(),
   });
 
   return NextResponse.json({ ok: true, url });

@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getSelfServePlans, TRIAL_DAYS } from "@/lib/billing/plans";
 import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
+import { resolveLocale } from "@/i18n/request";
 import {
   createBillingPortalSession,
   createCheckoutSession,
@@ -195,6 +197,7 @@ export async function POST(
           subscriptionId: billing!.stripe_subscription_id as string,
           priceId: plan.stripePriceId,
           returnUrl,
+          locale: await resolveLocale(),
         });
         if (session) return NextResponse.json({ ok: true, mode: "portal", url: session.url });
       } catch (err) {
@@ -214,6 +217,7 @@ export async function POST(
         customerId: billing!.stripe_customer_id,
         returnUrl,
         subscriptionId: billing!.stripe_subscription_id,
+        locale: await resolveLocale(),
       });
       return NextResponse.json({ ok: true, mode: "portal", url });
     } catch (err) {
@@ -225,6 +229,7 @@ export async function POST(
         const { url } = await createBillingPortalSession({
           customerId: billing!.stripe_customer_id,
           returnUrl,
+          locale: await resolveLocale(),
         });
         return NextResponse.json({ ok: true, mode: "portal", url });
       } catch (fallbackErr) {
@@ -323,14 +328,23 @@ export async function POST(
       .eq("company_id", companyId);
   }
 
+  const locale = await resolveLocale();
+  const t = await getTranslations({ locale, namespace: "Billing.trial" });
   const { url } = await createCheckoutSession({
     customerId,
     priceId: plan.stripePriceId,
     companyId,
     planKey: plan.key,
     baseUrl: resolveCheckoutBaseUrl(),
+    locale,
     ...(returnPath ? { returnPath } : {}),
-    ...(grantTrial ? { trialPeriodDays: TRIAL_DAYS, trialUserId: user.id } : {}),
+    ...(grantTrial
+      ? {
+          trialPeriodDays: TRIAL_DAYS,
+          trialUserId: user.id,
+          submitMessage: t("checkoutNote", { limit: plan.trialReplyLimit!, days: TRIAL_DAYS }),
+        }
+      : {}),
   });
 
   return NextResponse.json({ ok: true, mode: "checkout", url });
