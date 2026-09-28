@@ -692,59 +692,71 @@
     "value": {
       "heading": "Uma funcionária que não tira folga",
       "sub": "Faça a conta com os números do seu negócio.",
-      "coverage": {
-        "title": "Quantas horas da semana ficam cobertas",
-        "note": "A CLT limita a jornada de um atendente a 44 horas por semana. A semana tem 168.",
-        "person": "Um atendente em tempo integral",
-        "staffra": "Malu e Ana",
-        "hours": "{hours}h por semana"
+      "compare": {
+        "title": "Contratar alguém ou usar a Staffra",
+        "personHead": "Atendente CLT",
+        "personSub": "Tempo integral",
+        "staffraHead": "Com a Staffra",
+        "staffraSub": "Malu e Ana",
+        "hoursLabel": "Horas atendendo por semana",
+        "hours": "{hours}h",
+        "rows": [
+          {
+            "label": "Noites, fins de semana e feriados",
+            "person": "Fora do expediente",
+            "staffra": "Sempre atende"
+          },
+          {
+            "label": "Tempo de resposta",
+            "person": "Depende da fila",
+            "staffra": "Em segundos"
+          },
+          {
+            "label": "Conversas ao mesmo tempo",
+            "person": "Uma de cada vez",
+            "staffra": "Quantas chegarem"
+          },
+          {
+            "label": "Preço e estoque",
+            "person": "Precisa consultar",
+            "staffra": "Sempre o cadastrado"
+          },
+          {
+            "label": "Folgas, férias e faltas",
+            "person": "Precisa de cobertura",
+            "staffra": "Não tem"
+          }
+        ],
+        "note": "A CLT limita a jornada a 44 horas por semana. A semana tem 168."
       },
-      "facts": [
-        {
-          "label": "Tempo de resposta",
-          "staffra": "Em segundos",
-          "person": "Depende da fila"
-        },
-        {
-          "label": "Conversas ao mesmo tempo",
-          "staffra": "Quantas chegarem",
-          "person": "Uma de cada vez"
-        },
-        {
-          "label": "Preço e estoque",
-          "staffra": "Sempre o cadastrado",
-          "person": "Precisa consultar"
-        },
-        {
-          "label": "Folgas e férias",
-          "staffra": "Não tem",
-          "person": "Precisa de cobertura"
-        }
-      ],
       "calc": {
-        "title": "Quanto você gasta hoje",
-        "sub": "Coloque o custo mensal de quem responde seus clientes. Nada é enviado: a conta é feita aqui na página.",
-        "costLabel": "Custo por atendente, por mês",
+        "title": "Qual plano serve para você",
+        "sub": "Informe o que você gasta hoje e quantas conversas recebe. A conta é feita aqui na página, nada é enviado.",
+        "costLabel": "Quanto você gasta hoje com atendimento, por mês",
         "costPlaceholder": "ex.: 2.800",
-        "costHint": "Some salário, encargos e benefícios.",
-        "countLabel": "Atendentes",
+        "costHint": "Some salário, encargos e benefícios de quem responde seus clientes.",
+        "volumeLabel": "Conversas com clientes por mês",
+        "volumeHint": "Estimamos cerca de {replies} respostas por conversa.",
         "decrease": "Diminuir",
         "increase": "Aumentar",
+        "wppLabel": "Atendo clientes pelo WhatsApp",
+        "resultLabel": "Plano indicado",
+        "perMonth": "{price}/mês",
+        "planFits": "Até {replies} respostas por mês, cerca de {conversations} conversas.",
+        "planFitsWpp": "Com WhatsApp. Até {replies} respostas por mês, cerca de {conversations} conversas.",
+        "usage": "Você usaria cerca de {pct}% do plano.",
+        "customBody": "Com esse volume, montamos um plano sob medida para o seu negócio.",
+        "customCta": "Falar com a gente",
         "today": "Hoje, por mês",
-        "todayHours": "Cobre até {hours}h por semana",
+        "todaySub": "Só no horário da equipe",
         "withStaffra": "Com a Staffra, por mês",
-        "withStaffraHours": "Plano “{plan}” com WhatsApp, 24h por dia",
-        "empty": "Digite o custo para ver a comparação.",
-        "saving": "{amount} a menos por mês, com atendimento 24 horas.",
-        "noSaving": "Pelo mesmo investimento, o atendimento passa a ser 24 horas.",
-        "disclaimer": "A Staffra não precisa substituir ninguém: ela atende enquanto sua equipe não pode e chama vocês quando precisar.",
-        "withStaffraReplies": "Até {replies} respostas por mês"
+        "withStaffraSub": "24 horas, todos os dias",
+        "empty": "Informe quanto você gasta hoje para ver a diferença.",
+        "saving": "Você gasta {amount} a menos por mês e atende 24 horas por dia.",
+        "extra": "São {amount} a mais por mês, e seus clientes passam a ser atendidos 24 horas por dia.",
+        "disclaimer": "A Staffra não precisa substituir ninguém: ela atende enquanto sua equipe não pode e chama vocês quando precisar."
       },
-      "cta": "Ver planos",
-      "factsHeader": {
-        "staffra": "Malu e Ana",
-        "person": "Um atendente"
-      }
+      "cta": "Ver planos"
     },
     "tour": {
       "heading": "Veja o painel por dentro",

@@ -12,6 +12,13 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-28 — Landing calculator picks the plan from conversation volume
+
+**Decision:** The "Uma funcionária que não tira folga" calculator now asks what the visitor spends today, their monthly conversations and whether they use WhatsApp, then recommends the cheapest plan whose reply quota fits instead of comparing against one fixed plan. Conversations become replies at an estimated 5 replies per conversation, stated on the page. The coverage table became an explicit two-column "Atendente CLT vs Com a Staffra" comparison.
+**Why:** The owner found the old table unclear about which value was Staffra and which was hiring someone, and wanted the calculator to show which plan fits and whether it pays off. Plans are sold by replies, not conversations, so the conversion factor is shown openly rather than hidden. With the 2026-09-27 prices, 5 per conversation keeps the fit realistic without pushing small merchants to a bigger plan.
+
+---
+
 ## 2026-09-27 — Real plan prices and quotas; annual = 15% off
 
 **Decision:** The placeholders are replaced with the owner's real numbers:
