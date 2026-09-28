@@ -85,10 +85,12 @@ export function ChannelHub({
   whatsappEntitled,
   metaAppId,
   metaConfigId,
+  metaSolutionId,
   chatUrl,
   embedSnippet,
   telegramLink,
   widgetInitial,
+  defaultLauncherSrc,
   allowedEmbedDomains,
 }: {
   companyId: string;
@@ -99,16 +101,18 @@ export function ChannelHub({
   whatsappEntitled: boolean;
   metaAppId: string;
   metaConfigId: string;
+  metaSolutionId: string;
   chatUrl: string;
   embedSnippet: string;
   telegramLink: string;
   widgetInitial: {
     greeting: string | null;
-    launcherType: "default" | "video" | "image";
+    launcherType: "default" | "photo" | "image";
     launcherAssetUrl: string | null;
     position: "bottom-right" | "bottom-left";
     offsetBottom: number;
   };
+  defaultLauncherSrc: string;
   allowedEmbedDomains: string[];
 }) {
   const t = useTranslations("MyAgents.channelHub");
@@ -222,6 +226,7 @@ export function ChannelHub({
               whatsappEntitled={whatsappEntitled}
               metaAppId={metaAppId}
               metaConfigId={metaConfigId}
+              metaSolutionId={metaSolutionId}
             />
           </div>
           <div hidden={active !== "instagram"}>
@@ -249,6 +254,8 @@ export function ChannelHub({
               agentName={agentName}
               canEdit={canEdit}
               initial={widgetInitial}
+              defaultLauncherSrc={defaultLauncherSrc}
+              agentPhotoSrc={agentPhotoSrc}
             />
             <div className="h-px w-full bg-outline-variant/60" />
             <EmbedSnippetSection agentName={agentName} embedSnippet={embedSnippet} />

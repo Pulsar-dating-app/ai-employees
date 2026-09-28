@@ -17,6 +17,7 @@ export interface TestEnv {
   googleCalendarMockUrl: string;
   shopifyApiMockUrl: string;
   stripeApiMockUrl: string;
+  twilioApiMockUrl: string;
 }
 
 // Reads the connection info global-setup.ts wrote after booting the test

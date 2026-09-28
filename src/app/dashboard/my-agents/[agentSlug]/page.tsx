@@ -7,6 +7,7 @@ import { defaultAgentName } from "@/lib/agents/naming";
 import { agentDefaultPhotos, resolveAgentPhoto } from "@/lib/agents/media";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
+import { resolveDefaultLauncher } from "@/lib/widget/launcher-defaults";
 import { findPlan } from "@/lib/billing/plans";
 import { decideWhatsappPlanGate } from "@/lib/whatsapp/enforcement";
 import { Button } from "@/components/ui/button";
@@ -98,6 +99,8 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
     launcherAssetUrl: companyAgent.widget_launcher_asset_url,
     position: companyAgent.widget_position,
     offsetBottom: companyAgent.widget_offset_bottom,
+    photoType: companyAgent.photo_type,
+    photoSrc,
   });
   const telegramLink = `https://t.me/${process.env.TELEGRAM_BOT_USERNAME ?? ""}?start=${companyAgent.id}`;
 
@@ -140,6 +143,7 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
           whatsappEntitled={whatsappEntitled}
           metaAppId={process.env.META_APP_ID ?? ""}
           metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
+          metaSolutionId={process.env.META_WHATSAPP_SOLUTION_ID ?? ""}
           chatUrl={chatUrl}
           embedSnippet={embedSnippet}
           telegramLink={telegramLink}
@@ -150,6 +154,7 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
             position: companyAgent.widget_position,
             offsetBottom: companyAgent.widget_offset_bottom,
           }}
+          defaultLauncherSrc={resolveDefaultLauncher(agentSlug, companyAgent.photo_type).src}
           allowedEmbedDomains={company.allowed_embed_domains ?? []}
         />
       </Suspense>

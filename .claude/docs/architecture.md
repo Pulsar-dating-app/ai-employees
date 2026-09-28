@@ -138,6 +138,9 @@ F4 calls — F4 has since shipped for real, see the "Onboarding & admin shell"
 section above (`src/app/dashboard/my-agents/[agentSlug]/channels-section.tsx`).
 **Provider: Meta Cloud API direct** (Embedded Signup), not a BSP
 (Twilio/360dialog) — see decisions.md for the cost/UX tradeoff that drove this.
+**Superseded 2026-09-25:** new connections go through Twilio's Partner
+Solution — see "WhatsApp via Twilio Partner Solution" below. The register/PIN
+details here now apply only to `provider = 'meta'` rows.
 
 - `supabase/migrations/20260826104820_create_whatsapp_connection_tables.sql`
   — one table, `company_whatsapp_connections` (one row per company,
@@ -374,6 +377,8 @@ dashboard UI unification).
 
 ### WhatsApp coexistence (Trello D8) — 2026-09-05
 
+> **Legacy since 2026-09-25:** new connections go through Twilio, which doesn't support coexistence for Tech Provider numbers. Embedded Signup no longer offers it and the connect route no longer accepts `isCoexistence`. What follows applies only to existing `provider = 'meta'` rows.
+
 Discovered live-testing the real Embedded Signup popup (not
 `manual-connect-test`): registering a number the normal way removes it from
 the merchant's WhatsApp Business mobile app — Cloud API only from then on.
@@ -446,22 +451,17 @@ is **Coexistence** — mobile app and Cloud API on the same number, in sync.
   development. Code-complete and integration-tested only until that
   happens.
 
-### WhatsApp connect: billing/payment-method disclosure — 2026-09-05
+### WhatsApp connect: billing note — 2026-09-05, rewritten 2026-09-25
 
-`channels-section.tsx`'s not-connected state gates the "Conectar WhatsApp"
-button behind an explicit checkbox acknowledgment, shown alongside a warning
-`Alert` covering two costs the connect flow otherwise never mentions: the
-merchant must add a payment method to the WABA in Meta Business Manager
-(D5's `has_payment_issue` only surfaces the consequence *after* a send
-fails), and Meta bills the merchant directly, separately from Staffra, once
-usage passes a free allowance. **No BRL rate is hardcoded anywhere** — the
-copy links to Meta's own live pricing page instead. This is deliberate:
-Meta's pricing changes materially on 2026-10-01 (service-window replies,
-today unconditionally free — the mode this codebase's agents rely on —
-start being billed past a free allowance), and the exact post-change rate
-isn't confirmed from an authoritative source as of this writing. See
-decisions.md's 2026-09-05 entry for the full reasoning and what to update
-once the real rate is confirmed.
+Originally a warning `Alert` plus a required checkbox telling the merchant
+to add a payment method at Meta and that Meta bills them directly. Since
+the Twilio Partner Solution (2026-09-25), Twilio's credit line pays Meta and
+the `_wpp` plan already prices Meta's fees in, so that copy was false. The
+not-connected state now shows an `info` `Alert` (`billingIncludedTitle` /
+`billingIncludedDescription`): WhatsApp is covered by the plan, no payment
+method at Meta, nothing billed separately. No checkbox gate, no link to
+Meta's pricing page. The D5 payment-issue badge stays for legacy
+`provider = 'meta'` rows only.
 
 ### WhatsApp entitlement gate (WhatsApp add-on) — 2026-09-22
 
@@ -537,6 +537,27 @@ went through the service-role client regardless, so migration
 policies and revokes the grants outright — same shape as `company_billing`'s
 lockdown. See decisions.md for the full reasoning (including why this
 couldn't have made WhatsApp actually functional even before being closed).
+
+### WhatsApp via Twilio Partner Solution — 2026-09-25
+
+New WhatsApp connections go through **Twilio's Tech Provider Partner Solution**, not Meta Cloud API direct (reverses 2026-08-26; see decisions.md). Rows created before this stay `provider = 'meta'` and keep the old paths.
+
+- **Embedded Signup** passes `extras.setup.solutionID` (`META_WHATSAPP_SOLUTION_ID`, Twilio's Partner Solution ID from App Dashboard > WhatsApp > Partner Solutions). **No `featureType` any more:** Twilio confirmed (2026-09-25 support ticket) that Tech Provider numbers can't do WhatsApp Business App coexistence. A number already on the app must migrate to the API, which ends its use in the app. Only the `FINISH` event is handled.
+- **Connect route** still exchanges the `code`, but only to read the display number (`lookupDisplayPhoneNumber`). The FINISH event carries only `phone_number_id`, and Twilio needs E.164. It no longer calls `/register` or `subscribed_apps`, because Twilio owns both and doing them ourselves would fight Twilio over the number. It then:
+  1. gets or creates the company's **Twilio subaccount** (`company_twilio_accounts`, one per company, service-role only: RLS on, no policies, all privileges revoked);
+  2. `POST messaging.twilio.com/v2/Channels/Senders` authenticated **as the subaccount**, with `sender_id = whatsapp:+E164`, `configuration.waba_id`, `configuration.account_type = "ISVSubAccount"` (Twilio's instruction for senders under customer subaccounts; `profile.name` is not needed for ESU numbers) and `webhook.callback_url = {STAFFRA_CHECKOUT_BASE_URL}/api/webhooks/twilio/whatsapp`;
+  3. upserts the row with `provider = 'twilio'`, `twilio_sender_sid` / `twilio_sender_id` / `twilio_sender_status`, and `status = 'connected'` only if the sender came back `ONLINE`, else `pending`.
+  A reconnect or a `force` move of the same number reuses the existing sender sid instead of registering it twice.
+- **Pending → connected:** Twilio has no webhook for sender status changes (confirmed by Twilio). `GET .../whatsapp` refreshes a pending Twilio row from the Senders API, stores the latest `twilio_sender_status`, and promotes it on `ONLINE`. `channels-section.tsx` polls that GET every 5s while pending. It branches on the sender status:
+  - `PENDING_VERIFICATION` (Twilio says ESU numbers usually go straight to `ONLINE`, but not always): the admin types the SMS code, and `PATCH .../whatsapp {verificationCode}` posts it to `POST /v2/Channels/Senders/{sid}` (→ `VERIFYING`, then polling). The PATCH returns 409 unless the row is actually awaiting verification, and 502 if Twilio rejects the code.
+  - `OFFLINE`: "Activation failed", with a disconnect-and-retry button.
+  - anything else: "Activating".
+- **Disconnect** deletes the sender on Twilio first, then flips the row. It returns 502 and leaves the row untouched if Twilio refuses, so the number doesn't stay registered out of sight.
+- **Inbound:** `POST /api/webhooks/twilio/whatsapp` (form-encoded). It looks up the subaccount by `AccountSid`, verifies `X-Twilio-Signature` with **that subaccount's** auth token over the configured public URL (not `request.url`, which can differ behind a proxy), then matches the connection by `To` **scoped to that subaccount's company**, so a valid signature from one tenant can't reach another tenant's number. The customer identity is `WaId` (digits, no `+`), the same shape Meta's `from` used, so `customers.phone` is consistent across providers. It replies with empty TwiML and sends the AI reply via the Messages API instead.
+- **Shared pipeline:** everything after "which connection is this?" (pause, plan gate, session, idempotent persist, paused conversation, billing gate, engine, reply, usage, send gate, send-failure handling) lives in `src/lib/whatsapp/inbound.ts`. Both webhooks call it with a provider-specific `sendReply`, so a new gate goes in one place.
+- **Outbound manual replies** (`conversations/[id]/messages`) branch on `provider`. Twilio 401/403 maps to `token_invalid` (connection flips to disconnected). There is no `payment_issue` equivalent on Twilio yet, so the D5 flag and its cron (`provider = 'meta'` only now) never fire for Twilio rows.
+- **Meta-direct paths kept, scoped to `provider = 'meta'`:** the old webhook (`/api/webhooks/whatsapp`, including D8 echoes and history), the eligibility cron, and `manual-connect-test` (which pins `provider: 'meta'`). No coexistence through Twilio (see above), so D8's echo/history handling is legacy-only.
+- Env: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` (parent account, used only to create subaccounts), `META_WHATSAPP_SOLUTION_ID`. Tests point `TWILIO_API_BASE_URL` / `TWILIO_MESSAGING_API_BASE_URL` at `tests/integration/helpers/twilio-api-mock.ts`. Magic values: waba id containing `trigger-sender-failure` / `trigger-sender-creating` / `trigger-sender-verification` (code `000000` is rejected) / `trigger-sender-offline`; the mock also 400s a sender created without `account_type: "ISVSubAccount"`; company name containing `trigger-subaccount-failure`. `GET /__sent?to=` and `/__deleted_senders` expose what the app sent.
 
 ### Telegram channel (Trello O1) — 2026-09-06
 
@@ -1326,6 +1347,10 @@ Fifth ticket of epic M — the last piece of the "who's allowed to embed this" s
 
 **Follow-up — launcher background is white, not indigo** (the character video's own tones read too close to indigo, poor contrast against it); same fallback role as before, just a different color.
 
+**Follow-up (2026-09-28) — mobile behavior and minimize.** Under 480px (`MOBILE_QUERY` in `widget.js`) the launcher is 56px and respects `env(safe-area-inset-bottom)`; the teaser sits compact beside it with no × and hides itself after 6s, and once seen it stays hidden for the rest of the browser session (`sessionStorage`, `staffra-widget-teaser-seen:*`) — the × dismissal on desktop still persists in `localStorage`. While the visitor scrolls, the launcher shrinks and fades (`.staffra-widget-scrolling`, restored 500ms after scrolling stops). The open panel is `100dvh` and locks the host page's scroll (`html`/`body` overflow, restored on close). On every viewport the launcher sits in a wrapper (`#staffra-widget-launcher-wrap`) with a small × (always visible on touch, hover-only on desktop) that minimizes it to an edge tab with a chevron (`#staffra-widget-restore`); minimized state is kept per session under `staffra-widget-minimized:*`.
+
+**Follow-up (2026-09-28) — launcher hides while the chat is open.** Clicking the launcher (or the teaser) opens the panel in the launcher's own spot (`panelBottom = launcherBottom`) and hides the launcher; only a `staffra-chat:close` postMessage from the iframe brings it back. That makes the in-iframe close button the visitor's only way out, so every screen `/talk/...?embedded=1` can render needs one — `EmbedCloseButton` (`src/app/talk/[companySlug]/[agentSlug]/embed-close-button.tsx`) is shared by the chat header and the paused-agent ("unavailable") screen. Next's generic 404 page has none, which only matters for a snippet with a wrong company/agent slug.
+
 **Follow-up — dismissible speech-bubble teaser, merchant-configurable via `data-greeting`.** A white rounded bubble appears next to the launcher ~1.2s after load (a deliberate delay so it reads as a considered greeting, not a jarring instant pop-up), with a tail pointing at the launcher and its own "×" dismiss button. Text comes from `data-greeting="..."` on the `<script>` tag; omitted, it falls back to a generic default — deliberately free of "AI"/"chatbot"/"assistant" language, matching this product's customer-facing copy rules the same way M4's page copy does. Clicking the bubble itself also opens the chat (a larger, more discoverable click target than the launcher alone). Dismissal (either the × or opening the chat) is persisted to `localStorage` under `staffra-widget-teaser-dismissed:{company}:{agent}` — same per-company+agent scoping as the chat session id — so it shows once per browser, never nags a returning visitor. On narrow viewports (`max-width: 480px`) it repositions above the launcher instead of beside it, matching the same "reflow, don't just shrink" approach the chat panel itself already uses for mobile. The dashboard's M6 embed-snippet card does not currently mention `data-greeting` — it's an optional attribute a merchant can add by hand; surfacing it in the dashboard UI (a text field alongside the copyable snippet) would be a natural, small follow-up to M6 if wanted.
 
 ### Dashboard: link/embed code + allowed embed domains (Trello M6, M7)
@@ -1346,7 +1371,7 @@ The M5 teaser follow-up above named this as a natural next step ("surfacing it i
 
 - **First real use of Supabase Storage in this app** (migration `20260901014358_add_widget_customization.sql`). New `widget-assets` bucket, **public** — launcher assets are embedded on arbitrary third-party public storefronts by `widget.js`, which has no auth context, the same reason `public/widget-launcher.webm` (the shared default) is a plain static file today. RLS on `storage.objects` follows the same shape every other table's does post-hardening: public `select`, `insert`/`delete` gated by `private.is_company_member(((storage.foldername(name))[1])::uuid)` — the first path segment of `{companyId}/{agentId}/{filename}` is the company id RLS checks membership against. **Caught while writing this migration**: a first draft referenced `public.is_company_member`, which hasn't existed since `harden_function_security.sql` moved every RLS helper to a `private` schema not exposed via PostgREST — a stale read of an old migration file, not a new decision; every migration after that hardening pass correctly uses `private.*`.
 - **Scoped per-agent** (`company_agents.widget_greeting`/`widget_launcher_type`/`widget_launcher_asset_url`), not per-company — the whole embed snippet was already scoped to one `(company, agent)` pair (`/talk/{company}/{agent}`), so each hired employee can look and sound different in their own widget, same as F5's human-handoff toggle went company-wide specifically *because* its tool wasn't agent-scoped — the opposite reasoning applies cleanly here.
-- **`POST /api/companies/[companyId]/agents/[agentSlug]/widget`** — one endpoint saves the whole form (`launcherType` + `greeting` + optional `file`), matching B4's `ImportPanel`/`products/import` FormData shape rather than splitting upload and save into two round trips. Member-gated like product edits, not admin-only — this is cosmetic content, not a security-sensitive toggle. Server-side limits: video 4MB (webm/mp4), image 2MB (png/jpeg/webp/gif) — small deliberately, since this asset loops on every page load of every visitor to the merchant's site. Reverting to `"default"` or replacing an asset **deletes the previous object from storage** (best-effort, after the DB row is safely updated, via a public-URL-to-path parser) so orphaned files don't accumulate. Choosing `"video"`/`"image"` with no file and nothing previously saved is a 400, not a silent no-op.
+- **`POST /api/companies/[companyId]/agents/[agentSlug]/widget`** — one endpoint saves the whole form (`launcherType` + `greeting` + optional `file`), matching B4's `ImportPanel`/`products/import` FormData shape rather than splitting upload and save into two round trips. Member-gated like product edits, not admin-only — this is cosmetic content, not a security-sensitive toggle. Server-side limit: image 2MB (png/jpeg/webp/gif). The original `"video"` upload type was retired 2026-09-28 in favor of `"photo"` (the agent's profile photo, no upload) — see decisions.md — small deliberately, since this asset loops on every page load of every visitor to the merchant's site. Reverting to `"default"` or replacing an asset **deletes the previous object from storage** (best-effort, after the DB row is safely updated, via a public-URL-to-path parser) so orphaned files don't accumulate. Choosing `"video"`/`"image"` with no file and nothing previously saved is a 400, not a silent no-op.
 - **`widget.js` gained two new optional attributes**, additive and backward-compatible: `data-launcher-type="video"|"image"` + `data-launcher-src="<url>"`. Absent (including every snippet pasted before this shipped) → unchanged default behavior, the shared `/widget-launcher.webm`. Present with `type="image"` → renders an `<img>` instead of a `<video>` inside the same circular button, same `object-fit: cover` treatment. `data-greeting` already existed (M5's teaser follow-up) and is unchanged; it's now generated from a persisted value instead of only ever being hand-typed by a merchant.
 - **`src/lib/widget/embed-snippet.ts`**'s `buildEmbedSnippet()` is shared between the server-rendered snippet in `page.tsx` and (in principle) any other future caller — one function decides the exact attribute string from a `{greeting, launcherType, launcherAssetUrl}` triple, HTML-attribute-escaping the greeting so a merchant typing a quote or angle bracket can't break the generated `<script>` tag (the same class of bug as the `embedHint` bug above, guarded against directly rather than by convention).
 - **The Customize card's "live preview" reflects unsaved edits (including an instant local `URL.createObjectURL` preview of a just-picked file, before it's ever uploaded); the actual copyable snippet below it only reflects the last *saved* state.** Deliberate split: the snippet can never show a broken/local `blob:` URL a merchant would paste onto their real site, while the preview still gives immediate WYSIWYG feedback. Saving calls `router.refresh()` so the sibling `WebChatChannelCard`'s server-rendered snippet picks up the change; the customize card itself updates its own "current asset" state directly from the save response rather than waiting on that prop refresh, avoiding a stale-preview flash.
@@ -1528,7 +1553,7 @@ The landing is **`src/components/landing/landing-page-2.tsx`** (`LandingPageV2`)
 - **Blocks 2 and 3 (2026-09-24).**
   - **Section order:** hero → "Funciona com o que você já usa" strip → workforce → channels → product tour → trust → value (coverage + calculator) → pricing → FAQ → final CTA.
   - **Pricing:** `pricing-section.tsx` reads `LandingV2.pricing` itself through `useTranslations`, so the server passes no props. Prices, per-day lines and reply counts come only from `getSelfServePlansForVariant`. The period toggle uses the shared sliding indicator, and the savings badge is computed from the catalog.
-  - **Value section (`value-calculator.tsx`, client):** coverage bars (44h CLT week vs 168h) plus a browser-only calculator comparing cost per attendant × count with `getPlan("intermediate_wpp")`'s price and reply limit. It uses the WhatsApp variant because WhatsApp is gated to `_wpp` plans (2026-09-22) and this audience sells there. The count is capped at 10. It replaced the Staffra vs human table. The saving line is shown only when the cost is above the plan price.
+  - **Value section (`value-calculator.tsx`, client, `ValueSection`):** two cards. (1) A head-to-head comparison with explicit column heads ("Atendente CLT" vs "Com a Staffra"): 44h vs 168h per week with bars, then five rows, the Staffra column tinted. (2) A plan-fit calculator: what they spend today, conversations per month (stepper + slider, 50–1500) and a WhatsApp switch. It converts conversations to replies at `REPLIES_PER_CONVERSATION = 5` (shown to the visitor as an estimate), picks the cheapest monthly plan from `getSelfServePlansForVariant` whose `monthlyReplyLimit` covers it, shows usage % and the difference against today's spend, and falls back to "Sob medida" + `SalesContactDialog` above the top plan. Prices and quotas come only from the catalog, so it follows `plans.ts` automatically.
   - **Product tour (`product-tour.tsx`, client, `#demo`):** replaced `interactive-demo.tsx`, a hand-built dashboard mock that didn't match the real product, and with it `src/app/dashboard/agent-card.tsx`, whose only importer it was. It shows five real screenshots in `public/landing-v2/tour/{pt,en}/{conversations,channels,products,schedule,performance}.webp` (1920×1200, WebP q80). It autoplays every 7s only while in view, stops on a manual pick, and is off under reduced motion. On mobile, autoplay is off (and any touch stops it), and each step shows its own zoomed crop (`MOBILE_CROP`, fractions of the 1920×1200 shot) in a 4:3 frame. Re-check those crops if a screenshot is retaken. **To refresh the shots**, seed a local sample company (Studio Aurora / Aurora Studio, Malu and Ana hired, channels connected, products, services, ~90 days of conversations) against the local stack, capture each route at 1440×900 @1.5x with Playwright, and convert to WebP. The scripts were throwaway and are not in the repo.
   - **Removed files:** `count-up.tsx`, `plan-features.tsx`, `public/landing-v2/analytics.jpg`, `workspace.jpg`.
   - **JSON-LD:** still reads `pricing.plans[].{tier,name,desc,price}` and `faq.items[].{q,a}`, so keep those shapes.

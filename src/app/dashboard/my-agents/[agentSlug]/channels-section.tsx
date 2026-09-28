@@ -10,15 +10,7 @@ import { ChannelPanelHeader } from "./channel-panel-header";
 import { ChannelPreview } from "./channel-preview";
 import { useReportChannelStatus } from "./channel-status";
 
-// The exact rate is deliberately never hardcoded anywhere in this file (or
-// any copy in messages/*.json) -- see decisions.md's 2026-09-05 entry.
-// Meta's own pricing is changing materially on 2026-10-01 (service-window
-// replies, today unconditionally free, start being billed past a free
-// allowance) and the post-change BRL rate isn't reliably confirmed from an
-// authoritative source yet. Linking to Meta's own live page means the
-// merchant always sees a real, current number instead of one we could get
-// wrong on their actual card.
-const WHATSAPP_PRICING_URL = "https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing";
+const PENDING_POLL_MS = 5000;
 
 declare global {
   interface Window {
@@ -41,9 +33,10 @@ type Connection = {
   connected_at: string | null;
   has_payment_issue: boolean;
   payment_issue_detected_at: string | null;
+  twilio_sender_status: string | null;
 };
 
-type ViewState = "loading" | "idle" | "connecting" | "disconnecting" | "confirmingDisconnect";
+type ViewState = "loading" | "idle" | "connecting" | "disconnecting" | "confirmingDisconnect" | "verifying";
 
 // The real merchant-facing WhatsApp connect screen — Meta Embedded Signup
 // (D1's backend), presented with a two-step setup guide. Connect/disconnect
@@ -60,6 +53,7 @@ export function ChannelsSection({
   whatsappEntitled,
   metaAppId,
   metaConfigId,
+  metaSolutionId,
 }: {
   companyId: string;
   agentSlug: string;
@@ -78,17 +72,14 @@ export function ChannelsSection({
   whatsappEntitled: boolean;
   metaAppId: string;
   metaConfigId: string;
+  metaSolutionId: string;
 }) {
   const t = useTranslations("MyAgents.channels");
   const [connection, setConnection] = useState<Connection | null>(null);
   const [view, setView] = useState<ViewState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  // Gates the connect button on the billing/payment-method disclosure below
-  // being explicitly acknowledged -- a real financial decision (Meta bills
-  // the merchant directly, separately from Staffra), not copy that should
-  // be skimmable past.
-  const [acknowledged, setAcknowledged] = useState(false);
-  const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string; isCoexistence?: boolean }>({});
+  const [verificationCode, setVerificationCode] = useState("");
+  const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
   const statusUrl = `/api/companies/${companyId}/agents/${agentSlug}/whatsapp`;
 
   useEffect(() => {
@@ -123,16 +114,6 @@ export function ChannelsSection({
           pendingSignup.current.phoneNumberId = data.data?.phone_number_id;
           pendingSignup.current.wabaId = data.data?.waba_id;
           maybeSubmit();
-        } else if (data.event === "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING") {
-          // Trello D8 -- the merchant chose to connect the number they
-          // already use in the WhatsApp Business app (offered inline by
-          // Meta's popup because startSignup() passes
-          // extras.featureType: "whatsapp_business_app_onboarding" below).
-          // This event carries only waba_id, never phone_number_id -- the
-          // connect route resolves the number server-side instead.
-          pendingSignup.current.wabaId = data.data?.waba_id;
-          pendingSignup.current.isCoexistence = true;
-          maybeSubmit();
         }
       } catch {
         // Not a JSON message we care about.
@@ -144,16 +125,26 @@ export function ChannelsSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusUrl, metaAppId]);
 
+  const isPending = connection?.status === "pending";
+  useEffect(() => {
+    if (!isPending) return;
+    const interval = setInterval(() => {
+      fetch(statusUrl)
+        .then((res) => res.json())
+        .then((data: { connection: Connection | null }) => setConnection(data.connection))
+        .catch(() => {});
+    }, PENDING_POLL_MS);
+    return () => clearInterval(interval);
+  }, [isPending, statusUrl]);
+
   function maybeSubmit() {
-    const { code, phoneNumberId, wabaId, isCoexistence } = pendingSignup.current;
-    // A coexistence connection (D8) never gets a phoneNumberId from the
-    // browser -- the connect route resolves it from the WABA itself.
-    if (!code || !wabaId || (!isCoexistence && !phoneNumberId)) return;
+    const { code, phoneNumberId, wabaId } = pendingSignup.current;
+    if (!code || !wabaId || !phoneNumberId) return;
 
     fetch(`${statusUrl}/connect`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, phoneNumberId, wabaId, isCoexistence }),
+      body: JSON.stringify({ code, phoneNumberId, wabaId }),
     })
       .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
       .then(({ ok, json }) => {
@@ -194,16 +185,28 @@ export function ChannelsSection({
         config_id: metaConfigId,
         response_type: "code",
         override_default_response_type: true,
-        // Trello D8 -- featureType tells Meta's popup to offer the merchant
-        // an inline choice to connect the number they already use in the
-        // WhatsApp Business app, instead of only offering a fresh
-        // Cloud-API-only registration. The merchant's choice comes back as
-        // which completion event fires (FINISH vs
-        // FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING), handled in onMessage
-        // above -- this is not a second button on our side.
-        extras: { setup: {}, featureType: "whatsapp_business_app_onboarding", version: "v4", sessionInfoVersion: "3" },
+        extras: { setup: { solutionID: metaSolutionId }, version: "v4", sessionInfoVersion: "3" },
       },
     );
+  }
+
+  async function submitVerificationCode() {
+    setErrorMessage(null);
+    setView("verifying");
+    const res = await fetch(statusUrl, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ verificationCode }),
+    }).catch(() => null);
+    if (!res?.ok) {
+      setErrorMessage(t("verificationError"));
+      setView("idle");
+      return;
+    }
+    const { connection: updated } = await res.json();
+    setConnection(updated);
+    setVerificationCode("");
+    setView("idle");
   }
 
   async function confirmDisconnect() {
@@ -220,6 +223,8 @@ export function ChannelsSection({
   }
 
   const isConnected = connection?.status === "connected";
+  const needsVerification = isPending && connection?.twilio_sender_status === "PENDING_VERIFICATION";
+  const activationFailed = isPending && connection?.twilio_sender_status === "OFFLINE";
   // D5: a connected number Meta has flagged for a payment issue can't
   // deliver anything -- distinct from "not connected", since the merchant
   // already completed Embedded Signup and needs a different fix (add a
@@ -234,7 +239,14 @@ export function ChannelsSection({
         ? null
         : hasPaymentIssue
           ? { tone: "warn", label: tHub("paymentIssue") }
-          : isConnected
+          : activationFailed
+            ? { tone: "warn", label: tHub("activationFailed") }
+            : isPending
+            ? {
+                tone: "warn",
+                label: tHub("activating", { detail: connection?.display_phone_number ?? "" }),
+              }
+            : isConnected
             ? {
                 tone: "ok",
                 label: connection?.display_phone_number
@@ -340,34 +352,79 @@ export function ChannelsSection({
                       </div>
                     ))}
                 </div>
+              ) : isPending ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3 rounded-lg border border-outline-variant/60 bg-surface-container-low p-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-container px-2.5 py-1 text-xs font-semibold text-on-surface-variant">
+                      {t("pendingBadge")}
+                    </span>
+                    <span className="text-sm font-medium text-on-surface">{connection?.display_phone_number}</span>
+                  </div>
+                  {activationFailed ? (
+                    <>
+                      <p className="text-sm text-on-surface-variant">{t("activationFailedDescription")}</p>
+                      {canEdit ? (
+                        <div>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            isLoading={view === "disconnecting"}
+                            onClick={confirmDisconnect}
+                          >
+                            {t("activationRetry")}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : needsVerification ? (
+                    canEdit ? (
+                      <form
+                        className="flex flex-col gap-2"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          submitVerificationCode();
+                        }}
+                      >
+                        <label htmlFor="whatsapp-verification-code" className="text-sm text-on-surface-variant">
+                          {t("verificationDescription", { number: connection?.display_phone_number ?? "" })}
+                        </label>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <input
+                            id="whatsapp-verification-code"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            maxLength={8}
+                            value={verificationCode}
+                            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+                            placeholder={t("verificationCodePlaceholder")}
+                            className="w-36 rounded-md border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface"
+                          />
+                          <Button type="submit" size="sm" isLoading={view === "verifying"} disabled={verificationCode.length < 4}>
+                            {t("verificationSubmit")}
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <p className="text-sm text-on-surface-variant">{t("verificationWaitingForAdmin")}</p>
+                    )
+                  ) : (
+                    <p className="text-sm text-on-surface-variant">{t("pendingDescription")}</p>
+                  )}
+                </div>
               ) : (
                 <div className="flex flex-col gap-4">
                   <p className="text-sm text-on-surface-variant">{t("notConnected")}</p>
                   <ChannelPreview agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={accent} />
                   {canEdit ? (
                     <>
-                      <Alert variant="warning" title={t("billingDisclosureTitle")}>
-                        {t("billingDisclosurePaymentMethod")}
-                        <br />
-                        {t("billingDisclosureBilling")}{" "}
-                        <a href={WHATSAPP_PRICING_URL} target="_blank" rel="noopener noreferrer" className="underline">
-                          {t("billingDisclosureLinkText")}
-                        </a>
+                      <Alert variant="info" title={t("billingIncludedTitle")}>
+                        {t("billingIncludedDescription")}
                       </Alert>
-                      <label className="flex items-start gap-2 text-sm text-on-surface-variant">
-                        <input
-                          type="checkbox"
-                          className="mt-0.5"
-                          checked={acknowledged}
-                          onChange={(e) => setAcknowledged(e.target.checked)}
-                        />
-                        {t("billingAcknowledgeLabel")}
-                      </label>
                       <div>
                         <Button
                           type="button"
                           isLoading={view === "connecting"}
-                          disabled={!acknowledged}
                           onClick={startSignup}
                         >
                           {view === "connecting" ? t("connecting") : t("connectButton")}

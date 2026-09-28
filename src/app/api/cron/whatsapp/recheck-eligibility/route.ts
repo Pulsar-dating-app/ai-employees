@@ -34,6 +34,7 @@ async function handle(request: Request) {
   const { data: connections, error } = await supabase
     .from("company_whatsapp_connections")
     .select("id, phone_number_id, access_token")
+    .eq("provider", "meta")
     .eq("status", "connected")
     .eq("has_payment_issue", true)
     .not("access_token", "is", null);

@@ -692,59 +692,71 @@
     "value": {
       "heading": "An employee who never takes a day off",
       "sub": "Run the numbers for your own business.",
-      "coverage": {
-        "title": "How many hours of the week are covered",
-        "note": "A full-time employee in Brazil (CLT) works at most 44 hours a week. A week has 168.",
-        "person": "One full-time employee",
-        "staffra": "Malu and Ana",
-        "hours": "{hours}h a week"
+      "compare": {
+        "title": "Hiring someone or using Staffra",
+        "personHead": "Full-time employee",
+        "personSub": "CLT contract",
+        "staffraHead": "With Staffra",
+        "staffraSub": "Malu and Ana",
+        "hoursLabel": "Hours answering per week",
+        "hours": "{hours}h",
+        "rows": [
+          {
+            "label": "Nights, weekends and holidays",
+            "person": "Off the clock",
+            "staffra": "Always answers"
+          },
+          {
+            "label": "Response time",
+            "person": "Depends on the queue",
+            "staffra": "Seconds"
+          },
+          {
+            "label": "Conversations at once",
+            "person": "One at a time",
+            "staffra": "As many as arrive"
+          },
+          {
+            "label": "Price and stock",
+            "person": "Has to check",
+            "staffra": "Always what you set"
+          },
+          {
+            "label": "Days off, vacations and absences",
+            "person": "Needs cover",
+            "staffra": "None"
+          }
+        ],
+        "note": "Brazilian labor law (CLT) caps a work week at 44 hours. A week has 168."
       },
-      "facts": [
-        {
-          "label": "Response time",
-          "staffra": "Seconds",
-          "person": "Depends on the queue"
-        },
-        {
-          "label": "Conversations at once",
-          "staffra": "As many as come in",
-          "person": "One at a time"
-        },
-        {
-          "label": "Prices and stock",
-          "staffra": "Always what you set up",
-          "person": "Has to look it up"
-        },
-        {
-          "label": "Days off and holidays",
-          "staffra": "None",
-          "person": "Need cover"
-        }
-      ],
       "calc": {
-        "title": "What you spend today",
-        "sub": "Enter the monthly cost of whoever answers your customers. Nothing is sent: the math happens right here on the page.",
-        "costLabel": "Cost per employee, per month",
+        "title": "Which plan fits you",
+        "sub": "Enter what you spend today and how many conversations you get. The math happens right here on the page, nothing is sent.",
+        "costLabel": "What you spend on customer service today, per month",
         "costPlaceholder": "e.g. 2,800",
-        "costHint": "Add salary, taxes and benefits.",
-        "countLabel": "Employees",
+        "costHint": "Add salary, taxes and benefits of whoever answers your customers.",
+        "volumeLabel": "Customer conversations per month",
+        "volumeHint": "We estimate about {replies} replies per conversation.",
         "decrease": "Decrease",
         "increase": "Increase",
+        "wppLabel": "I answer customers on WhatsApp",
+        "resultLabel": "Recommended plan",
+        "perMonth": "{price}/month",
+        "planFits": "Up to {replies} replies a month, about {conversations} conversations.",
+        "planFitsWpp": "With WhatsApp. Up to {replies} replies a month, about {conversations} conversations.",
+        "usage": "You'd use about {pct}% of the plan.",
+        "customBody": "At this volume, we build a custom plan for your business.",
+        "customCta": "Talk to us",
         "today": "Today, per month",
-        "todayHours": "Covers up to {hours}h a week",
+        "todaySub": "Only during team hours",
         "withStaffra": "With Staffra, per month",
-        "withStaffraHours": "“{plan}” plan with WhatsApp, around the clock",
-        "empty": "Enter a cost to see the comparison.",
-        "saving": "{amount} less per month, with 24-hour coverage.",
-        "noSaving": "For the same spend, you get 24-hour coverage.",
-        "disclaimer": "Staffra doesn't have to replace anyone: it answers while your team can't, and brings you in when it matters.",
-        "withStaffraReplies": "Up to {replies} replies a month"
+        "withStaffraSub": "24 hours, every day",
+        "empty": "Enter what you spend today to see the difference.",
+        "saving": "You spend {amount} less per month and answer around the clock.",
+        "extra": "That's {amount} more per month, and your customers get answers around the clock.",
+        "disclaimer": "Staffra doesn't have to replace anyone: it answers while your team can't, and brings you in when it matters."
       },
-      "cta": "See plans",
-      "factsHeader": {
-        "staffra": "Malu and Ana",
-        "person": "One employee"
-      }
+      "cta": "See plans"
     },
     "tour": {
       "heading": "See the dashboard from the inside",
@@ -1122,14 +1134,20 @@
       "stepTwoDescription": "Once connected, your team answers on WhatsApp automatically — day and night.",
       "paymentIssueBadge": "Payment needed",
       "paymentIssueDescription": "WhatsApp can't deliver messages until a payment method is added to your account in Meta Business Manager.",
-      "billingDisclosureTitle": "Before you connect",
-      "billingDisclosurePaymentMethod": "You'll need to add a payment method to your WhatsApp Business account in Meta Business Manager — without it, messages won't be delivered even after connecting.",
-      "billingDisclosureBilling": "Meta charges you directly for WhatsApp usage, separately from your Staffra subscription, once you go past a free allowance. Rates change over time, so always check the current ones here:",
-      "billingDisclosureLinkText": "Meta's official WhatsApp pricing",
-      "billingAcknowledgeLabel": "I understand Meta bills me separately for WhatsApp usage and that I need to add a payment method.",
+      "billingIncludedTitle": "WhatsApp is included in your plan",
+      "billingIncludedDescription": "Messages your team sends and receives on WhatsApp are already covered by your Staffra plan. You don't need to add a payment method at Meta or pay anything separately.",
       "addonRequiredTitle": "WhatsApp isn't included in your current plan",
       "addonRequiredDescription": "Add the WhatsApp add-on to your plan to connect a number and let your team answer customers there.",
-      "addonRequiredCta": "Add WhatsApp to your plan"
+      "addonRequiredCta": "Add WhatsApp to your plan",
+      "pendingBadge": "Activating",
+      "pendingDescription": "We're activating this number on WhatsApp. It usually takes a few minutes, and this page updates on its own.",
+      "verificationDescription": "WhatsApp sent a code by text message to {number}. Enter it here to finish activating the number.",
+      "verificationCodePlaceholder": "6-digit code",
+      "verificationSubmit": "Confirm code",
+      "verificationError": "We couldn't confirm that code. Check it and try again.",
+      "verificationWaitingForAdmin": "This number is waiting for a confirmation code. An owner or admin needs to enter it here.",
+      "activationFailedDescription": "We couldn't activate this number on WhatsApp. Disconnect it and connect again.",
+      "activationRetry": "Disconnect and try again"
     },
     "channelTabs": {
       "tablistLabel": "Ways customers can reach this employee",
@@ -1187,8 +1205,8 @@
       "launcherSectionTitle": "Launcher appearance",
       "launcherDefault": "Default animation",
       "launcherDefaultHint": "{name}'s built-in animated character.",
-      "launcherVideo": "Custom video",
-      "launcherVideoHint": "WebM or MP4, up to 4MB.",
+      "launcherPhoto": "Default image",
+      "launcherPhotoHint": "{name}'s profile photo.",
       "launcherImage": "Custom image",
       "launcherImageHint": "PNG, JPEG, WebP, or GIF, up to 2MB.",
       "chooseFileButton": "Choose file",
@@ -1207,9 +1225,7 @@
       "savingButton": "Saving…",
       "saved": "Saved",
       "chooseFileError": "Choose a file to upload.",
-      "unsupportedFileVideo": "Use a WebM or MP4 file.",
       "unsupportedFileImage": "Use a PNG, JPEG, WebP, or GIF file.",
-      "fileTooLargeVideo": "Video must be 4MB or smaller.",
       "fileTooLargeImage": "Image must be 2MB or smaller.",
       "saveError": "Something went wrong saving that setting. Please try again."
     },
@@ -1282,7 +1298,9 @@
         "paymentIssue": "Payment issue with Meta",
         "ready": "Ready to share",
         "noSites": "No sites allowed yet",
-        "sitesCount": "{count, plural, one {# site allowed} other {# sites allowed}}"
+        "sitesCount": "{count, plural, one {# site allowed} other {# sites allowed}}",
+        "activating": "Activating · {detail}",
+        "activationFailed": "Activation failed"
       }
     },
     "behavior": {

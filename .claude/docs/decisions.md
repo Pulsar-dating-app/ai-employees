@@ -33,6 +33,29 @@ Stating the catalog up front follows the pattern that fixed policies and the FAQ
 
 ---
 
+## 2026-09-28 — Widget launcher: "custom video" replaced by "default image"
+
+**Decision:** The Customize card's launcher options are now Default animation / Default image / Custom image. The new `widget_launcher_type = 'photo'` shows the agent's own profile photo (whatever `resolveAgentPhoto()` returns for the row's `photo_type`), stores no asset, and goes out in the snippet as a plain `data-launcher-type="image"` with the photo's absolute URL, so `widget.js` needed no change. The `'video'` type is gone: migration `20260928120000_replace_video_launcher_with_photo.sql` moves existing `'video'` rows to `'default'` and tightens the check constraint, and the API route rejects it. An agent with no photo at all falls back to the default video.
+**Why:** The owner wanted merchants to be able to use the character they already picked in the profile editor as a still bubble, and saw no need for custom video uploads now that every character has its own curated animation. Uploaded videos left in the `widget-assets` bucket by old `'video'` rows are not cleaned up (dev test data only).
+
+## 2026-09-28 — Default widget launcher follows the agent's chosen profile photo
+
+**Decision:** The embed widget's "Default animation" is now resolved per agent slug *and* `company_agents.photo_type` (`resolveDefaultLauncher(slug, photoType)` in `src/lib/widget/launcher-defaults.ts`): Malu uses `public/agents/sales-1-launcher.webm` / `sales-2-launcher.webm`, Ana uses `ana-classic-launcher.webm` / `secretary-2-launcher.webm`, matching `default_1` / `default_2` in `src/lib/agents/media.ts`. A custom uploaded photo has no matching video and uses the first one; a slug with no entry still falls back to `/widget-launcher.webm`. The server page computes the src once and passes it to both the snippet and the Customize card preview.
+**Why:** Merchants picking the second avatar still saw the first character bouncing in their site's launcher, so the widget and the profile looked like two different people. Saving the photo already calls `router.refresh()`, so snippet and preview update without extra wiring. An already-pasted snippet keeps its baked-in `data-launcher-src` until the merchant copies the new one.
+**Launcher framing standard:** every default launcher is a 440×480 VP9 WebM, framed waist-up with the top of the head just below the top edge (Ana's classic video is the reference). The `*-launcher.webm` files are cropped and re-encoded from the 1280×720 `sales-1/sales-2/secretary-2.mp4` masters with `ffmpeg -vf "crop=W:H:X:Y,scale=440:480" -c:v libvpx-vp9 -crf 38 -an`, which also cuts them from 0.5–1.6 MB to 100–220 KB, since they load on every visit to a merchant's site. A new character video must be cropped the same way, not dropped in as-is.
+
+## 2026-09-28 — Shorter default widget greetings
+
+**Decision:** The predefined teaser greetings are now short calls to action: Ana "Agende seu horário aqui!", and "Posso ajudar?" for the generic fallback (`launcher-defaults.ts` and `widget.js`'s own fallback). Malu keeps "Oi! 👋 Posso ajudar a encontrar o que você procura?" — the owner confirmed that one is the intended sales default.
+**Why:** The owner found the old lines too long for the small bubble next to the launcher. A merchant's saved `widget_greeting` still wins, so a row with leftover test text keeps showing it until the field is cleared and saved.
+
+## 2026-09-28 — Landing calculator picks the plan from conversation volume
+
+**Decision:** The "Uma funcionária que não tira folga" calculator now asks what the visitor spends today, their monthly conversations and whether they use WhatsApp, then recommends the cheapest plan whose reply quota fits instead of comparing against one fixed plan. Conversations become replies at an estimated 5 replies per conversation, stated on the page. The coverage table became an explicit two-column "Atendente CLT vs Com a Staffra" comparison.
+**Why:** The owner found the old table unclear about which value was Staffra and which was hiring someone, and wanted the calculator to show which plan fits and whether it pays off. Plans are sold by replies, not conversations, so the conversion factor is shown openly rather than hidden. With the 2026-09-27 prices, 5 per conversation keeps the fit realistic without pushing small merchants to a bigger plan.
+
+---
+
 ## 2026-09-27 — Real plan prices and quotas; annual = 15% off
 
 **Decision:** The placeholders are replaced with the owner's real numbers:
@@ -50,6 +73,19 @@ Annual = 12 × monthly − 15%, rounded to the cent (e.g. Starter R$989,30/year)
 
 **Decision:** An existing subscriber picks any of the 12 self-serve variants on our billing page (the period/WhatsApp toggles now show in change mode too). The checkout route then opens Stripe's `subscription_update_confirm` Portal flow for that exact Price instead of the generic plan list. To make that possible, each tier's WhatsApp variants moved to their own Product ("Staffra <Tier> + WhatsApp"), so the Stripe catalog is 6 Products × (monthly, annual). The Portal config also has `adjustable_quantity` off and schedules `shortening_interval` changes (annual → monthly) at period end, alongside the existing `decreasing_item_amount` rule.
 **Why:** The Customer Portal only allows one Price per interval per Product in its plan-switch list, and in the sandbox it rejects a confirm flow to any Price not on that list. With 4 Prices per Product, moving between "Starter" and "Starter + WhatsApp" was impossible. A fully in-app swap (`subscriptions.update`) was rejected: we'd own proration previews, 3DS/decline handling, and period-end downgrades via Subscription Schedules, all of which the Portal already does. The confirm flow gives the in-app choice at the cost of about one function. Quantity was switchable in the Portal before this, which would have let a merchant pay 2× without `plan_key` changing.
+
+## 2026-09-25 — WhatsApp moves to Twilio's Partner Solution (reverses 2026-08-26)
+
+**Decision:** New WhatsApp connections go through Twilio as the Partner Solution in Meta's Tech Provider program. Embedded Signup carries Twilio's `solutionID`, each company gets a Twilio subaccount, the number is registered as a Twilio sender (Senders API v2), and messages flow through Twilio's webhook and Messages API. The Meta-direct connect path is gone. Existing rows are dev data (no real users) and stay `provider = 'meta'`; the Meta webhook, send path and eligibility cron keep serving them.
+**Why:** The user accepted Twilio's Partner Solution in Meta for Developers. With a Partner Solution, Twilio registers the number and holds the messaging credit line, so registering or sending through Cloud API ourselves would conflict with it. The shared inbound pipeline (`src/lib/whatsapp/inbound.ts`) keeps both providers on identical gates. One subaccount per company (not per agent) follows Twilio's "a subaccount for each new business" guidance while agents keep their own numbers.
+**Twilio's answers (support ticket, 2026-09-25):**
+- No coexistence for Tech Provider numbers. Embedded Signup dropped `featureType: "whatsapp_business_app_onboarding"`, and a number on the WhatsApp Business app must migrate to the API.
+- Senders usually go straight to `ONLINE` but can land in `PENDING_VERIFICATION`, so an in-app SMS-code step was added.
+- There is no sender-status webhook, so we poll.
+- `profile.name` is not needed for ESU numbers.
+- `configuration.account_type` must be `ISVSubAccount`.
+
+The connect screen's "Meta bills you directly / add a payment method at Meta" disclosure and its acknowledgment checkbox were replaced by an "included in your plan" note at the user's request: only `_wpp` plans reach that screen, and those already include Meta's fees.
 
 ## 2026-09-24 — Landing demo is real screenshots; value section is a calculator
 

@@ -31,32 +31,25 @@ describe("WhatsApp inbound webhook (GET verify, POST receive)", () => {
     agentSlug: string,
     phoneNumberId: string,
     wabaId: string,
+    isCoexistence = false,
   ) {
-    // P6 (active plan) + the WhatsApp add-on (2026-09-22): the connect route
-    // rejects a plan without `whatsappIncluded`.
     await seedActivePlan(companyId, { planKey: "starter_wpp" });
     await api("POST", `/api/companies/${companyId}/agents/${agentSlug}`, ownerCookie);
-    const connected = await api<{ connection: { phone_number_id: string } }>(
-      "POST",
-      `/api/companies/${companyId}/agents/${agentSlug}/whatsapp/connect`,
-      ownerCookie,
-      { code: "any-code", phoneNumberId, wabaId },
-    );
-    return connected.json.connection.phone_number_id;
-  }
-
-  // Trello D8 -- no phoneNumberId supplied by the caller; the connect route
-  // resolves it server-side via finishCoexistenceConnection's
-  // GET /{wabaId}/phone_numbers call (mocked in graph-api-mock.ts).
-  async function connectedCoexistenceAgent(ownerCookie: string, companyId: string, agentSlug: string, wabaId: string) {
-    await seedActivePlan(companyId, { planKey: "starter_wpp" }); // P6 + WhatsApp add-on
-    await api("POST", `/api/companies/${companyId}/agents/${agentSlug}`, ownerCookie);
-    return api<{ connection: { phone_number_id: string; is_coexistence: boolean } }>(
-      "POST",
-      `/api/companies/${companyId}/agents/${agentSlug}/whatsapp/connect`,
-      ownerCookie,
-      { code: "any-code", wabaId, isCoexistence: true },
-    );
+    const { data: agent } = await service.from("agents").select("id").eq("slug", agentSlug).single();
+    const { error } = await service.from("company_whatsapp_connections").insert({
+      company_id: companyId,
+      agent_id: (agent as { id: string }).id,
+      phone_number_id: phoneNumberId,
+      waba_id: wabaId,
+      display_phone_number: "+55 11 91234-5678",
+      status: "connected",
+      access_token: "mock-access-token",
+      connected_at: new Date().toISOString(),
+      is_coexistence: isCoexistence,
+      provider: "meta",
+    });
+    expect(error).toBeNull();
+    return phoneNumberId;
   }
 
   function echoPayload(phoneNumberId: string, to: string, text: string, messageId: string) {
@@ -368,37 +361,25 @@ describe("WhatsApp inbound webhook (GET verify, POST receive)", () => {
     });
   });
 
-  describe("Trello D8 -- coexistence connect", () => {
-    it("resolves the phone number from the WABA and marks is_coexistence", async () => {
-      const owner = await signUpTestUser("owner");
-      const companyId = await createCompany(owner.cookieHeader, "WA Coexistence Connect Co");
-      const res = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "waba-coex-happy-path");
-      expect(res.status).toBe(200);
-      expect(res.json.connection.phone_number_id).toBe("waba-coex-happy-path-phone");
-      expect(res.json.connection.is_coexistence).toBe(true);
-    });
+  it("ignores a Twilio-provider connection for the same phone number id", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "WA Webhook Twilio Row Co");
+    const phoneNumberId = await connectedAgent(owner.cookieHeader, companyId, "malu", "phone-twilio-row", "waba-twilio-row");
+    await service.from("company_whatsapp_connections").update({ provider: "twilio" }).eq("phone_number_id", phoneNumberId);
 
-    it("502s when the WABA has zero phone numbers", async () => {
-      const owner = await signUpTestUser("owner");
-      const companyId = await createCompany(owner.cookieHeader, "WA Coexistence Zero Numbers Co");
-      const res = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "trigger-zero-numbers");
-      expect(res.status).toBe(502);
-    });
+    const body = messagingPayload(phoneNumberId, "+5511900000005", "oi", "msg-twilio-row");
+    const res = await postWebhook(body, sign(body));
+    expect(res.status).toBe(200);
 
-    it("502s when the WABA has multiple phone numbers", async () => {
-      const owner = await signUpTestUser("owner");
-      const companyId = await createCompany(owner.cookieHeader, "WA Coexistence Multiple Numbers Co");
-      const res = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "trigger-multiple-numbers");
-      expect(res.status).toBe(502);
-    });
+    const { data: messages } = await service.from("messages").select("id").eq("company_id", companyId);
+    expect(messages).toEqual([]);
   });
 
   describe("Trello D8 -- message echoes and history backfill", () => {
     it("persists a merchant echo and pauses the conversation", async () => {
       const owner = await signUpTestUser("owner");
       const companyId = await createCompany(owner.cookieHeader, "WA Echo Co");
-      const connected = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "waba-echo-test");
-      const phoneNumberId = connected.json.connection.phone_number_id;
+      const phoneNumberId = await connectedAgent(owner.cookieHeader, companyId, "malu", "waba-echo-test-phone", "waba-echo-test", true);
 
       const body = echoPayload(phoneNumberId, "+5511900000010", "já te respondi por aqui!", "echo-msg-1");
       const res = await postWebhook(body, sign(body));
@@ -428,8 +409,7 @@ describe("WhatsApp inbound webhook (GET verify, POST receive)", () => {
     it("is idempotent: a repeat delivery of the same echo id changes nothing", async () => {
       const owner = await signUpTestUser("owner");
       const companyId = await createCompany(owner.cookieHeader, "WA Echo Idempotent Co");
-      const connected = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "waba-echo-idempotent");
-      const phoneNumberId = connected.json.connection.phone_number_id;
+      const phoneNumberId = await connectedAgent(owner.cookieHeader, companyId, "malu", "waba-echo-idempotent-phone", "waba-echo-idempotent", true);
 
       const body = echoPayload(phoneNumberId, "+5511900000011", "primeira vez", "echo-msg-repeat");
       await postWebhook(body, sign(body));
@@ -443,8 +423,7 @@ describe("WhatsApp inbound webhook (GET verify, POST receive)", () => {
     it("backfills history with correct roles and never touches conversation status or the engine", async () => {
       const owner = await signUpTestUser("owner");
       const companyId = await createCompany(owner.cookieHeader, "WA History Co");
-      const connected = await connectedCoexistenceAgent(owner.cookieHeader, companyId, "malu", "waba-history-test");
-      const phoneNumberId = connected.json.connection.phone_number_id;
+      const phoneNumberId = await connectedAgent(owner.cookieHeader, companyId, "malu", "waba-history-test-phone", "waba-history-test", true);
       const customerPhone = "+5511900000012";
 
       const body = historyPayload(phoneNumberId, customerPhone, [

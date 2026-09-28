@@ -7,7 +7,6 @@ import { BrandLogo } from "./brand-logos";
 import { ChannelShowcase, type ChannelItem } from "./channel-showcase";
 import { M } from "./landing-icons";
 import { PricingSection } from "./pricing-section";
-import { getPlan } from "@/lib/billing/plans";
 import { CalendarIcon } from "@/components/ui/icons";
 import { SalesContactDialog } from "./sales-contact-dialog";
 import { ShaderBackground } from "@/components/ui/shader-background";
@@ -16,7 +15,7 @@ import { ShutterReveal } from "./shutter-reveal";
 import { SlideReveal } from "./slide-reveal";
 import { CascadeText } from "./cascade-text";
 import { ProductTour } from "./product-tour";
-import { ValueCalculator } from "./value-calculator";
+import { ValueSection } from "./value-calculator";
 import { HeroChatDemo, type HeroChatCopy } from "./hero-chat-demo";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
@@ -68,8 +67,6 @@ export async function LandingPageV2() {
   const steps = t.raw("rag.steps") as Step[];
   const sources = t.raw("rag.sources") as Source[];
   const locale = (await getLocale()) as "en" | "pt";
-  const recommendedPlan = getPlan("intermediate_wpp");
-  const recommendedName = (t.raw("pricing.plans") as { name: string }[])[1]?.name ?? "";
   const faqs = t.raw("faq.items") as Faq[];
   const heroChat = t.raw("hero.chat") as HeroChatCopy;
   const footerCols = t.raw("footer.columns") as FooterCol[];
@@ -377,11 +374,7 @@ export async function LandingPageV2() {
             </h2>
             <p className="mt-3 text-[17px] leading-[26px] text-[#464555]">{t("value.sub")}</p>
           </div>
-          <ValueCalculator
-            planPriceCents={recommendedPlan.priceBrlCents ?? 0}
-            planReplies={recommendedPlan.monthlyReplyLimit ?? 0}
-            planName={recommendedName}
-          />
+          <ValueSection />
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href={HIRE}
