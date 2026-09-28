@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { CompanyRepository, type PolicyInformation } from "@/lib/companies/repository";
 import { AppointmentRepository } from "@/lib/appointments/repository";
 import { ProductRepository } from "@/lib/products/repository";
+import type { CatalogOverview } from "@/lib/products/catalog-overview";
 import { countActiveProfessionals } from "@/lib/professionals/repository";
 import { classifyServiceChoice, type ServiceChoice } from "./prompt";
 
@@ -47,11 +48,12 @@ export async function loadMultipleProfessionals(supabase: SupabaseClient, compan
   return (await countActiveProfessionals(supabase, companyId)) > 1;
 }
 
-// Whether this company has any product at all, from the same count
-// ProductRepository.hasProducts uses (so search_products' own catalogEmpty
-// signal and this can never disagree).
-export async function loadHasProducts(supabase: SupabaseClient, companyId: string): Promise<boolean> {
-  return ProductRepository.hasProducts(companyId, supabase);
+// What this company sells (count, top categories, a few names), for an
+// agent that can search a catalog. `total === 0` is the empty-catalog signal
+// -- the same active-products filter search_products' own catalogEmpty uses,
+// so the two can never disagree.
+export async function loadCatalogOverview(supabase: SupabaseClient, companyId: string): Promise<CatalogOverview> {
+  return ProductRepository.catalogOverview(companyId, supabase);
 }
 
 // Whether the merchant has set any opening hours (one count query, the same one

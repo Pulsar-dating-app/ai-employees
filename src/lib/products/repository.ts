@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { PRODUCT_PUBLIC_COLUMNS } from "@/lib/products/columns";
 import { createProductEmbedding } from "@/lib/products/embeddings";
+import { summarizeCatalog, type CatalogOverview } from "@/lib/products/catalog-overview";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type OpenAI from "openai";
 
@@ -343,4 +344,25 @@ async function hasProducts(companyId: string, supabaseClient?: SupabaseClient): 
   return (count ?? 0) > 0;
 }
 
-export const ProductRepository = { search, get, hasProducts };
+// How many active products a sample for the overview reads: enough for a
+// small catalog's exact category counts, bounded for a big one.
+const OVERVIEW_SAMPLE_SIZE = 400;
+
+// 2026-09-27 -- what the business sells, for Malu's prompt (see
+// catalog-overview.ts). One query: the exact count rides along with a bounded
+// sample of names/categories. total 0 is the empty-catalog signal too, so
+// this replaces hasProducts on that path.
+async function catalogOverview(companyId: string, supabaseClient?: SupabaseClient): Promise<CatalogOverview> {
+  const client = supabaseClient ?? createServiceClient();
+  const { data, count, error } = await client
+    .from("products")
+    .select("name, category", { count: "exact" })
+    .eq("company_id", companyId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(OVERVIEW_SAMPLE_SIZE);
+  if (error) throw error;
+  return summarizeCatalog((data ?? []) as { name: string | null; category: string | null }[], count ?? 0);
+}
+
+export const ProductRepository = { search, get, hasProducts, catalogOverview };

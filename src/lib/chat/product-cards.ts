@@ -172,9 +172,13 @@ export function collectSearchedProducts(toolCalls: readonly ToolCallLike[]): Sea
 // the only version the model can drive precisely for every case. See
 // decisions.md.
 //
-// Returns [] when no chosen product has an image. A row of name-and-price
-// cards duplicating the text the customer just read adds nothing -- the
-// picture is the entire reason this feature exists.
+// Only a product with an image gets a card -- the picture is the entire
+// reason this feature exists, and Instagram's carousel and Telegram's album
+// can't draw one without it. Until 2026-09-27 this was all-or-nothing (no
+// image anywhere -> no cards; one image -> the imageless ones carded too);
+// it is per product now, matching what the prompt tells the model
+// (PRODUCT_CARD_GUIDANCE: a product whose image_url is null is never carded,
+// so its name and price go in the text).
 export function selectProductCards(
   toolCalls: readonly ToolCallLike[],
   responseText: string,
@@ -188,9 +192,7 @@ export function selectProductCards(
       ? pickByExplicitIds(searched, displayProductIds)
       : pickByNameMention(searched, responseText);
 
-  const capped = chosen.slice(0, MAX_PRODUCT_CARDS);
-  if (!capped.some((product) => product.image_url)) return [];
-  return capped;
+  return chosen.filter((product) => product.image_url).slice(0, MAX_PRODUCT_CARDS);
 }
 
 // The model's own ordered id list -> the matching searched products, in

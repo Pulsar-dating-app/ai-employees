@@ -230,13 +230,25 @@ describe("selectProductCards fallback (no explicit product_ids)", () => {
     expect(selectProductCards([searchCall(imageless)], "Temos a Prancha Alpina disponível.")).toEqual([]);
   });
 
-  it("still attaches a named product with no image when a named sibling has one", () => {
+  // 2026-09-27 -- per product, not all-or-nothing: the prompt tells the
+  // model an imageless product is never carded (so its price goes in the
+  // text), and this is what makes that true.
+  it("cards only the named products that have an image", () => {
     const mixed = [
       product({ id: "a", name: "Prancha Alpina", image_url: null }),
       product({ id: "b", name: "Prancha Nevada" }),
     ];
     const reply = "Temos a Prancha Alpina e a Prancha Nevada.";
-    expect(ids(selectProductCards([searchCall(mixed)], reply))).toEqual(["a", "b"]);
+    expect(ids(selectProductCards([searchCall(mixed)], reply))).toEqual(["b"]);
+  });
+
+  it("drops an explicitly chosen product with no image, keeping the rest in order", () => {
+    const mixed = [
+      product({ id: "a", name: "Plano Starter", image_url: null }),
+      product({ id: "b", name: "Prancha Nevada" }),
+      product({ id: "c", name: "Prancha Alpina" }),
+    ];
+    expect(ids(selectProductCards([searchCall(mixed)], "", ["c", "a", "b"]))).toEqual(["c", "b"]);
   });
 
   it("does not card a product whose name is too short to match reliably", () => {

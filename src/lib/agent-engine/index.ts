@@ -9,7 +9,7 @@ import {
   loadBusinessName,
   loadCompanyTimezone,
   loadHasBusinessHours,
-  loadHasProducts,
+  loadCatalogOverview,
   loadMultipleProfessionals,
   loadHumanHandoffEnabled,
   loadPolicies,
@@ -101,12 +101,12 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
   // Same reasoning for search_products: only an agent that can search a
   // catalog needs to know whether it's empty.
   const canSearchProducts = tools.some((tool) => tool.name === "search_products");
-  const [serviceChoice, hasBusinessHours, hasProducts, multipleProfessionals] = await Promise.all([
+  const [serviceChoice, hasBusinessHours, catalogOverview, multipleProfessionals] = await Promise.all([
     tools.some((tool) => tool.name === "list_services")
       ? loadServiceChoice(supabase, input.companyId)
       : null,
     canSchedule ? loadHasBusinessHours(supabase, input.companyId) : true,
-    canSearchProducts ? loadHasProducts(supabase, input.companyId) : true,
+    canSearchProducts ? loadCatalogOverview(supabase, input.companyId) : null,
     canSchedule ? loadMultipleProfessionals(supabase, input.companyId) : null,
   ]);
 
@@ -138,9 +138,13 @@ async function run(input: AgentEngineInput, deps: AgentEngineDeps = {}): Promise
     noBusinessHours: hasBusinessHours
       ? null
       : { canOfferTeam: tools.some((tool) => tool.name === "request_human") },
-    emptyCatalog: hasProducts
-      ? null
-      : { canOfferTeam: tools.some((tool) => tool.name === "request_human") },
+    emptyCatalog:
+      catalogOverview && catalogOverview.total === 0
+        ? { canOfferTeam: tools.some((tool) => tool.name === "request_human") }
+        : null,
+    // What the business sells, so "planos"/"serviços"/"cursos" are known to
+    // be the catalog before the model decides whether to search.
+    catalogOverview,
     currentDate: formatCurrentDate(companyTimezone),
   });
   const initialInput = buildInitialInput(input.message);
