@@ -101,7 +101,9 @@ async function resolveAgent(
 
 // POST: admin-only. Body: { code, phoneNumberId, wabaId, force? } -- exactly
 // what Embedded Signup hands the browser on success, plus the same `force`
-// flag N2 introduced. Upserts on (company_id, agent_id), so reconnecting is
+// flag N2 introduced -- or { reconnect: true, force? } to re-register this
+// agent's last disconnected Twilio number without Embedded Signup, which
+// refuses a number already shared with our app. Upserts on (company_id, agent_id), so reconnecting is
 // idempotent -- same convention as D1's original route.
 export async function POST(
   request: Request,
@@ -125,11 +127,12 @@ export async function POST(
   const agent = agentCheck.agent!;
 
   const body = await request.json().catch(() => null);
+  const reconnect = body?.reconnect === true;
   const code = typeof body?.code === "string" ? body.code : "";
-  const phoneNumberId = typeof body?.phoneNumberId === "string" ? body.phoneNumberId : "";
-  const wabaId = typeof body?.wabaId === "string" ? body.wabaId : "";
+  let phoneNumberId = typeof body?.phoneNumberId === "string" ? body.phoneNumberId : "";
+  let wabaId = typeof body?.wabaId === "string" ? body.wabaId : "";
   const force = body?.force === true;
-  if (!code || !wabaId || !phoneNumberId) {
+  if (!reconnect && (!code || !wabaId || !phoneNumberId)) {
     return NextResponse.json({ error: "code, phoneNumberId and wabaId are required" }, { status: 400 });
   }
 
@@ -153,14 +156,38 @@ export async function POST(
     return NextResponse.json({ error: "whatsapp_addon_required" }, { status: 403 });
   }
 
-  let accessToken: string;
-  let tokenExpiresAt: string | null;
+  let accessToken: string | null = null;
+  let tokenExpiresAt: string | null = null;
   let displayPhoneNumber: string | null;
-  try {
-    ({ accessToken, tokenExpiresAt } = await exchangeCodeForToken(code));
-    displayPhoneNumber = await lookupDisplayPhoneNumber(accessToken, phoneNumberId);
-  } catch {
-    return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
+  if (reconnect) {
+    const { data: previous, error: previousError } = await serviceClient
+      .from("company_whatsapp_connections")
+      .select("phone_number_id, waba_id, display_phone_number, provider, status")
+      .eq("company_id", companyId)
+      .eq("agent_id", agent.id)
+      .maybeSingle();
+    if (previousError) {
+      return NextResponse.json({ error: previousError.message }, { status: 500 });
+    }
+    if (
+      !previous ||
+      previous.provider !== "twilio" ||
+      previous.status !== "disconnected" ||
+      !previous.waba_id ||
+      !previous.display_phone_number
+    ) {
+      return NextResponse.json({ error: "nothing_to_reconnect" }, { status: 409 });
+    }
+    phoneNumberId = previous.phone_number_id;
+    wabaId = previous.waba_id;
+    displayPhoneNumber = previous.display_phone_number;
+  } else {
+    try {
+      ({ accessToken, tokenExpiresAt } = await exchangeCodeForToken(code));
+      displayPhoneNumber = await lookupDisplayPhoneNumber(accessToken, phoneNumberId);
+    } catch {
+      return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
+    }
   }
   if (!displayPhoneNumber) {
     return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
