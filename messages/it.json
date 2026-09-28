@@ -920,10 +920,6 @@
       "appointmentsNoShow": {
         "label": "Mancate presenze",
         "caption": "Segnati come non presentati"
-      },
-      "waitlistAdded": {
-        "label": "Lista d'attesa",
-        "caption": "Clienti aggiunti in questo periodo"
       }
     },
     "notASale": "Un clic sul checkout significa che un cliente ha aperto il tuo negozio, non che la vendita sia stata conclusa.",
@@ -1799,7 +1795,14 @@
       "remove": "Rimuovi dall'attività",
       "removeConfirm": "Rimuovere {name} dall'attività? Perde subito l'accesso e la sua agenda viene disattivata, quindi i clienti non potranno più prenotare con lui. Lo storico resta e potrai riattivare l'agenda più avanti.",
       "unlinkSelf": "Scollega il mio account da questa agenda",
-      "ownerOnly": "Solo il proprietario può farlo."
+      "ownerOnly": "Solo il proprietario può farlo.",
+      "bookingsTitle": "Appuntamenti",
+      "bookingsSubtitle": "Se i clienti possono prenotare con questa persona.",
+      "takesBookingsLabel": "Riceve appuntamenti",
+      "takesBookingsOn": "I clienti possono prenotare con {name}.",
+      "takesBookingsOff": "{name} non viene proposto ai clienti. Accesso, pagina e appuntamenti passati restano.",
+      "notBookingSubtitle": "Non riceve appuntamenti: i clienti non possono prenotare con questa persona.",
+      "notBookingShort": "Non riceve appuntamenti"
     },
     "settings": {
       "pageTitle": "Impostazioni dell'agenda",
