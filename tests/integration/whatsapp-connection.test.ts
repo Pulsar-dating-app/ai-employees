@@ -311,24 +311,25 @@ describe("WhatsApp connection (GET/DELETE .../whatsapp, POST .../whatsapp/connec
     ).toBe(409);
   });
 
-  it("surfaces a sender that goes OFFLINE while pending, and lets the admin disconnect it", async () => {
+  it("keeps a sender that reports OFFLINE while activating pending until Twilio brings it ONLINE", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Offline Sender WA Co");
     await hireAgent(owner.cookieHeader, companyId, "malu");
 
-    await api("POST", connectPath(companyId, "malu"), owner.cookieHeader, connectBody({
-      wabaId: `trigger-sender-offline-${randomUUID().slice(0, 8)}`,
-    }));
+    const connected = await api<{ connection: { status: string; twilio_sender_status: string } }>(
+      "POST",
+      connectPath(companyId, "malu"),
+      owner.cookieHeader,
+      connectBody({ wabaId: `trigger-sender-offline-${randomUUID().slice(0, 8)}` }),
+    );
+    expect(connected.json.connection).toMatchObject({ status: "pending", twilio_sender_status: "OFFLINE" });
 
     const refreshed = await api<{ connection: { status: string; twilio_sender_status: string } }>(
       "GET",
       statusPath(companyId, "malu"),
       owner.cookieHeader,
     );
-    expect(refreshed.json.connection).toMatchObject({ status: "pending", twilio_sender_status: "OFFLINE" });
-
-    const disconnected = await api<{ connection: { status: string } }>("DELETE", statusPath(companyId, "malu"), owner.cookieHeader);
-    expect(disconnected.json.connection.status).toBe("disconnected");
+    expect(refreshed.json.connection).toMatchObject({ status: "connected", twilio_sender_status: "ONLINE" });
   });
 
   it("returns 502 (not a raw Meta error) when the token exchange fails", async () => {

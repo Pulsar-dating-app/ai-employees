@@ -72,13 +72,13 @@ export function startTwilioApiMock(): Promise<{ url: string; stop: () => Promise
         : wabaId.includes("trigger-sender-verification")
           ? "PENDING_VERIFICATION"
           : wabaId.includes("trigger-sender-offline")
-            ? "OFFLINE_PENDING"
+            ? "OFFLINE"
             : "ONLINE";
       senders.set(sid, { senderId: body.sender_id, accountSid: basicAuthUser(req), status });
       return send(201, {
         sid,
         sender_id: body.sender_id,
-        status: status === "OFFLINE_PENDING" ? "CREATING" : status,
+        status,
         configuration: body.configuration,
         webhook: body.webhook,
       });
@@ -101,7 +101,7 @@ export function startTwilioApiMock(): Promise<{ url: string; stop: () => Promise
         sender.status = "VERIFYING";
         return send(200, { sid: senderMatch[1], sender_id: sender.senderId, status: "VERIFYING" });
       }
-      const next: Record<string, string> = { CREATING: "ONLINE", VERIFYING: "ONLINE", OFFLINE_PENDING: "OFFLINE" };
+      const next: Record<string, string> = { CREATING: "ONLINE", VERIFYING: "ONLINE", OFFLINE: "ONLINE" };
       sender.status = next[sender.status] ?? sender.status;
       return send(200, { sid: senderMatch[1], sender_id: sender.senderId, status: sender.status });
     }
