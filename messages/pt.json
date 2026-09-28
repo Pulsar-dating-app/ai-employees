@@ -1148,7 +1148,16 @@
       "verificationWaitingForAdmin": "Este número está aguardando um código de confirmação. Um proprietário ou administrador precisa digitá-lo aqui.",
       "reconnectDescription": "{name} já usou o número {number}. Reconecte esse número ou conecte outro.",
       "reconnectButton": "Reconectar {number}",
-      "connectAnotherButton": "Conectar outro número"
+      "connectAnotherButton": "Conectar outro número",
+      "pendingCancel": "Cancelar conexão",
+      "reconnectTwoFactorTitle": "Antes de reconectar",
+      "reconnectTwoFactorIntro": "O WhatsApp só deixa este número voltar se a verificação em duas etapas estiver desligada. Faça isso antes, senão a reconexão falha:",
+      "reconnectTwoFactorStepOpen": "Abra o Gerenciador do WhatsApp no Meta Business Suite",
+      "reconnectTwoFactorStepNumber": "Em Números de telefone, clique em {number} e abra Configurações",
+      "reconnectTwoFactorStepDisable": "Desligue a verificação em duas etapas",
+      "reconnectTwoFactorStepWait": "Espere cerca de 5 minutos e volte aqui",
+      "reconnectTwoFactorConfirm": "Desliguei a verificação em duas etapas deste número e esperei alguns minutos.",
+      "reconnectNowButton": "Reconectar agora"
     },
     "channelTabs": {
       "tablistLabel": "Formas de os clientes falarem com este funcionário",

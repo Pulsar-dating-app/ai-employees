@@ -1148,7 +1148,16 @@
       "verificationWaitingForAdmin": "This number is waiting for a confirmation code. An owner or admin needs to enter it here.",
       "reconnectDescription": "{name} already used {number}. Reconnect it, or connect a different number.",
       "reconnectButton": "Reconnect {number}",
-      "connectAnotherButton": "Connect another number"
+      "connectAnotherButton": "Connect another number",
+      "pendingCancel": "Cancel connection",
+      "reconnectTwoFactorTitle": "Before you reconnect",
+      "reconnectTwoFactorIntro": "WhatsApp only lets this number come back if two-step verification is turned off. Do this first, or the reconnection will fail:",
+      "reconnectTwoFactorStepOpen": "Open WhatsApp Manager in Meta Business Suite",
+      "reconnectTwoFactorStepNumber": "Under Phone numbers, click {number} and open Settings",
+      "reconnectTwoFactorStepDisable": "Turn off two-step verification",
+      "reconnectTwoFactorStepWait": "Wait about 5 minutes, then come back here",
+      "reconnectTwoFactorConfirm": "I turned off two-step verification for this number and waited a few minutes.",
+      "reconnectNowButton": "Reconnect now"
     },
     "channelTabs": {
       "tablistLabel": "Ways customers can reach this employee",
