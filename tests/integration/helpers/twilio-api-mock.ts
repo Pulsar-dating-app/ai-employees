@@ -62,8 +62,9 @@ export function startTwilioApiMock(): Promise<{ url: string; stop: () => Promise
       if (wabaId.includes("trigger-sender-failure")) {
         return send(400, { code: 63110, message: "mock: sender registration failed" });
       }
-      if (body?.configuration?.account_type !== "ISVSubAccount") {
-        return send(400, { code: 63100, message: "mock: account_type must be ISVSubAccount" });
+      const accountType = body?.configuration?.account_type;
+      if (accountType !== undefined && !["", "ISV"].includes(accountType)) {
+        return send(400, { code: 63100, message: "account_type must be one of ['' ISV]" });
       }
       const sid = `XE${randomUUID().replace(/-/g, "")}`;
       const status = wabaId.includes("trigger-sender-creating")
