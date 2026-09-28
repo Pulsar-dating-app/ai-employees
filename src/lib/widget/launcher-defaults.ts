@@ -1,21 +1,18 @@
-// Curated default embed-widget launcher video, per agent slug -- the
-// circular bubble's own looping character video. A slug with no entry here
-// falls back to the original shared /widget-launcher.webm (that file
-// predates this per-agent system and is effectively Malu's own launcher
-// already).
-
 export type DefaultLauncherAsset = {
   src: string;
 };
 
-const AGENT_DEFAULT_LAUNCHERS: Partial<Record<string, DefaultLauncherAsset>> = {
-  ana: { src: "/agents/ana-classic-launcher.webm" },
+const AGENT_DEFAULT_LAUNCHERS: Partial<Record<string, readonly [DefaultLauncherAsset, DefaultLauncherAsset]>> = {
+  malu: [{ src: "/agents/sales-1-launcher.webm" }, { src: "/agents/sales-2-launcher.webm" }],
+  ana: [{ src: "/agents/ana-classic-launcher.webm" }, { src: "/agents/secretary-2-launcher.webm" }],
 };
 
 const LEGACY_SHARED_CLASSIC: DefaultLauncherAsset = { src: "/widget-launcher.webm" };
 
-export function resolveDefaultLauncher(slug: string): DefaultLauncherAsset {
-  return AGENT_DEFAULT_LAUNCHERS[slug] ?? LEGACY_SHARED_CLASSIC;
+export function resolveDefaultLauncher(slug: string, photoType?: string | null): DefaultLauncherAsset {
+  const defaults = AGENT_DEFAULT_LAUNCHERS[slug];
+  if (!defaults) return LEGACY_SHARED_CLASSIC;
+  return photoType === "default_2" ? defaults[1] : defaults[0];
 }
 
 // Predefined teaser-bubble greeting, per agent slug -- shown until a
@@ -30,10 +27,10 @@ export function resolveDefaultLauncher(slug: string): DefaultLauncherAsset {
 // card's greeting field, same as always.
 const AGENT_DEFAULT_GREETINGS: Partial<Record<string, string>> = {
   malu: "Oi! 👋 Posso ajudar a encontrar o que você procura?",
-  ana: "Oi! 😊 Precisa marcar ou reagendar um horário? Posso te ajudar!",
+  ana: "Agende seu horário aqui!",
 };
 
-const GENERIC_DEFAULT_GREETING = "Oi! 👋 Posso te ajudar?";
+const GENERIC_DEFAULT_GREETING = "Posso ajudar?";
 
 export function resolveDefaultGreeting(slug: string): string {
   return AGENT_DEFAULT_GREETINGS[slug] ?? GENERIC_DEFAULT_GREETING;

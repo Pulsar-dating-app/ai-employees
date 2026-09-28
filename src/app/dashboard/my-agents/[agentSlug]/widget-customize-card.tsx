@@ -4,15 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { VideoIcon, ImageIcon, PositionBottomRightIcon, PositionBottomLeftIcon } from "@/components/ui/icons";
-import { resolveDefaultLauncher, resolveDefaultGreeting } from "@/lib/widget/launcher-defaults";
+import { VideoIcon, ImageIcon, UserIcon, PositionBottomRightIcon, PositionBottomLeftIcon } from "@/components/ui/icons";
+import { resolveDefaultGreeting } from "@/lib/widget/launcher-defaults";
 
-type LauncherType = "default" | "video" | "image";
+type LauncherType = "default" | "photo" | "image";
 type Position = "bottom-right" | "bottom-left";
 
-const VIDEO_ACCEPT = "video/webm,video/mp4";
 const IMAGE_ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
-const MAX_VIDEO_BYTES = 4 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 // Mirrors widget.js's own MAX_OFFSET_BOTTOM headroom, but the slider only
 // goes up to what a real bottom nav bar ever needs to clear -- a merchant
@@ -24,7 +22,7 @@ const MAX_OFFSET_SLIDER = 120;
 // Customize screen (Stitch "Customize Embedded Agent - Admin Workspace") --
 // replaces the old static "here's your embed code" half of the agent's
 // Connections page with an actual editor: pick the launcher bubble's look
-// (the shared default animation, or a merchant's own video/image), its
+// (the default animation, the agent's photo, or a merchant's own image), its
 // corner and bottom clearance, and set the greeting, seeing all of it live
 // before saving. WebChatChannelCard (sibling, same page) keeps rendering
 // the actual copyable snippet from the *saved* state -- this card is the
@@ -35,11 +33,15 @@ export function WidgetCustomizeCard({
   agentName,
   canEdit,
   initial,
+  defaultLauncherSrc,
+  agentPhotoSrc,
 }: {
   companyId: string;
   agentSlug: string;
   agentName: string;
   canEdit: boolean;
+  defaultLauncherSrc: string;
+  agentPhotoSrc: string | null;
   initial: {
     greeting: string | null;
     launcherType: LauncherType;
@@ -79,7 +81,11 @@ export function WidgetCustomizeCard({
   }, [localPreviewUrl]);
 
   const previewSrc =
-    launcherType === "default" ? resolveDefaultLauncher(agentSlug).src : (localPreviewUrl ?? launcherAssetUrl);
+    launcherType === "default"
+      ? defaultLauncherSrc
+      : launcherType === "photo"
+        ? agentPhotoSrc
+        : (localPreviewUrl ?? launcherAssetUrl);
 
   function chooseLauncher(next: LauncherType) {
     setLauncherType(next);
@@ -95,21 +101,19 @@ export function WidgetCustomizeCard({
       setSelectedFile(null);
       return;
     }
-    const maxBytes = launcherType === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-    const accept = launcherType === "video" ? VIDEO_ACCEPT : IMAGE_ACCEPT;
-    if (!accept.split(",").includes(file.type)) {
-      setError(launcherType === "video" ? t("unsupportedFileVideo") : t("unsupportedFileImage"));
+    if (!IMAGE_ACCEPT.split(",").includes(file.type)) {
+      setError(t("unsupportedFileImage"));
       return;
     }
-    if (file.size > maxBytes) {
-      setError(launcherType === "video" ? t("fileTooLargeVideo") : t("fileTooLargeImage"));
+    if (file.size > MAX_IMAGE_BYTES) {
+      setError(t("fileTooLargeImage"));
       return;
     }
     setSelectedFile(file);
   }
 
   async function save() {
-    if (launcherType !== "default" && !selectedFile && !launcherAssetUrl) {
+    if (launcherType === "image" && !selectedFile && !launcherAssetUrl) {
       setError(t("chooseFileError"));
       return;
     }
@@ -151,13 +155,13 @@ export function WidgetCustomizeCard({
 
   const launcherOptions: { value: LauncherType; icon: typeof VideoIcon; label: string; hint: string }[] = [
     { value: "default", icon: VideoIcon, label: t("launcherDefault"), hint: t("launcherDefaultHint", { name: agentName }) },
-    { value: "video", icon: VideoIcon, label: t("launcherVideo"), hint: t("launcherVideoHint") },
+    { value: "photo", icon: UserIcon, label: t("launcherPhoto"), hint: t("launcherPhotoHint", { name: agentName }) },
     { value: "image", icon: ImageIcon, label: t("launcherImage"), hint: t("launcherImageHint") },
   ];
 
   const positionOptions: { value: Position; icon: typeof PositionBottomRightIcon; label: string }[] = [
-    { value: "bottom-right", icon: PositionBottomRightIcon, label: t("positionBottomRight") },
     { value: "bottom-left", icon: PositionBottomLeftIcon, label: t("positionBottomLeft") },
+    { value: "bottom-right", icon: PositionBottomRightIcon, label: t("positionBottomRight") },
   ];
 
   const previewSide = position === "bottom-left" ? "left" : "right";
@@ -206,7 +210,7 @@ export function WidgetCustomizeCard({
                 })}
               </div>
 
-              {launcherType !== "default" ? (
+              {launcherType === "image" ? (
                 <div className="mt-3 flex items-center gap-3">
                   <Button
                     type="button"
@@ -227,7 +231,7 @@ export function WidgetCustomizeCard({
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept={launcherType === "video" ? VIDEO_ACCEPT : IMAGE_ACCEPT}
+                    accept={IMAGE_ACCEPT}
                     disabled={!canEdit || saving}
                     onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
                     className="hidden"
@@ -356,7 +360,7 @@ export function WidgetCustomizeCard({
                 ) : null}
                 <div className="h-16 w-16 overflow-hidden rounded-full border border-outline-variant bg-surface-container-lowest shadow-level1">
                   {previewSrc ? (
-                    launcherType === "image" ? (
+                    launcherType !== "default" ? (
                       // Arbitrary merchant-uploaded/blob-preview source, not a static
                       // build asset next/image can optimize.
                       // eslint-disable-next-line @next/next/no-img-element

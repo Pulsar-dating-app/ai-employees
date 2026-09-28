@@ -12,6 +12,22 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 ---
 
+## 2026-09-28 — Widget launcher: "custom video" replaced by "default image"
+
+**Decision:** The Customize card's launcher options are now Default animation / Default image / Custom image. The new `widget_launcher_type = 'photo'` shows the agent's own profile photo (whatever `resolveAgentPhoto()` returns for the row's `photo_type`), stores no asset, and goes out in the snippet as a plain `data-launcher-type="image"` with the photo's absolute URL, so `widget.js` needed no change. The `'video'` type is gone: migration `20260928120000_replace_video_launcher_with_photo.sql` moves existing `'video'` rows to `'default'` and tightens the check constraint, and the API route rejects it. An agent with no photo at all falls back to the default video.
+**Why:** The owner wanted merchants to be able to use the character they already picked in the profile editor as a still bubble, and saw no need for custom video uploads now that every character has its own curated animation. Uploaded videos left in the `widget-assets` bucket by old `'video'` rows are not cleaned up (dev test data only).
+
+## 2026-09-28 — Default widget launcher follows the agent's chosen profile photo
+
+**Decision:** The embed widget's "Default animation" is now resolved per agent slug *and* `company_agents.photo_type` (`resolveDefaultLauncher(slug, photoType)` in `src/lib/widget/launcher-defaults.ts`): Malu uses `public/agents/sales-1-launcher.webm` / `sales-2-launcher.webm`, Ana uses `ana-classic-launcher.webm` / `secretary-2-launcher.webm`, matching `default_1` / `default_2` in `src/lib/agents/media.ts`. A custom uploaded photo has no matching video and uses the first one; a slug with no entry still falls back to `/widget-launcher.webm`. The server page computes the src once and passes it to both the snippet and the Customize card preview.
+**Why:** Merchants picking the second avatar still saw the first character bouncing in their site's launcher, so the widget and the profile looked like two different people. Saving the photo already calls `router.refresh()`, so snippet and preview update without extra wiring. An already-pasted snippet keeps its baked-in `data-launcher-src` until the merchant copies the new one.
+**Launcher framing standard:** every default launcher is a 440×480 VP9 WebM, framed waist-up with the top of the head just below the top edge (Ana's classic video is the reference). The `*-launcher.webm` files are cropped and re-encoded from the 1280×720 `sales-1/sales-2/secretary-2.mp4` masters with `ffmpeg -vf "crop=W:H:X:Y,scale=440:480" -c:v libvpx-vp9 -crf 38 -an`, which also cuts them from 0.5–1.6 MB to 100–220 KB, since they load on every visit to a merchant's site. A new character video must be cropped the same way, not dropped in as-is.
+
+## 2026-09-28 — Shorter default widget greetings
+
+**Decision:** The predefined teaser greetings are now short calls to action: Ana "Agende seu horário aqui!", and "Posso ajudar?" for the generic fallback (`launcher-defaults.ts` and `widget.js`'s own fallback). Malu keeps "Oi! 👋 Posso ajudar a encontrar o que você procura?" — the owner confirmed that one is the intended sales default.
+**Why:** The owner found the old lines too long for the small bubble next to the launcher. A merchant's saved `widget_greeting` still wins, so a row with leftover test text keeps showing it until the field is cleared and saved.
+
 ## 2026-09-28 — Landing calculator picks the plan from conversation volume
 
 **Decision:** The "Uma funcionária que não tira folga" calculator now asks what the visitor spends today, their monthly conversations and whether they use WhatsApp, then recommends the cheapest plan whose reply quota fits instead of comparing against one fixed plan. Conversations become replies at an estimated 5 replies per conversation, stated on the page. The coverage table became an explicit two-column "Atendente CLT vs Com a Staffra" comparison.

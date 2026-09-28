@@ -4,14 +4,20 @@ export type WidgetPosition = "bottom-right" | "bottom-left";
 
 export type WidgetCustomization = {
   greeting: string | null;
-  launcherType: "default" | "video" | "image";
+  launcherType: "default" | "photo" | "image";
   launcherAssetUrl: string | null;
   // Which bottom corner, and how far to lift it off the bottom edge -- for
   // a merchant whose own site has something (a mobile bottom nav bar, a
   // cookie banner) sitting where the launcher would otherwise land.
   position: WidgetPosition;
   offsetBottom: number;
+  photoType?: string | null;
+  photoSrc?: string | null;
 };
+
+function absoluteUrl(baseUrl: string, src: string): string {
+  return /^https?:\/\//.test(src) ? src : baseUrl + src;
+}
 
 // HTML-attribute escaping -- greeting and (in principle) a filename-derived
 // asset URL are user-supplied text landing inside a double-quoted attribute
@@ -56,9 +62,12 @@ export function buildEmbedSnippet(
   const greetingText = customization.greeting || resolveDefaultGreeting(agentSlug);
   attrs.push(`data-greeting="${escapeAttr(greetingText)}"`);
 
-  if (customization.launcherType !== "default" && customization.launcherAssetUrl) {
-    attrs.push(`data-launcher-type="${customization.launcherType}"`);
+  if (customization.launcherType === "image" && customization.launcherAssetUrl) {
+    attrs.push(`data-launcher-type="image"`);
     attrs.push(`data-launcher-src="${escapeAttr(customization.launcherAssetUrl)}"`);
+  } else if (customization.launcherType === "photo" && customization.photoSrc) {
+    attrs.push(`data-launcher-type="image"`);
+    attrs.push(`data-launcher-src="${escapeAttr(absoluteUrl(baseUrl, customization.photoSrc))}"`);
   } else {
     // Default -- bakes in this agent's own default video (falls back to the
     // original shared one for a slug without a dedicated asset), so every
@@ -70,7 +79,7 @@ export function buildEmbedSnippet(
     // left relative): this attribute is read by widget.js running on the
     // *merchant's* page, where a relative path would resolve against their
     // domain, not Staffra's.
-    const asset = resolveDefaultLauncher(agentSlug);
+    const asset = resolveDefaultLauncher(agentSlug, customization.photoType);
     attrs.push(`data-launcher-src="${escapeAttr(baseUrl + asset.src)}"`);
   }
 

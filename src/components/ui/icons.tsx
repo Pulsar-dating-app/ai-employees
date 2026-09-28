@@ -333,6 +333,15 @@ export function ImageIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function UserIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...NAV_ICON_PROPS} {...props}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c0-3.87 3.13-6.5 7-6.5s7 2.63 7 6.5" />
+    </svg>
+  );
+}
+
 // The Alert component's warning variant (Stitch "Alert Component System").
 export function WarningIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
