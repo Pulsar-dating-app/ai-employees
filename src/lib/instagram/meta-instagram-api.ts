@@ -183,9 +183,7 @@ async function fetchAccountProfile(accessToken: string) {
 // The full connect sequence the route calls: code -> long-lived token,
 // subscribed to webhooks, username resolved. Mirrors WhatsApp's
 // exchangeCodeForToken + finishConnection pair, collapsed into one function
-// since Instagram's steps have no independent reuse the way WhatsApp's
-// manual-connect-test route needed (finishConnection alone, skipping the
-// code exchange) -- nothing here has a second caller yet.
+// since nothing here has a second caller.
 export async function connectInstagramAccount(code: string) {
   const { accessToken: shortLivedToken } = await exchangeCodeForShortLivedToken(code);
   const { accessToken, tokenExpiresAt } = await exchangeForLongLivedToken(shortLivedToken);

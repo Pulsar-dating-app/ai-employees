@@ -10,6 +10,11 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-01 — Removed the dev-only scheduling harness and WhatsApp manual-connect route
+
+**Decision:** Deleted `src/app/dashboard/dev-scheduling-test/` and `api/companies/[companyId]/agents/[agentSlug]/whatsapp/manual-connect-test/`.
+**Why:** Both were throwaway scaffolding, already 404 in production. The scheduling dashboard (K-epic) replaced the harness, and new WhatsApp connections go through Twilio and Embedded Signup, so pasting a Meta test number's token directly is no longer how the channel is tested.
+
 ## 2026-09-28 — Appointment emails go out in the conversation's language
 
 **Decision:** `book_appointment` takes a required `language` (`pt`/`en`/`it`; any other language → `en`). The model sets it from the conversation. It is stored in the new `appointments.language` column. The confirmation, reminder and declined emails (`src/lib/email/templates.ts`) render in that language, including the date format. Null (dashboard bookings, older rows) means Portuguese, as before.
