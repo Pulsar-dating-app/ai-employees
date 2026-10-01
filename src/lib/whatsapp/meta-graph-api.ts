@@ -1,10 +1,4 @@
 // Shared Meta Graph API calls for Trello D1's WhatsApp connect flow.
-// Extracted once a second caller needed the same register/subscribe/lookup
-// sequence (the real connect route, and the temporary manual-connect-test
-// route -- see src/app/api/companies/[companyId]/whatsapp/manual-connect-test/).
-// This file itself is NOT test-only -- it's used by the real connect route
-// and stays after F4 ships; only manual-connect-test (one of its two
-// callers, tagged TODO(D1-TEST-ONLY)) goes away.
 //
 // META_GRAPH_API_BASE_URL lets tests point this at a local mock instead of
 // the real Meta Graph API (the spawned test Next.js server can't share an
@@ -94,9 +88,7 @@ export async function exchangeCodeForToken(code: string) {
 // Registers the phone number for Cloud API messaging, subscribes our app to
 // the WABA's webhooks (so D2's inbound webhook has something to receive),
 // and fetches the merchant-facing display number. Takes an already-valid
-// access token -- callers get one either via exchangeCodeForToken (real
-// Embedded Signup) or by pasting one from Meta's own API Setup test number
-// (manual-connect-test, no Embedded Signup/Advanced Access needed). `pin`
+// access token from exchangeCodeForToken. `pin`
 // must be the previously-stored PIN for this connection if one exists (see
 // generateRegistrationPin's doc comment) -- the caller decides that, not
 // this function.
