@@ -18,12 +18,19 @@ import { CascadeText } from "./cascade-text";
 import { ProductTour } from "./product-tour";
 import { ValueSection } from "./value-calculator";
 import { HeroChatDemo, type HeroChatCopy } from "./hero-chat-demo";
+import { TalkToMaluButton } from "./talk-to-malu-button";
+import { getSelfServePlansForVariant } from "@/lib/billing/plans";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 import logo from "../../../public/logo.png";
 
 const HIRE = "/?auth=signup";
 const LOGIN = "/?auth=login";
+const MALU_CHAT = "/talk/staffra-2/malu";
+
+const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const ENTRY_PLAN_CENTS = getSelfServePlansForVariant("monthly", true)[0]?.priceBrlCents ?? 0;
+const ENTRY_PRICE_PER_DAY = BRL_WHOLE.format(Math.ceil(ENTRY_PLAN_CENTS / 30 / 100));
 
 type LogoItem = { name: string };
 type Agent = {
@@ -134,7 +141,7 @@ export async function LandingPageV2() {
             className="relative z-10 mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-10 px-4 pb-14 pt-8 md:px-10 md:pt-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-14 lg:pb-20"
           >
             <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-              <h1 className="text-balance text-[34px] font-bold leading-[1.08] tracking-[-0.025em] text-[#0f172a] sm:text-[46px] lg:text-[58px] lg:leading-[1.03] xl:text-[64px]">
+              <h1 className="text-balance text-[34px] font-bold leading-[1.08] tracking-[-0.025em] text-[#0f172a] sm:text-[46px] lg:text-[52px] lg:leading-[1.04] xl:text-[60px]">
                 {t("hero.headlinePre")}{" "}
                 <ShutterReveal>
                   <span className="bg-gradient-to-r from-[#3525cd] via-[#4f46e5] to-[#006591] bg-clip-text text-transparent">
@@ -156,25 +163,18 @@ export async function LandingPageV2() {
                   <CascadeText text={t("hero.ctaPrimary")} />
                   <M name="arrow_forward" size={18} />
                 </Link>
-                <a
-                  href="#demo"
-                  aria-label={t("hero.ctaSecondary")}
-                  className="group hidden items-center justify-center gap-2 rounded-xl px-5 py-4 text-[15px] font-semibold text-[#0f172a] transition-colors hover:text-[#3525cd] sm:inline-flex"
+                <TalkToMaluButton
+                  fallbackHref={MALU_CHAT}
+                  label={t("hero.ctaSecondary")}
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[15px] font-semibold text-[#0f172a] transition-colors hover:text-[#3525cd] sm:py-4"
                 >
-                  <M name="play_circle" size={20} className="text-[#3525cd]" />
+                  <M name="chat_bubble" size={19} className="text-[#3525cd]" />
                   <CascadeText text={t("hero.ctaSecondary")} />
-                </a>
-                <SalesContactDialog
-                  triggerLabel={t("hero.ctaSales")}
-                  triggerClassName="group inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[15px] font-semibold text-[#0f172a] transition-colors hover:text-[#3525cd] sm:hidden"
-                >
-                  <CascadeText text={t("hero.ctaSales")} />
-                  <M name="arrow_forward" size={18} />
-                </SalesContactDialog>
+                </TalkToMaluButton>
               </div>
 
               <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13px] font-medium text-[#464555] lg:justify-start">
-                {[t("hero.trust1"), t("hero.trust2"), t("hero.trust3")].map((trust) => (
+                {[t("hero.trust1"), t("hero.trust2", { price: ENTRY_PRICE_PER_DAY }), t("hero.trust3")].map((trust) => (
                   <li key={trust} className="flex items-center gap-1.5">
                     <M name="check_circle" size={16} className="text-[#10b981]" />
                     {trust}
@@ -432,7 +432,7 @@ export async function LandingPageV2() {
             <div className="lv2-cta-blob-a pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
             <div className="lv2-cta-blob-b pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-[#39b8fd]/20 blur-2xl" />
             <div className="relative z-10 mx-auto flex max-w-2xl flex-col items-center">
-              <h2 className="text-[26px] font-bold leading-[32px] tracking-[-0.01em] text-white sm:text-[32px] sm:leading-[40px]">
+              <h2 className="text-balance text-[26px] font-bold leading-[32px] tracking-[-0.01em] text-white sm:text-[32px] sm:leading-[40px]">
                 {t("finalCta.heading")}
               </h2>
               <p className="mt-2 max-w-xl text-[16px] leading-[26px] tracking-[0.01em] text-[#dad7ff]">

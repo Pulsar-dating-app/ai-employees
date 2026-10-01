@@ -269,14 +269,13 @@
       "login": "Accedi"
     },
     "hero": {
-      "headlinePre": "Vendi e prenota appuntamenti su WhatsApp",
-      "headlineHighlight": "a qualsiasi ora",
-      "sub": "Assumi Malu per vendere e Ana per gestire la tua agenda. Rispondono con i tuoi prezzi, le tue scorte e i tuoi orari reali, e non si inventano mai nulla. Pronte in pochi minuti, senza codice.",
+      "headlinePre": "Il tuo prossimo cliente potrebbe scriverti alle 23.",
+      "headlineHighlight": "Chi risponderà?",
+      "sub": "Malu vende e Ana prenota appuntamenti su WhatsApp, a qualsiasi ora, con i tuoi prezzi, le tue scorte e i tuoi orari reali, senza inventare nulla. Pronte in pochi minuti, senza codice.",
       "ctaPrimary": "Prova gratis per 7 giorni",
-      "ctaSecondary": "Guardale all'opera",
-      "ctaSales": "Parla con un esperto",
+      "ctaSecondary": "Parla ora con Malu",
       "trust1": "WhatsApp ufficiale di Meta",
-      "trust2": "Instagram, Telegram e il tuo sito",
+      "trust2": "Da {price} al giorno",
       "trust3": "Disdici quando vuoi",
       "chat": {
         "tablistLabel": "Scegli cosa vedere",
@@ -632,7 +631,7 @@
       ]
     },
     "finalCta": {
-      "heading": "Il tuo prossimo cliente potrebbe scriverti alle 23. Chi risponderà?",
+      "heading": "Alle 23 rispondono Malu e Ana per te.",
       "sub": "Assumi Malu e Ana oggi e lascia che WhatsApp risponda mentre tu pensi a tutto il resto.",
       "ctaPrimary": "Prova gratis per 7 giorni",
       "fine": "Disdici quando vuoi · Nessun costo di attivazione"
@@ -796,6 +795,9 @@
           "alt": "Dashboard delle prestazioni con un grafico delle conversazioni"
         }
       }
+    },
+    "widget": {
+      "greeting": "Ciao! 👋 Sono Malu. Vuoi vedere come risponderei ai tuoi clienti?"
     }
   },
   "Dashboard": {

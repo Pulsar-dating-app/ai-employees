@@ -269,14 +269,13 @@
       "login": "Log in"
     },
     "hero": {
-      "headlinePre": "Sell and book appointments on WhatsApp",
-      "headlineHighlight": "around the clock",
-      "sub": "Hire Malu to sell and Ana to run your calendar. They answer with your real prices, stock and opening hours, and never make things up. Ready in minutes, no code.",
+      "headlinePre": "Your next customer might message at 11pm.",
+      "headlineHighlight": "Who's going to answer?",
+      "sub": "Malu sells and Ana books appointments on WhatsApp, any time of day, using your real prices, stock and opening hours, and never makes things up. Ready in minutes, no code.",
       "ctaPrimary": "Try free for 7 days",
-      "ctaSecondary": "See it in action",
-      "ctaSales": "Talk to a specialist",
+      "ctaSecondary": "Chat with Malu now",
       "trust1": "Official WhatsApp by Meta",
-      "trust2": "Instagram, Telegram and your site",
+      "trust2": "From {price} a day",
       "trust3": "Cancel anytime",
       "chat": {
         "tablistLabel": "Choose what to see",
@@ -632,7 +631,7 @@
       ]
     },
     "finalCta": {
-      "heading": "Your next customer might message at 11pm. Who's going to answer?",
+      "heading": "At 11pm, Malu and Ana answer for you.",
       "sub": "Hire Malu and Ana today and let WhatsApp answer while you take care of everything else.",
       "ctaPrimary": "Try free for 7 days",
       "fine": "Cancel anytime · No setup fee"
@@ -796,6 +795,9 @@
           "alt": "Performance dashboard with a conversations chart"
         }
       }
+    },
+    "widget": {
+      "greeting": "Hi! 👋 I'm Malu. Want to see how I'd help your customers?"
     }
   },
   "Dashboard": {

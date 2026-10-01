@@ -87,7 +87,7 @@ export function PricingSection() {
   const plans = t.raw("plans") as LandingPlan[];
   const included = t.raw("included") as string[];
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
-  const [whatsappIncluded, setWhatsappIncluded] = useState(false);
+  const [whatsappIncluded, setWhatsappIncluded] = useState(true);
 
   const selfServePlans = getSelfServePlansForVariant(billingPeriod, whatsappIncluded);
   const [monthlyRef] = getSelfServePlansForVariant("monthly", whatsappIncluded);

@@ -269,14 +269,13 @@
       "login": "Entrar"
     },
     "hero": {
-      "headlinePre": "Venda e agende pelo WhatsApp",
-      "headlineHighlight": "24 horas por dia",
-      "sub": "Contrate a Malu para vender e a Ana para cuidar da sua agenda. Elas respondem com os seus preços, estoque e horários de verdade, sem inventar nada. Tudo pronto em minutos, sem programar.",
+      "headlinePre": "Seu próximo cliente pode chegar às 23h.",
+      "headlineHighlight": "Quem vai responder?",
+      "sub": "A Malu vende e a Ana agenda pelo WhatsApp, a qualquer hora, com os seus preços, estoque e horários de verdade, sem inventar nada. Tudo pronto em minutos, sem programar.",
       "ctaPrimary": "Testar 7 dias grátis",
-      "ctaSecondary": "Ver funcionando",
-      "ctaSales": "Falar com um especialista",
+      "ctaSecondary": "Converse com a Malu agora",
       "trust1": "WhatsApp oficial da Meta",
-      "trust2": "Instagram, Telegram e seu site",
+      "trust2": "A partir de {price} por dia",
       "trust3": "Cancele quando quiser",
       "chat": {
         "tablistLabel": "Escolha o que ver",
@@ -632,7 +631,7 @@
       ]
     },
     "finalCta": {
-      "heading": "Seu próximo cliente pode chegar às 23h. Quem vai responder?",
+      "heading": "Às 23h, a Malu e a Ana respondem por você.",
       "sub": "Contrate a Malu e a Ana hoje e deixe o WhatsApp atendendo enquanto você cuida do resto.",
       "ctaPrimary": "Testar 7 dias grátis",
       "fine": "Cancele quando quiser · Sem taxa de instalação"
@@ -796,6 +795,9 @@
           "alt": "Painel de desempenho com gráfico de conversas"
         }
       }
+    },
+    "widget": {
+      "greeting": "Oi! 👋 Sou a Malu. Quer ver como eu atenderia os seus clientes?"
     }
   },
   "Dashboard": {
