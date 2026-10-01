@@ -10,6 +10,11 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-01 — Landing leads with the 11pm hook, a live Malu chat and WhatsApp prices
+
+**Decision:** The hero headline is "Seu próximo cliente pode chegar às 23h. Quem vai responder?". The hero's secondary CTA opens the real Malu widget already on the page. A trust tick anchors price per day from the cheapest WhatsApp plan, and the pricing table opens with WhatsApp on.
+**Why:** The owner's goal is conversion. There are no testimonials yet, so talking to the real product is the strongest proof available. The page sells WhatsApp, so opening the table at the no-WhatsApp R$ 97 and then charging R$ 150 at checkout would read as bait. The per-day anchor uses the WhatsApp price for the same reason.
+
 ## 2026-10-01 — Removed the dev-only scheduling harness and WhatsApp manual-connect route
 
 **Decision:** Deleted `src/app/dashboard/dev-scheduling-test/` and `api/companies/[companyId]/agents/[agentSlug]/whatsapp/manual-connect-test/`.

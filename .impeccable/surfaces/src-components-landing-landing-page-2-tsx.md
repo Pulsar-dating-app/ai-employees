@@ -55,3 +55,6 @@ FINISH: a build that is unreviewed and undocumented is unfinished. This one ends
 FORM: no seed key. No concept roll was run for this surface, and the owner has not explicitly waived one.
 
 WhatsApp truth (2026-09-24): WhatsApp only works on `_wpp` plans. The pricing toggle is "Com WhatsApp", the included list and FAQ say WhatsApp comes on WhatsApp plans, and the calculator quotes the recommended plan with WhatsApp.
+
+Amendment (2026-10-01): the pricing "Com WhatsApp" toggle defaults to on, so the first prices a visitor sees match the hero's WhatsApp promise and the calculator's recommendation. The final CTA heading answers the hero's question instead of repeating it: "Às 23h, a Malu e a Ana respondem por você."
+
