@@ -83,13 +83,13 @@ describe("billing plan catalog (Trello P1)", () => {
     }
   });
 
-  // 2026-09-27 -- the owner's real prices. Literal on purpose: these must
+  // 2026-10-02 -- the owner's real prices (own Meta account / through Staffra). Literal on purpose: these must
   // match the Stripe Price amounts, so a change here should be deliberate.
   it("carries the agreed monthly prices and reply quotas", () => {
     const expected = {
-      starter: { monthly: 9_700, wpp: 15_000, replies: 1_000 },
-      intermediate: { monthly: 29_700, wpp: 45_000, replies: 3_000 },
-      pro: { monthly: 49_700, wpp: 75_000, replies: 5_000 },
+      starter: { monthly: 19_700, wpp: 49_700, replies: 3_000 },
+      intermediate: { monthly: 31_700, wpp: 99_700, replies: 6_000 },
+      pro: { monthly: 49_700, wpp: 159_700, replies: 10_000 },
     };
     for (const tier of SELF_SERVE_TIERS) {
       expect(getPlan(tier).priceBrlCents, tier).toBe(expected[tier].monthly);
@@ -101,7 +101,6 @@ describe("billing plan catalog (Trello P1)", () => {
   it("prices each annual variant as 12 months of its monthly price minus 15%, rounded up to a whole real", () => {
     expect(annualPriceCents(9_700)).toBe(99_000); // R$989,40 -> R$990
     expect(annualPriceCents(15_000)).toBe(153_000); // already whole: not bumped to R$1.531
-    // The Stripe Price amounts behind the lookup keys (2026-09-28).
     const annualKeys = [
       "starter_annual",
       "starter_annual_wpp",
@@ -111,7 +110,7 @@ describe("billing plan catalog (Trello P1)", () => {
       "pro_annual_wpp",
     ] as const;
     expect(annualKeys.map((k) => getPlan(k).priceBrlCents)).toEqual([
-      99_000, 153_000, 303_000, 459_000, 507_000, 765_000,
+      201_000, 507_000, 323_400, 1_017_000, 507_000, 1_629_000,
     ]);
     for (const tier of SELF_SERVE_TIERS) {
       const monthly = getPlan(tier);

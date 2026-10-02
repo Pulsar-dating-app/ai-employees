@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { WarningIcon } from "@/components/ui/icons";
+import { WarningIcon, WhatsAppIcon } from "@/components/ui/icons";
+import type { MetaSpendAlertLevel } from "@/lib/whatsapp/meta-pricing";
 
 // Trello P4/P5 follow-up -- a past_due/unpaid subscription silences every
 // bot on every channel (the reply gate), but until now the only place that
@@ -42,6 +43,34 @@ export function BillingPastDueAlert({
       }
     >
       <WarningIcon className="h-3.5 w-3.5 shrink-0" />
+      {compact ? null : label}
+    </Link>
+  );
+}
+
+// The merchant's own Meta account crossed 50% / 80% / 100% of the plan's
+// Meta ceiling this month (see getMetaSpendSummary). Same placement as the
+// billing alert, linking to the spend card on the billing page.
+export function MetaSpendAlert({ level, compact = false }: { level: MetaSpendAlertLevel; compact?: boolean }) {
+  const t = useTranslations("Dashboard");
+  const label = t("metaSpendAlert", { pct: level });
+  const tone =
+    level === 100
+      ? "border-error/30 bg-error-container/60 text-error"
+      : level === 80
+        ? "border-[#e0902f]/40 bg-[#fdf1e0] text-[#8a5300]"
+        : "border-primary/30 bg-primary-fixed text-primary";
+  return (
+    <Link
+      href="/dashboard/settings/billing#meta-spend"
+      aria-label={label}
+      className={
+        compact
+          ? `flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${tone}`
+          : `inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors hover:brightness-95 ${tone}`
+      }
+    >
+      <WhatsAppIcon className="h-3.5 w-3.5 shrink-0" />
       {compact ? null : label}
     </Link>
   );

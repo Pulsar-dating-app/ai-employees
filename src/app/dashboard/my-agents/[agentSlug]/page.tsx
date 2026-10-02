@@ -9,7 +9,7 @@ import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 import { resolveDefaultLauncher } from "@/lib/widget/launcher-defaults";
 import { findPlan } from "@/lib/billing/plans";
-import { decideWhatsappPlanGate } from "@/lib/whatsapp/enforcement";
+import { decideWhatsappPlanGate, whatsappProviderForPlan } from "@/lib/whatsapp/enforcement";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
 import { resolveAgentDescription } from "@/lib/agents/copy";
@@ -69,10 +69,12 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
     supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle(),
     supabase.from("company_billing").select("plan_key, subscription_status").eq("company_id", company.id).maybeSingle(),
   ]);
-  const whatsappEntitled = decideWhatsappPlanGate({
-    subscription_status: billing?.subscription_status ?? null,
-    whatsappIncluded: findPlan(billing?.plan_key)?.whatsappIncluded === true,
-  }).allow;
+  const whatsappIncluded = findPlan(billing?.plan_key)?.whatsappIncluded === true;
+  const whatsappProvider = whatsappProviderForPlan(whatsappIncluded);
+  const whatsappEntitled = decideWhatsappPlanGate(
+    { subscription_status: billing?.subscription_status ?? null, whatsappIncluded },
+    whatsappProvider,
+  ).allow;
 
   if (!companyAgent) {
     return (
@@ -144,6 +146,7 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
           metaAppId={process.env.META_APP_ID ?? ""}
           metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
           metaSolutionId={process.env.META_WHATSAPP_SOLUTION_ID ?? ""}
+          whatsappProvider={whatsappProvider}
           chatUrl={chatUrl}
           embedSnippet={embedSnippet}
           telegramLink={telegramLink}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decideWhatsappSendGate, decideWhatsappPlanGate } from "@/lib/whatsapp/enforcement";
+import { decideWhatsappSendGate, decideWhatsappPlanGate, whatsappProviderForPlan } from "@/lib/whatsapp/enforcement";
 
 // Trello D5. Pure gate a WhatsApp connection must pass before D2's webhook
 // attempts D4's sendWhatsappMessage. Reads the *last known* state on the
@@ -35,40 +35,59 @@ describe("decideWhatsappSendGate (Trello D5)", () => {
   });
 });
 
-// 2026-09-22. The WhatsApp entitlement gate: does this company's plan
-// actually include the WhatsApp add-on, checked fresh (not the last-known
-// connection-row state decideWhatsappSendGate above reads) by both the
-// connect route and the inbound webhook.
-describe("decideWhatsappPlanGate (2026-09-22)", () => {
-  it("allows an active subscription whose plan includes WhatsApp", () => {
-    expect(decideWhatsappPlanGate({ subscription_status: "active", whatsappIncluded: true })).toEqual({
+// 2026-09-22, reworked 2026-10-02. The WhatsApp entitlement gate: every live
+// subscription includes WhatsApp, but a Twilio connection (Staffra pays Meta)
+// needs a whatsappIncluded (`_wpp`) plan, while a Meta-direct one (the
+// merchant's own Meta account) works on any plan.
+describe("decideWhatsappPlanGate", () => {
+  it("allows a Meta-direct connection on a plain plan", () => {
+    for (const subscription_status of ["active", "trialing"]) {
+      expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: false }, "meta")).toEqual({
+        allow: true,
+      });
+    }
+  });
+
+  it("allows a Twilio connection on a whatsappIncluded plan", () => {
+    for (const subscription_status of ["active", "trialing"]) {
+      expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: true }, "twilio")).toEqual({
+        allow: true,
+      });
+    }
+  });
+
+  it("allows a Meta-direct connection on a whatsappIncluded plan", () => {
+    expect(decideWhatsappPlanGate({ subscription_status: "active", whatsappIncluded: true }, "meta")).toEqual({
       allow: true,
     });
   });
 
-  it("allows a trialing subscription whose plan includes WhatsApp", () => {
-    expect(decideWhatsappPlanGate({ subscription_status: "trialing", whatsappIncluded: true })).toEqual({
-      allow: true,
-    });
-  });
-
-  it("blocks an active subscription on a plan without the add-on", () => {
-    expect(decideWhatsappPlanGate({ subscription_status: "active", whatsappIncluded: false })).toEqual({
+  it("blocks a Twilio connection on a plain plan", () => {
+    expect(decideWhatsappPlanGate({ subscription_status: "active", whatsappIncluded: false }, "twilio")).toEqual({
       allow: false,
       reason: "no_addon",
     });
   });
 
-  it("blocks a whatsappIncluded plan whose subscription has lapsed", () => {
+  it("blocks any connection once the subscription has lapsed", () => {
     for (const subscription_status of ["past_due", "canceled", "unpaid", "incomplete", null]) {
-      expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: true })).toEqual({
-        allow: false,
-        reason: "no_addon",
-      });
+      for (const provider of ["meta", "twilio"] as const) {
+        expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: true }, provider)).toEqual({
+          allow: false,
+          reason: "no_addon",
+        });
+      }
     }
   });
 
   it("blocks when there is no billing row at all", () => {
-    expect(decideWhatsappPlanGate(null)).toEqual({ allow: false, reason: "no_addon" });
+    expect(decideWhatsappPlanGate(null, "meta")).toEqual({ allow: false, reason: "no_addon" });
+  });
+});
+
+describe("whatsappProviderForPlan", () => {
+  it("connects whatsappIncluded plans through Twilio and plain plans through Meta", () => {
+    expect(whatsappProviderForPlan(true)).toBe("twilio");
+    expect(whatsappProviderForPlan(false)).toBe("meta");
   });
 });

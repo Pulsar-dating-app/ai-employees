@@ -437,96 +437,48 @@ is **Coexistence** — mobile app and Cloud API on the same number, in sync.
   development. Code-complete and integration-tested only until that
   happens.
 
-### WhatsApp connect: billing note — 2026-09-05, rewritten 2026-09-25
+### WhatsApp: two ways to connect, chosen by the plan — 2026-10-02
 
-Originally a warning `Alert` plus a required checkbox telling the merchant
-to add a payment method at Meta and that Meta bills them directly. Since
-the Twilio Partner Solution (2026-09-25), Twilio's credit line pays Meta and
-the `_wpp` plan already prices Meta's fees in, so that copy was false. The
-not-connected state now shows an `info` `Alert` (`billingIncludedTitle` /
-`billingIncludedDescription`): WhatsApp is covered by the plan, no payment
-method at Meta, nothing billed separately. No checkbox gate, no link to
-Meta's pricing page. The D5 payment-issue badge stays for legacy
-`provider = 'meta'` rows only.
+Every plan includes WhatsApp. The plan's `whatsappIncluded` (`plans.ts`) only decides who pays Meta, and that decides how the number connects (`whatsappProviderForPlan`, `src/lib/whatsapp/enforcement.ts`):
 
-### WhatsApp entitlement gate (WhatsApp add-on) — 2026-09-22
+| Plan key | Merchant-facing name | Connects through | Who pays Meta |
+|---|---|---|---|
+| `starter`, `intermediate`, `pro` (+ `_annual`) | "Com sua conta da Meta" | Meta Cloud API direct, `provider = 'meta'` | The merchant, on the card they add on Meta |
+| `*_wpp` (+ `_annual_wpp`) | "Tudo pela Staffra" | Twilio Partner Solution, `provider = 'twilio'` | Staffra, via Twilio's credit line (priced into the plan) |
 
-Blocks WhatsApp connect/reply for a company whose plan doesn't include the
-WhatsApp add-on (a `_wpp` plan variant, `plans.ts`'s `whatsappIncluded` —
-2026-09-16), on top of D5's connection-health gate above. Three layers, all
-sharing one pure decision function:
+- **Embedded Signup** (`channels-section.tsx`) passes Twilio's `solutionID` only on a `_wpp` plan. Without it, the WABA is shared with our app alone and Meta bills the merchant directly. Onboarding without a `solutionID` alongside the Partner Solution has **not been live-tested yet** (2026-10-02). The app also needs advanced access to `whatsapp_business_messaging` for third-party businesses.
+- **Connect route, Meta-direct branch** (`connectMetaDirect` in `.../whatsapp/connect/route.ts`): `finishConnection` registers the number with a PIN (`/register`) and subscribes to the WABA's webhooks, the same flow as before 2026-09-25. The PIN is stored in `two_step_pin` and reused for that `phone_number_id` on every reconnect, because Meta rejects a different PIN ("PIN Mismatch"). No Twilio subaccount is created. "Reconnect without Embedded Signup" stays Twilio-only (409 `nothing_to_reconnect` on a plain plan).
+- **Everything after connect already existed for `provider = 'meta'` rows** and is reused: the Meta webhook (`/api/webhooks/whatsapp`), Cloud API sends, D5's payment-issue flag (Meta error 131042) and its eligibility cron. That flag is how a merchant learns their Meta card is missing or failing.
+- **Billing note on the connect screen:** a `_wpp` plan shows `billingIncluded*` (nothing to pay Meta). A plain plan shows `billingOwn*`: Meta will ask for a card during connection and charges it directly for replies beyond the month's 1,000 free ones.
+- **Card on Meta** (`needs_payment_method`, migration `20261002100000`): right after a Meta-direct connect, `hasWabaPaymentMethod` reads the WABA's `primary_funding_id`. No card sets the flag. The channel screen then shows "Falta cadastrar um cartão na Meta" with steps, a link to Meta's payment settings and an "I've added it" button. Every status `GET` asks Meta again until a card shows up. A failed lookup never sets the flag. The flag is UI-only and does not gate sends; D5's `has_payment_issue` (Meta refusing a send) remains the hard signal.
+- **Plan change off `_wpp`** (`releaseTwilioNumbersOffPlan`, `src/lib/whatsapp/plan-change.ts`): `syncBillingFromSubscription` calls it on every sync whose effective plan isn't `whatsappIncluded`. That includes the billing page's reconcile, so a missed webhook still gets caught. Each live Twilio number is deleted on Twilio and marked `disconnected` with `disconnect_reason = 'plan_changed'`. A number Twilio refuses to delete stays as is and is retried on the next sync; the plan gate keeps it silent meanwhile. The channel screen tells the merchant why and shows the turn-off-2FA steps, because Twilio left 2FA on and Meta's `/register` would reject our PIN. It then offers the Meta-direct connect. A Twilio reconnect is refused (409). A new connect or a manual disconnect clears the reason.
+- **Meta spend estimate** (`getMetaSpendSummary`, `src/lib/whatsapp/meta-spend.ts`; pure math in `computeMetaSpend`, `src/lib/whatsapp/meta-pricing.ts`). It applies to plain plans with a connected Meta-direct number. It counts this calendar month's (UTC) `agent` + `merchant` messages per number, because the free tier is per number. Each reply beyond the 1,000 free is priced at R$ 0,04, the top of Meta's range. A projection extrapolates the month's pace. The ceiling is the same formula over the plan's monthly quota, which is the number quoted at checkout. Alert levels are 50/80/100% of that ceiling. Shown in two places:
+  - `MetaSpendCard` on the billing page (`#meta-spend`);
+  - a `MetaSpendAlert` pill in the top bar and mobile header once a level is reached, computed in the dashboard layout.
 
-- **`decideWhatsappPlanGate(billing)`** (`src/lib/whatsapp/enforcement.ts`) —
-  `{ subscription_status, whatsappIncluded } | null → { allow: true } |
-  { allow: false, reason: "no_addon" }`. Entitled only when the status is
-  `active`/`trialing` **and** the plan's `whatsappIncluded` is `true` — a
-  `_wpp` plan with a lapsed subscription doesn't count, same as any other
-  billing gate. Pure and fed a freshly-read row by both call sites (like
-  billing's `decideReplyGate`, unlike D5's gate which reads the connection's
-  last-known state).
-- **Connect route**
-  (`.../agents/[agentSlug]/whatsapp/connect/route.ts`) — checked right
-  after body validation (so a malformed request still 400s regardless of
-  plan) and before any Meta call. Blocked → `403
-  { error: "whatsapp_addon_required" }`. `plan_key` → `whatsappIncluded` via
-  `findPlan` (`plans.ts`), the safe/`undefined`-on-unknown counterpart to
-  `getPlan` (which throws) — needed here because a raw DB column value
-  isn't a trusted `PlanKey` the way a catalog-driven call site's is.
-- **Inbound webhook** (`api/webhooks/whatsapp/route.ts`) — checked
-  immediately after the K6 paused-hire check, before session resolution or
-  persisting anything. This covers the number that stayed `connected` after
-  a Portal downgrade dropped the add-on (the connect route only checks at
-  connect time) — a **full skip**, not the billing/paused gates' "persist
-  the inbound message, stay silent" shape, since an unentitled company
-  shouldn't see the channel working in any capacity. Scoped to the
-  customer-message loop only; the D8 echo/history-backfill loops are
-  unaffected (out of scope — a merchant with a stale coexistence connection
-  syncing old messages isn't "using" the channel the way an AI-generated
-  reply is).
-- **Manual inbox reply** (`conversations/[conversationId]/messages/route.ts`'s
-  `deliverOverWhatsapp`, added 2026-09-27) — checked before any send. Blocked
-  → the reply is still persisted (that route never loses merchant text) and
-  returns `delivery: { ok: false, reason: "no_addon" }`, which the inbox shows
-  as `Conversations.inbox.thread.deliveryNoWhatsappAddon`. The connection row is
-  left `connected`, so moving back to a `_wpp` plan works without reconnecting.
-  This closed the one send path the gate didn't cover: a merchant who switched
-  to a plan without WhatsApp could still answer by hand.
-- **UI** (`my-agents/[agentSlug]/page.tsx` → `channel-tabs-card.tsx` →
-  `channels-section.tsx`) — the page fetches `company_billing` and computes
-  `whatsappEntitled` the same way the connect route does; `false` renders a
-  locked upsell (`MyAgents.channels.addonRequired*`, linking to
-  `/dashboard/settings/billing`) instead of the connect flow, regardless of
-  `canEdit` or a stale `connected` row from before a downgrade. Defense in
-  depth only — the two server-side gates above are what actually enforce
-  this.
+  It is an estimate, not Meta's invoice: templates aren't counted, and Meta's `pricing_analytics` / status-webhook `pricing` aren't read. No email alerts yet.
+- **Billing page tier cards** show the same Meta box as the landing on plain plans ("Sem WhatsApp R$ 0 / Com WhatsApp até R$ X"), and "WhatsApp incluso" on `_wpp` plans.
 
-Tests: `tests/unit/whatsapp/enforcement.test.ts` (the pure gate, every
-status/plan combination). `tests/integration/whatsapp-connection.test.ts` —
-blocks a connect attempt on a plan without the add-on, 403 with the right
-error code. `tests/integration/whatsapp-webhook.test.ts` — a number
-connected while entitled goes fully silent (nothing persisted) once
-`company_billing.plan_key` is downgraded off the add-on. Every existing
-WhatsApp connect fixture in these two files plus
-`company-whatsapp-connections-rls.test.ts` was moved from `seedActivePlan()`
-(defaults to `"starter"`, no add-on) to `{ planKey: "starter_wpp" }` — those
-tests are about hiring/RLS/idempotency, not entitlement, so they just need a
-plan the connect route will actually accept.
+### WhatsApp entitlement gate — 2026-09-22, reworked 2026-10-02
 
-**Direct-RLS bypass, closed same day.** The connect route's gate only
-covers requests through the Next.js API — `company_whatsapp_connections`
-originally still granted `insert`/`update` (and, via the schema-wide
-blanket grant, `delete`) to the regular `authenticated` client, with RLS
-policies allowing a company admin to write directly (bypassing the route,
-and with it this gate, entirely). Every real write in this codebase already
-went through the service-role client regardless, so migration
-`20260922100000_lock_writes_to_whatsapp_connections.sql` drops those
-policies and revokes the grants outright — same shape as `company_billing`'s
-lockdown. See decisions.md for the full reasoning (including why this
-couldn't have made WhatsApp actually functional even before being closed).
+`decideWhatsappPlanGate(billing, provider)` (`src/lib/whatsapp/enforcement.ts`) allows WhatsApp only when the subscription is `active`/`trialing` **and** either the connection is `provider = 'meta'` (the merchant pays Meta, so any plan covers it) or the plan is `whatsappIncluded`. A Twilio number on a plain plan is blocked: Staffra would be paying Meta and Twilio for a merchant who no longer pays for that. The only reason is `no_addon`. Call sites, all fed a freshly read `company_billing` row:
+
+- **Connect route**: provider comes from the plan, so this only rejects a lapsed or missing subscription (403 `whatsapp_addon_required`), before any Meta call.
+- **Inbound pipeline** (`src/lib/whatsapp/inbound.ts`): each webhook passes its own provider. Blocked → a full skip, nothing persisted.
+- **Manual inbox reply** (`deliverOverWhatsapp`): reads the connection first and gates on its provider. Blocked → the reply is saved, and `delivery: { ok: false, reason: "no_addon" }` is shown as `deliveryNoWhatsappAddon`.
+- **Agent page UI**: `whatsappEntitled` uses the plan's provider. `false` (no live subscription) shows the locked `addonRequired*` card ("Ative um plano para usar o WhatsApp"). Defense in depth only.
+
+`company_whatsapp_connections` writes are service-role only (migration `20260922100000`), so the route's gate can't be bypassed by a direct client write.
+
+Tests: `tests/unit/whatsapp/enforcement.test.ts` covers every status × plan × provider combination. Integration coverage:
+- `whatsapp-connection.test.ts`: a plain plan connects to Meta with no Twilio, and reuses the PIN on reconnect. A Meta register failure returns 502 and writes nothing. A lapsed subscription returns 403. A Twilio reconnect on a plain plan returns 409.
+- `whatsapp-webhook.test.ts`: a Meta number keeps answering on a plain plan, and goes silent once the subscription lapses.
+- `twilio-whatsapp-webhook.test.ts`: a Twilio number goes silent after a move off a `_wpp` plan.
+- `conversations.test.ts`: a plain plan delivers over a Meta number, and a Twilio number on a plain plan returns `no_addon`.
 
 ### WhatsApp via Twilio Partner Solution — 2026-09-25
 
-New WhatsApp connections go through **Twilio's Tech Provider Partner Solution**, not Meta Cloud API direct (reverses 2026-08-26; see decisions.md). Rows created before this stay `provider = 'meta'` and keep the old paths.
+Since 2026-10-02 this path applies to `_wpp` plans only; plain plans connect to Meta directly (see "two ways to connect" above). Originally all new connections went through **Twilio's Tech Provider Partner Solution** instead of Meta Cloud API direct (reversing 2026-08-26; see decisions.md).
 
 - **Embedded Signup** passes `extras.setup.solutionID` (`META_WHATSAPP_SOLUTION_ID`, Twilio's Partner Solution ID from App Dashboard > WhatsApp > Partner Solutions). **No `featureType` any more:** Twilio confirmed (2026-09-25 support ticket) that Tech Provider numbers can't do WhatsApp Business App coexistence. A number already on the app must migrate to the API, which ends its use in the app. Only the `FINISH` event is handled.
 - **Connect route** still exchanges the `code`, but only to read the display number (`lookupDisplayPhoneNumber`). The FINISH event carries only `phone_number_id`, and Twilio needs E.164. It no longer calls `/register` or `subscribed_apps`, because Twilio owns both and doing them ourselves would fight Twilio over the number. It then:

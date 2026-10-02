@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { exchangeCodeForToken, lookupDisplayPhoneNumber } from "@/lib/whatsapp/meta-graph-api";
+import {
+  exchangeCodeForToken,
+  finishConnection,
+  generateRegistrationPin,
+  hasWabaPaymentMethod,
+  lookupDisplayPhoneNumber,
+} from "@/lib/whatsapp/meta-graph-api";
 import {
   createWhatsappSender,
   fetchWhatsappSender,
@@ -13,7 +19,7 @@ import {
 } from "@/lib/whatsapp/twilio-api";
 import { ensureCompanyTwilioCredentials } from "@/lib/whatsapp/twilio-subaccounts";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
-import { decideWhatsappPlanGate } from "@/lib/whatsapp/enforcement";
+import { decideWhatsappPlanGate, whatsappProviderForPlan } from "@/lib/whatsapp/enforcement";
 import { findPlan } from "@/lib/billing/plans";
 
 // Trello D1 amendment (2026-09-04) -- finishes what Meta's Embedded Signup
@@ -37,7 +43,7 @@ import { findPlan } from "@/lib/billing/plans";
 //     auto-resolved -- that would mean reassigning something this caller
 //     doesn't own.
 const SAFE_COLUMNS =
-  "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at, has_payment_issue, payment_issue_detected_at, is_coexistence, provider, twilio_sender_status";
+  "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at, has_payment_issue, payment_issue_detected_at, is_coexistence, provider, twilio_sender_status, disconnect_reason, needs_payment_method";
 
 async function requireAdmin(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -148,12 +154,17 @@ export async function POST(
     .select("plan_key, subscription_status")
     .eq("company_id", companyId)
     .maybeSingle();
-  const planGate = decideWhatsappPlanGate({
-    subscription_status: (billing?.subscription_status as string | null) ?? null,
-    whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
-  });
+  const whatsappIncluded = findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true;
+  const provider = whatsappProviderForPlan(whatsappIncluded);
+  const planGate = decideWhatsappPlanGate(
+    { subscription_status: (billing?.subscription_status as string | null) ?? null, whatsappIncluded },
+    provider,
+  );
   if (!planGate.allow) {
     return NextResponse.json({ error: "whatsapp_addon_required" }, { status: 403 });
+  }
+  if (reconnect && provider !== "twilio") {
+    return NextResponse.json({ error: "nothing_to_reconnect" }, { status: 409 });
   }
 
   let accessToken: string | null = null;
@@ -192,11 +203,9 @@ export async function POST(
   if (!displayPhoneNumber) {
     return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
   }
-  const senderId = toWhatsappSenderId(displayPhoneNumber);
-
   const { data: holder, error: holderError } = await serviceClient
     .from("company_whatsapp_connections")
-    .select("id, company_id, agent_id, twilio_sender_sid, twilio_sender_id")
+    .select("id, company_id, agent_id, twilio_sender_sid, twilio_sender_id, two_step_pin")
     .eq("phone_number_id", phoneNumberId)
     .neq("status", "disconnected")
     .maybeSingle();
@@ -226,6 +235,20 @@ export async function POST(
     }
   }
 
+  if (provider === "meta") {
+    return connectMetaDirect(serviceClient, {
+      companyId,
+      agentId: agent.id,
+      phoneNumberId,
+      wabaId,
+      accessToken: accessToken!,
+      tokenExpiresAt,
+      displayPhoneNumber,
+      holderPin: holder?.two_step_pin ?? null,
+    });
+  }
+
+  const senderId = toWhatsappSenderId(displayPhoneNumber);
   const { data: company } = await serviceClient.from("companies").select("name").eq("id", companyId).maybeSingle();
 
   let sender: TwilioSender;
@@ -265,6 +288,8 @@ export async function POST(
         payment_issue_detected_at: null,
         is_coexistence: false,
         provider: "twilio",
+        disconnect_reason: null,
+        needs_payment_method: false,
         twilio_sender_sid: sender.sid,
         twilio_sender_id: sender.senderId,
         twilio_sender_status: sender.status,
@@ -292,4 +317,75 @@ async function registerSender(
     } catch {}
   }
   return createWhatsappSender(credentials, input);
+}
+
+// The merchant's own Meta account (plain, non-_wpp plan): Embedded Signup ran
+// without Twilio's solutionID, so the WABA is ours alone and Meta bills the
+// merchant's own payment method. Register the number for Cloud API ourselves
+// and subscribe to the WABA's webhooks, as before 2026-09-25. Meta ties a
+// number to the PIN of its first /register and rejects a different one later
+// ("PIN Mismatch"), so a reconnect reuses the stored PIN for this number.
+async function connectMetaDirect(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  input: {
+    companyId: string;
+    agentId: string;
+    phoneNumberId: string;
+    wabaId: string;
+    accessToken: string;
+    tokenExpiresAt: string | null;
+    displayPhoneNumber: string;
+    holderPin: string | null;
+  },
+) {
+  const { data: existing } = await serviceClient
+    .from("company_whatsapp_connections")
+    .select("two_step_pin")
+    .eq("phone_number_id", input.phoneNumberId)
+    .not("two_step_pin", "is", null)
+    .limit(1)
+    .maybeSingle();
+  const pin: string = existing?.two_step_pin ?? input.holderPin ?? generateRegistrationPin();
+
+  try {
+    await finishConnection(input.accessToken, input.phoneNumberId, input.wabaId, pin);
+  } catch (err) {
+    console.error("WhatsApp connect: Meta registration failed", err);
+    return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
+  }
+  const hasPaymentMethod = await hasWabaPaymentMethod(input.accessToken, input.wabaId);
+
+  const { data: connection, error } = await serviceClient
+    .from("company_whatsapp_connections")
+    .upsert(
+      {
+        company_id: input.companyId,
+        agent_id: input.agentId,
+        phone_number_id: input.phoneNumberId,
+        waba_id: input.wabaId,
+        display_phone_number: input.displayPhoneNumber,
+        status: "connected",
+        access_token: input.accessToken,
+        token_expires_at: input.tokenExpiresAt,
+        two_step_pin: pin,
+        connected_at: new Date().toISOString(),
+        has_payment_issue: false,
+        payment_issue_detected_at: null,
+        is_coexistence: false,
+        provider: "meta",
+        twilio_sender_sid: null,
+        twilio_sender_id: null,
+        twilio_sender_status: null,
+        disconnect_reason: null,
+        needs_payment_method: hasPaymentMethod === false,
+      },
+      { onConflict: "company_id,agent_id" },
+    )
+    .select(SAFE_COLUMNS)
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ connection });
 }

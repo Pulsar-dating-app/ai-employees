@@ -9,6 +9,7 @@ import {
   TWILIO_SENDER_PENDING_VERIFICATION,
 } from "@/lib/whatsapp/twilio-api";
 import { getCompanyTwilioCredentials } from "@/lib/whatsapp/twilio-subaccounts";
+import { hasWabaPaymentMethod } from "@/lib/whatsapp/meta-graph-api";
 
 // Trello D1 amendment (2026-09-04) -- WhatsApp connection status/lifecycle
 // for one hired agent. The actual "connect" action lives in
@@ -25,7 +26,7 @@ import { getCompanyTwilioCredentials } from "@/lib/whatsapp/twilio-subaccounts";
 // column-privilege-locked -- every select below lists safe columns
 // explicitly and must never include them for a regular (non-service) client.
 const SAFE_COLUMNS =
-  "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at, has_payment_issue, payment_issue_detected_at, provider, twilio_sender_status";
+  "phone_number_id, waba_id, display_phone_number, status, connected_at, token_expires_at, has_payment_issue, payment_issue_detected_at, provider, twilio_sender_status, disconnect_reason, needs_payment_method";
 
 async function requireMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -149,7 +150,38 @@ export async function GET(
     if (refreshed) return NextResponse.json({ connection: refreshed });
   }
 
+  if (data?.provider === "meta" && data.status === "connected" && data.needs_payment_method) {
+    const refreshed = await recheckMetaPaymentMethod(companyId, agentCheck.agentId!);
+    if (refreshed) return NextResponse.json({ connection: refreshed });
+  }
+
   return NextResponse.json({ connection: data ?? null });
+}
+
+// A Meta-direct number connected before the merchant added a card on Meta:
+// every status read asks Meta again, so the "add a card" step clears itself
+// as soon as they've done it (the channel screen re-reads on "I've added it").
+async function recheckMetaPaymentMethod(companyId: string, agentId: string) {
+  const serviceClient = createServiceClient();
+  const { data: row } = await serviceClient
+    .from("company_whatsapp_connections")
+    .select("access_token, waba_id")
+    .eq("company_id", companyId)
+    .eq("agent_id", agentId)
+    .maybeSingle();
+  if (!row?.access_token || !row.waba_id) return null;
+
+  const hasPaymentMethod = await hasWabaPaymentMethod(row.access_token, row.waba_id);
+  if (!hasPaymentMethod) return null;
+
+  const { data } = await serviceClient
+    .from("company_whatsapp_connections")
+    .update({ needs_payment_method: false })
+    .eq("company_id", companyId)
+    .eq("agent_id", agentId)
+    .select(SAFE_COLUMNS)
+    .maybeSingle();
+  return data;
 }
 
 async function refreshPendingTwilioSender(companyId: string, agentId: string) {
@@ -312,7 +344,14 @@ export async function DELETE(
 
   const { data, error } = await serviceClient
     .from("company_whatsapp_connections")
-    .update({ status: "disconnected", access_token: null, token_expires_at: null, twilio_sender_sid: null })
+    .update({
+      status: "disconnected",
+      access_token: null,
+      token_expires_at: null,
+      twilio_sender_sid: null,
+      disconnect_reason: null,
+      needs_payment_method: false,
+    })
     .eq("company_id", companyId)
     .eq("agent_id", agentCheck.agentId)
     .select(SAFE_COLUMNS)

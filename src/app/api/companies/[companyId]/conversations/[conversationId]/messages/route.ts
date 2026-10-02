@@ -128,21 +128,11 @@ async function deliverOverWhatsapp(
   const service = createServiceClient();
 
   // Same entitlement gate as the connect route and the inbound webhook: a
-  // company whose plan no longer includes WhatsApp (e.g. switched to a
-  // non-_wpp plan while the number is still connected) can't send on it,
+  // Twilio-connected number on a plan that no longer pays for it (moved off a
+  // _wpp plan), or any number once the subscription lapses, can't send,
   // manually or otherwise.
-  const { data: billing } = await service
-    .from("company_billing")
-    .select("plan_key, subscription_status")
-    .eq("company_id", companyId)
-    .maybeSingle();
-  const planGate = decideWhatsappPlanGate({
-    subscription_status: (billing?.subscription_status as string | null) ?? null,
-    whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
-  });
-  if (!planGate.allow) return { ok: false, reason: "no_addon" };
-
-  const [{ data: connection }, { data: customer }] = await Promise.all([
+  const [{ data: billing }, { data: connection }, { data: customer }] = await Promise.all([
+    service.from("company_billing").select("plan_key, subscription_status").eq("company_id", companyId).maybeSingle(),
     service
       .from("company_whatsapp_connections")
       .select("access_token, phone_number_id, status, provider, twilio_sender_id")
@@ -151,6 +141,17 @@ async function deliverOverWhatsapp(
       .maybeSingle(),
     service.from("customers").select("phone").eq("id", customerId).maybeSingle(),
   ]);
+
+  if (connection) {
+    const planGate = decideWhatsappPlanGate(
+      {
+        subscription_status: (billing?.subscription_status as string | null) ?? null,
+        whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
+      },
+      connection.provider === "twilio" ? "twilio" : "meta",
+    );
+    if (!planGate.allow) return { ok: false, reason: "no_addon" };
+  }
 
   if (!connection || connection.status !== "connected" || !customer?.phone) {
     return { ok: false };

@@ -130,6 +130,23 @@ export async function lookupDisplayPhoneNumber(accessToken: string, phoneNumberI
   return displayPhoneNumber ?? null;
 }
 
+// Whether the merchant's WABA has a payment method Meta can bill
+// (`primary_funding_id`). Only meaningful for a Meta-direct number, where
+// the merchant pays Meta themselves. Null when Meta couldn't be asked, so a
+// failed lookup never flags a merchant who may well have a card.
+export async function hasWabaPaymentMethod(accessToken: string, wabaId: string): Promise<boolean | null> {
+  try {
+    const res = await fetch(graphApiUrl(`/${wabaId}`, { fields: "primary_funding_id" }), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return null;
+    const { primary_funding_id: fundingId } = (await res.json()) as { primary_funding_id?: string };
+    return Boolean(fundingId);
+  } catch {
+    return null;
+  }
+}
+
 // Trello D4 -- delivery, the other end of D2's inbound webhook. Modeled
 // directly on sendInstagramMessage (src/lib/instagram/meta-instagram-api.ts):
 // one retry on a transient 5xx, no retry on a 4xx (fails identically). The

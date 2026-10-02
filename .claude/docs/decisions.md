@@ -10,6 +10,26 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-02 — WhatsApp on every plan; the plan picks Meta-direct or Twilio
+
+**Decision:** `plans.ts` now carries the 3k/6k/10k plans: R$ 197/317/497 for plain keys and R$ 497/997/1.597 for `_wpp` keys. No key was renamed, so `company_billing.plan_key` and the Stripe lookup keys are unchanged. Every plan includes WhatsApp:
+- A plain key means the merchant's own Meta account. Embedded Signup runs without Twilio's `solutionID`, the number registers with Meta directly (`provider = 'meta'`), and Meta bills the merchant's card.
+- A `_wpp` key keeps the Twilio Partner Solution flow, with Meta's fees in the price.
+
+`decideWhatsappPlanGate` now takes the connection's provider. A Twilio number needs a `_wpp` plan; a Meta-direct number works on any live plan. Onboarding and the billing page replace the "include WhatsApp" switch with the same two-option choice as the landing (`WhatsAppModeChoice`). The landing reads the catalog again (`landing-plans.ts` derives from `plans.ts`).
+**Why:**
+- A merchant who brings their own Meta account costs Staffra nothing per message, so there's no reason to withhold WhatsApp from the cheaper plans.
+- The Twilio route costs Staffra Meta's fee plus Twilio's per-message fee, so it stays on the plan that prices those in.
+- Reusing the existing keys means the owner only has to swap Stripe Price amounts (`transfer_lookup_key`).
+- Until that happens, Stripe charges the 2026-09-28 amounts while the catalog shows and enforces the new prices and quotas. There are no real users, so this is accepted.
+- The Meta-direct webhook, send path and payment-issue flag never left the codebase (they kept serving legacy `provider = 'meta'` rows), so only the connect step had to come back.
+- Open risk: onboarding without a `solutionID` alongside an accepted Partner Solution hasn't been tested live.
+
+Follow-ups shipped the same day:
+- **Auto-release of Twilio numbers when a company leaves `_wpp`.** Disconnect plus a reconnect notice, and no route back to Twilio. A silent channel the merchant can't explain is worse than an explicit disconnect.
+- **A "card on Meta" check at connect time** (`primary_funding_id`). It is UI-only, because whether Meta delivers free-tier replies without a card is unconfirmed, and gating on it could block a working number.
+- **A Meta spend estimate with 50/80/100% alerts in the dashboard.** It is computed from our own `messages` rows rather than Meta's `pricing_analytics`. Every reply already goes through our send path, the count needs no new Meta permission or webhook field, and it can't drift from what the merchant sees in their inbox. The trade-off is that it's an estimate, priced at the top of Meta's range.
+
 ## 2026-10-02 — Landing shows the new 3k/6k/10k plans, WhatsApp on every plan
 
 **Decision:** The landing's pricing table no longer reads `plans.ts`. It reads its own `src/components/landing/landing-plans.ts`: 3.000 / 6.000 / 10.000 replies. Every plan includes WhatsApp, and the merchant picks how to pay for it. With their own Meta account it costs R$ 197 / R$ 317 / R$ 497, plus Meta billed to their card on Meta. Through Staffra (Twilio, Meta fees included) it costs R$ 497 / R$ 997 / R$ 1.597. Each own-account card shows the Meta ceiling: 1.000 free replies, then up to R$ 0,04 each. A banner states that a merchant who doesn't use WhatsApp needs no Meta account or card and pays nothing extra. Annual billing shows the per-month equivalent as the big number, the monthly price struck through, and the yearly total. It uses `annualPriceCents`, so prices stay in whole reais. The value calculator, hero per-day anchor and JSON-LD read the same file. This supersedes the 2026-10-01 entry's WhatsApp-on toggle.

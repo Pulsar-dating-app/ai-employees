@@ -22,29 +22,34 @@ export function decideWhatsappSendGate(connection: {
   return { allow: true };
 }
 
-// 2026-09-22 -- the WhatsApp *entitlement* gate: is this company even paying
-// for the channel, distinct from D5's connection-health gate above. WhatsApp
-// is a per-plan add-on (`BillingPlan.whatsappIncluded`, the `_wpp` variants
-// in plans.ts) layered on a live subscription, not something every
-// subscriber gets -- a company on a plain (non-`_wpp`) plan, or with a
-// lapsed subscription, must not be able to connect a number or receive
-// AI-generated WhatsApp replies, regardless of what
-// `company_whatsapp_connections` says. Pure, fed a fresh `company_billing`
-// row by both call sites (the connect route, before it talks to Meta at
-// all; the inbound webhook, before it resolves a session or persists
-// anything) -- same "freshly read, not cached" shape as `decideReplyGate`,
-// unlike D5's gate above.
+// 2026-09-22, reworked 2026-10-02 -- the WhatsApp *entitlement* gate: is
+// this company paying for the way this number is connected, distinct from
+// D5's connection-health gate above. Every live subscription includes
+// WhatsApp; the plan only decides who pays Meta. A plain plan means the
+// merchant's own Meta account (`provider = 'meta'`, Meta bills their card);
+// a `_wpp` plan (`BillingPlan.whatsappIncluded`) means Staffra connects the
+// number through Twilio and pays Meta for them. So a Twilio connection needs
+// a `_wpp` plan -- a merchant who downgrades keeps the number registered but
+// can't keep using a channel Staffra pays for -- while a Meta-direct one
+// works on any plan. Pure, fed a freshly read `company_billing` row by every
+// call site (connect route, inbound pipeline, manual inbox reply, agent page).
 const WHATSAPP_ENTITLED_STATUSES = new Set(["active", "trialing"]);
+
+export type WhatsappProvider = "meta" | "twilio";
 
 export type WhatsappPlanGateDecision = { allow: true } | { allow: false; reason: "no_addon" };
 
-export function decideWhatsappPlanGate(billing: {
-  subscription_status: string | null;
-  whatsappIncluded: boolean;
-} | null): WhatsappPlanGateDecision {
+export function whatsappProviderForPlan(whatsappIncluded: boolean): WhatsappProvider {
+  return whatsappIncluded ? "twilio" : "meta";
+}
+
+export function decideWhatsappPlanGate(
+  billing: { subscription_status: string | null; whatsappIncluded: boolean } | null,
+  provider: WhatsappProvider,
+): WhatsappPlanGateDecision {
   const entitled =
     !!billing &&
     WHATSAPP_ENTITLED_STATUSES.has(billing.subscription_status ?? "") &&
-    billing.whatsappIncluded;
+    (provider === "meta" || billing.whatsappIncluded);
   return entitled ? { allow: true } : { allow: false, reason: "no_addon" };
 }

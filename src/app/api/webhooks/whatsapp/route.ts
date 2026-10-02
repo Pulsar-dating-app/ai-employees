@@ -184,7 +184,7 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (!connection) continue;
 
-    await handleInboundWhatsappMessage(supabase, connection, { from, text, messageId }, (reply) =>
+    await handleInboundWhatsappMessage(supabase, { ...connection, provider: "meta" }, { from, text, messageId }, (reply) =>
       sendWhatsappMessage(connection.access_token, connection.phone_number_id, from, reply),
     );
   }

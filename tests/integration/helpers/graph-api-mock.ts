@@ -22,7 +22,11 @@ import type { AddressInfo } from "node:net";
 // - phoneNumberId (in the GET lookup path) === "trigger-payment-issue" ->
 //   the plain lookup also 400s with 131042, so D5's checkWhatsappEligibility
 //   can be tested against the same magic value
+// - wabaId containing "trigger-no-funding" -> GET ?fields=primary_funding_id
+//   reports no payment method, until POST /__add_funding?waba_id= adds one
+//   (the only piece of state here, keyed by a per-test unique WABA id)
 export function startGraphApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
+  const fundedWabas = new Set<string>();
   const server: Server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
     const send = (status: number, body: unknown) => {
@@ -78,6 +82,14 @@ export function startGraphApiMock(): Promise<{ url: string; stop: () => Promise<
     }
 
     const phoneMatch = url.pathname.match(/^\/v21\.0\/([^/]+)$/);
+    if (phoneMatch && url.searchParams.get("fields") === "primary_funding_id") {
+      const hasFunding = !phoneMatch[1].includes("trigger-no-funding") || fundedWabas.has(phoneMatch[1]);
+      return send(200, hasFunding ? { id: phoneMatch[1], primary_funding_id: "mock-funding" } : { id: phoneMatch[1] });
+    }
+    if (url.pathname === "/__add_funding" && req.method === "POST") {
+      fundedWabas.add(url.searchParams.get("waba_id") ?? "");
+      return send(200, { ok: true });
+    }
     if (phoneMatch) {
       if (phoneMatch[1] === "trigger-payment-issue") {
         return send(400, {

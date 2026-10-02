@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/locales";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { BillingPastDueAlert, type SilenceReason } from "./billing-alert";
+import { BillingPastDueAlert, MetaSpendAlert, type SilenceReason } from "./billing-alert";
+import type { MetaSpendAlertLevel } from "@/lib/whatsapp/meta-pricing";
 
 const SECTIONS = [
   {
@@ -25,9 +26,11 @@ const SECTIONS = [
 export function TopBar({
   locale,
   silence,
+  metaSpendAlert = null,
 }: {
   locale: Locale;
   silence: SilenceReason | null;
+  metaSpendAlert?: MetaSpendAlertLevel | null;
 }) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard.tabs");
@@ -38,6 +41,7 @@ export function TopBar({
       <span className="text-lg font-extrabold tracking-tight text-primary">{t(section)}</span>
       <div className="flex items-center gap-3">
         {silence ? <BillingPastDueAlert reason={silence} /> : null}
+        {metaSpendAlert ? <MetaSpendAlert level={metaSpendAlert} /> : null}
         <LanguageSwitcher currentLocale={locale} />
       </div>
     </header>

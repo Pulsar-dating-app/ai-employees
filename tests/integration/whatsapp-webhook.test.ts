@@ -333,26 +333,36 @@ describe("WhatsApp inbound webhook (GET verify, POST receive)", () => {
       expect(messages).toEqual([{ role: "customer", content: "are you there?" }]);
     });
 
-    // 2026-09-22 -- a number connected while the company had the WhatsApp
-    // add-on stays `connected` in company_whatsapp_connections even after a
-    // Portal downgrade drops the add-on (the connect route only checks
-    // entitlement at connect time) -- the webhook's own plan gate is what
-    // actually stops it. Unlike the paused-conversation case above, this is
-    // a full skip: nothing is persisted at all, since the company isn't
-    // paying for the channel to work in any capacity.
-    it("goes fully silent once the plan no longer includes the WhatsApp add-on", async () => {
+    // 2026-10-02 -- a Meta-direct number is the merchant's own Meta account,
+    // which every plan covers, so moving off a _wpp plan doesn't stop it.
+    // Only a lapsed subscription does, and that's a full skip: nothing is
+    // persisted, since the company isn't paying for the channel at all.
+    it("keeps answering on a plain plan, since the number is the merchant's own Meta account", async () => {
       const owner = await signUpTestUser("owner");
-      const companyId = await createCompany(owner.cookieHeader, "WA Webhook Downgraded Co");
-      const phoneNumberId = await connectedAgent(owner.cookieHeader, companyId, "malu", "phone-downgraded", "waba-downgraded");
+      const companyId = await createCompany(owner.cookieHeader, "WA Webhook Plain Plan Co");
+      const phoneNumberId = await connectedAgent(owner.cookieHeader, companyId, "malu", "phone-plain-plan", "waba-plain-plan");
+      await service.from("company_billing").update({ plan_key: "starter" }).eq("company_id", companyId);
 
-      // Simulates the P4 webhook syncing a Portal downgrade off the add-on.
-      const { error: downgradeError } = await service
+      const body = messagingPayload(phoneNumberId, "+5511900000006", "oi, ainda funciona?", "msg-plain-plan");
+      const res = await postWebhook(body, sign(body));
+      expect(res.status).toBe(200);
+
+      const { data: messages } = await service.from("messages").select("role").eq("company_id", companyId);
+      expect(messages?.map((m) => m.role)).toContain("customer");
+    });
+
+    it("goes fully silent once the subscription has lapsed", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "WA Webhook Lapsed Co");
+      const phoneNumberId = await connectedAgent(owner.cookieHeader, companyId, "malu", "phone-lapsed", "waba-lapsed");
+
+      const { error: lapseError } = await service
         .from("company_billing")
-        .update({ plan_key: "starter" })
+        .update({ subscription_status: "canceled" })
         .eq("company_id", companyId);
-      expect(downgradeError).toBeNull();
+      expect(lapseError).toBeNull();
 
-      const body = messagingPayload(phoneNumberId, "+5511900000004", "oi, ainda funciona?", "msg-downgraded");
+      const body = messagingPayload(phoneNumberId, "+5511900000004", "oi, ainda funciona?", "msg-lapsed");
       const res = await postWebhook(body, sign(body));
       expect(res.status).toBe(200); // Meta always gets 200.
 

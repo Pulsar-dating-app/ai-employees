@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import clsx from "clsx";
+import { WhatsAppModeChoice } from "@/components/billing/whatsapp-mode-choice";
+import { metaMaxCents } from "@/lib/whatsapp/meta-pricing";
 import { useTranslations } from "next-intl";
 import {
   findPlan,
@@ -11,7 +13,7 @@ import {
   type BillingPlan,
   type PlanKey,
 } from "@/lib/billing/plans";
-import { ChatIcon, CheckIcon, WhatsAppIcon } from "@/components/ui/icons";
+import { ChatIcon, CheckIcon } from "@/components/ui/icons";
 import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 import { CheckoutButton } from "./billing-actions";
 
@@ -66,34 +68,6 @@ function PeriodSwitch({
         </button>
       ))}
     </div>
-  );
-}
-
-function WhatsAppSwitch({ value, onChange }: { value: boolean; onChange: (next: boolean) => void }) {
-  const t = useTranslations("Billing.picker");
-  return (
-    <label className="inline-flex h-12 cursor-pointer items-center gap-3 rounded-full bg-surface-container py-1 pl-4 pr-1.5">
-      <WhatsAppIcon className="h-4 w-4 text-[#1faa55]" />
-      <span className="text-label-md font-medium text-on-surface">{t("wppToggleLabel")}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={value}
-        onClick={() => onChange(!value)}
-        className={clsx(
-          "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-          value ? "bg-primary" : "bg-outline-variant",
-        )}
-      >
-        <span
-          className={clsx(
-            "inline-block h-5 w-5 rounded-full bg-white shadow-[0_1px_3px_rgba(25,28,29,0.3)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
-            value ? "translate-x-6" : "translate-x-1",
-          )}
-        />
-      </button>
-    </label>
   );
 }
 
@@ -165,6 +139,33 @@ function TierCard({
             </p>
           ) : null}
         </div>
+
+        {plan.whatsappIncluded ? (
+          <p className="mt-4 flex items-start gap-1.5 rounded-xl bg-success-100/60 px-3.5 py-3 text-[13px] font-semibold text-success-500">
+            <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {t("tiers.meta.included")}
+          </p>
+        ) : (
+          <div className="mt-4 rounded-xl bg-surface-container-low px-3.5 py-3">
+            <p className="text-[12px] font-semibold text-on-surface-variant">{t("tiers.meta.label")}</p>
+            <dl className="mt-1.5 flex flex-col gap-1 text-[13px]">
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-on-surface-variant">{t("tiers.meta.without")}</dt>
+                <dd className="font-semibold tabular-nums text-success-500">{BRL_WHOLE.format(0)}</dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-on-surface-variant">{t("tiers.meta.with")}</dt>
+                <dd className="font-semibold tabular-nums text-on-surface">
+                  {t("tiers.meta.upTo", {
+                    price: BRL_WHOLE.format(
+                      metaMaxCents((plan.monthlyReplyLimit ?? 0) / (isAnnual ? 12 : 1)) / 100,
+                    ),
+                  })}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        )}
 
         {/* Only the reply quota differs between tiers; everything else is in
             the shared "included in every plan" list below the cards. */}
@@ -255,13 +256,8 @@ export function PlanTiers({
           the 12 variants (period and WhatsApp included), not just another
           tier of their current one. */}
       <div className="flex flex-col items-center gap-3">
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <PeriodSwitch value={billingPeriod} onChange={setBillingPeriod} savingsPct={savingsPct} />
-          <WhatsAppSwitch value={whatsappIncluded} onChange={setWhatsappIncluded} />
-        </div>
-        <p className="max-w-xl text-balance text-center text-[13px] leading-5 text-on-surface-variant">
-          {t("picker.wppToggleNote")}
-        </p>
+        <PeriodSwitch value={billingPeriod} onChange={setBillingPeriod} savingsPct={savingsPct} />
+        <WhatsAppModeChoice whatsappIncluded={whatsappIncluded} onChange={setWhatsappIncluded} />
       </div>
 
       <div className="grid grid-cols-1 items-stretch gap-5 pt-3 md:grid-cols-3">

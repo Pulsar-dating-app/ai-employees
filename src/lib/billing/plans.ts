@@ -74,9 +74,10 @@ export interface BillingPlan {
   tier: PlanTier;
   /** `null` only for `enterprise`, which has no self-serve billing period. */
   billingPeriod: BillingPeriod | null;
-  /** Whether this variant bundles Meta's WhatsApp usage cost into the
-   * Staffra price, instead of the merchant being billed separately by Meta
-   * (see decisions.md 2026-09-05's WhatsApp billing disclosure). */
+  /** Every plan includes WhatsApp. `true` = everything through Staffra: the
+   * number connects through Twilio and Meta's fees are in the price. `false`
+   * = the merchant's own Meta account: the number connects to Meta directly
+   * and Meta bills the merchant's card (see `whatsappProviderForPlan`). */
   whatsappIncluded: boolean;
   /**
    * Stripe Price `lookup_key`. Runtime code resolves the Price by this,
@@ -124,14 +125,18 @@ export interface BillingPlan {
   isSelfServe: boolean;
 }
 
-// Real monthly prices per tier, without and with WhatsApp (2026-09-27, owner's
-// numbers; 2026-09-28 rounded up from R$X,99 to whole reais). Annual prices
-// are derived: 12 months minus ANNUAL_DISCOUNT, rounded up to a whole real.
-// These must match the Stripe Price amounts behind each lookup key.
+// Monthly prices per tier (2026-10-02, owner's numbers). Every plan includes
+// WhatsApp; the two prices are the two ways to pay Meta for it: the plain
+// price is the merchant's own Meta account (Meta bills their card), the
+// `Wpp` price is everything through Staffra (Twilio, Meta fees included).
+// Annual prices are derived: 12 months minus ANNUAL_DISCOUNT, rounded up to
+// a whole real. These must match the Stripe Price amounts behind each lookup
+// key -- as of 2026-10-02 Stripe still holds the 2026-09-28 amounts and the
+// owner is updating it separately.
 const BASE = {
-  starter: { monthlyBrlCents: 9_700, monthlyWppBrlCents: 15_000, monthlyReplyLimit: 1_000 },
-  intermediate: { monthlyBrlCents: 29_700, monthlyWppBrlCents: 45_000, monthlyReplyLimit: 3_000 },
-  pro: { monthlyBrlCents: 49_700, monthlyWppBrlCents: 75_000, monthlyReplyLimit: 5_000 },
+  starter: { monthlyBrlCents: 19_700, monthlyWppBrlCents: 49_700, monthlyReplyLimit: 3_000 },
+  intermediate: { monthlyBrlCents: 31_700, monthlyWppBrlCents: 99_700, monthlyReplyLimit: 6_000 },
+  pro: { monthlyBrlCents: 49_700, monthlyWppBrlCents: 159_700, monthlyReplyLimit: 10_000 },
 } as const;
 
 export const ANNUAL_DISCOUNT = 0.15;

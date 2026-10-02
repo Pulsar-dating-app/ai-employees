@@ -1,7 +1,8 @@
 import type Stripe from "stripe";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getStripeClient } from "./client";
-import { getPlan, getPlanByLookupKey, type PlanKey } from "@/lib/billing/plans";
+import { findPlan, getPlan, getPlanByLookupKey, type PlanKey } from "@/lib/billing/plans";
+import { releaseTwilioNumbersOffPlan } from "@/lib/whatsapp/plan-change";
 
 // Trello P4 -- the handlers behind POST /api/webhooks/stripe. Everything
 // funnels through `syncBillingFromSubscription`: given a Stripe.Subscription
@@ -157,6 +158,14 @@ async function syncBillingFromSubscription(
     if (insertError && insertError.code !== "23505") {
       throw new Error(`company_billing insert failed: ${insertError.message}`);
     }
+  }
+
+  // Off a `_wpp` plan, Staffra no longer pays Meta/Twilio for this company's
+  // WhatsApp, so its Twilio numbers are released (they reconnect on the
+  // merchant's own Meta account). Runs on every sync, not only on the event
+  // that changed the plan, so a failed release is retried by the next one.
+  if (effectivePlanKey && !findPlan(effectivePlanKey)?.whatsappIncluded) {
+    await releaseTwilioNumbersOffPlan(service, companyId);
   }
 
   // The first session parks a hire when the merchant leaves without a plan

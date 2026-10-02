@@ -23,6 +23,8 @@ import { PageHeader } from "../../page-header";
 import { CheckoutButton, EndTrialButton, ManageBillingButton } from "./billing-actions";
 import { PlanTiers } from "./plan-tiers";
 import { UsageRing } from "./usage-ring";
+import { MetaSpendCard } from "./meta-spend-card";
+import { getMetaSpendSummary } from "@/lib/whatsapp/meta-spend";
 import { requireAdminPage } from "@/lib/auth/company-access";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
@@ -188,6 +190,7 @@ export default async function BillingPage() {
       ? Math.min(periodDays, Math.max(1, Math.ceil((nowMs - periodStartMs) / DAY_MS)))
       : null;
 
+  const metaSpend = await getMetaSpendSummary(createServiceClient(), company.id);
   const used = usage?.replies_used ?? 0;
   const limit = usage?.reply_limit ?? plan?.monthlyReplyLimit ?? 0;
   const rawPct = limit > 0 ? (used / limit) * 100 : 0;
@@ -322,10 +325,10 @@ export default async function BillingPage() {
                   {plan.displayName}
                 </h2>
                 <StatusPill status={status!} label={t(`status.${status}`)} />
-                {plan.whatsappIncluded ? (
+                {plan.tier !== "enterprise" ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1 text-[12px] font-semibold text-on-surface-variant">
                     <WhatsAppIcon className="h-3.5 w-3.5 text-[#1faa55]" />
-                    {t("picker.wppBadge")}
+                    {plan.whatsappIncluded ? t("picker.wppBadgeManaged") : t("picker.wppBadgeOwn")}
                   </span>
                 ) : null}
               </div>
@@ -424,6 +427,12 @@ export default async function BillingPage() {
               ) : null}
             </div>
           </section>
+
+          {metaSpend ? (
+            <div className={SHELL}>
+              <MetaSpendCard spend={metaSpend} />
+            </div>
+          ) : null}
 
           {plan.key !== "enterprise" && !isLapsedPayment ? (
             <section className="flex flex-col gap-2">
