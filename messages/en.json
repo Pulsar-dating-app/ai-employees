@@ -490,7 +490,7 @@
     },
     "pricing": {
       "heading": "Simple plans, with Malu and Ana in all of them",
-      "sub": "What changes between plans is how many replies your team can send.",
+      "sub": "Every plan comes with official WhatsApp, Instagram, Telegram, website chat and direct link. What changes is how many replies your team can send.",
       "trialNote": "7 days free. We ask for a card up front but only charge after 7 days or 500 replies, whichever comes first.",
       "featuredBadge": "Recommended",
       "periodToggle": {
@@ -499,26 +499,21 @@
       },
       "periodLabel": "Billing period",
       "savings": "−{pct}%",
-      "wppToggleLabel": "With WhatsApp",
-      "wppToggleNote": "Without WhatsApp: Instagram, Telegram, website chat and direct link. Turn it on to see prices with official WhatsApp.",
       "perMonth": "/ month",
-      "perYear": "/ year",
-      "perDay": "≈ {price} a day",
-      "annualSavings": "≈ {monthly} per month · you save {saved}",
+      "annualSavings": "{total} a year · you save {saved}",
       "repliesMonthly": "{count} replies a month",
-      "repliesAnnual": "{count} replies a year",
       "repliesNote": "Every message your team sends a customer counts as one reply.",
       "includedTitle": "All of this in every plan",
       "included": [
-        "Malu for sales and Ana for appointments",
-        "Instagram, Telegram, website chat and direct link, plus official WhatsApp on WhatsApp plans",
-        "Catalog from a spreadsheet or synced with Shopify",
-        "Calendar with Google Calendar, waitlist and approval",
-        "Answers only from your data, never made up",
-        "Hands conversations to your team when needed",
-        "Conversation inbox and performance reports",
-        "Name and photo for each employee, your way",
-        "Unlimited dashboard users"
+        "Malu for sales and Ana for scheduling",
+        "WhatsApp, Instagram, Telegram, website chat and direct link",
+        "Catalog from a spreadsheet or Shopify",
+        "Scheduling with Google Calendar",
+        "Replies only from your own data",
+        "Hands the conversation to your team",
+        "Conversation inbox and reports",
+        "Name and photo your way",
+        "Unlimited users"
       ],
       "plans": [
         {
@@ -544,11 +539,40 @@
           "name": "Custom",
           "desc": "Multiple locations or very high volume, on negotiated terms.",
           "price": "Let's talk",
-          "priceNote": "Projects from R$ 3,900/month",
-          "cta": "Talk to sales"
+          "cta": "Talk to sales",
+          "features": [
+            "Dedicated support from someone on our team",
+            "Features built on demand for your business",
+            "Integration with the systems you already use",
+            "Negotiated reply volume"
+          ]
         }
       ],
-      "wppToggleNoteOn": "Includes official WhatsApp, with Meta's fees already in the price."
+      "meta": {
+        "choiceLabel": "How do you want to use WhatsApp?",
+        "own": {
+          "title": "With your own Meta account",
+          "badge": "Cheapest",
+          "desc": "You connect your number and add your card on Meta, which charges you directly only for what you use.",
+          "rate": "1,000 free replies a month, then up to {unit} each."
+        },
+        "managed": {
+          "title": "All through Staffra",
+          "desc": "We handle WhatsApp for you. Meta's fees already in the price, no card on Meta."
+        },
+        "savings": "Save up to {amount} a month",
+        "noWppTitle": "Not using WhatsApp? You pay nothing extra.",
+        "noWppBody": "Serve customers on Instagram, Telegram, website chat or direct link. No Meta account, no card, no extra cost: just the plan price.",
+        "cardLabel": "WhatsApp, paid straight to Meta",
+        "cardNoWpp": "Without WhatsApp",
+        "cardNoWppValue": "R$ 0",
+        "cardWpp": "With WhatsApp",
+        "cardWppValue": "up to {price}",
+        "cardTotal": "Maximum with WhatsApp: {total} / month",
+        "managedLine": "WhatsApp included, nothing to pay Meta",
+        "managedSub": "Fixed price, no separate charges.",
+        "footnote": "Estimate for replies to customers in Brazil within 24 h of their last message. Appointment reminders cost about R$ 0.04 each and promotional messages about R$ 0.38."
+      }
     },
     "salesContact": {
       "title": "Talk to a specialist",
@@ -618,7 +642,7 @@
         },
         {
           "q": "Do you use official WhatsApp? Can I keep my number?",
-          "a": "Yes. We connect through Meta's official connection, and you can use the number you already have in the WhatsApp Business app or a new one. WhatsApp comes with the WhatsApp plans, and Meta's fees are already included in the price."
+          "a": "Yes. We connect through Meta's official connection, and you can use the number you already have in the WhatsApp Business app or a new one. Every plan includes WhatsApp, and you choose how to use it: with your own Meta account, paying Meta directly and at cost (1,000 free replies a month and about R$ 0.04 each after that), or all through Staffra, with the fees already in the price. If you won't use WhatsApp, you don't need a Meta account or card and pay nothing extra."
         },
         {
           "q": "Is there a contract or setup fee?",
@@ -743,7 +767,6 @@
         "resultLabel": "Recommended plan",
         "perMonth": "{price}/month",
         "planFits": "Up to {replies} replies a month, about {conversations} conversations.",
-        "planFitsWpp": "With WhatsApp. Up to {replies} replies a month, about {conversations} conversations.",
         "usage": "You'd use about {pct}% of the plan.",
         "customBody": "At this volume, we build a custom plan for your business.",
         "customCta": "Talk to us",
@@ -754,7 +777,8 @@
         "empty": "Enter what you spend today to see the difference.",
         "saving": "You spend {amount} less per month and answer around the clock.",
         "extra": "That's {amount} more per month, and your customers get answers around the clock.",
-        "disclaimer": "Staffra doesn't have to replace anyone: it answers while your team can't, and brings you in when it matters."
+        "disclaimer": "Staffra doesn't have to replace anyone: it answers while your team can't, and brings you in when it matters.",
+        "withStaffraWppSub": "{plan} plan + about {meta} to Meta"
       },
       "cta": "See plans"
     },
