@@ -490,7 +490,7 @@
     },
     "pricing": {
       "heading": "Planos simples, com a Malu e a Ana em todos",
-      "sub": "O que muda entre os planos é quantas respostas sua equipe pode enviar.",
+      "sub": "Todos os planos vêm com WhatsApp oficial, Instagram, Telegram, chat no site e link direto. O que muda é quantas respostas sua equipe pode enviar.",
       "trialNote": "7 dias grátis. Pedimos o cartão no início, mas só cobramos depois de 7 dias ou de 500 respostas, o que vier primeiro.",
       "featuredBadge": "Recomendado",
       "periodToggle": {
@@ -499,26 +499,21 @@
       },
       "periodLabel": "Período de cobrança",
       "savings": "−{pct}%",
-      "wppToggleLabel": "Com WhatsApp",
-      "wppToggleNote": "Sem WhatsApp: Instagram, Telegram, chat no site e link direto. Ligue para ver os preços com o WhatsApp oficial.",
       "perMonth": "/ mês",
-      "perYear": "/ ano",
-      "perDay": "≈ {price} por dia",
-      "annualSavings": "≈ {monthly} por mês · você economiza {saved}",
+      "annualSavings": "{total} por ano · você economiza {saved}",
       "repliesMonthly": "{count} respostas por mês",
-      "repliesAnnual": "{count} respostas por ano",
       "repliesNote": "Cada mensagem que sua equipe envia para um cliente conta como uma resposta.",
       "includedTitle": "Tudo isso em todos os planos",
       "included": [
         "Malu para vendas e Ana para agendamentos",
-        "Instagram, Telegram, chat no site e link direto, e o WhatsApp oficial nos planos com WhatsApp",
-        "Catálogo por planilha ou sincronizado com o Shopify",
-        "Agenda com Google Calendar, lista de espera e aprovação",
-        "Respostas só com os seus dados, sem inventar",
-        "Passa a conversa para o seu time quando precisar",
-        "Caixa de conversas e relatórios de desempenho",
-        "Nome e foto de cada funcionária do seu jeito",
-        "Usuários ilimitados no painel"
+        "WhatsApp, Instagram, Telegram, chat no site e link direto",
+        "Catálogo por planilha ou Shopify",
+        "Agenda com Google Calendar",
+        "Respostas só com os seus dados",
+        "Passa a conversa para o seu time",
+        "Caixa de conversas e relatórios",
+        "Nome e foto do seu jeito",
+        "Usuários ilimitados"
       ],
       "plans": [
         {
@@ -544,11 +539,40 @@
           "name": "Sob medida",
           "desc": "Várias unidades ou volume muito alto, com condições negociadas.",
           "price": "Sob consulta",
-          "priceNote": "Projetos a partir de R$ 3.900/mês",
-          "cta": "Falar com vendas"
+          "cta": "Falar com vendas",
+          "features": [
+            "Suporte individualizado, com uma pessoa do nosso time",
+            "Funcionalidades sob demanda para o seu negócio",
+            "Integração com os sistemas que você já usa",
+            "Volume de respostas negociado"
+          ]
         }
       ],
-      "wppToggleNoteOn": "Inclui o WhatsApp oficial, com as taxas da Meta já no preço."
+      "meta": {
+        "choiceLabel": "Como você quer usar o WhatsApp?",
+        "own": {
+          "title": "Com sua conta da Meta",
+          "badge": "Mais barato",
+          "desc": "Você conecta seu número e cadastra seu cartão na Meta, que cobra direto só pelo que você usar.",
+          "rate": "1.000 respostas grátis por mês, depois até {unit} cada."
+        },
+        "managed": {
+          "title": "Tudo pela Staffra",
+          "desc": "A gente cuida do WhatsApp para você. Taxas da Meta já no preço, sem cartão na Meta."
+        },
+        "savings": "Economize até {amount} por mês",
+        "noWppTitle": "Não vai usar o WhatsApp? Não paga nada a mais.",
+        "noWppBody": "Atenda pelo Instagram, Telegram, chat no site ou link direto. Sem conta na Meta, sem cartão, sem custo extra: é só o valor do plano.",
+        "cardLabel": "WhatsApp, pago direto à Meta",
+        "cardNoWpp": "Sem WhatsApp",
+        "cardNoWppValue": "R$ 0",
+        "cardWpp": "Com WhatsApp",
+        "cardWppValue": "até {price}",
+        "cardTotal": "Máximo com WhatsApp: {total} / mês",
+        "managedLine": "WhatsApp incluso, nada a pagar à Meta",
+        "managedSub": "Preço fechado, sem cobrança à parte.",
+        "footnote": "Estimativa para respostas a clientes no Brasil até 24 h depois da última mensagem deles. Lembretes de agendamento custam cerca de R$ 0,04 cada e mensagens promocionais cerca de R$ 0,38."
+      }
     },
     "salesContact": {
       "title": "Falar com especialista",
@@ -618,7 +642,7 @@
         },
         {
           "q": "Vocês usam o WhatsApp oficial? Posso usar meu número atual?",
-          "a": "Sim. A conexão é feita pela conexão oficial da Meta, e dá para usar o número que você já tem no app WhatsApp Business ou um número novo. O WhatsApp vem nos planos com WhatsApp, e as taxas da Meta já estão incluídas no preço."
+          "a": "Sim. A conexão é feita pela conexão oficial da Meta, e dá para usar o número que você já tem no app WhatsApp Business ou um número novo. Todo plano inclui WhatsApp, e você escolhe como usar: com sua conta da Meta, pagando a Meta direto e ao custo (1.000 respostas grátis por mês e cerca de R$ 0,04 cada depois disso), ou tudo pela Staffra, com as taxas já no preço. Se não for usar o WhatsApp, não precisa de conta nem de cartão na Meta e não paga nada a mais."
         },
         {
           "q": "Tem fidelidade ou taxa de instalação?",
@@ -743,7 +767,6 @@
         "resultLabel": "Plano indicado",
         "perMonth": "{price}/mês",
         "planFits": "Até {replies} respostas por mês, cerca de {conversations} conversas.",
-        "planFitsWpp": "Com WhatsApp. Até {replies} respostas por mês, cerca de {conversations} conversas.",
         "usage": "Você usaria cerca de {pct}% do plano.",
         "customBody": "Com esse volume, montamos um plano sob medida para o seu negócio.",
         "customCta": "Falar com a gente",
@@ -754,7 +777,8 @@
         "empty": "Informe quanto você gasta hoje para ver a diferença.",
         "saving": "Você gasta {amount} a menos por mês e atende 24 horas por dia.",
         "extra": "São {amount} a mais por mês, e seus clientes passam a ser atendidos 24 horas por dia.",
-        "disclaimer": "A Staffra não precisa substituir ninguém: ela atende enquanto sua equipe não pode e chama vocês quando precisar."
+        "disclaimer": "A Staffra não precisa substituir ninguém: ela atende enquanto sua equipe não pode e chama vocês quando precisar.",
+        "withStaffraWppSub": "{plan} do plano + cerca de {meta} da Meta"
       },
       "cta": "Ver planos"
     },

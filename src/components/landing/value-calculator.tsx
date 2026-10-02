@@ -4,10 +4,10 @@ import { useId, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
-import { getSelfServePlansForVariant } from "@/lib/billing/plans";
 import { CheckIcon, UsersIcon, XIcon } from "@/components/ui/icons";
 import { SalesContactDialog } from "./sales-contact-dialog";
 import { CascadeText } from "./cascade-text";
+import { LANDING_PLANS, META_FREE_REPLIES, META_MAX_CENTS_PER_REPLY } from "./landing-plans";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 
@@ -16,7 +16,7 @@ const CLT_WEEK_HOURS = 44;
 const REPLIES_PER_CONVERSATION = 5;
 const VOLUME_STEP = 50;
 const VOLUME_MIN = 50;
-const VOLUME_MAX = 1500;
+const VOLUME_MAX = 2500;
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const NUM = new Intl.NumberFormat("pt-BR");
 
@@ -175,15 +175,18 @@ function ValueCalculator() {
   const [conversations, setConversations] = useState(150);
   const [whatsapp, setWhatsapp] = useState(true);
 
-  const plans = getSelfServePlansForVariant("monthly", whatsapp);
   const neededReplies = conversations * REPLIES_PER_CONVERSATION;
-  const planIndex = plans.findIndex((p) => (p.monthlyReplyLimit ?? 0) >= neededReplies);
-  const plan = planIndex >= 0 ? plans[planIndex] : null;
-  const planPrice = (plan?.priceBrlCents ?? 0) / 100;
-  const planReplies = plan?.monthlyReplyLimit ?? 0;
+  const planIndex = LANDING_PLANS.findIndex((p) => p.monthlyReplies >= neededReplies);
+  const plan = planIndex >= 0 ? LANDING_PLANS[planIndex] : null;
+  const planPrice = (plan?.ownCents ?? 0) / 100;
+  const metaPrice = whatsapp
+    ? (Math.max(0, neededReplies - META_FREE_REPLIES) * META_MAX_CENTS_PER_REPLY) / 100
+    : 0;
+  const totalPrice = planPrice + metaPrice;
+  const planReplies = plan?.monthlyReplies ?? 0;
   const usagePct = plan ? Math.max(1, Math.round((neededReplies / planReplies) * 100)) : 0;
   const cost = Number(costText.replace(/\D/g, "")) || 0;
-  const diff = cost - planPrice;
+  const diff = cost - totalPrice;
 
   return (
     <div className="flex flex-col gap-6 rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_60px_-32px_rgba(53,37,205,0.35)] ring-1 ring-[#e7e3f7] sm:p-7">
@@ -273,7 +276,7 @@ function ValueCalculator() {
               </p>
             </div>
             <p className="mt-2 text-[13px] leading-5 text-[#dad7ff]">
-              {t(whatsapp ? "planFitsWpp" : "planFits", {
+              {t("planFits", {
                 replies: NUM.format(planReplies),
                 conversations: NUM.format(Math.floor(planReplies / REPLIES_PER_CONVERSATION)),
               })}
@@ -315,9 +318,13 @@ function ValueCalculator() {
               <div className="rounded-2xl bg-[#f5f2ff] p-4 ring-1 ring-[#dcd7fb]">
                 <p className="text-[13px] font-medium text-[#3525cd]">{t("withStaffra")}</p>
                 <p className="mt-1 text-[22px] font-semibold tabular-nums leading-tight text-[#0f172a]">
-                  {BRL.format(planPrice)}
+                  {BRL.format(totalPrice)}
                 </p>
-                <p className="mt-1 text-[12px] text-[#464555]">{t("withStaffraSub")}</p>
+                <p className="mt-1 text-[12px] text-[#464555]">
+                  {metaPrice > 0
+                    ? t("withStaffraWppSub", { plan: BRL.format(planPrice), meta: BRL.format(metaPrice) })
+                    : t("withStaffraSub")}
+                </p>
               </div>
             </div>
             <p className="text-[15px] font-semibold leading-6">

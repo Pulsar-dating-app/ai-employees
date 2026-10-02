@@ -10,6 +10,11 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-02 — Landing shows the new 3k/6k/10k plans, WhatsApp on every plan
+
+**Decision:** The landing's pricing table no longer reads `plans.ts`. It reads its own `src/components/landing/landing-plans.ts`: 3.000 / 6.000 / 10.000 replies. Every plan includes WhatsApp, and the merchant picks how to pay for it. With their own Meta account it costs R$ 197 / R$ 317 / R$ 497, plus Meta billed to their card on Meta. Through Staffra (Twilio, Meta fees included) it costs R$ 497 / R$ 997 / R$ 1.597. Each own-account card shows the Meta ceiling: 1.000 free replies, then up to R$ 0,04 each. A banner states that a merchant who doesn't use WhatsApp needs no Meta account or card and pays nothing extra. Annual billing shows the per-month equivalent as the big number, the monthly price struck through, and the yearly total. It uses `annualPriceCents`, so prices stay in whole reais. The value calculator, hero per-day anchor and JSON-LD read the same file. This supersedes the 2026-10-01 entry's WhatsApp-on toggle.
+**Why:** Merchants don't resent Meta's cost; they resent finding it after paying. Showing a ceiling before checkout, and saying plainly that skipping WhatsApp costs nothing, removes the trap feeling. The catalog, onboarding, billing page and Stripe still carry the old plans. Until they are migrated, landing prices don't match checkout, and `landing-plans.ts` must be folded back into `plans.ts`.
+
 ## 2026-10-01 — Landing leads with the 11pm hook, a live Malu chat and WhatsApp prices
 
 **Decision:** The hero headline is "Seu próximo cliente pode chegar às 23h. Quem vai responder?". The hero's secondary CTA opens the real Malu widget already on the page. A trust tick anchors price per day from the cheapest WhatsApp plan, and the pricing table opens with WhatsApp on.

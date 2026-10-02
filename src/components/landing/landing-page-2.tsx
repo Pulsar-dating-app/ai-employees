@@ -19,7 +19,7 @@ import { ProductTour } from "./product-tour";
 import { ValueSection } from "./value-calculator";
 import { HeroChatDemo, type HeroChatCopy } from "./hero-chat-demo";
 import { TalkToMaluButton } from "./talk-to-malu-button";
-import { getSelfServePlansForVariant } from "@/lib/billing/plans";
+import { LANDING_PLANS } from "./landing-plans";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 import logo from "../../../public/logo.png";
@@ -29,7 +29,7 @@ const LOGIN = "/?auth=login";
 const MALU_CHAT = "/talk/staffra-2/malu";
 
 const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-const ENTRY_PLAN_CENTS = getSelfServePlansForVariant("monthly", true)[0]?.priceBrlCents ?? 0;
+const ENTRY_PLAN_CENTS = LANDING_PLANS[0].ownCents;
 const ENTRY_PRICE_PER_DAY = BRL_WHOLE.format(Math.ceil(ENTRY_PLAN_CENTS / 30 / 100));
 
 type LogoItem = { name: string };
