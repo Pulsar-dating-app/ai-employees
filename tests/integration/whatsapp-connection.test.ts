@@ -212,6 +212,70 @@ describe("WhatsApp connection (GET/DELETE .../whatsapp, POST .../whatsapp/connec
     expect(cleared.json.connection.needs_payment_method).toBe(false);
   });
 
+  // Trello D8, restored 2026-10-02 -- coexistence (keep the WhatsApp Business
+  // app on the number) on the merchant's own Meta account. The number is
+  // already registered by the app, so there's no /register and no PIN.
+  describe("coexistence", () => {
+    async function plainPlanCompany(name: string) {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, name);
+      await seedActivePlan(companyId, { planKey: "starter" });
+      await api("POST", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader);
+      return { owner, companyId };
+    }
+
+    it("resolves the number from the WABA, skips the PIN and marks is_coexistence", async () => {
+      const { owner, companyId } = await plainPlanCompany("Coexistence Connect Co");
+      const wabaId = `waba-coex-${randomUUID().slice(0, 8)}`;
+
+      const result = await api<{ connection: Record<string, unknown> }>(
+        "POST",
+        connectPath(companyId, "malu"),
+        owner.cookieHeader,
+        { code: "good-code", wabaId, isCoexistence: true },
+      );
+      expect(result.status).toBe(200);
+      expect(result.json.connection).toMatchObject({
+        phone_number_id: `${wabaId}-phone`,
+        display_phone_number: "+55 11 93333-3333",
+        status: "connected",
+        provider: "meta",
+        is_coexistence: true,
+      });
+      const row = await connectionRow(companyId);
+      expect(row.two_step_pin).toBeNull();
+      expect(row.twilio_sender_sid).toBeNull();
+    });
+
+    it("returns 502 and writes nothing when the WABA has zero or several numbers", async () => {
+      for (const trigger of ["trigger-zero-numbers", "trigger-multiple-numbers"]) {
+        const { owner, companyId } = await plainPlanCompany(`Coexistence ${trigger} Co`);
+        const result = await api<{ error: string }>("POST", connectPath(companyId, "malu"), owner.cookieHeader, {
+          code: "good-code",
+          wabaId: `waba-${trigger}-${randomUUID().slice(0, 8)}`,
+          isCoexistence: true,
+        });
+        expect(result.status).toBe(502);
+        const status = await api<{ connection: unknown }>("GET", statusPath(companyId, "malu"), owner.cookieHeader);
+        expect(status.json.connection).toBeNull();
+      }
+    });
+
+    it("refuses coexistence on a _wpp plan, since Twilio can't do it", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Coexistence Twilio Co");
+      await hireAgent(owner.cookieHeader, companyId, "malu");
+
+      const result = await api<{ error: string }>("POST", connectPath(companyId, "malu"), owner.cookieHeader, {
+        code: "good-code",
+        wabaId: `waba-coex-${randomUUID().slice(0, 8)}`,
+        isCoexistence: true,
+      });
+      expect(result.status).toBe(400);
+      expect(result.json.error).toBe("coexistence_requires_own_meta_account");
+    });
+  });
+
   it("returns 502 and writes nothing when Meta refuses to register the number", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Own Meta Register Fail Co");

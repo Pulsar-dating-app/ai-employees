@@ -1191,7 +1191,8 @@
       "paymentMethodStillMissing": "A Meta ainda não mostra um cartão nessa conta. Pode levar alguns minutos depois de cadastrar.",
       "planChangedTitle": "Seu número foi desconectado porque você mudou de plano",
       "planChangedIntro": "Seu plano agora usa a sua própria conta da Meta, então o {number} saiu da conexão pela Staffra. Para voltar a atender por ele, conecte de novo pela sua conta:",
-      "planChangedThen": "Depois, clique em Conectar abaixo. Durante a conexão, a Meta vai pedir um cartão para cobrar as respostas além das 1.000 grátis do mês."
+      "planChangedThen": "Depois, clique em Conectar abaixo. Durante a conexão, a Meta vai pedir um cartão para cobrar as respostas além das 1.000 grátis do mês.",
+      "coexistenceHint": "Você pode continuar usando o app WhatsApp Business no celular: durante a conexão, escolha conectar o número que já está no app."
     },
     "channelTabs": {
       "tablistLabel": "Formas de os clientes falarem com este funcionário",

@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import {
   exchangeCodeForToken,
   finishConnection,
+  finishCoexistenceConnection,
   generateRegistrationPin,
   hasWabaPaymentMethod,
   lookupDisplayPhoneNumber,
@@ -138,17 +139,23 @@ export async function POST(
   let phoneNumberId = typeof body?.phoneNumberId === "string" ? body.phoneNumberId : "";
   let wabaId = typeof body?.wabaId === "string" ? body.wabaId : "";
   const force = body?.force === true;
-  if (!reconnect && (!code || !wabaId || !phoneNumberId)) {
-    return NextResponse.json({ error: "code, phoneNumberId and wabaId are required" }, { status: 400 });
+  // Trello D8 -- a merchant keeping their WhatsApp Business app on the number
+  // (FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING) never gets a phoneNumberId from
+  // the browser; it's resolved from the WABA below.
+  const isCoexistence = !reconnect && body?.isCoexistence === true;
+  if (!reconnect && (!code || !wabaId || (!isCoexistence && !phoneNumberId))) {
+    return NextResponse.json(
+      { error: "code and wabaId are required (phoneNumberId too, unless isCoexistence)" },
+      { status: 400 },
+    );
   }
 
   const serviceClient = createServiceClient();
 
-  // 2026-09-22 -- WhatsApp is a paid add-on (a `_wpp` plan variant,
-  // plans.ts), not something every subscriber gets. Checked here, after
-  // body validation (so a malformed request still 400s the same way
-  // regardless of plan) but before any Meta call is made -- connecting a
-  // number this company isn't entitled to costs nothing to reject early.
+  // The plan decides how the number connects (Meta direct vs Twilio) and the
+  // gate rejects a lapsed subscription. Checked after body validation (so a
+  // malformed request still 400s the same way regardless of plan) but before
+  // any Meta call is made.
   const { data: billing } = await serviceClient
     .from("company_billing")
     .select("plan_key, subscription_status")
@@ -165,6 +172,9 @@ export async function POST(
   }
   if (reconnect && provider !== "twilio") {
     return NextResponse.json({ error: "nothing_to_reconnect" }, { status: 409 });
+  }
+  if (isCoexistence && provider !== "meta") {
+    return NextResponse.json({ error: "coexistence_requires_own_meta_account" }, { status: 400 });
   }
 
   let accessToken: string | null = null;
@@ -195,8 +205,13 @@ export async function POST(
   } else {
     try {
       ({ accessToken, tokenExpiresAt } = await exchangeCodeForToken(code));
-      displayPhoneNumber = await lookupDisplayPhoneNumber(accessToken, phoneNumberId);
-    } catch {
+      if (isCoexistence) {
+        ({ phoneNumberId, displayPhoneNumber } = await finishCoexistenceConnection(accessToken, wabaId));
+      } else {
+        displayPhoneNumber = await lookupDisplayPhoneNumber(accessToken, phoneNumberId);
+      }
+    } catch (err) {
+      console.error("WhatsApp connect: Meta lookup failed", err);
       return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
     }
   }
@@ -245,6 +260,7 @@ export async function POST(
       tokenExpiresAt,
       displayPhoneNumber,
       holderPin: holder?.two_step_pin ?? null,
+      isCoexistence,
     });
   }
 
@@ -336,8 +352,13 @@ async function connectMetaDirect(
     tokenExpiresAt: string | null;
     displayPhoneNumber: string;
     holderPin: string | null;
+    isCoexistence: boolean;
   },
 ) {
+  if (input.isCoexistence) {
+    return saveMetaDirectConnection(serviceClient, input, null);
+  }
+
   const { data: existing } = await serviceClient
     .from("company_whatsapp_connections")
     .select("two_step_pin")
@@ -353,6 +374,23 @@ async function connectMetaDirect(
     console.error("WhatsApp connect: Meta registration failed", err);
     return NextResponse.json({ error: "Failed to connect WhatsApp" }, { status: 502 });
   }
+  return saveMetaDirectConnection(serviceClient, input, pin);
+}
+
+async function saveMetaDirectConnection(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  input: {
+    companyId: string;
+    agentId: string;
+    phoneNumberId: string;
+    wabaId: string;
+    accessToken: string;
+    tokenExpiresAt: string | null;
+    displayPhoneNumber: string;
+    isCoexistence: boolean;
+  },
+  pin: string | null,
+) {
   const hasPaymentMethod = await hasWabaPaymentMethod(input.accessToken, input.wabaId);
 
   const { data: connection, error } = await serviceClient
@@ -371,7 +409,7 @@ async function connectMetaDirect(
         connected_at: new Date().toISOString(),
         has_payment_issue: false,
         payment_issue_detected_at: null,
-        is_coexistence: false,
+        is_coexistence: input.isCoexistence,
         provider: "meta",
         twilio_sender_sid: null,
         twilio_sender_id: null,

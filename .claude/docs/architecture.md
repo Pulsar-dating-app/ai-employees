@@ -364,7 +364,7 @@ dashboard UI unification).
 
 ### WhatsApp coexistence (Trello D8) — 2026-09-05
 
-> **Legacy since 2026-09-25:** new connections go through Twilio, which doesn't support coexistence for Tech Provider numbers. Embedded Signup no longer offers it and the connect route no longer accepts `isCoexistence`. What follows applies only to existing `provider = 'meta'` rows.
+> **Meta-direct only (restored 2026-10-02):** Twilio doesn't support coexistence for Tech Provider numbers, so from 2026-09-25 it was switched off. It is back for plain plans (the merchant's own Meta account). Embedded Signup passes `featureType: "whatsapp_business_app_onboarding"` only when the plan's provider is `meta`. The connect route accepts `isCoexistence` only then; on a `_wpp` plan it returns 400 `coexistence_requires_own_meta_account`. A coexistence connect skips `/register` and the PIN (`two_step_pin` stays null). It still goes through the same payment-method check and `needs_payment_method` flag as a regular Meta-direct connect.
 
 Discovered live-testing the real Embedded Signup popup: registering a number the normal way removes it from
 the merchant's WhatsApp Business mobile app — Cloud API only from then on.

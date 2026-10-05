@@ -130,6 +130,46 @@ export async function lookupDisplayPhoneNumber(accessToken: string, phoneNumberI
   return displayPhoneNumber ?? null;
 }
 
+// Trello D8, restored 2026-10-02 for the merchant's own Meta account -- the
+// coexistence counterpart to finishConnection. A merchant who keeps using
+// the WhatsApp Business app on the same number (Meta's
+// FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING event) has a number that's already
+// registered on Meta's side, so /register (and its PIN) is skipped. Still
+// subscribes the app to the WABA's webhooks, and resolves the number
+// server-side because that event carries no phone_number_id. Meta-direct
+// only: Twilio doesn't support coexistence for Tech Provider numbers.
+export async function finishCoexistenceConnection(accessToken: string, wabaId: string) {
+  const authHeaders = { Authorization: `Bearer ${accessToken}` };
+
+  const subscribeRes = await fetch(graphApiUrl(`/${wabaId}/subscribed_apps`), {
+    method: "POST",
+    headers: authHeaders,
+  });
+  if (!subscribeRes.ok) throw new Error(`Meta webhook subscription failed: ${await subscribeRes.text()}`);
+
+  const phoneNumbersRes = await fetch(
+    graphApiUrl(`/${wabaId}/phone_numbers`, { fields: "display_phone_number" }),
+    { headers: authHeaders },
+  );
+  if (!phoneNumbersRes.ok) {
+    throw new Error(`Meta phone number lookup failed: ${await phoneNumbersRes.text()}`);
+  }
+  const { data: phoneNumbers } = (await phoneNumbersRes.json()) as {
+    data?: { id: string; display_phone_number?: string }[];
+  };
+
+  // Embedded Signup's coexistence flow funnels merchants into one number per
+  // WABA; zero or several is an ambiguity worth an error, not a guess.
+  if (!phoneNumbers || phoneNumbers.length !== 1) {
+    throw new Error(`Expected exactly one phone number on WABA ${wabaId}, found ${phoneNumbers?.length ?? 0}`);
+  }
+
+  return {
+    phoneNumberId: phoneNumbers[0].id,
+    displayPhoneNumber: phoneNumbers[0].display_phone_number ?? null,
+  };
+}
+
 // Whether the merchant's WABA has a payment method Meta can bill
 // (`primary_funding_id`). Only meaningful for a Meta-direct number, where
 // the merchant pays Meta themselves. Null when Meta couldn't be asked, so a

@@ -1191,7 +1191,8 @@
       "paymentMethodStillMissing": "Meta doesn't show a card on this account yet. It can take a few minutes after you add it.",
       "planChangedTitle": "Your number was disconnected because you changed plans",
       "planChangedIntro": "Your plan now uses your own Meta account, so {number} is no longer connected through Staffra. To answer on it again, reconnect it with your own account:",
-      "planChangedThen": "Then click Connect below. While connecting, Meta will ask for a card to charge replies beyond the month's 1,000 free ones."
+      "planChangedThen": "Then click Connect below. While connecting, Meta will ask for a card to charge replies beyond the month's 1,000 free ones.",
+      "coexistenceHint": "You can keep using the WhatsApp Business app on your phone: while connecting, choose to connect the number that's already in the app."
     },
     "channelTabs": {
       "tablistLabel": "Ways customers can reach this employee",

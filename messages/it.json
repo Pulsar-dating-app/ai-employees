@@ -1191,7 +1191,8 @@
       "paymentMethodStillMissing": "Meta non mostra ancora una carta su questo account. Può volerci qualche minuto dopo averla aggiunta.",
       "planChangedTitle": "Il tuo numero è stato scollegato perché hai cambiato piano",
       "planChangedIntro": "Il tuo piano ora usa il tuo account Meta, quindi {number} non è più collegato tramite Staffra. Per rispondere di nuovo da lì, ricollegalo con il tuo account:",
-      "planChangedThen": "Poi clicca su Collega qui sotto. Durante il collegamento, Meta ti chiederà una carta per addebitare le risposte oltre le 1.000 gratuite del mese."
+      "planChangedThen": "Poi clicca su Collega qui sotto. Durante il collegamento, Meta ti chiederà una carta per addebitare le risposte oltre le 1.000 gratuite del mese.",
+      "coexistenceHint": "Puoi continuare a usare l'app WhatsApp Business sul telefono: durante il collegamento, scegli di collegare il numero che è già nell'app."
     },
     "channelTabs": {
       "tablistLabel": "Come i clienti possono raggiungere questa dipendente",

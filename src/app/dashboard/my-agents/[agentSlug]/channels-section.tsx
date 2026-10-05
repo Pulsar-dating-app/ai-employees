@@ -99,7 +99,7 @@ export function ChannelsSection({
   const [twoFactorDisabled, setTwoFactorDisabled] = useState(false);
   const [recheckingPayment, setRecheckingPayment] = useState(false);
   const [paymentStillMissing, setPaymentStillMissing] = useState(false);
-  const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
+  const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string; isCoexistence?: boolean }>({});
   const statusUrl = `/api/companies/${companyId}/agents/${agentSlug}/whatsapp`;
 
   useEffect(() => {
@@ -134,6 +134,13 @@ export function ChannelsSection({
           pendingSignup.current.phoneNumberId = data.data?.phone_number_id;
           pendingSignup.current.wabaId = data.data?.waba_id;
           maybeSubmit();
+        } else if (data.event === "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING") {
+          // Trello D8 -- the merchant kept their WhatsApp Business app on the
+          // number (offered only on their own Meta account, see startSignup).
+          // No phone_number_id here; the connect route resolves it.
+          pendingSignup.current.wabaId = data.data?.waba_id;
+          pendingSignup.current.isCoexistence = true;
+          maybeSubmit();
         }
       } catch {
         // Not a JSON message we care about.
@@ -158,13 +165,13 @@ export function ChannelsSection({
   }, [isPending, statusUrl]);
 
   function maybeSubmit() {
-    const { code, phoneNumberId, wabaId } = pendingSignup.current;
-    if (!code || !wabaId || !phoneNumberId) return;
+    const { code, phoneNumberId, wabaId, isCoexistence } = pendingSignup.current;
+    if (!code || !wabaId || (!isCoexistence && !phoneNumberId)) return;
 
     fetch(`${statusUrl}/connect`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, phoneNumberId, wabaId }),
+      body: JSON.stringify({ code, phoneNumberId, wabaId, isCoexistence }),
     })
       .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
       .then(({ ok, json }) => {
@@ -229,11 +236,13 @@ export function ChannelsSection({
         config_id: metaConfigId,
         response_type: "code",
         override_default_response_type: true,
-        extras: {
-          setup: whatsappProvider === "twilio" ? { solutionID: metaSolutionId } : {},
-          version: "v4",
-          sessionInfoVersion: "3",
-        },
+        // Twilio's Partner Solution can't do coexistence for Tech Provider
+        // numbers, so only the merchant's own Meta account gets Meta's
+        // "keep using the WhatsApp Business app" option.
+        extras:
+          whatsappProvider === "twilio"
+            ? { setup: { solutionID: metaSolutionId }, version: "v4", sessionInfoVersion: "3" }
+            : { setup: {}, featureType: "whatsapp_business_app_onboarding", version: "v4", sessionInfoVersion: "3" },
       },
     );
   }
@@ -549,9 +558,12 @@ export function ChannelsSection({
                           {t("billingIncludedDescription")}
                         </Alert>
                       ) : (
-                        <Alert variant="info" title={t("billingOwnTitle")}>
-                          {t("billingOwnDescription")}
-                        </Alert>
+                        <>
+                          <Alert variant="info" title={t("billingOwnTitle")}>
+                            {t("billingOwnDescription")}
+                          </Alert>
+                          <p className="text-sm text-on-surface-variant">{t("coexistenceHint")}</p>
+                        </>
                       )}
                       {reconnectableNumber && (view === "confirmingReconnect" || view === "reconnecting") ? (
                         <div className="flex flex-col gap-3">

@@ -26,6 +26,7 @@ Record of notable decisions and the reasoning behind them, newest first.
 - Open risk: onboarding without a `solutionID` alongside an accepted Partner Solution hasn't been tested live.
 
 Follow-ups shipped the same day:
+- **WhatsApp Business App coexistence is back, on the merchant's own Meta account only** (D8's code restored from `0a8b291`). Most small merchants run their business from the app and won't give it up, and Twilio can't offer it, so it is the strongest reason to pick the own-account plan. Only replies Staffra sends through the API cost money on Meta; what the owner types in the app stays free, which matches the spend estimate, since that counts only our sends.
 - **Auto-release of Twilio numbers when a company leaves `_wpp`.** Disconnect plus a reconnect notice, and no route back to Twilio. A silent channel the merchant can't explain is worse than an explicit disconnect.
 - **A "card on Meta" check at connect time** (`primary_funding_id`). It is UI-only, because whether Meta delivers free-tier replies without a card is unconfirmed, and gating on it could block a working number.
 - **A Meta spend estimate with 50/80/100% alerts in the dashboard.** It is computed from our own `messages` rows rather than Meta's `pricing_analytics`. Every reply already goes through our send path, the count needs no new Meta permission or webhook field, and it can't drift from what the merchant sees in their inbox. The trade-off is that it's an estimate, priced at the top of Meta's range.

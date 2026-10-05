@@ -25,6 +25,10 @@ import type { AddressInfo } from "node:net";
 // - wabaId containing "trigger-no-funding" -> GET ?fields=primary_funding_id
 //   reports no payment method, until POST /__add_funding?waba_id= adds one
 //   (the only piece of state here, keyed by a per-test unique WABA id)
+// - wabaId (in the GET /{wabaId}/phone_numbers lookup) containing
+//   "trigger-zero-numbers" -> empty list; "trigger-multiple-numbers" -> two
+//   entries (D8's finishCoexistenceConnection must throw on either);
+//   otherwise one entry, id derived from the wabaId so it stays unique
 export function startGraphApiMock(): Promise<{ url: string; stop: () => Promise<void> }> {
   const fundedWabas = new Set<string>();
   const server: Server = createServer((req, res) => {
@@ -79,6 +83,21 @@ export function startGraphApiMock(): Promise<{ url: string; stop: () => Promise<
         return send(200, { messages: [{ id: `mock-message-${to}` }] });
       });
       return;
+    }
+
+    const phoneNumbersMatch = url.pathname.match(/^\/v21\.0\/([^/]+)\/phone_numbers$/);
+    if (phoneNumbersMatch) {
+      const wabaId = phoneNumbersMatch[1];
+      if (wabaId.includes("trigger-zero-numbers")) return send(200, { data: [] });
+      if (wabaId.includes("trigger-multiple-numbers")) {
+        return send(200, {
+          data: [
+            { id: `${wabaId}-phone-1`, display_phone_number: "+55 11 91111-1111" },
+            { id: `${wabaId}-phone-2`, display_phone_number: "+55 11 92222-2222" },
+          ],
+        });
+      }
+      return send(200, { data: [{ id: `${wabaId}-phone`, display_phone_number: "+55 11 93333-3333" }] });
     }
 
     const phoneMatch = url.pathname.match(/^\/v21\.0\/([^/]+)$/);
