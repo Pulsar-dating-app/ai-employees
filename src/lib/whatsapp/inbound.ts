@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AgentEngine } from "@/lib/agent-engine";
 import { resolveWhatsappSession } from "@/lib/whatsapp/session";
-import { decideWhatsappSendGate, decideWhatsappPlanGate } from "@/lib/whatsapp/enforcement";
+import { decideWhatsappSendGate, decideWhatsappPlanGate, type WhatsappProvider } from "@/lib/whatsapp/enforcement";
 import type { SendWhatsappMessageResult } from "@/lib/whatsapp/meta-graph-api";
 import { findPlan } from "@/lib/billing/plans";
 import { evaluateReplyGate, recordAiReply } from "@/lib/billing/enforcement";
@@ -12,6 +12,7 @@ export type InboundWhatsappConnection = {
   agent_id: string;
   status: string;
   has_payment_issue: boolean;
+  provider: WhatsappProvider;
 };
 
 export async function handleInboundWhatsappMessage(
@@ -35,10 +36,13 @@ export async function handleInboundWhatsappMessage(
     .select("plan_key, subscription_status")
     .eq("company_id", connection.company_id)
     .maybeSingle();
-  const planGate = decideWhatsappPlanGate({
-    subscription_status: (billing?.subscription_status as string | null) ?? null,
-    whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
-  });
+  const planGate = decideWhatsappPlanGate(
+    {
+      subscription_status: (billing?.subscription_status as string | null) ?? null,
+      whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
+    },
+    connection.provider,
+  );
   if (!planGate.allow) return;
 
   let session;

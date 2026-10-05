@@ -559,6 +559,71 @@ describe("Stripe webhook (Trello P4)", () => {
     expect(rows![0].reply_limit).toBe(getPlan("pro").monthlyReplyLimit); // onto the new plan
   });
 
+  // 2026-10-02 -- off a _wpp plan, Staffra stops paying Meta/Twilio for the
+  // company's WhatsApp, so its Twilio numbers are released and flagged for a
+  // reconnect on the merchant's own Meta account.
+  it("moving off a _wpp plan releases the company's Twilio numbers for a reconnect on their own Meta account", async () => {
+    const owner = await signUpTestUser("owner");
+    const created = await api<{ company: { id: string } }>("POST", "/api/companies", owner.cookieHeader, {
+      name: "P4 Off WPP Co",
+    });
+    const companyId = created.json.company.id;
+    await svc.from("company_billing").insert({
+      company_id: companyId,
+      stripe_customer_id: "cus_offwpp",
+      stripe_subscription_id: "sub_offwpp",
+      subscription_status: "active",
+      plan_key: "starter_wpp",
+      current_period_start: new Date("2026-06-15T00:00:00Z").toISOString(),
+    });
+    await api("POST", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader);
+    const unique = crypto.randomUUID().slice(0, 8);
+    const connected = await api("POST", `/api/companies/${companyId}/agents/malu/whatsapp/connect`, owner.cookieHeader, {
+      code: "good-code",
+      phoneNumberId: `phone-${unique}`,
+      wabaId: `waba-${unique}`,
+    });
+    expect(connected.status).toBe(200);
+    const { data: before } = await svc
+      .from("company_whatsapp_connections")
+      .select("twilio_sender_sid")
+      .eq("company_id", companyId)
+      .single();
+    const senderSid = (before as { twilio_sender_sid: string }).twilio_sender_sid;
+
+    const res = await postEvent(
+      stripeEvent(
+        "customer.subscription.updated",
+        subscriptionObject({
+          id: "sub_offwpp",
+          companyId,
+          status: "active",
+          lookupKey: "starter2_monthly",
+          periodStartSec: Math.floor(new Date("2026-06-15T00:00:00Z").getTime() / 1000),
+        }),
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect((await readBilling(companyId))?.plan_key).toBe("starter");
+
+    const { data: after } = await svc
+      .from("company_whatsapp_connections")
+      .select("status, provider, disconnect_reason, twilio_sender_sid")
+      .eq("company_id", companyId)
+      .single();
+    expect(after).toEqual({ status: "disconnected", provider: "twilio", disconnect_reason: "plan_changed", twilio_sender_sid: null });
+    const deleted = (await (await fetch(`${getTestEnv().twilioApiMockUrl}/__deleted_senders`)).json()) as string[];
+    expect(deleted).toContain(senderSid);
+
+    const reconnect = await api<{ error: string }>(
+      "POST",
+      `/api/companies/${companyId}/agents/malu/whatsapp/connect`,
+      owner.cookieHeader,
+      { reconnect: true },
+    );
+    expect(reconnect.status).toBe(409);
+  });
+
   it("an unknown price lookup_key keeps the existing plan_key but still syncs status", async () => {
     const companyId = await createCompany("P4 Unknown Key Co");
     await svc.from("company_billing").insert({

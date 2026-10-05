@@ -9,10 +9,12 @@ import { WhatsAppIcon, CheckIcon, LockIcon } from "@/components/ui/icons";
 import { ChannelPanelHeader } from "./channel-panel-header";
 import { ChannelPreview } from "./channel-preview";
 import { useReportChannelStatus } from "./channel-status";
+import type { WhatsappProvider } from "@/lib/whatsapp/enforcement";
 
 const PENDING_POLL_MS = 5000;
 
 const WHATSAPP_MANAGER_PHONE_NUMBERS_URL = "https://business.facebook.com/wa/manage/phone-numbers/";
+const META_PAYMENT_SETTINGS_URL = "https://business.facebook.com/billing_hub/payment_settings";
 
 declare global {
   interface Window {
@@ -37,6 +39,8 @@ type Connection = {
   payment_issue_detected_at: string | null;
   twilio_sender_status: string | null;
   provider: "meta" | "twilio";
+  disconnect_reason: "plan_changed" | null;
+  needs_payment_method: boolean;
 };
 
 type ViewState =
@@ -65,6 +69,7 @@ export function ChannelsSection({
   metaAppId,
   metaConfigId,
   metaSolutionId,
+  whatsappProvider,
 }: {
   companyId: string;
   agentSlug: string;
@@ -84,6 +89,7 @@ export function ChannelsSection({
   metaAppId: string;
   metaConfigId: string;
   metaSolutionId: string;
+  whatsappProvider: WhatsappProvider;
 }) {
   const t = useTranslations("MyAgents.channels");
   const [connection, setConnection] = useState<Connection | null>(null);
@@ -91,7 +97,9 @@ export function ChannelsSection({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
   const [twoFactorDisabled, setTwoFactorDisabled] = useState(false);
-  const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
+  const [recheckingPayment, setRecheckingPayment] = useState(false);
+  const [paymentStillMissing, setPaymentStillMissing] = useState(false);
+  const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string; isCoexistence?: boolean }>({});
   const statusUrl = `/api/companies/${companyId}/agents/${agentSlug}/whatsapp`;
 
   useEffect(() => {
@@ -126,6 +134,13 @@ export function ChannelsSection({
           pendingSignup.current.phoneNumberId = data.data?.phone_number_id;
           pendingSignup.current.wabaId = data.data?.waba_id;
           maybeSubmit();
+        } else if (data.event === "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING") {
+          // Trello D8 -- the merchant kept their WhatsApp Business app on the
+          // number (offered only on their own Meta account, see startSignup).
+          // No phone_number_id here; the connect route resolves it.
+          pendingSignup.current.wabaId = data.data?.waba_id;
+          pendingSignup.current.isCoexistence = true;
+          maybeSubmit();
         }
       } catch {
         // Not a JSON message we care about.
@@ -150,13 +165,13 @@ export function ChannelsSection({
   }, [isPending, statusUrl]);
 
   function maybeSubmit() {
-    const { code, phoneNumberId, wabaId } = pendingSignup.current;
-    if (!code || !wabaId || !phoneNumberId) return;
+    const { code, phoneNumberId, wabaId, isCoexistence } = pendingSignup.current;
+    if (!code || !wabaId || (!isCoexistence && !phoneNumberId)) return;
 
     fetch(`${statusUrl}/connect`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, phoneNumberId, wabaId }),
+      body: JSON.stringify({ code, phoneNumberId, wabaId, isCoexistence }),
     })
       .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
       .then(({ ok, json }) => {
@@ -221,7 +236,13 @@ export function ChannelsSection({
         config_id: metaConfigId,
         response_type: "code",
         override_default_response_type: true,
-        extras: { setup: { solutionID: metaSolutionId }, version: "v4", sessionInfoVersion: "3" },
+        // Twilio's Partner Solution can't do coexistence for Tech Provider
+        // numbers, so only the merchant's own Meta account gets Meta's
+        // "keep using the WhatsApp Business app" option.
+        extras:
+          whatsappProvider === "twilio"
+            ? { setup: { solutionID: metaSolutionId }, version: "v4", sessionInfoVersion: "3" }
+            : { setup: {}, featureType: "whatsapp_business_app_onboarding", version: "v4", sessionInfoVersion: "3" },
       },
     );
   }
@@ -245,6 +266,18 @@ export function ChannelsSection({
     setView("idle");
   }
 
+  async function recheckPaymentMethod() {
+    setRecheckingPayment(true);
+    setPaymentStillMissing(false);
+    const data = await fetch(statusUrl)
+      .then((res) => res.json() as Promise<{ connection: Connection | null }>)
+      .catch(() => null);
+    setRecheckingPayment(false);
+    if (!data) return;
+    setConnection(data.connection);
+    setPaymentStillMissing(data.connection?.needs_payment_method === true);
+  }
+
   async function confirmDisconnect() {
     setView("disconnecting");
     const res = await fetch(statusUrl, { method: "DELETE" });
@@ -260,7 +293,7 @@ export function ChannelsSection({
 
   const isConnected = connection?.status === "connected";
   const reconnectableNumber =
-    connection?.status === "disconnected" && connection.provider === "twilio"
+    connection?.status === "disconnected" && connection.provider === "twilio" && whatsappProvider === "twilio"
       ? connection.display_phone_number
       : null;
   const needsVerification = isPending && connection?.twilio_sender_status === "PENDING_VERIFICATION";
@@ -269,6 +302,9 @@ export function ChannelsSection({
   // already completed Embedded Signup and needs a different fix (add a
   // payment method in Meta Business Manager), not to reconnect.
   const hasPaymentIssue = isConnected && connection?.has_payment_issue === true;
+  const needsPaymentMethod = isConnected && connection?.provider === "meta" && connection.needs_payment_method === true;
+  const disconnectedByPlanChange =
+    connection?.status === "disconnected" && connection.disconnect_reason === "plan_changed" && whatsappProvider === "meta";
   const tHub = useTranslations("MyAgents.channelHub.status");
   useReportChannelStatus(
     "whatsapp",
@@ -278,6 +314,10 @@ export function ChannelsSection({
         ? null
         : hasPaymentIssue
           ? { tone: "warn", label: tHub("paymentIssue") }
+          : needsPaymentMethod
+            ? { tone: "warn", label: tHub("paymentMethodMissing") }
+            : disconnectedByPlanChange
+              ? { tone: "warn", label: tHub("planChangedDisconnected") }
           : isPending
             ? {
                 tone: "warn",
@@ -351,6 +391,38 @@ export function ChannelsSection({
                         {t("paymentIssueBadge")}
                       </span>
                       <p className="text-sm text-on-surface-variant">{t("paymentIssueDescription")}</p>
+                    </div>
+                  ) : null}
+                  {needsPaymentMethod ? (
+                    <div className="flex flex-col gap-3">
+                      <Alert variant="warning" title={t("paymentMethodTitle")}>
+                        {t("paymentMethodIntro")}
+                      </Alert>
+                      <ol className="list-decimal space-y-1 pl-5 text-sm text-on-surface-variant">
+                        <li>
+                          <a href={META_PAYMENT_SETTINGS_URL} target="_blank" rel="noopener noreferrer" className="underline">
+                            {t("paymentMethodStepOpen")}
+                          </a>
+                        </li>
+                        <li>{t("paymentMethodStepAdd")}</li>
+                        <li>{t("paymentMethodStepBack")}</li>
+                      </ol>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          isLoading={recheckingPayment}
+                          onClick={recheckPaymentMethod}
+                        >
+                          {t("paymentMethodRecheck")}
+                        </Button>
+                        {paymentStillMissing ? (
+                          <p role="status" className="text-sm text-on-surface-variant">
+                            {t("paymentMethodStillMissing")}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
                   ) : null}
                   {canEdit &&
@@ -450,11 +522,49 @@ export function ChannelsSection({
                 <div className="flex flex-col gap-4">
                   <p className="text-sm text-on-surface-variant">{t("notConnected")}</p>
                   <ChannelPreview agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={accent} />
+                  {disconnectedByPlanChange ? (
+                    <div className="flex flex-col gap-3">
+                      <Alert variant="warning" title={t("planChangedTitle")}>
+                        {t("planChangedIntro", { number: connection?.display_phone_number ?? "" })}
+                      </Alert>
+                      {canEdit ? (
+                        <>
+                          <ol className="list-decimal space-y-1 pl-5 text-sm text-on-surface-variant">
+                            <li>
+                              <a
+                                href={WHATSAPP_MANAGER_PHONE_NUMBERS_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline"
+                              >
+                                {t("reconnectTwoFactorStepOpen")}
+                              </a>
+                            </li>
+                            <li>
+                              {t("reconnectTwoFactorStepNumber", { number: connection?.display_phone_number ?? "" })}
+                            </li>
+                            <li>{t("reconnectTwoFactorStepDisable")}</li>
+                            <li>{t("reconnectTwoFactorStepWait")}</li>
+                          </ol>
+                          <p className="text-sm text-on-surface-variant">{t("planChangedThen")}</p>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : null}
                   {canEdit ? (
                     <>
-                      <Alert variant="info" title={t("billingIncludedTitle")}>
-                        {t("billingIncludedDescription")}
-                      </Alert>
+                      {whatsappProvider === "twilio" ? (
+                        <Alert variant="info" title={t("billingIncludedTitle")}>
+                          {t("billingIncludedDescription")}
+                        </Alert>
+                      ) : (
+                        <>
+                          <Alert variant="info" title={t("billingOwnTitle")}>
+                            {t("billingOwnDescription")}
+                          </Alert>
+                          <p className="text-sm text-on-surface-variant">{t("coexistenceHint")}</p>
+                        </>
+                      )}
                       {reconnectableNumber && (view === "confirmingReconnect" || view === "reconnecting") ? (
                         <div className="flex flex-col gap-3">
                           <Alert variant="warning" title={t("reconnectTwoFactorTitle")}>

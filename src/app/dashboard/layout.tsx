@@ -12,6 +12,8 @@ import {
   isSilentForNoPlan as checkSilentForNoPlan,
 } from "@/lib/billing/activation";
 import { getUsageSummary } from "@/lib/billing/usage-summary";
+import { getMetaSpendSummary } from "@/lib/whatsapp/meta-spend";
+import { createServiceClient } from "@/lib/supabase/service";
 import { countFilledSections, SETTINGS_MIN_SECTIONS } from "@/lib/companies/settings-completeness";
 import { getSchedulingWarnings } from "@/lib/scheduling/warnings";
 import { buildSetupChecklist, loadPlanAndChannelFacts } from "@/lib/setup/checklist";
@@ -142,6 +144,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     settingsFields,
     schedulingWarnings,
     planAndChannel,
+    metaSpend,
   ] = companyId
     ? await Promise.all([
         checkBillingPastDue(companyId, supabase),
@@ -159,6 +162,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           .maybeSingle(),
         getSchedulingWarnings(supabase, companyId),
         loadPlanAndChannelFacts(supabase, companyId),
+        getMetaSpendSummary(createServiceClient(), companyId),
       ])
     : [
         false,
@@ -168,6 +172,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         { data: null },
         { calendarNotConnected: false, businessHoursEmpty: false, servicesEmpty: false },
         { planChosen: false, channelLive: false },
+        null,
       ];
 
   const silence = isBillingPastDue ? "past_due" : isSilentForNoPlan ? "no_plan" : null;
@@ -218,9 +223,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           usage={usage}
           attention={attention}
           setupSteps={setupSteps}
+          metaSpendAlert={metaSpend?.alertLevel ?? null}
         />
         <div className="relative z-10 sm:pl-64">
-          <TopBar locale={locale as Locale} silence={silence} />
+          <TopBar locale={locale as Locale} silence={silence} metaSpendAlert={metaSpend?.alertLevel ?? null} />
           <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">{children}</main>
         </div>
       </div>

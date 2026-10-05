@@ -102,6 +102,15 @@ describe("Twilio WhatsApp inbound webhook (POST /api/webhooks/twilio/whatsapp)",
     ]);
   });
 
+  it("goes fully silent once the company moves off a _wpp plan, since Staffra no longer pays for this number", async () => {
+    const { companyId, accountSid, authToken } = await connectedCompany("Twilio Downgraded Co");
+    await service.from("company_billing").update({ plan_key: "starter" }).eq("company_id", companyId);
+
+    const res = await postWebhook(inboundParams(accountSid, "5511900000109", "oi", "SMdowngraded"), authToken);
+    expect(res.status).toBe(200);
+    expect(await companyMessages(companyId)).toEqual([]);
+  });
+
   it("is idempotent on a repeat MessageSid", async () => {
     const { companyId, accountSid, authToken } = await connectedCompany("Twilio Idempotent Co");
     const params = inboundParams(accountSid, "5511900000103", "primeira", "SMrepeat");

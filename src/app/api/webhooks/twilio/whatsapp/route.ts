@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (!connection) return twimlResponse();
 
-  await handleInboundWhatsappMessage(supabase, connection, { from: waId, text, messageId }, (reply) =>
+  await handleInboundWhatsappMessage(supabase, { ...connection, provider: "twilio" }, { from: waId, text, messageId }, (reply) =>
     sendTwilioWhatsappMessage(subaccount.credentials, connection.twilio_sender_id, waId, reply),
   );
 

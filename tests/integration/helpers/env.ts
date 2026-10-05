@@ -18,6 +18,7 @@ export interface TestEnv {
   shopifyApiMockUrl: string;
   stripeApiMockUrl: string;
   twilioApiMockUrl: string;
+  graphApiMockUrl: string;
 }
 
 // Reads the connection info global-setup.ts wrote after booting the test

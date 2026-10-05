@@ -97,7 +97,7 @@ describe("company_whatsapp_connections RLS: access_token is column-locked for ev
       { name: "Direct Write Bypass Co" },
     );
     const companyId = created.json.company.id;
-    await seedActivePlan(companyId, { planKey: "starter" }); // deliberately no WhatsApp add-on
+    await seedActivePlan(companyId, { planKey: "starter" });
     await api("POST", `/api/companies/${companyId}/agents/malu`, owner.cookieHeader);
 
     const fakeInsert = await owner.client

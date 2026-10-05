@@ -24,7 +24,8 @@ import {
 import { LanguageSwitcher } from "@/components/language-switcher";
 import type { UsageSummary } from "@/lib/billing/usage-summary";
 import type { SetupStep } from "@/lib/setup/checklist";
-import { BillingPastDueAlert, type SilenceReason } from "./billing-alert";
+import { BillingPastDueAlert, MetaSpendAlert, type SilenceReason } from "./billing-alert";
+import type { MetaSpendAlertLevel } from "@/lib/whatsapp/meta-pricing";
 import { SetupGuide } from "./setup-guide";
 
 // Every tab is always shown. Products → Malu, Scheduling → Ana, Performance
@@ -341,6 +342,7 @@ export function Sidebar({
   attention,
   setupSteps,
   member = null,
+  metaSpendAlert = null,
 }: {
   companyName: string | null;
   email: string | null;
@@ -350,6 +352,7 @@ export function Sidebar({
   usage: UsageSummary | null;
   attention: Attention;
   setupSteps: SetupStep[];
+  metaSpendAlert?: MetaSpendAlertLevel | null;
   // Set for a `member` login: their name and linked professional.
   member?: { name: string | null; professionalId: string | null } | null;
 }) {
@@ -476,6 +479,7 @@ export function Sidebar({
         </div>
         <div className="flex items-center gap-2">
           {silence ? <BillingPastDueAlert compact reason={silence} /> : null}
+          {metaSpendAlert ? <MetaSpendAlert compact level={metaSpendAlert} /> : null}
           <LanguageSwitcher currentLocale={locale} />
           <form action={logout}>
             <button type="submit" aria-label={tDash("logout")} className="p-1.5 text-on-surface-variant">

@@ -112,6 +112,7 @@ describe("Conversations API", () => {
     companyId: string,
     status: "active" | "paused" | "closed",
     recipientPhone = "5511999998888",
+    provider: "meta" | "twilio" = "meta",
   ) {
     const svc = getTestServiceClient();
     const { data: agent } = await svc.from("agents").select("id").eq("slug", "malu").single();
@@ -149,6 +150,7 @@ describe("Conversations API", () => {
       waba_id: `mock-waba-${randomUUID()}`,
       access_token: "mock-token",
       status: "connected",
+      provider,
     });
     return conversationId;
   }
@@ -404,6 +406,23 @@ describe("Conversations API", () => {
     expect(detail.json.messages.map((m) => m.role)).toEqual(["customer", "merchant"]);
   });
 
+  it("delivers a reply on a plain plan over the merchant's own Meta-connected number", async () => {
+    const owner = await signUpTestUser("owner");
+    const company = await createCompany(owner.cookieHeader, "Conv WA Own Meta Co");
+    await seedActivePlan(company.id, { planKey: "starter" });
+    await hireMalu(owner.cookieHeader, company.id);
+    const conversationId = await seedWhatsappConversation(company.id, "active");
+
+    const res = await api<{ delivery: { ok: boolean } | null }>(
+      "POST",
+      `/api/companies/${company.id}/conversations/${conversationId}/messages`,
+      owner.cookieHeader,
+      { message: "Oi! Entregamos sim." },
+    );
+    expect(res.status).toBe(201);
+    expect(res.json.delivery).toEqual({ ok: true });
+  });
+
   it("a WhatsApp reply that Meta rejects is still saved, reports delivery failure, and disconnects a dead token", async () => {
     const owner = await signUpTestUser("owner");
     const company = await createCompany(owner.cookieHeader, "Conv WA Delivery Fail Co");
@@ -441,14 +460,14 @@ describe("Conversations API", () => {
     expect((connection as { status: string }).status).toBe("disconnected");
   });
 
-  it("a WhatsApp reply is saved but not sent once the plan no longer includes WhatsApp", async () => {
+  it("a reply over a Twilio-connected number is saved but not sent once the plan no longer pays for it", async () => {
     const owner = await signUpTestUser("owner");
     const company = await createCompany(owner.cookieHeader, "Conv WA No Addon Co");
-    // Plain Starter: the number is still connected (e.g. from before a switch
-    // to a plan without WhatsApp), but the plan doesn't include it.
+    // Plain Starter: the number is still connected through Twilio from before
+    // a switch off a _wpp plan, and Staffra no longer pays for that.
     await seedActivePlan(company.id, { planKey: "starter" });
     await hireMalu(owner.cookieHeader, company.id);
-    const conversationId = await seedWhatsappConversation(company.id, "paused");
+    const conversationId = await seedWhatsappConversation(company.id, "paused", undefined, "twilio");
 
     const res = await api<{ message: { content: string }; delivery: { ok: boolean; reason?: string } | null }>(
       "POST",

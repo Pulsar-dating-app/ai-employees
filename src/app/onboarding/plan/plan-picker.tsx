@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CheckIcon } from "@/components/ui/icons";
 import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import { getSelfServePlansForVariant, type BillingPeriod } from "@/lib/billing/plans";
+import { WhatsAppModeChoice } from "@/components/billing/whatsapp-mode-choice";
 import { StepActions } from "../step-card";
 import { OnboardingLoader } from "../onboarding-loader";
 
@@ -109,28 +110,8 @@ export function PlanPicker({
             </button>
           ))}
         </div>
-        <div className="inline-flex items-center gap-2.5 rounded-lg border border-primary-fixed bg-white/70 px-3 py-2">
-          <span className="text-label-md font-medium text-on-surface">{t("picker.wppToggleLabel")}</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={whatsappIncluded}
-            onClick={() => setWhatsappIncluded((v) => !v)}
-            className={clsx(
-              "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
-              whatsappIncluded ? "bg-primary" : "bg-primary-fixed",
-            )}
-          >
-            <span
-              className={clsx(
-                "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
-                whatsappIncluded ? "translate-x-6" : "translate-x-1",
-              )}
-            />
-          </button>
-        </div>
       </div>
-      <p className="-mt-3 text-sm text-on-surface-variant">{t("picker.wppToggleNote")}</p>
+      <WhatsAppModeChoice whatsappIncluded={whatsappIncluded} onChange={setWhatsappIncluded} />
 
       <div role="radiogroup" aria-label={t("groupLabel")} className="grid items-stretch gap-4 sm:grid-cols-2">
         {plans.map((plan, index) => {

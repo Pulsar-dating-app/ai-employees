@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+
 // Shared Meta Graph API calls for Trello D1's WhatsApp connect flow.
 //
 // META_GRAPH_API_BASE_URL lets tests point this at a local mock instead of
@@ -54,10 +56,17 @@ export const PAYMENT_ISSUE_ERROR_CODE = 131042;
 // (reconnect, retry) must supply the *same* PIN, or Meta rejects it with
 // "(#133005) Two step verification PIN Mismatch". Callers must persist
 // whatever PIN they pass to finishConnection (company_whatsapp_connections.two_step_pin)
-// and reuse it on every future call for that company -- only generate a
-// fresh one via this function when no stored PIN exists yet.
-export function generateRegistrationPin() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+// and reuse it on every future call for that company -- only derive one via
+// this function when no stored PIN exists yet.
+//
+// 2026-10-05: derived from the number (HMAC with the app secret) instead of
+// random. A connect that registers the number and then fails before the row
+// is saved used to lose its random PIN for good, so every retry hit "PIN
+// Mismatch" until the merchant turned 2FA off by hand. Derived, a retry
+// always sends the same PIN.
+export function registrationPinFor(phoneNumberId: string) {
+  const digest = createHmac("sha256", process.env.META_APP_SECRET ?? "").update(`whatsapp-pin:${phoneNumberId}`).digest();
+  return String(100000 + (digest.readUInt32BE(0) % 900000));
 }
 
 export async function exchangeCodeForToken(code: string) {
@@ -90,7 +99,7 @@ export async function exchangeCodeForToken(code: string) {
 // and fetches the merchant-facing display number. Takes an already-valid
 // access token from exchangeCodeForToken. `pin`
 // must be the previously-stored PIN for this connection if one exists (see
-// generateRegistrationPin's doc comment) -- the caller decides that, not
+// registrationPinFor's doc comment) -- the caller decides that, not
 // this function.
 export async function finishConnection(
   accessToken: string,
@@ -128,6 +137,63 @@ export async function lookupDisplayPhoneNumber(accessToken: string, phoneNumberI
     display_phone_number?: string;
   };
   return displayPhoneNumber ?? null;
+}
+
+// Trello D8, restored 2026-10-02 for the merchant's own Meta account -- the
+// coexistence counterpart to finishConnection. A merchant who keeps using
+// the WhatsApp Business app on the same number (Meta's
+// FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING event) has a number that's already
+// registered on Meta's side, so /register (and its PIN) is skipped. Still
+// subscribes the app to the WABA's webhooks, and resolves the number
+// server-side because that event carries no phone_number_id. Meta-direct
+// only: Twilio doesn't support coexistence for Tech Provider numbers.
+export async function finishCoexistenceConnection(accessToken: string, wabaId: string) {
+  const authHeaders = { Authorization: `Bearer ${accessToken}` };
+
+  const subscribeRes = await fetch(graphApiUrl(`/${wabaId}/subscribed_apps`), {
+    method: "POST",
+    headers: authHeaders,
+  });
+  if (!subscribeRes.ok) throw new Error(`Meta webhook subscription failed: ${await subscribeRes.text()}`);
+
+  const phoneNumbersRes = await fetch(
+    graphApiUrl(`/${wabaId}/phone_numbers`, { fields: "display_phone_number" }),
+    { headers: authHeaders },
+  );
+  if (!phoneNumbersRes.ok) {
+    throw new Error(`Meta phone number lookup failed: ${await phoneNumbersRes.text()}`);
+  }
+  const { data: phoneNumbers } = (await phoneNumbersRes.json()) as {
+    data?: { id: string; display_phone_number?: string }[];
+  };
+
+  // Embedded Signup's coexistence flow funnels merchants into one number per
+  // WABA; zero or several is an ambiguity worth an error, not a guess.
+  if (!phoneNumbers || phoneNumbers.length !== 1) {
+    throw new Error(`Expected exactly one phone number on WABA ${wabaId}, found ${phoneNumbers?.length ?? 0}`);
+  }
+
+  return {
+    phoneNumberId: phoneNumbers[0].id,
+    displayPhoneNumber: phoneNumbers[0].display_phone_number ?? null,
+  };
+}
+
+// Whether the merchant's WABA has a payment method Meta can bill
+// (`primary_funding_id`). Only meaningful for a Meta-direct number, where
+// the merchant pays Meta themselves. Null when Meta couldn't be asked, so a
+// failed lookup never flags a merchant who may well have a card.
+export async function hasWabaPaymentMethod(accessToken: string, wabaId: string): Promise<boolean | null> {
+  try {
+    const res = await fetch(graphApiUrl(`/${wabaId}`, { fields: "primary_funding_id" }), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return null;
+    const { primary_funding_id: fundingId } = (await res.json()) as { primary_funding_id?: string };
+    return Boolean(fundingId);
+  } catch {
+    return null;
+  }
 }
 
 // Trello D4 -- delivery, the other end of D2's inbound webhook. Modeled

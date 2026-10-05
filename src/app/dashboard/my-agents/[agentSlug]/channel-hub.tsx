@@ -16,6 +16,7 @@ import {
 import { SideDrawer } from "@/components/ui/side-drawer";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { ChannelsSection } from "./channels-section";
+import type { WhatsappProvider } from "@/lib/whatsapp/enforcement";
 import { InstagramConnectCard } from "./instagram-connect-card";
 import { WidgetCustomizeCard } from "./widget-customize-card";
 import { EmbedSnippetSection } from "./embed-snippet-section";
@@ -86,6 +87,7 @@ export function ChannelHub({
   metaAppId,
   metaConfigId,
   metaSolutionId,
+  whatsappProvider,
   chatUrl,
   embedSnippet,
   telegramLink,
@@ -102,6 +104,7 @@ export function ChannelHub({
   metaAppId: string;
   metaConfigId: string;
   metaSolutionId: string;
+  whatsappProvider: WhatsappProvider;
   chatUrl: string;
   embedSnippet: string;
   telegramLink: string;
@@ -227,6 +230,7 @@ export function ChannelHub({
               metaAppId={metaAppId}
               metaConfigId={metaConfigId}
               metaSolutionId={metaSolutionId}
+              whatsappProvider={whatsappProvider}
             />
           </div>
           <div hidden={active !== "instagram"}>

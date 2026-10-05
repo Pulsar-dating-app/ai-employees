@@ -212,6 +212,7 @@ export default async function setup() {
         shopifyApiMockUrl: shopifyApiMock.url,
         stripeApiMockUrl: stripeApiMock.url,
         twilioApiMockUrl: twilioApiMock.url,
+        graphApiMockUrl: graphApiMock.url,
       },
       null,
       2,

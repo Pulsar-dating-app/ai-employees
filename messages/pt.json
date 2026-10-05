@@ -236,9 +236,7 @@
         "period": {
           "monthly": "Mensal",
           "annual": "Anual"
-        },
-        "wppToggleLabel": "Incluir WhatsApp no plano",
-        "wppToggleNote": "Sem essa opção, o plano não inclui o WhatsApp: o atendimento funciona no Instagram, Telegram, chat do site e link direto. Dá para incluir o WhatsApp depois nas Configurações."
+        }
       },
       "cta": "Escolher plano",
       "ctaTrial": "Começar grátis",
@@ -893,7 +891,8 @@
     "member": {
       "deactivatedTitle": "Sua agenda foi desativada",
       "deactivatedBody": "O negócio desativou sua agenda, então não há nada para gerenciar aqui agora. Fale com o responsável se isso for um engano."
-    }
+    },
+    "metaSpendAlert": "WhatsApp: {pct}% do máximo da Meta"
   },
   "Metrics": {
     "pageTitle": "Desempenho",
@@ -1159,9 +1158,9 @@
       "paymentIssueDescription": "O WhatsApp não consegue entregar mensagens até que uma forma de pagamento seja adicionada à sua conta no Meta Business Manager.",
       "billingIncludedTitle": "O WhatsApp já está incluído no seu plano",
       "billingIncludedDescription": "As mensagens que sua equipe envia e recebe no WhatsApp já estão cobertas pelo seu plano do Staffra. Você não precisa cadastrar forma de pagamento na Meta nem pagar nada à parte.",
-      "addonRequiredTitle": "O WhatsApp não está incluído no seu plano atual",
-      "addonRequiredDescription": "Adicione o complemento de WhatsApp ao seu plano para conectar um número e deixar seu time responder os clientes por lá.",
-      "addonRequiredCta": "Adicionar WhatsApp ao meu plano",
+      "addonRequiredTitle": "Ative um plano para usar o WhatsApp",
+      "addonRequiredDescription": "Todo plano inclui WhatsApp. Escolha um plano para conectar um número e deixar seu time responder os clientes por lá.",
+      "addonRequiredCta": "Ver planos",
       "pendingBadge": "Ativando",
       "pendingDescription": "Estamos ativando este número no WhatsApp. Costuma levar alguns minutos, e esta página se atualiza sozinha.",
       "verificationDescription": "O WhatsApp enviou um código por SMS para {number}. Digite aqui para terminar de ativar o número.",
@@ -1180,7 +1179,20 @@
       "reconnectTwoFactorStepDisable": "Desligue a verificação em duas etapas",
       "reconnectTwoFactorStepWait": "Espere cerca de 5 minutos e volte aqui",
       "reconnectTwoFactorConfirm": "Desliguei a verificação em duas etapas deste número e esperei alguns minutos.",
-      "reconnectNowButton": "Reconectar agora"
+      "reconnectNowButton": "Reconectar agora",
+      "billingOwnTitle": "Você paga o WhatsApp direto à Meta",
+      "billingOwnDescription": "Durante a conexão, a Meta vai pedir um cartão. Ela cobra direto nele só as respostas que passarem das 1.000 grátis do mês, em reais. A Staffra não cobra nada a mais pelo WhatsApp.",
+      "paymentMethodTitle": "Falta cadastrar um cartão na Meta",
+      "paymentMethodIntro": "Seu número está conectado, mas a sua conta do WhatsApp na Meta ainda não tem forma de pagamento. Sem ela, a Meta pode bloquear o envio das respostas.",
+      "paymentMethodStepOpen": "Abra as configurações de pagamento no Meta Business Suite",
+      "paymentMethodStepAdd": "Adicione um cartão à conta do WhatsApp deste número",
+      "paymentMethodStepBack": "Volte aqui e clique em \"Já cadastrei\"",
+      "paymentMethodRecheck": "Já cadastrei",
+      "paymentMethodStillMissing": "A Meta ainda não mostra um cartão nessa conta. Pode levar alguns minutos depois de cadastrar.",
+      "planChangedTitle": "Seu número foi desconectado porque você mudou de plano",
+      "planChangedIntro": "Seu plano agora usa a sua própria conta da Meta, então o {number} saiu da conexão pela Staffra. Para voltar a atender por ele, conecte de novo pela sua conta:",
+      "planChangedThen": "Depois, clique em Conectar abaixo. Durante a conexão, a Meta vai pedir um cartão para cobrar as respostas além das 1.000 grátis do mês.",
+      "coexistenceHint": "Você pode continuar usando o app WhatsApp Business no celular: durante a conexão, escolha conectar o número que já está no app."
     },
     "channelTabs": {
       "tablistLabel": "Formas de os clientes falarem com este funcionário",
@@ -1327,12 +1339,14 @@
         "connected": "Conectado",
         "connectedTo": "Conectado · {detail}",
         "notConnected": "Não conectado",
-        "notInPlan": "Fora do seu plano",
+        "notInPlan": "Sem plano ativo",
         "paymentIssue": "Pagamento pendente na Meta",
         "ready": "Pronto para compartilhar",
         "noSites": "Nenhum site autorizado",
         "sitesCount": "{count, plural, one {# site autorizado} other {# sites autorizados}}",
-        "activating": "Ativando · {detail}"
+        "activating": "Ativando · {detail}",
+        "paymentMethodMissing": "Falta cartão na Meta",
+        "planChangedDisconnected": "Desconectado · reconecte pela sua conta da Meta"
       }
     },
     "behavior": {
@@ -2158,7 +2172,7 @@
         "send": "Enviar",
         "sendError": "Algo deu errado ao enviar. Tente novamente.",
         "deliveryFailed": "Sua resposta foi salva, mas não conseguimos entregá-la ao cliente. Isso pode acontecer se já passaram mais de 24 horas desde a última mensagem dele.",
-        "deliveryNoWhatsappAddon": "Sua resposta foi salva, mas seu plano atual não inclui WhatsApp, então ela não foi enviada. Para responder por lá, escolha um plano com WhatsApp em Plano e cobrança.",
+        "deliveryNoWhatsappAddon": "Sua resposta foi salva, mas não foi enviada porque seu plano atual não cobre este número de WhatsApp. Confira em Plano e cobrança.",
         "empty": "Nenhuma mensagem ainda.",
         "loadError": "Não foi possível carregar esta conversa.",
         "retry": "Tentar novamente"
@@ -2501,10 +2515,9 @@
         "monthly": "Mensal",
         "annual": "Anual"
       },
-      "wppToggleLabel": "Incluir WhatsApp no plano",
-      "wppToggleNote": "Sem essa opção, o plano não inclui o WhatsApp: o atendimento funciona no Instagram, Telegram, chat do site e link direto. Para atender pelo WhatsApp, escolha um plano com WhatsApp.",
-      "wppBadge": "WhatsApp incluso",
-      "recommended": "Recomendado"
+      "recommended": "Recomendado",
+      "wppBadgeOwn": "WhatsApp pela sua conta da Meta",
+      "wppBadgeManaged": "WhatsApp pela Staffra"
     },
     "enterprise": {
       "title": "Precisa de mais volume ou condições sob medida?",
@@ -2531,7 +2544,7 @@
       "includedTitle": "Tudo isso em todos os planos",
       "included": [
         "Malu para vendas e Ana para agendamentos",
-        "Instagram, Telegram, chat no site e link direto, e o WhatsApp oficial nos planos com WhatsApp",
+        "WhatsApp oficial, Instagram, Telegram, chat no site e link direto",
         "Catálogo por planilha ou sincronizado com o Shopify",
         "Agenda com Google Calendar, lista de espera e aprovação",
         "Respostas só com os seus dados, sem inventar",
@@ -2543,7 +2556,14 @@
       "current": "Seu plano",
       "switchTitle": "Trocar de plano",
       "switchBody": "Escolha outro plano. Você confirma a mudança na Stripe antes de qualquer cobrança.",
-      "switchOption": "Mudar para esta opção"
+      "switchOption": "Mudar para esta opção",
+      "meta": {
+        "label": "WhatsApp, pago direto à Meta",
+        "without": "Sem WhatsApp",
+        "with": "Com WhatsApp",
+        "upTo": "até {price} / mês",
+        "included": "WhatsApp incluso, nada a pagar à Meta"
+      }
     },
     "panel": {
       "dayOf": "Dia {day} de {total}",
@@ -2554,6 +2574,32 @@
       "trialEndsOn": "O teste acaba em {date}",
       "paymentPending": "Aguardando um pagamento aprovado",
       "teamReplies": "Respostas enviadas pela sua equipe neste período"
+    },
+    "whatsappMode": {
+      "label": "Como você quer usar o WhatsApp?",
+      "own": {
+        "title": "Com sua conta da Meta",
+        "badge": "Mais barato",
+        "desc": "Você conecta seu número e cadastra seu cartão na Meta, que cobra direto só pelo que você usar. 1.000 respostas grátis por mês, depois até R$ 0,04 cada."
+      },
+      "managed": {
+        "title": "Tudo pela Staffra",
+        "desc": "A gente cuida do WhatsApp para você. Taxas da Meta já no preço, sem cartão na Meta."
+      },
+      "noWpp": "Não vai usar o WhatsApp? Sem conta na Meta, sem cartão, sem custo extra: é só o valor do plano."
+    },
+    "metaSpend": {
+      "title": "Gasto com o WhatsApp na Meta",
+      "subtitle": "Estimativa deste mês para os números conectados pela sua conta da Meta.",
+      "spent": "Gasto até agora",
+      "projected": "Projeção para o mês",
+      "freeLeft": "Respostas grátis restantes",
+      "freeLeftValue": "{left} de {total}",
+      "ceilingLabel": "Máximo do seu plano com a Meta",
+      "alert50": "Você já usou metade do máximo de {ceiling} com a Meta neste mês.",
+      "alert80": "Você já usou 80% do máximo de {ceiling} com a Meta neste mês.",
+      "alert100": "Você chegou ao máximo de {ceiling} com a Meta neste mês. A Meta segue cobrando cada resposta no seu cartão.",
+      "footnote": "Estimativa calculada a partir das respostas enviadas, a até R$ 0,04 cada depois das 1.000 grátis de cada número. O valor exato está na fatura da Meta."
     }
   },
   "AccessRemoved": {
