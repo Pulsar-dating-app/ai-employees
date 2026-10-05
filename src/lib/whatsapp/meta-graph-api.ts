@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+
 // Shared Meta Graph API calls for Trello D1's WhatsApp connect flow.
 //
 // META_GRAPH_API_BASE_URL lets tests point this at a local mock instead of
@@ -54,10 +56,17 @@ export const PAYMENT_ISSUE_ERROR_CODE = 131042;
 // (reconnect, retry) must supply the *same* PIN, or Meta rejects it with
 // "(#133005) Two step verification PIN Mismatch". Callers must persist
 // whatever PIN they pass to finishConnection (company_whatsapp_connections.two_step_pin)
-// and reuse it on every future call for that company -- only generate a
-// fresh one via this function when no stored PIN exists yet.
-export function generateRegistrationPin() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+// and reuse it on every future call for that company -- only derive one via
+// this function when no stored PIN exists yet.
+//
+// 2026-10-05: derived from the number (HMAC with the app secret) instead of
+// random. A connect that registers the number and then fails before the row
+// is saved used to lose its random PIN for good, so every retry hit "PIN
+// Mismatch" until the merchant turned 2FA off by hand. Derived, a retry
+// always sends the same PIN.
+export function registrationPinFor(phoneNumberId: string) {
+  const digest = createHmac("sha256", process.env.META_APP_SECRET ?? "").update(`whatsapp-pin:${phoneNumberId}`).digest();
+  return String(100000 + (digest.readUInt32BE(0) % 900000));
 }
 
 export async function exchangeCodeForToken(code: string) {
@@ -90,7 +99,7 @@ export async function exchangeCodeForToken(code: string) {
 // and fetches the merchant-facing display number. Takes an already-valid
 // access token from exchangeCodeForToken. `pin`
 // must be the previously-stored PIN for this connection if one exists (see
-// generateRegistrationPin's doc comment) -- the caller decides that, not
+// registrationPinFor's doc comment) -- the caller decides that, not
 // this function.
 export async function finishConnection(
   accessToken: string,

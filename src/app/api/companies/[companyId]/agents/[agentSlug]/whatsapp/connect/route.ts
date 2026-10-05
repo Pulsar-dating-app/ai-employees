@@ -5,9 +5,9 @@ import {
   exchangeCodeForToken,
   finishConnection,
   finishCoexistenceConnection,
-  generateRegistrationPin,
   hasWabaPaymentMethod,
   lookupDisplayPhoneNumber,
+  registrationPinFor,
 } from "@/lib/whatsapp/meta-graph-api";
 import {
   createWhatsappSender,
@@ -366,7 +366,7 @@ async function connectMetaDirect(
     .not("two_step_pin", "is", null)
     .limit(1)
     .maybeSingle();
-  const pin: string = existing?.two_step_pin ?? input.holderPin ?? generateRegistrationPin();
+  const pin: string = existing?.two_step_pin ?? input.holderPin ?? registrationPinFor(input.phoneNumberId);
 
   try {
     await finishConnection(input.accessToken, input.phoneNumberId, input.wabaId, pin);
@@ -423,6 +423,7 @@ async function saveMetaDirectConnection(
     .single();
 
   if (error) {
+    console.error("WhatsApp connect: saving the Meta-direct connection failed", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   return NextResponse.json({ connection });
