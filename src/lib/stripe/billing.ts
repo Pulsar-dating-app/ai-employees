@@ -100,6 +100,10 @@ export async function createCheckoutSession(opts: {
     customer: opts.customerId,
     locale: stripeLocale(opts.locale),
     ...(opts.submitMessage ? { custom_text: { submit: { message: opts.submitMessage } } } : {}),
+    // Shows Checkout's "Add promotion code" field. The codes themselves are
+    // Coupons + Promotion Codes managed in the Stripe Dashboard; on a trial
+    // the discount lands on the first paid invoice after the trial.
+    allow_promotion_codes: true,
     line_items: [{ price: opts.priceId, quantity: 1 }],
     metadata: { companyId: opts.companyId, planKey: opts.planKey },
     subscription_data: {

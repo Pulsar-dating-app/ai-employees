@@ -69,6 +69,8 @@ describe("Plan checkout (Trello P3)", () => {
     expect(res.status).toBe(200);
     expect(res.json.mode).toBe("checkout");
     expect(res.json.url).toMatch(/^https:\/\/checkout\.stripe\.test\/c\//);
+    // Promo codes handed out by the team must be typeable at Checkout.
+    expect((await capturedCheckoutSession(res.json.url!))?.allowPromotionCodes).toBe(true);
 
     const svc = getTestServiceClient();
     const { data: billing } = await svc

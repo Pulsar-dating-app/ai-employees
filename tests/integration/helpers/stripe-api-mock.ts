@@ -118,6 +118,7 @@ export type CapturedCheckoutSession = {
   metadata: Record<string, string>;
   locale: string | null;
   submitMessage: string | null;
+  allowPromotionCodes: boolean;
 };
 
 export type CapturedPortalSession = {
@@ -184,6 +185,7 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
         metadata: extractMetadata(params, "subscription_data[metadata]"),
         locale: params.get("locale"),
         submitMessage: params.get("custom_text[submit][message]"),
+        allowPromotionCodes: params.get("allow_promotion_codes") === "true",
       });
       return send(200, {
         id,
