@@ -131,8 +131,7 @@ export interface BillingPlan {
 // `Wpp` price is everything through Staffra (Twilio, Meta fees included).
 // Annual prices are derived: 12 months minus ANNUAL_DISCOUNT, rounded up to
 // a whole real. These must match the Stripe Price amounts behind each lookup
-// key -- as of 2026-10-02 Stripe still holds the 2026-09-28 amounts and the
-// owner is updating it separately.
+// key (sandbox Prices swapped to these amounts 2026-10-05).
 const BASE = {
   starter: { monthlyBrlCents: 19_700, monthlyWppBrlCents: 49_700, monthlyReplyLimit: 3_000 },
   intermediate: { monthlyBrlCents: 31_700, monthlyWppBrlCents: 99_700, monthlyReplyLimit: 6_000 },
@@ -238,6 +237,9 @@ function tierPlans(
   ];
 }
 
+// 2026-10-05 -- "preço 2.0": 10 Prices re-created at the new amounts (Pro
+// without Twilio kept R$497, so its 2 Prices stayed). Same steps as below.
+//
 // 2026-09-28 -- all 12 Prices re-created at whole-real amounts (R$97 instead
 // of R$96,99, etc.); lookup keys moved with `transfer_lookup_key`, the
 // Customer Portal's plan-switch list repointed to the new ids, old Prices
@@ -257,22 +259,22 @@ function tierPlans(
 // are archived.
 export const BILLING_PLANS: readonly BillingPlan[] = [
   ...tierPlans("starter", "Starter", "starter2", {
-    monthly: "price_1UKfWbHAg1kV3YLStDz0WwaL",
-    annual: "price_1UKfWbHAg1kV3YLSmdFDaIC3",
-    monthlyWpp: "price_1UKfWcHAg1kV3YLS2s20CJbP",
-    annualWpp: "price_1UKfWdHAg1kV3YLS0J238LvZ",
+    monthly: "price_1UNEoPHAg1kV3YLSX8NOynAW",
+    annual: "price_1UNEoPHAg1kV3YLSgrIzCE5T",
+    monthlyWpp: "price_1UNEoQHAg1kV3YLSlzVzAVaI",
+    annualWpp: "price_1UNEoRHAg1kV3YLS2hVBZiT0",
   }),
   ...tierPlans("intermediate", "Intermediate", "intermediate", {
-    monthly: "price_1UKfWdHAg1kV3YLSwCGLzKjF",
-    annual: "price_1UKfWeHAg1kV3YLSS2vRo6Jm",
-    monthlyWpp: "price_1UKfWfHAg1kV3YLSGj1b0nfN",
-    annualWpp: "price_1UKfWgHAg1kV3YLSnopnKEiV",
+    monthly: "price_1UNEoRHAg1kV3YLSYDKP1Oy3",
+    annual: "price_1UNEoSHAg1kV3YLS6QkFjYX9",
+    monthlyWpp: "price_1UNEoTHAg1kV3YLSTD0yUmvP",
+    annualWpp: "price_1UNEoUHAg1kV3YLSbQZWbYwi",
   }),
   ...tierPlans("pro", "Pro", "pro", {
     monthly: "price_1UKfWgHAg1kV3YLSVNOXlbNS",
     annual: "price_1UKfWhHAg1kV3YLS58i4Lwkt",
-    monthlyWpp: "price_1UKfWiHAg1kV3YLSRYT7cZW5",
-    annualWpp: "price_1UKfWjHAg1kV3YLSevx5mjs3",
+    monthlyWpp: "price_1UNEoUHAg1kV3YLS8S0dXSpH",
+    annualWpp: "price_1UNEoVHAg1kV3YLS45rnfxNb",
   }),
   {
     key: "enterprise",

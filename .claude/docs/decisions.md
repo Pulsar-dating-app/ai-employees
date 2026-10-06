@@ -10,6 +10,20 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-06 — Stripe sandbox matches the 3k/6k/10k catalog; promotion codes at Checkout
+
+**Decision:**
+- **Prices:** the Stripe sandbox now charges the 2026-10-02 catalog. 10 Prices were re-created with lookup keys transferred, the Portal plan-switch list repointed, the old 10 archived and the IDs swapped in `plans.ts`. Pro on the merchant's own Meta account kept R$ 497 / R$ 5.070, so its 2 Prices stayed.
+- **Product names:** the Products keep the plain tier name ("Staffra Starter", "Staffra Intermediate", "Staffra Pro") for both the own-account and the `_wpp` variant. Checkout shows only the price difference.
+- **Promotion codes:** Checkout sets `allow_promotion_codes: true`. Codes are Coupons + Promotion Codes created in the Stripe Dashboard. A sandbox sample, `TESTE20`, gives 20% off the first paid invoice.
+
+**Why:**
+- **Prices:** this closes the gap the 2026-10-02 entry accepted, when the catalog showed the new prices but Stripe charged the old ones.
+- **Product names:** a Product name has one language. A "Sua conta Meta" / "Tudo pela Staffra" suffix was tried and reverted, because English and Italian merchants saw it in Portuguese.
+- **Promotion codes:** the team wants to hand out discounts to specific people without code changes.
+
+---
+
 ## 2026-10-02 — WhatsApp on every plan; the plan picks Meta-direct or Twilio
 
 **Decision:** `plans.ts` now carries the 3k/6k/10k plans: R$ 197/317/497 for plain keys and R$ 497/997/1.597 for `_wpp` keys. No key was renamed, so `company_billing.plan_key` and the Stripe lookup keys are unchanged. Every plan includes WhatsApp:
