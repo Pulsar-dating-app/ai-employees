@@ -10,6 +10,13 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-07 — Checkout resolves Prices by lookup key, not by id
+
+**Decision:** `plans.ts` no longer carries Stripe Price ids (`stripePriceId` is gone). Checkout and the plan-switch confirm flow resolve the active Price for a plan's lookup key at request time (`resolvePriceId`, cached 5 minutes). If no Price exists, checkout returns `502 price_unavailable` before creating a customer or a `company_billing` row.
+**Why:** Price ids differ between the sandbox and the live account, so hard-coded ids made the production switch impossible without a per-environment catalog. Lookup keys are ours to name and identical in both accounts, and the webhook already mapped Prices back to plans by them. A price change also stops needing a deploy.
+
+---
+
 ## 2026-10-06 — Stripe sandbox matches the 3k/6k/10k catalog; promotion codes at Checkout
 
 **Decision:**

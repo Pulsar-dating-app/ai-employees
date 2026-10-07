@@ -36,10 +36,9 @@ describe("billing plan catalog (Trello P1)", () => {
     expect(keys).toHaveLength(13);
   });
 
-  it("gives every self-serve plan a Stripe Price and lookup key", () => {
+  it("gives every self-serve plan a Stripe lookup key", () => {
     for (const plan of getSelfServePlans()) {
       expect(plan.stripeLookupKey, plan.key).toBeTruthy();
-      expect(plan.stripePriceId, plan.key).toMatch(/^price_/);
     }
   });
 
@@ -48,7 +47,6 @@ describe("billing plan catalog (Trello P1)", () => {
     expect(enterprise.isSelfServe).toBe(false);
     expect(enterprise.billingPeriod).toBeNull();
     expect(enterprise.stripeLookupKey).toBeNull();
-    expect(enterprise.stripePriceId).toBeNull();
     // Enterprise terms are negotiated per deal, not fixed in the catalog.
     expect(enterprise.monthlyReplyLimit).toBeNull();
     expect(enterprise.priceBrlCents).toBeNull();

@@ -22,8 +22,10 @@ import { getPlan, type PlanKey } from "@/lib/billing/plans";
 //    "trigger-end-trial-failure" -> 400 instead.
 //  - any other subscription update WITHOUT proration_behavior=
 //    create_prorations -> 400 (kept for P4; P3 no longer calls it)
-//  - GET /v1/subscriptions/sub_mock_<planKey> reports that plan's real
-//    Price id as the current item (used by P4).
+//  - GET /v1/prices?lookup_keys[]=<key> -> one active Price whose id is
+//    `mockPriceId(<key>)` (the routes resolve Prices by lookup key).
+//  - GET /v1/subscriptions/sub_mock_<planKey> reports that plan's mock
+//    Price as the current item (used by P4).
 //  - a sub id containing `__trial`/`__user_<id>` reports `status:
 //    "trialing"` / metadata.trialUserId on GET (Trello P8's free trial).
 //  - every checkout session create's `subscription_data` (trial_period_days
@@ -38,6 +40,12 @@ function readBody(req: IncomingMessage): Promise<string> {
     req.on("data", (chunk) => (data += chunk));
     req.on("end", () => resolve(data));
   });
+}
+
+/** The Price id the mock reports for a lookup key -- deterministic, so a
+ * test can predict which Price a route sent without its own lookup. */
+export function mockPriceId(lookupKey: string): string {
+  return `price_mock_${lookupKey}`;
 }
 
 function randomId(prefix: string): string {
@@ -79,7 +87,7 @@ function priceForSubscription(subscriptionId: string): { id: string; lookup_key:
   const { planKey } = parseSubMock(subscriptionId);
   if (planKey) {
     const plan = getPlan(planKey);
-    if (plan.stripePriceId) return { id: plan.stripePriceId, lookup_key: plan.stripeLookupKey };
+    if (plan.stripeLookupKey) return { id: mockPriceId(plan.stripeLookupKey), lookup_key: plan.stripeLookupKey };
   }
   return { id: "price_mock_unknown_current", lookup_key: null };
 }
@@ -117,6 +125,7 @@ export type CapturedCheckoutSession = {
   trialPeriodDays: number | null;
   metadata: Record<string, string>;
   locale: string | null;
+  price: string | null;
   submitMessage: string | null;
   allowPromotionCodes: boolean;
 };
@@ -159,6 +168,13 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
     const body = req.method === "GET" ? "" : await readBody(req);
     const params = new URLSearchParams(body);
 
+    // --- Prices ------------------------------------------------------------
+    if (req.method === "GET" && url.pathname === "/v1/prices") {
+      const keys = [...url.searchParams].filter(([k]) => k.startsWith("lookup_keys")).map(([, v]) => v);
+      const data = keys.map((key) => ({ id: mockPriceId(key), object: "price", active: true, lookup_key: key }));
+      return send(200, { object: "list", data, has_more: false });
+    }
+
     // --- Customers -------------------------------------------------------
     if (req.method === "POST" && url.pathname === "/v1/customers") {
       const email = params.get("email") ?? "";
@@ -184,6 +200,7 @@ export function startStripeApiMock(): Promise<{ url: string; stop: () => Promise
         trialPeriodDays: trialPeriodDaysRaw ? Number(trialPeriodDaysRaw) : null,
         metadata: extractMetadata(params, "subscription_data[metadata]"),
         locale: params.get("locale"),
+        price: params.get("line_items[0][price]"),
         submitMessage: params.get("custom_text[submit][message]"),
         allowPromotionCodes: params.get("allow_promotion_codes") === "true",
       });
