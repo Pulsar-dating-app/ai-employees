@@ -10,6 +10,23 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-07 — Terms: no SLA, data-incident roles, and Pulsar owns custom development
+**Decision:** `Legal.terms` in `messages/{en,pt,it}.json` grew from 16 to 19 sections, and the three new ones carry a deliberate stance:
+- **8. Availability** — no SLA and no uptime percentage is promised, maintenance may take the Service down, and downtime is excluded from liability for lost sales/profits. Downtime earns **no credit, discount, compensation or refund**, except where required by law.
+- **6. Security and data incidents** — the merchant is the LGPD controller of its own customers' data and Pulsar is the processor, so ANPD/data-subject notification for the merchant's base is the merchant's duty. Incidents at subprocessors (AI model, cloud, messaging, calendar, payment providers) and incidents caused by the merchant's own credentials or integrations are excluded. Sensitive data (full card details, passwords, health, biometric, children's) is banned from the Service.
+- **12. Custom development** — IP in anything built to a merchant's request belongs exclusively to Pulsar, who may resell it to other customers, including the merchant's competitors; the merchant gets a non-exclusive licence lasting as long as the subscription.
+
+Section 4 (AI-generated content) also gained two disclosure paragraphs and turned "we recommend monitoring conversations" into an obligation.
+**Why:**
+- **No downtime credit at all, by the owner's call:** a pro-rata credit as the sole remedy was proposed and rejected — the business position is that downtime never costs Staffra money. Noted risk: a flat "downtime entitles you to nothing" is the first clause a Brazilian court strikes when the merchant is an MEI or small business and the CDC applies (art. 51, I), since excluding *liability* is weaker than limiting a *remedy*. The "except where required by law" valve stays in the sentence for that reason, mirroring the one section 9 already carried, so a court voids the case and not the clause. Revisit only if a downtime dispute actually arises.
+- **Custom-development IP had to be written down:** Lei 9.609/1998 art. 4 gives rights in commissioned software to the *contracting party* "salvo estipulação em contrário". Silence meant the merchant owned what we built. The old section 9 ("Pulsar owns the Service") was not enough, because a bespoke feature is exactly what a merchant would argue is not "the Service".
+- **Controller/processor split, not a blanket disclaimer:** under LGPD arts. 42–43 the processor can be jointly liable to a data subject, and these Terms do not bind the merchant's own customers. The section is therefore worded to allocate roles, exclude third-party and merchant-caused incidents, and create a right of regress — the defence against a data subject or the ANPD still rests on the security measures actually being in place, not on the clause.
+- The AI-disclosure paragraphs close the case of a merchant pasting confidential or third-party information into an AI employee's configuration and the model repeating it to a customer.
+
+**Still pending:** the text is a draft for a lawyer to review before it is relied on, and every custom-development quote must repeat the IP clause (art. 4's "salvo estipulação em contrário" cuts both ways — a later signed proposal silent on IP reopens the question).
+
+---
+
 ## 2026-10-07 — Checkout resolves Prices by lookup key, not by id
 
 **Decision:** `plans.ts` no longer carries Stripe Price ids (`stripePriceId` is gone). Checkout and the plan-switch confirm flow resolve the active Price for a plan's lookup key at request time (`resolvePriceId`, cached 5 minutes). If no Price exists, checkout returns `502 price_unavailable` before creating a customer or a `company_billing` row.

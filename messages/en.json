@@ -2322,7 +2322,7 @@
     },
     "terms": {
       "title": "Terms of Service",
-      "date": "September 2, 2026",
+      "date": "October 7, 2026",
       "intro": "These Terms of Service (\"Terms\") are a binding agreement between Pulsar LTDA (\"Pulsar\", \"we\", \"us\"), the company that operates the Staffra platform (\"Staffra\", the \"Service\"), and the business or person that uses our website, dashboard, and services (together, the \"Service\"). By creating an account or using the Service, you agree to these Terms. If you are agreeing on behalf of a company, you represent that you are authorized to bind that company.",
       "sections": [
         {
@@ -2352,7 +2352,9 @@
           "heading": "4. AI-generated content",
           "paragraphs": [
             "Replies produced by an AI employee are generated automatically and may be inaccurate, incomplete, or not appropriate for every situation. They are not professional, legal, medical, or financial advice.",
-            "You are responsible for the messages your AI employees send. We recommend monitoring conversations, keeping a human available to step in, and pausing an AI employee if it is not behaving as you expect. Pulsar is not liable for decisions made or actions taken based on AI-generated content."
+            "You are responsible for the messages your AI employees send. You must monitor conversations, keep a human available to step in, and pause an AI employee that is not behaving as you expect. Pulsar is not liable for decisions made or actions taken based on AI-generated content.",
+            "An AI employee answers based on the information you provide and may reproduce it, in whole or in part, in conversations with your customers. It is up to you to decide what goes into your AI employee's configuration: do not include confidential or internal information, third-party information, or personal data that you would not want repeated to a customer. We are not liable for the disclosure of information that you yourself made available to the AI employee, nor for information you entered that is incorrect, outdated, or that you were not entitled to enter.",
+            "You acknowledge that AI models are probabilistic and may behave unexpectedly, including by repeating, combining, or revealing information present in the conversation context, sending the wrong message, or replying to the wrong customer, even when the AI employee is correctly configured. To the maximum extent permitted by law, we are not liable for the improper disclosure of information by an AI employee or by an AI model provider, nor for any loss arising from it; any liability of ours in such a case is subject to the limits in section 14."
           ]
         },
         {
@@ -2363,73 +2365,107 @@
           ]
         },
         {
-          "heading": "6. Third-party services",
+          "heading": "6. Security and data incidents",
+          "paragraphs": [
+            "We maintain reasonable technical and administrative measures to protect Customer Content, as described in our Privacy Policy. No system, transmission, or storage is completely secure: we do not warrant that Customer Content will be free from unauthorized access, loss, alteration, or disclosure.",
+            "You are the controller of your own customers' personal data and you determine the purposes of its processing. Pulsar acts as processor, handling that data in accordance with your instructions and these Terms. You are responsible for the legal basis, for responding to data subject requests, and, in the event of an incident involving your own customer base, for notifying the data subjects and Brazil's National Data Protection Authority, with our reasonable cooperation.",
+            "To operate the Service, Customer Content is transmitted to third-party providers, including AI model, cloud, messaging, calendar, and payment providers, as described in our Privacy Policy. To the maximum extent permitted by law, we are not liable for unauthorized access, leakage, loss, misuse, or retention of data occurring in the infrastructure or models of, or through the acts of, those third parties, nor for changes to their privacy practices.",
+            "We are likewise not liable for incidents arising from your or your team's credentials being compromised, shared, or poorly managed, from permissions and integrations you grant, from devices, networks, or accounts under your control, or from information entered into the Service in breach of these Terms.",
+            "You must not enter into the Service, or instruct an AI employee to collect, full card details, passwords, health or biometric data, children's data, or other sensitive data. If you do, you assume the full risk of and responsibility for that processing and will indemnify us for claims arising from it.",
+            "We will notify you without undue delay of security incidents we become aware of that affect your Customer Content, with the information available to us. Any liability of ours relating to security or data protection is subject to the limits in section 14."
+          ]
+        },
+        {
+          "heading": "7. Third-party services",
           "paragraphs": [
             "The Service integrates with third-party platforms such as Meta, calendar providers, and payment processors. Your use of those platforms is governed by their own terms and privacy policies, and we are not responsible for their availability, changes, or actions.",
             "A third-party platform may suspend or limit access to its APIs at any time, which can affect the Service. We are not liable for such disruptions."
           ]
         },
         {
-          "heading": "7. Fees and payment",
+          "heading": "8. Availability, maintenance, and force majeure",
+          "paragraphs": [
+            "The Service is provided with no service level agreement (SLA) and no guaranteed uptime percentage. We do not promise that the Service, the connected channels, or the AI providers will be available continuously, on time, or free of failures.",
+            "We may carry out scheduled or emergency maintenance, updates, and fixes that make the Service wholly or partly unavailable. Whenever reasonably possible we will give advance notice of scheduled maintenance; emergency maintenance and security measures may be carried out without notice.",
+            "The Service depends on third-party infrastructure and platforms, such as cloud providers, AI model providers, Meta, calendar providers, and payment processors, and on your internet connection. Failures, blocks, rate limits, account suspensions, or API changes at those third parties may interrupt the Service, and we are not liable for unavailability whose cause lies outside our own infrastructure.",
+            "There is no credit, discount, compensation, or refund for unavailability of the Service, except where required by law.",
+            "To the maximum extent permitted by law, we are not liable for sales, customer service, bookings, undelivered messages, lost opportunities, lost profits, or any other financial loss arising from the Service being unavailable, slow, or degraded.",
+            "Neither party is liable for a failure to perform caused by an act of God or force majeure, including power, telecommunications, or cloud provider failures, cyberattacks, acts of authorities, and unilateral decisions by third-party platforms.",
+            "Because the Service speaks to your customers, you are responsible for keeping an alternative channel and an alternative person available to handle customer service while the Service is unavailable."
+          ]
+        },
+        {
+          "heading": "9. Fees and payment",
           "paragraphs": [
             "Paid plans, if applicable to your account, are billed in advance on the cycle shown at checkout through our payment processor (such as Stripe) and are non-refundable except where required by law. We may change pricing with at least 30 days' notice before your next renewal.",
             "Fees charged to your own customers through checkout links are processed by a third-party payment provider and settled to you according to that provider's terms. Pulsar is not a party to those transactions and does not hold your funds."
           ]
         },
         {
-          "heading": "8. Acceptable use",
+          "heading": "10. Acceptable use",
           "paragraphs": [
             "You must not: reverse engineer or attempt to extract the underlying models or source code; resell or provide the Service to a third party except your own end customers; probe or breach security or authentication measures; use the Service to build a competing product; or exceed rate limits or place an unreasonable load on our infrastructure.",
             "We may throttle, suspend, or terminate access for conduct that violates these Terms or that threatens the security or integrity of the Service."
           ]
         },
         {
-          "heading": "9. Intellectual property",
+          "heading": "11. Intellectual property",
           "paragraphs": [
             "Pulsar and its licensors own all rights in the Service, including the software, AI employee designs, the models we provide, and the Staffra and Pulsar names and logos. These Terms do not grant you any right to use our trademarks without prior written permission.",
             "Feedback you send us about the Service may be used by us without restriction or obligation to you."
           ]
         },
         {
-          "heading": "10. Disclaimers",
+          "heading": "12. Custom development",
+          "paragraphs": [
+            "We may, at our discretion, develop features, customizations, integrations, automations, models, and conversation flows requested by you (\"Custom Developments\"). Unless a specific written agreement provides otherwise, and for the purposes of article 4 of Brazilian Law No. 9,609/1998 and of Law No. 9,610/1998, all intellectual property rights in Custom Developments, including source code, architecture, models, instructions, interfaces, documentation, and derivative works, belong exclusively to Pulsar from the moment of their creation, even where the development was requested, specified, or paid for by you.",
+            "Any amounts paid for a Custom Development pay for the development service and for the right to use the feature while your subscription is active, and do not constitute an assignment, joint ownership, work made to order on an exclusive basis, or a transfer of copyright or of any other intellectual property right.",
+            "While your subscription is active and in good standing, you receive a non-exclusive, non-transferable, revocable licence to use the Custom Development on the same terms as the Service. When the subscription ends, that licence ends.",
+            "We may incorporate the Custom Development into the Service and make it available, in whole or in part, to other customers, including your competitors, with no exclusivity, notice, approval, royalty, or payment of any kind to you. You will have no right to remuneration, a share, or credit for the use, licensing, resale, or further development of the feature.",
+            "This does not reach your Customer Content, nor your brands and materials, which remain yours under section 5. Information about your business that you give us in order to configure a Custom Development remains Customer Content; the software and technical artifacts we build from it do not.",
+            "Any exclusivity, assignment of rights, or development as a work made to order is valid only if set out in a written instrument signed by Pulsar, which will prevail over this section."
+          ]
+        },
+        {
+          "heading": "13. Disclaimers",
           "paragraphs": [
             "The Service is provided \"as is\" and \"as available\" without warranties of any kind, whether express or implied, including implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the Service will be uninterrupted or error-free, or that AI-generated content will be accurate or suitable for your purposes."
           ]
         },
         {
-          "heading": "11. Limitation of liability",
+          "heading": "14. Limitation of liability",
           "paragraphs": [
             "To the maximum extent permitted by law, Pulsar will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for lost profits, revenue, data, or goodwill, arising out of or related to the Service.",
             "Our total liability for any claim arising out of or related to the Service will not exceed the greater of the amount you paid us for the Service in the 12 months before the event giving rise to the claim, or R$ 500 (five hundred Brazilian reais). Nothing in these Terms limits liability that cannot be limited under applicable law, including under the Brazilian Consumer Protection Code where it applies."
           ]
         },
         {
-          "heading": "12. Indemnification",
+          "heading": "15. Indemnification",
           "paragraphs": [
             "You will defend, indemnify, and hold harmless Pulsar from any claim, loss, or expense (including reasonable legal fees) arising from your Customer Content, your use of the Service, your violation of these Terms, or your violation of any law or the rights of a third party, including your own customers."
           ]
         },
         {
-          "heading": "13. Suspension and termination",
+          "heading": "16. Suspension and termination",
           "paragraphs": [
             "You may stop using the Service and close your account at any time from the dashboard. We may suspend or terminate your access if you materially breach these Terms, fail to pay, or if required by law or by a third-party platform.",
             "On termination, your right to use the Service ends. We will make Customer Content available for export for a limited period and then delete it in line with our Privacy Policy, unless the law requires us to keep it."
           ]
         },
         {
-          "heading": "14. Changes to these Terms",
+          "heading": "17. Changes to these Terms",
           "paragraphs": [
             "We may update these Terms from time to time. If a change is material, we will notify you by email or through the dashboard before it takes effect. Continuing to use the Service after that means you accept the updated Terms."
           ]
         },
         {
-          "heading": "15. Governing law",
+          "heading": "18. Governing law",
           "paragraphs": [
             "These Terms are governed by the laws of the Federative Republic of Brazil, without regard to conflict-of-law rules. The courts of the Comarca of São Paulo, State of São Paulo, Brazil will have exclusive jurisdiction, except where mandatory consumer-protection law gives you the right to bring proceedings in your place of residence."
           ]
         },
         {
-          "heading": "16. Contact us",
+          "heading": "19. Contact us",
           "paragraphs": [
             "Questions about these Terms can be sent to Pulsar LTDA at app.pulsar.contato@gmail.com."
           ]
