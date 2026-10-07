@@ -3,6 +3,7 @@ import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
 import { capturedCheckoutSession, capturedPortalSession } from "./helpers/stripe-checkout-sessions";
+import { mockPriceId } from "./helpers/stripe-api-mock";
 import { getPlan, TRIAL_DAYS } from "@/lib/billing/plans";
 import { isBillingActive } from "@/lib/billing/activation";
 
@@ -221,7 +222,7 @@ describe("Plan checkout (Trello P3)", () => {
           flowType: "subscription_update_confirm",
           subscription: "sub_mock_starter",
           itemId: "si_mock_1",
-          price: getPlan(target).stripePriceId,
+          price: mockPriceId(getPlan(target).stripeLookupKey!),
         });
         expect(session?.afterCompletionReturnUrl).toMatch(/\/dashboard\/settings\/billing$/);
 
@@ -256,12 +257,21 @@ describe("Plan checkout (Trello P3)", () => {
     });
   });
 
-  it("checkout targets the plan's real BRL price id", () => {
-    // Guards the plumbing the mock relies on: the route resolves the price
-    // via getPlan().
-    expect(getPlan("starter").stripePriceId).toMatch(/^price_/);
-    expect(getPlan("pro").stripePriceId).toMatch(/^price_/);
-  });
+  // Price ids differ between the sandbox and the live account; only the
+  // lookup key is the same in both, so that is what checkout must go by.
+  it.each(["starter", "intermediate_annual_wpp"] as const)(
+    "checks out %s with the Price found under its lookup key",
+    async (planKey) => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, `Checkout Lookup ${planKey} Co`);
+
+      const res = await checkout(owner.cookieHeader, companyId, planKey);
+      expect(res.status).toBe(200);
+      expect((await capturedCheckoutSession(res.json.url!))?.price).toBe(
+        mockPriceId(getPlan(planKey).stripeLookupKey!),
+      );
+    },
+  );
 
   // A completed checkout whose `checkout.session.completed` webhook never
   // landed leaves company_billing on the P3 stub (`incomplete`, no

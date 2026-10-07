@@ -80,18 +80,14 @@ export interface BillingPlan {
    * and Meta bills the merchant's card (see `whatsappProviderForPlan`). */
   whatsappIncluded: boolean;
   /**
-   * Stripe Price `lookup_key`. Runtime code resolves the Price by this,
-   * never by a hard-coded id, so the underlying Price can be swapped
-   * (`transfer_lookup_key`) when the real numbers land -- no deploy.
+   * Stripe Price `lookup_key`. Runtime code resolves the Price by this
+   * (`resolvePriceId`, stripe/prices.ts), never by a hard-coded id: ids
+   * differ between the sandbox and the live account, and a price change is
+   * then a Stripe-only swap (`transfer_lookup_key`), no deploy. Every
+   * account must carry an active Price under each of these keys.
    * `null` for contact-us plans, which have no Price.
    */
   stripeLookupKey: string | null;
-  /**
-   * The Stripe Price id currently behind `stripeLookupKey`. Kept for
-   * reference/debugging only -- resolution goes through the lookup key.
-   * `null` for contact-us plans.
-   */
-  stripePriceId: string | null;
   /**
    * AI-reply allowance for one Stripe billing period, seeded
    * into `company_message_usage.reply_limit` (Trello P2) when a period
@@ -166,18 +162,10 @@ export function fullYearPriceCents(plan: Pick<BillingPlan, "tier" | "whatsappInc
 // it as a literal.
 export const TRIAL_REPLY_LIMIT = 500;
 
-interface TierPriceIds {
-  monthly: string;
-  annual: string;
-  monthlyWpp: string;
-  annualWpp: string;
-}
-
 function tierPlans(
   tier: keyof typeof BASE,
   displayName: string,
   lookupPrefix: string,
-  priceIds: TierPriceIds,
 ): BillingPlan[] {
   const base = BASE[tier];
   return [
@@ -188,7 +176,6 @@ function tierPlans(
       billingPeriod: "monthly",
       whatsappIncluded: false,
       stripeLookupKey: `${lookupPrefix}_monthly`,
-      stripePriceId: priceIds.monthly,
       monthlyReplyLimit: base.monthlyReplyLimit,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
       priceBrlCents: base.monthlyBrlCents,
@@ -201,7 +188,6 @@ function tierPlans(
       billingPeriod: "annual",
       whatsappIncluded: false,
       stripeLookupKey: `${lookupPrefix}_annual`,
-      stripePriceId: priceIds.annual,
       // 12 months' worth in one lump sum -- see the file-level "KNOWN GAP" note.
       monthlyReplyLimit: base.monthlyReplyLimit * 12,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
@@ -215,7 +201,6 @@ function tierPlans(
       billingPeriod: "monthly",
       whatsappIncluded: true,
       stripeLookupKey: `${lookupPrefix}_monthly_wpp`,
-      stripePriceId: priceIds.monthlyWpp,
       monthlyReplyLimit: base.monthlyReplyLimit,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
       priceBrlCents: base.monthlyWppBrlCents,
@@ -228,7 +213,6 @@ function tierPlans(
       billingPeriod: "annual",
       whatsappIncluded: true,
       stripeLookupKey: `${lookupPrefix}_annual_wpp`,
-      stripePriceId: priceIds.annualWpp,
       monthlyReplyLimit: base.monthlyReplyLimit * 12,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
       priceBrlCents: annualPriceCents(base.monthlyWppBrlCents),
@@ -237,45 +221,18 @@ function tierPlans(
   ];
 }
 
-// 2026-10-05 -- "preço 2.0": 10 Prices re-created at the new amounts (Pro
-// without Twilio kept R$497, so its 2 Prices stayed). Same steps as below.
-//
-// 2026-09-28 -- all 12 Prices re-created at whole-real amounts (R$97 instead
-// of R$96,99, etc.); lookup keys moved with `transfer_lookup_key`, the
-// Customer Portal's plan-switch list repointed to the new ids, old Prices
-// archived.
-//
-// All 9 new Prices were created directly in the Stripe sandbox (test mode,
-// account acct_1UBCAoHAg1kV3YLS) via the Stripe MCP -- see this file's
-// 2026-09-16 comment.
-//
-// 2026-09-27 -- the WhatsApp variants live on their own Product per tier
-// ("Staffra <Tier> + WhatsApp"), not on the tier's base Product. The Customer
-// Portal allows only one Price per interval per Product in its plan-switch
-// list, and a Price can only be switched to if it's on that list -- so with
-// both monthly Prices on one Product, "Starter" <-> "Starter + WhatsApp" was
-// impossible. Layout now: 6 Products x (monthly, annual). Lookup keys were
-// carried over with `transfer_lookup_key`; the old same-Product WPP Prices
-// are archived.
+// Stripe layout (both accounts): 6 Products -- each tier's own-Meta-account
+// and `_wpp` variant on separate Products, because the Customer Portal allows
+// only one Price per interval per Product in its plan-switch list -- each with
+// a monthly and an annual Price under the lookup keys built here. A price
+// change = new Price created with `transfer_lookup_key`, the Portal list
+// repointed, the old Price archived (decisions.md has each round). The
+// `starter2` prefix is historical: the first Starter Product was archived
+// with the `starter_*` keys still on its Prices.
 export const BILLING_PLANS: readonly BillingPlan[] = [
-  ...tierPlans("starter", "Starter", "starter2", {
-    monthly: "price_1UNEoPHAg1kV3YLSX8NOynAW",
-    annual: "price_1UNEoPHAg1kV3YLSgrIzCE5T",
-    monthlyWpp: "price_1UNEoQHAg1kV3YLSlzVzAVaI",
-    annualWpp: "price_1UNEoRHAg1kV3YLS2hVBZiT0",
-  }),
-  ...tierPlans("intermediate", "Intermediate", "intermediate", {
-    monthly: "price_1UNEoRHAg1kV3YLSYDKP1Oy3",
-    annual: "price_1UNEoSHAg1kV3YLS6QkFjYX9",
-    monthlyWpp: "price_1UNEoTHAg1kV3YLSTD0yUmvP",
-    annualWpp: "price_1UNEoUHAg1kV3YLSbQZWbYwi",
-  }),
-  ...tierPlans("pro", "Pro", "pro", {
-    monthly: "price_1UKfWgHAg1kV3YLSVNOXlbNS",
-    annual: "price_1UKfWhHAg1kV3YLS58i4Lwkt",
-    monthlyWpp: "price_1UNEoUHAg1kV3YLS8S0dXSpH",
-    annualWpp: "price_1UNEoVHAg1kV3YLS45rnfxNb",
-  }),
+  ...tierPlans("starter", "Starter", "starter2"),
+  ...tierPlans("intermediate", "Intermediate", "intermediate"),
+  ...tierPlans("pro", "Pro", "pro"),
   {
     key: "enterprise",
     displayName: "Enterprise",
@@ -283,7 +240,6 @@ export const BILLING_PLANS: readonly BillingPlan[] = [
     billingPeriod: null,
     whatsappIncluded: false,
     stripeLookupKey: null,
-    stripePriceId: null,
     monthlyReplyLimit: null,
     trialReplyLimit: null,
     priceBrlCents: null,

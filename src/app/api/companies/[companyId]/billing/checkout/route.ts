@@ -12,6 +12,7 @@ import {
   createPlanSwitchSession,
   getOrCreateStripeCustomer,
 } from "@/lib/stripe/billing";
+import { resolvePriceId } from "@/lib/stripe/prices";
 
 // Trello P3 -- POST /api/companies/[companyId]/billing/checkout
 //
@@ -190,12 +191,12 @@ export async function POST(
     // screen for that Price. If that can't be built (already on that plan,
     // Price missing from the Portal config, any Stripe error) we fall
     // through to the generic plan-switch list below instead of failing.
-    if (plan?.stripePriceId) {
+    if (plan?.stripeLookupKey) {
       try {
         const session = await createPlanSwitchSession({
           customerId: billing!.stripe_customer_id,
           subscriptionId: billing!.stripe_subscription_id as string,
-          priceId: plan.stripePriceId,
+          priceId: await resolvePriceId(plan.stripeLookupKey),
           returnUrl,
           locale: await resolveLocale(),
         });
@@ -269,11 +270,23 @@ export async function POST(
       { status: 400 },
     );
   }
-  if (!plan.stripePriceId) {
+  if (!plan.stripeLookupKey) {
     // Every self-serve plan always has a price; this is a config-drift guard.
     return NextResponse.json(
       { error: `Plan '${planKey}' has no Stripe price configured` },
       { status: 500 },
+    );
+  }
+  // Resolved before any customer or company_billing write, so a Stripe
+  // account missing this Price leaves nothing half-done behind.
+  let priceId: string;
+  try {
+    priceId = await resolvePriceId(plan.stripeLookupKey);
+  } catch (err) {
+    console.error(`billing checkout: no Stripe Price for '${plan.stripeLookupKey}'`, err);
+    return NextResponse.json(
+      { error: "This plan isn't available for purchase right now.", code: "price_unavailable" },
+      { status: 502 },
     );
   }
 
@@ -332,7 +345,7 @@ export async function POST(
   const t = await getTranslations({ locale, namespace: "Billing.trial" });
   const { url } = await createCheckoutSession({
     customerId,
-    priceId: plan.stripePriceId,
+    priceId,
     companyId,
     planKey: plan.key,
     baseUrl: resolveCheckoutBaseUrl(),
