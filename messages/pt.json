@@ -2322,7 +2322,7 @@
     },
     "terms": {
       "title": "Termos de Serviço",
-      "date": "2 de setembro de 2026",
+      "date": "7 de outubro de 2026",
       "intro": "Estes Termos de Serviço (\"Termos\") são um acordo vinculante entre a Pulsar LTDA (\"Pulsar\", \"nós\"), empresa responsável pela plataforma Staffra (\"Staffra\", o \"Serviço\"), e a empresa ou pessoa que utiliza nosso site, painel e serviços (em conjunto, o \"Serviço\"). Ao criar uma conta ou usar o Serviço, você concorda com estes Termos. Se você estiver concordando em nome de uma empresa, declara ter poderes para vinculá-la.",
       "sections": [
         {
@@ -2352,7 +2352,9 @@
           "heading": "4. Conteúdo gerado por IA",
           "paragraphs": [
             "As respostas produzidas por um funcionário de IA são geradas automaticamente e podem ser imprecisas, incompletas ou inadequadas para determinadas situações. Elas não são aconselhamento profissional, jurídico, médico ou financeiro.",
-            "Você é responsável pelas mensagens que seus funcionários de IA enviam. Recomendamos acompanhar as conversas, manter uma pessoa disponível para assumir e pausar um funcionário de IA se ele não estiver se comportando como esperado. A Pulsar não se responsabiliza por decisões tomadas ou ações praticadas com base em conteúdo gerado por IA."
+            "Você é responsável pelas mensagens que seus funcionários de IA enviam. Você deve acompanhar as conversas, manter uma pessoa disponível para assumir o atendimento e pausar um funcionário de IA que não esteja se comportando como esperado. A Pulsar não se responsabiliza por decisões tomadas ou ações praticadas com base em conteúdo gerado por IA.",
+            "Um funcionário de IA responde com base nas informações que você fornece e pode reproduzi-las, total ou parcialmente, nas conversas com os seus clientes. Cabe a você decidir o que entra na configuração do seu funcionário de IA: não inclua informações confidenciais, internas, de terceiros ou dados pessoais que você não queira que sejam repetidos a um cliente. Não respondemos pela divulgação de informações que você mesmo tenha disponibilizado ao funcionário de IA, nem por informações incorretas, desatualizadas ou indevidas que você tenha inserido.",
+            "Você reconhece que modelos de IA são probabilísticos e podem se comportar de forma inesperada, inclusive repetindo, combinando ou revelando informações presentes no contexto da conversa, enviando a mensagem errada ou respondendo ao cliente errado, ainda que o funcionário de IA esteja corretamente configurado. Na máxima extensão permitida por lei, não respondemos pela divulgação indevida de informações feita por um funcionário de IA ou por um provedor de modelo de IA, nem pelos prejuízos decorrentes dela; qualquer responsabilidade nossa nesse caso está sujeita aos limites do item 14."
           ]
         },
         {
@@ -2363,73 +2365,107 @@
           ]
         },
         {
-          "heading": "6. Serviços de terceiros",
+          "heading": "6. Segurança e incidentes de dados",
+          "paragraphs": [
+            "Adotamos medidas técnicas e administrativas razoáveis para proteger o Conteúdo do Cliente, descritas em nossa Política de Privacidade. Nenhum sistema, transmissão ou armazenamento é totalmente seguro: não garantimos que o Conteúdo do Cliente estará livre de acesso não autorizado, perda, alteração ou divulgação.",
+            "Você é o controlador dos dados pessoais dos seus próprios clientes e define as finalidades do tratamento. A Pulsar atua como operadora, tratando esses dados conforme as suas instruções e estes Termos. Cabe a você a base legal, o atendimento aos pedidos dos titulares e, em caso de incidente envolvendo a sua base, a comunicação aos titulares e à Autoridade Nacional de Proteção de Dados, com a nossa cooperação razoável.",
+            "Para operar o Serviço, o Conteúdo do Cliente é transmitido a provedores terceiros, incluindo provedores de modelos de IA, de nuvem, de mensageria, de agenda e de pagamento, descritos em nossa Política de Privacidade. Na máxima extensão permitida por lei, não respondemos por acesso não autorizado, vazamento, perda, uso indevido ou retenção de dados ocorridos na infraestrutura, nos modelos ou por ato desses terceiros, nem por mudanças nas práticas de privacidade deles.",
+            "Também não respondemos por incidentes decorrentes de credenciais suas ou da sua equipe comprometidas, compartilhadas ou mal administradas, de permissões e integrações que você conceda, de dispositivos, redes ou contas sob o seu controle, ou de informações inseridas no Serviço em desacordo com estes Termos.",
+            "Você não deve inserir no Serviço, nem instruir um funcionário de IA a coletar, dados completos de cartão, senhas, dados de saúde, biométricos, de crianças ou outros dados sensíveis. Se o fizer, assume integralmente o risco e a responsabilidade por esse tratamento e nos indenizará por reivindicações decorrentes dele.",
+            "Comunicaremos a você, sem demora injustificada, os incidentes de segurança de que tivermos conhecimento e que afetem o seu Conteúdo do Cliente, com as informações de que dispusermos. Qualquer responsabilidade nossa relacionada a segurança ou proteção de dados está sujeita aos limites do item 14."
+          ]
+        },
+        {
+          "heading": "7. Serviços de terceiros",
           "paragraphs": [
             "O Serviço se integra a plataformas de terceiros, como a Meta, provedores de agenda e processadores de pagamento. Seu uso dessas plataformas é regido pelos termos e políticas de privacidade delas, e não somos responsáveis por sua disponibilidade, mudanças ou atos.",
             "Uma plataforma de terceiros pode suspender ou limitar o acesso às suas APIs a qualquer momento, o que pode afetar o Serviço. Não nos responsabilizamos por essas interrupções."
           ]
         },
         {
-          "heading": "7. Preços e pagamento",
+          "heading": "8. Disponibilidade, manutenção e força maior",
+          "paragraphs": [
+            "O Serviço é oferecido sem compromisso de nível de serviço (SLA) e sem garantia de percentual de disponibilidade. Não prometemos que o Serviço, os canais conectados ou os provedores de IA estarão disponíveis de forma contínua, pontual ou livre de falhas.",
+            "Podemos realizar manutenções programadas ou emergenciais, atualizações e correções que tornem o Serviço total ou parcialmente indisponível. Sempre que for razoavelmente possível avisaremos as manutenções programadas com antecedência; manutenções emergenciais e medidas de segurança podem ser executadas sem aviso.",
+            "O Serviço depende de infraestrutura e plataformas de terceiros, como provedores de nuvem, provedores de modelos de IA, a Meta, provedores de agenda e processadores de pagamento, e também da sua conexão à internet. Falhas, bloqueios, limites de taxa, suspensões de conta ou mudanças de API desses terceiros podem interromper o Serviço, e não respondemos por indisponibilidade cuja causa esteja fora da nossa infraestrutura.",
+            "Não há crédito, abatimento, compensação ou reembolso por indisponibilidade do Serviço, salvo quando exigido por lei.",
+            "Na máxima extensão permitida por lei, não respondemos por vendas, atendimentos, agendamentos, mensagens não entregues, oportunidades perdidas, lucros cessantes ou qualquer outro prejuízo financeiro decorrente de o Serviço estar indisponível, lento ou degradado.",
+            "Nenhuma das partes responde pelo descumprimento causado por caso fortuito ou força maior, incluindo falhas de energia, de telecomunicações ou de provedores de nuvem, ataques cibernéticos, atos de autoridade e decisões unilaterais de plataformas de terceiros.",
+            "Como o Serviço fala com os seus clientes, você é responsável por manter um canal e uma pessoa de atendimento alternativos para usar enquanto o Serviço estiver indisponível."
+          ]
+        },
+        {
+          "heading": "9. Preços e pagamento",
           "paragraphs": [
             "Os planos pagos, quando aplicáveis à sua conta, são cobrados antecipadamente no ciclo indicado no checkout, por meio do nosso processador de pagamentos (como a Stripe), e não são reembolsáveis, salvo quando exigido por lei. Podemos alterar os preços com aviso prévio de pelo menos 30 dias antes da sua próxima renovação.",
             "Os valores cobrados dos seus próprios clientes por meio de links de pagamento são processados por um provedor de pagamento terceiro e repassados a você conforme os termos desse provedor. A Pulsar não é parte dessas transações e não retém seus recursos."
           ]
         },
         {
-          "heading": "8. Uso aceitável",
+          "heading": "10. Uso aceitável",
           "paragraphs": [
             "Você não deve: fazer engenharia reversa ou tentar extrair os modelos ou o código-fonte subjacentes; revender ou fornecer o Serviço a terceiros, exceto aos seus próprios clientes finais; sondar ou violar medidas de segurança ou autenticação; usar o Serviço para criar um produto concorrente; ou exceder limites de taxa ou impor carga irrazoável à nossa infraestrutura.",
             "Podemos limitar, suspender ou encerrar o acesso diante de conduta que viole estes Termos ou que ameaçe a segurança ou a integridade do Serviço."
           ]
         },
         {
-          "heading": "9. Propriedade intelectual",
+          "heading": "11. Propriedade intelectual",
           "paragraphs": [
             "A Pulsar e seus licenciadores detêm todos os direitos sobre o Serviço, incluindo o software, os designs dos funcionários de IA, os modelos que fornecemos e os nomes e logotipos Staffra e Pulsar. Estes Termos não concedem a você qualquer direito de usar nossas marcas sem autorização prévia por escrito.",
             "Sugestões que você nos enviar sobre o Serviço podem ser usadas por nós sem restrição ou obrigação para com você."
           ]
         },
         {
-          "heading": "10. Isenções de garantia",
+          "heading": "12. Desenvolvimentos sob medida",
+          "paragraphs": [
+            "Podemos, a nosso critério, desenvolver recursos, customizações, integrações, automações, modelos e fluxos de conversa solicitados por você (\"Desenvolvimentos sob Medida\"). Salvo acordo escrito específico em sentido contrário, e para os fins do art. 4º da Lei nº 9.609/1998 e da Lei nº 9.610/1998, todos os direitos de propriedade intelectual sobre os Desenvolvimentos sob Medida, incluindo código-fonte, arquitetura, modelos, instruções, interfaces, documentação e obras derivadas, pertencem exclusivamente à Pulsar desde a sua criação, ainda que o desenvolvimento tenha sido solicitado, especificado ou custeado por você.",
+            "Os valores eventualmente pagos por um Desenvolvimento sob Medida remuneram o serviço de desenvolvimento e o direito de usar o recurso enquanto a sua assinatura estiver ativa, e não configuram cessão, co-titularidade, obra sob encomenda com exclusividade, nem transferência de direitos autorais ou de qualquer outro direito de propriedade intelectual.",
+            "Enquanto a sua assinatura estiver ativa e em dia, você recebe uma licença de uso não exclusiva, intransferível e revogável sobre o Desenvolvimento sob Medida, nos mesmos termos de uso do Serviço. Encerrada a assinatura, essa licença termina.",
+            "Podemos incorporar o Desenvolvimento sob Medida ao Serviço e disponibilizá-lo, total ou parcialmente, a outros clientes, inclusive concorrentes seus, sem exclusividade, aviso, aprovação, royalty ou qualquer pagamento a você. Você não terá direito a remuneração, participação ou crédito pelo uso, licenciamento, revenda ou evolução do recurso.",
+            "Isso não alcança o seu Conteúdo do Cliente, nem as suas marcas e materiais, que seguem sendo seus conforme o item 5. As informações do seu negócio que você nos fornecer para configurar um Desenvolvimento sob Medida continuam sendo Conteúdo do Cliente; o software e os artefatos técnicos que construirmos a partir delas, não.",
+            "Qualquer exclusividade, cessão de direitos ou desenvolvimento como obra por encomenda só valerá se constar de instrumento escrito e assinado pela Pulsar, que prevalecerá sobre esta seção."
+          ]
+        },
+        {
+          "heading": "13. Isenções de garantia",
           "paragraphs": [
             "O Serviço é fornecido \"no estado em que se encontra\" e \"conforme disponível\", sem garantias de qualquer espécie, expressas ou implícitas, incluindo garantias implícitas de comercialização, adequação a uma finalidade específica e não violação. Não garantimos que o Serviço será ininterrupto ou livre de erros, nem que o conteúdo gerado por IA será preciso ou adequado às suas finalidades."
           ]
         },
         {
-          "heading": "11. Limitação de responsabilidade",
+          "heading": "14. Limitação de responsabilidade",
           "paragraphs": [
             "Na máxima extensão permitida por lei, a Pulsar não será responsável por quaisquer danos indiretos, incidentais, especiais, consequenciais ou punitivos, nem por lucros cessantes, perda de receita, de dados ou de reputação, decorrentes do Serviço ou a ele relacionados.",
             "Nossa responsabilidade total por qualquer reivindicação decorrente do Serviço ou a ele relacionada não excederá o maior valor entre o que você nos pagou pelo Serviço nos 12 meses anteriores ao evento que deu origem à reivindicação e R$ 500 (quinhentos reais). Nada nestes Termos limita responsabilidades que não possam ser limitadas pela legislação aplicável, inclusive pelo Código de Defesa do Consumidor quando aplicável."
           ]
         },
         {
-          "heading": "12. Indenização",
+          "heading": "15. Indenização",
           "paragraphs": [
             "Você defenderá, indenizará e manterá a Pulsar isenta de qualquer reivindicação, perda ou despesa (incluindo honorários advocatícios razoáveis) decorrente do seu Conteúdo do Cliente, do seu uso do Serviço, da sua violação destes Termos ou da sua violação de qualquer lei ou de direitos de terceiros, incluindo os seus próprios clientes."
           ]
         },
         {
-          "heading": "13. Suspensão e encerramento",
+          "heading": "16. Suspensão e encerramento",
           "paragraphs": [
             "Você pode parar de usar o Serviço e encerrar sua conta a qualquer momento pelo painel. Podemos suspender ou encerrar seu acesso se você violar materialmente estes Termos, deixar de pagar, ou se exigido por lei ou por uma plataforma de terceiros.",
             "Com o encerramento, seu direito de usar o Serviço termina. Disponibilizaremos o Conteúdo do Cliente para exportação por um período limitado e depois o excluiremos conforme nossa Política de Privacidade, salvo se a lei exigir que o mantenhamos."
           ]
         },
         {
-          "heading": "14. Alterações nestes Termos",
+          "heading": "17. Alterações nestes Termos",
           "paragraphs": [
             "Podemos atualizar estes Termos periodicamente. Se uma mudança for relevante, avisaremos você por e-mail ou pelo painel antes de ela entrar em vigor. Continuar a usar o Serviço após isso significa que você aceita os Termos atualizados."
           ]
         },
         {
-          "heading": "15. Lei aplicável e foro",
+          "heading": "18. Lei aplicável e foro",
           "paragraphs": [
             "Estes Termos são regidos pelas leis da República Federativa do Brasil, sem consideração às regras de conflito de leis. Fica eleito o foro da Comarca de São Paulo, Estado de São Paulo, Brasil, com exclusividade, exceto quando norma cogente de proteção ao consumidor assegurar a você o direito de demandar no seu domicílio."
           ]
         },
         {
-          "heading": "16. Fale conosco",
+          "heading": "19. Fale conosco",
           "paragraphs": [
             "Dúvidas sobre estes Termos podem ser enviadas à Pulsar LTDA pelo e-mail app.pulsar.contato@gmail.com."
           ]
