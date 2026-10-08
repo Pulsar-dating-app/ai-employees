@@ -10,6 +10,18 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-08 — A subscription created by hand in Stripe links to its company by customer
+
+**Decision:**
+- **Webhook:** when a subscription has no `metadata.companyId` and its id is on no `company_billing` row, the webhook looks the company up by the subscription's Stripe customer.
+- **Guard:** it adopts the subscription only if the subscription is live and the company's stored one isn't, so an event from an older subscription on the same customer can't overwrite a paying company.
+- **Billing-page reconcile:** when the stored subscription has ended, it moves to the customer's newest live one.
+- **Not covered:** a subscription made on a brand-new customer still needs `companyId` in its metadata.
+
+**Why:** a lifetime 100%-off subscription created in the live Dashboard reached the webhook with empty metadata. The company's row still held its previous, cancelled subscription, so nothing was written and the app showed the plan as cancelled until `companyId` was added by hand. The checkout creates one customer per company, and the account allows one company, so the customer identifies the company. Enterprise subscriptions created this way still don't get `plan_key = 'enterprise'`. Enterprise has no fixed reply quota and the usage row requires one, so that needs a product decision first.
+
+---
+
 ## 2026-10-07 — Terms: no SLA, data-incident roles, and Pulsar owns custom development
 **Decision:** `Legal.terms` in `messages/{en,pt,it}.json` grew from 16 to 19 sections, and the three new ones carry a deliberate stance:
 - **8. Availability** — no SLA and no uptime percentage is promised, maintenance may take the Service down, and downtime is excluded from liability for lost sales/profits. Downtime earns **no credit, discount, compensation or refund**, except where required by law.

@@ -37,6 +37,8 @@ function subscriptionObject(opts: {
   periodStartSec: number;
   cancelAtPeriodEnd?: boolean;
   customer?: string;
+  /** A subscription created by hand in the Stripe Dashboard carries none of our metadata. */
+  noMetadata?: boolean;
 }) {
   return {
     id: opts.id,
@@ -44,7 +46,7 @@ function subscriptionObject(opts: {
     status: opts.status,
     cancel_at_period_end: opts.cancelAtPeriodEnd ?? false,
     customer: opts.customer ?? `cus_${opts.companyId}`,
-    metadata: { companyId: opts.companyId },
+    metadata: opts.noMetadata ? {} : { companyId: opts.companyId },
     items: {
       object: "list",
       data: [
@@ -651,6 +653,92 @@ describe("Stripe webhook (Trello P4)", () => {
     const billing = await readBilling(companyId);
     expect(billing?.plan_key).toBe("pro"); // untouched
     expect(billing?.subscription_status).toBe("past_due"); // rest still ran
+  });
+
+  // A subscription created by hand in the Stripe Dashboard (a courtesy or
+  // negotiated plan) has no metadata and an id no company_billing row knows
+  // yet -- only the company's existing Stripe customer ties it to a company.
+  describe("a subscription created by hand in the Stripe Dashboard", () => {
+    async function seedEndedCompany(name: string, status = "canceled") {
+      const companyId = await createCompany(name);
+      await svc.from("company_billing").insert({
+        company_id: companyId,
+        stripe_customer_id: `cus_manual_${companyId}`,
+        stripe_subscription_id: `sub_old_${companyId}`,
+        subscription_status: status,
+        plan_key: "starter",
+      });
+      return companyId;
+    }
+
+    it("is linked to the company through its Stripe customer", async () => {
+      const companyId = await seedEndedCompany("P4 Manual Sub Co");
+
+      const res = await postEvent(
+        stripeEvent(
+          "customer.subscription.updated",
+          subscriptionObject({
+            id: `sub_manual_${companyId}`,
+            companyId,
+            status: "active",
+            lookupKey: "intermediate_monthly",
+            periodStartSec: unix(),
+            customer: `cus_manual_${companyId}`,
+            noMetadata: true,
+          }),
+        ),
+      );
+      expect(res.status).toBe(200);
+
+      const billing = await readBilling(companyId);
+      expect(billing?.stripe_subscription_id).toBe(`sub_manual_${companyId}`);
+      expect(billing?.subscription_status).toBe("active");
+      expect(billing?.plan_key).toBe("intermediate");
+    });
+
+    it("never overwrites a company that is live on another subscription", async () => {
+      const companyId = await seedEndedCompany("P4 Manual Sub Busy Co", "active");
+
+      await postEvent(
+        stripeEvent(
+          "customer.subscription.updated",
+          subscriptionObject({
+            id: `sub_other_${companyId}`,
+            companyId,
+            status: "active",
+            lookupKey: "pro_monthly",
+            periodStartSec: unix(),
+            customer: `cus_manual_${companyId}`,
+            noMetadata: true,
+          }),
+        ),
+      );
+
+      const billing = await readBilling(companyId);
+      expect(billing?.stripe_subscription_id).toBe(`sub_old_${companyId}`);
+      expect(billing?.plan_key).toBe("starter");
+    });
+
+    it("ignores one that isn't live", async () => {
+      const companyId = await seedEndedCompany("P4 Manual Sub Ended Co");
+
+      await postEvent(
+        stripeEvent(
+          "customer.subscription.deleted",
+          subscriptionObject({
+            id: `sub_older_${companyId}`,
+            companyId,
+            status: "canceled",
+            lookupKey: "pro_monthly",
+            periodStartSec: unix(),
+            customer: `cus_manual_${companyId}`,
+            noMetadata: true,
+          }),
+        ),
+      );
+
+      expect((await readBilling(companyId))?.stripe_subscription_id).toBe(`sub_old_${companyId}`);
+    });
   });
 
   it("customer.subscription.deleted marks the plan canceled", async () => {
