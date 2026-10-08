@@ -55,6 +55,41 @@ function sameSecond(a: string | null, b: string | null): boolean {
   return Math.floor(Date.parse(a) / 1000) === Math.floor(Date.parse(b) / 1000);
 }
 
+// A subscription created by hand in the Stripe Dashboard (a courtesy plan, a
+// negotiated deal) carries none of our metadata, and its id isn't on any
+// company_billing row yet. It is still created on the company's existing
+// Stripe customer, and each customer belongs to one company (created per
+// company by getOrCreateStripeCustomer), so the customer identifies it.
+//
+// Adopted only when the subscription is live and the company's stored one
+// isn't: an event from some other, older subscription on the same customer
+// must never overwrite a company that is paying through a different one.
+async function companyForCustomerSubscription(
+  service: Service,
+  subscription: Stripe.Subscription,
+): Promise<string | null> {
+  const customerId = expandableId(subscription.customer);
+  if (!customerId || !LIVE_STATUSES.has(subscription.status)) return null;
+
+  const { data, error } = await service
+    .from("company_billing")
+    .select("company_id, subscription_status, stripe_subscription_id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle();
+  if (error) {
+    console.error(`stripe webhook: customer lookup failed for ${customerId}`, error);
+    return null;
+  }
+  if (!data) return null;
+  if (LIVE_STATUSES.has(data.subscription_status as string)) {
+    console.error(
+      `stripe webhook: not adopting subscription ${subscription.id} -- company ${data.company_id} is already live on ${data.stripe_subscription_id}`,
+    );
+    return null;
+  }
+  return data.company_id as string;
+}
+
 async function syncBillingFromSubscription(
   service: Service,
   subscription: Stripe.Subscription,
@@ -63,7 +98,8 @@ async function syncBillingFromSubscription(
   const item = subscription.items.data[0];
 
   // Which company? metadata first (we set it on subscription_data in P3),
-  // else the existing company_billing row keyed by subscription id.
+  // else the existing company_billing row keyed by subscription id, else the
+  // row keyed by the subscription's customer.
   let companyId: string | null = opts.companyId ?? subscription.metadata?.companyId ?? null;
   if (!companyId) {
     const { data } = await service
@@ -72,6 +108,9 @@ async function syncBillingFromSubscription(
       .eq("stripe_subscription_id", subscription.id)
       .maybeSingle();
     companyId = (data?.company_id as string | undefined) ?? null;
+  }
+  if (!companyId) {
+    companyId = await companyForCustomerSubscription(service, subscription);
   }
   if (!companyId) {
     console.error("stripe webhook: subscription with no resolvable company", subscription.id);
@@ -310,19 +349,27 @@ export async function reconcileBillingFromStripe(
 
   const stripe = getStripeClient();
   let subscription: Stripe.Subscription | null = null;
+  const newestLiveSubscription = async () => {
+    const list = await stripe.subscriptions.list({
+      customer: customerId as string,
+      status: "all",
+      limit: 10,
+    });
+    return (
+      list.data.filter((s) => LIVE_STATUSES.has(s.status)).sort((a, b) => b.created - a.created)[0] ?? null
+    );
+  };
   try {
     if (knownSubId) {
       subscription = await stripe.subscriptions.retrieve(knownSubId);
+      // The stored subscription ended, but the customer may have a newer
+      // live one we never linked -- e.g. one created by hand in the Stripe
+      // Dashboard, whose webhook couldn't name a company.
+      if (!LIVE_STATUSES.has(subscription.status) && customerId) {
+        subscription = (await newestLiveSubscription()) ?? subscription;
+      }
     } else if (row.subscription_status === "incomplete") {
-      const list = await stripe.subscriptions.list({
-        customer: customerId as string,
-        status: "all",
-        limit: 10,
-      });
-      subscription =
-        list.data
-          .filter((s) => LIVE_STATUSES.has(s.status))
-          .sort((a, b) => b.created - a.created)[0] ?? null;
+      subscription = await newestLiveSubscription();
     }
   } catch (err) {
     console.error(`billing reconcile: Stripe lookup failed for company ${companyId}`, err);

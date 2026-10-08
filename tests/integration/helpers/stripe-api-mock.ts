@@ -27,7 +27,8 @@ import { getPlan, type PlanKey } from "@/lib/billing/plans";
 //  - GET /v1/subscriptions/sub_mock_<planKey> reports that plan's mock
 //    Price as the current item (used by P4).
 //  - a sub id containing `__trial`/`__user_<id>` reports `status:
-//    "trialing"` / metadata.trialUserId on GET (Trello P8's free trial).
+//    "trialing"` / metadata.trialUserId on GET (Trello P8's free trial);
+//    `__canceled` reports `status: "canceled"` (a subscription that ended).
 //  - every checkout session create's `subscription_data` (trial_period_days
 //    + nested metadata) is captured, keyed by session id, readable via GET
 //    /__checkout_sessions/<id> -- same inspection shape as
@@ -71,7 +72,13 @@ function extractMetadata(params: URLSearchParams, prefix = "metadata"): Record<s
 // out user on subscription_data when it grants a trial.
 function parseSubMock(
   subscriptionId: string,
-): { planKey: PlanKey | null; companyId: string | null; isTrial: boolean; trialUserId: string | null } {
+): {
+  planKey: PlanKey | null;
+  companyId: string | null;
+  isTrial: boolean;
+  isCanceled: boolean;
+  trialUserId: string | null;
+} {
   const planMatch = subscriptionId.match(/^sub_mock_(starter|pro|enterprise)/);
   const coMatch = subscriptionId.match(/__co_([^_]+)/);
   const userMatch = subscriptionId.match(/__user_(.+)$/);
@@ -79,6 +86,7 @@ function parseSubMock(
     planKey: planMatch ? (planMatch[1] as PlanKey) : null,
     companyId: coMatch ? coMatch[1] : null,
     isTrial: subscriptionId.includes("__trial"),
+    isCanceled: subscriptionId.includes("__canceled"),
     trialUserId: userMatch ? userMatch[1] : null,
   };
 }
@@ -94,11 +102,11 @@ function priceForSubscription(subscriptionId: string): { id: string; lookup_key:
 
 function mockSubscription(subscriptionId: string) {
   const nowSec = Math.floor(Date.now() / 1000);
-  const { companyId, isTrial, trialUserId } = parseSubMock(subscriptionId);
+  const { companyId, isTrial, isCanceled, trialUserId } = parseSubMock(subscriptionId);
   return {
     id: subscriptionId,
     object: "subscription",
-    status: isTrial ? "trialing" : "active",
+    status: isCanceled ? "canceled" : isTrial ? "trialing" : "active",
     cancel_at_period_end: false,
     customer: `cus_mock_of_${subscriptionId}`,
     metadata: {

@@ -342,6 +342,35 @@ describe("Plan checkout (Trello P3)", () => {
       expect(billing?.subscription_status).toBe("active");
     });
 
+    // The stored subscription ended, and the customer has a newer live one
+    // we never linked (e.g. created by hand in the Stripe Dashboard, whose
+    // webhook had no company to write to).
+    it("moves to the customer's newer live subscription when the stored one ended", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Checkout Reconcile Replaced Co");
+      const svc = getTestServiceClient();
+      await svc.from("company_billing").insert({
+        company_id: companyId,
+        // Mock: this customer id shape means "Stripe has a live starter sub".
+        stripe_customer_id: `cus_livesub_starter__co_${companyId}`,
+        stripe_subscription_id: `sub_mock_starter__canceled`,
+        subscription_status: "canceled",
+        plan_key: "starter",
+      });
+
+      const res = await checkout(owner.cookieHeader, companyId, "pro");
+      expect(res.status).toBe(200);
+      expect(res.json.mode).toBe("portal");
+
+      const { data: billing } = await svc
+        .from("company_billing")
+        .select("subscription_status, stripe_subscription_id")
+        .eq("company_id", companyId)
+        .single();
+      expect(billing?.subscription_status).toBe("active");
+      expect(billing?.stripe_subscription_id).toBe(`sub_mock_starter__co_${companyId}`);
+    });
+
     it("still mints a checkout when the customer genuinely has no live subscription", async () => {
       const owner = await signUpTestUser("owner");
       const companyId = await createCompany(owner.cookieHeader, "Checkout Reconcile Noop Co");
