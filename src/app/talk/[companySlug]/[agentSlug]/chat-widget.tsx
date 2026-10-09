@@ -163,6 +163,7 @@ export function ChatWidget({
   const scrollRef = useRef<HTMLElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const sendButtonRef = useRef<HTMLButtonElement>(null);
   // Whether the message list is scrolled to (near) the bottom. Starts true
   // so the first load lands at the newest message; flips as the visitor
   // scrolls up to read history, which is when we must NOT yank them back
@@ -304,6 +305,12 @@ export function ChatWidget({
     const sessionId = sessionIdRef.current;
     if (!text || isSending || !sessionId) return;
 
+    // A keyboard user who Tabbed to Send would otherwise be left focused on
+    // a button that's about to go disabled (focus drops to <body>). Pointer
+    // and touch users never get here with focus off the textarea -- see the
+    // button's onMouseDown.
+    if (document.activeElement === sendButtonRef.current) textareaRef.current?.focus();
+
     setErrorMessage(null);
     // The visitor just sent something — snap to the bottom to show it and
     // the reply, regardless of where they'd scrolled.
@@ -329,10 +336,6 @@ export function ChatWidget({
     });
 
     setIsSending(false);
-    // It's a chat: keep the cursor in the box so the visitor can just keep
-    // typing. Clicking Send (or the textarea being briefly busy) moves focus
-    // away otherwise, forcing a click back into the field every message.
-    textareaRef.current?.focus();
 
     if (!res.ok) {
       setErrorMessage(res.status === 429 ? t("errorRateLimited") : t("errorGeneric"));
@@ -534,6 +537,7 @@ export function ChatWidget({
                   }}
                   placeholder={t("inputPlaceholder", { name: agentName })}
                   rows={1}
+                  enterKeyHint="send"
                   // Stays enabled while a reply is in flight so the visitor can
                   // keep typing and never loses the caret; handleSend guards
                   // against an overlapping send.
@@ -541,7 +545,13 @@ export function ChatWidget({
                   className="max-h-[120px] w-full resize-none bg-transparent px-2.5 py-2 text-body-md text-on-surface caret-primary placeholder:text-outline focus:outline-none"
                 />
                 <button
+                  ref={sendButtonRef}
                   type="button"
+                  // It's a chat: the caret must stay in the box. Without this,
+                  // tapping Send moves focus to the button, which on mobile
+                  // closes the keyboard -- and it only came back once the
+                  // reply arrived and the textarea was re-focused.
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={handleSend}
                   disabled={!draft.trim() || isSending || !isReady}
                   aria-label={t("sendButton")}
