@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -86,6 +86,16 @@ function withArrivals(previous: ChatView | null, list: ChatMessage[]): ChatView 
   return { list, arrivalsFrom: previous === null ? list.length : previous.list.length };
 }
 
+function sameTranscript(a: ChatMessage[], b: ChatMessage[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((m, i) => m.role === b[i].role && m.content === b[i].content && m.created_at === b[i].created_at)
+  );
+}
+
+// How close to the bottom (px) still counts as "following the conversation".
+const PINNED_THRESHOLD_PX = 48;
+
 const STAMP_CLASS = "mt-1 text-label-sm font-normal tabular-nums text-on-surface-variant";
 
 const AVATAR_DIMENSIONS = {
@@ -149,8 +159,9 @@ export function ChatWidget({
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Whether the message list is scrolled to (near) the bottom. Starts true
   // so the first load lands at the newest message; flips as the visitor
@@ -185,7 +196,12 @@ export function ChatWidget({
           return res.ok ? res.json() : { messages: [] };
         })
         .then((data) => {
-          if (!cancelled) setView((prev) => withArrivals(prev, data.messages ?? []));
+          if (cancelled) return;
+          const next: ChatMessage[] = data.messages ?? [];
+          // A poll that brings nothing new must not touch state at all: a
+          // fresh (but identical) list would re-render the transcript every
+          // 5s for no reason.
+          setView((prev) => (prev && sameTranscript(prev.list, next) ? prev : withArrivals(prev, next)));
         })
         .catch(() => {
           if (!cancelled) setView((prev) => withArrivals(prev, []));
@@ -212,19 +228,75 @@ export function ChatWidget({
     };
   }, [companySlug, agentSlug, isEmbedded, isSending]);
 
-  // Only follow the conversation down when the visitor is already at the
-  // bottom. A poll refresh or an agent reply while they're reading earlier
-  // messages must leave their scroll position alone.
+  // Follow the conversation down only while the visitor is already at the
+  // bottom, and only when something actually changed size: new messages,
+  // the typing indicator, a product image finishing loading, or the
+  // message area shrinking because the mobile keyboard opened. Driven by
+  // layout rather than by every `view` update, so a poll that changes
+  // nothing never moves the scroll, and one that does never yanks a
+  // visitor who scrolled up to read history. Scrolls only the message
+  // container -- `scrollIntoView` would also scroll every ancestor (the
+  // page itself on mobile, and potentially the merchant's page around the
+  // embed iframe).
+  function followIfPinned() {
+    const el = scrollRef.current;
+    if (el && pinnedToBottomRef.current) el.scrollTop = el.scrollHeight;
+  }
+
+  const messageCount = view?.list.length ?? 0;
+  useLayoutEffect(followIfPinned, [messageCount, isSending]);
+
   useEffect(() => {
-    if (pinnedToBottomRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scroller = scrollRef.current;
+    const log = logRef.current;
+    if (!scroller || !log) return;
+    const observer = new ResizeObserver(followIfPinned);
+    observer.observe(scroller);
+    observer.observe(log);
+    return () => observer.disconnect();
+  }, [isBlockedHere]);
+
+  // WhatsApp-style mobile keyboard: the chat always fills exactly the
+  // *visible* area, so when the keyboard opens the header stays put, the
+  // input sits right above the keyboard and only the message list shrinks
+  // (and stays scrollable). Browsers that don't resize the layout viewport
+  // for the keyboard (iOS Safari; Android without interactive-widget) only
+  // report it through visualViewport -- and iOS additionally pans the page
+  // up, which the translate cancels out. Inside the embed iframe this is a
+  // no-op (the iframe's own viewport never sees the keyboard); widget.js
+  // does the same sizing for the iframe's panel on the host page.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const root = rootRef.current;
+    if (!vv || !root) return;
+    const viewport = vv;
+    const el = root;
+
+    function sync() {
+      // Pinch-zoomed: let the browser zoom normally instead of re-fitting
+      // the layout to the zoomed-in area.
+      if (Math.abs(viewport.scale - 1) > 0.01) {
+        el.style.height = "";
+        el.style.transform = "";
+        return;
+      }
+      el.style.height = `${viewport.height}px`;
+      el.style.transform = viewport.offsetTop ? `translateY(${viewport.offsetTop}px)` : "";
     }
-  }, [view, isSending]);
+
+    sync();
+    viewport.addEventListener("resize", sync);
+    viewport.addEventListener("scroll", sync);
+    return () => {
+      viewport.removeEventListener("resize", sync);
+      viewport.removeEventListener("scroll", sync);
+    };
+  }, []);
 
   function handleScroll() {
     const el = scrollRef.current;
     if (!el) return;
-    pinnedToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    pinnedToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < PINNED_THRESHOLD_PX;
   }
 
   async function handleSend() {
@@ -283,7 +355,7 @@ export function ChatWidget({
   const isReady = view !== null;
 
   return (
-    <div className="chat-root flex h-screen flex-col bg-surface">
+    <div ref={rootRef} className="chat-root fixed inset-x-0 top-0 flex h-dvh flex-col overflow-hidden bg-surface">
       <header className="z-10 flex shrink-0 items-center justify-between gap-4 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 shadow-level1 md:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative">
@@ -310,9 +382,9 @@ export function ChatWidget({
           <main
             ref={scrollRef}
             onScroll={handleScroll}
-            className="chat-scroll flex flex-1 flex-col items-center overflow-y-auto px-4 md:px-6"
+            className="chat-scroll flex min-h-0 flex-1 flex-col items-center overflow-y-auto overscroll-contain px-4 md:px-6"
           >
-            <div role="log" className="flex w-full max-w-2xl flex-1 flex-col py-6">
+            <div ref={logRef} role="log" className="flex w-full max-w-2xl flex-1 flex-col py-6">
               {!isReady ? null : list.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
                   <div className="relative">
@@ -439,8 +511,6 @@ export function ChatWidget({
                   {errorMessage}
                 </p>
               ) : null}
-
-              <div ref={bottomRef} />
             </div>
           </main>
 
