@@ -300,6 +300,32 @@
     lockedScroll = null;
   }
 
+  // Full-screen panel on mobile, kept fitted to the *visible* area. The
+  // keyboard opened by the chat's input never resizes the iframe's own
+  // viewport -- only this (host) page's visualViewport sees it, and iOS
+  // additionally pans this page up to keep the input in view, pushing the
+  // chat's header and messages off-screen. Pinning the panel to the visual
+  // viewport makes the iframe shrink instead, so the chat inside keeps its
+  // header, a scrollable message list, and the input right above the
+  // keyboard (WhatsApp-style).
+  function fitPanelToViewport() {
+    var vv = window.visualViewport;
+    if (!vv || !isMobile() || !panel.classList.contains("staffra-widget-open") || Math.abs(vv.scale - 1) > 0.01) {
+      panel.style.top = "";
+      panel.style.bottom = "";
+      panel.style.height = "";
+      return;
+    }
+    panel.style.top = vv.offsetTop + "px";
+    panel.style.bottom = "auto";
+    panel.style.height = vv.height + "px";
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", fitPanelToViewport);
+    window.visualViewport.addEventListener("scroll", fitPanelToViewport);
+  }
+
   var iframe = null;
 
   function open() {
@@ -316,11 +342,13 @@
     wrap.classList.add("staffra-widget-hidden");
     restoreButton.classList.remove("staffra-widget-visible");
     lockPageScroll();
+    fitPanelToViewport();
     dismissTeaser();
   }
 
   function close() {
     panel.classList.remove("staffra-widget-open");
+    fitPanelToViewport();
     unlockPageScroll();
     wrap.classList.remove("staffra-widget-hidden");
     launcher.focus();

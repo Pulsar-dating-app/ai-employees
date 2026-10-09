@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -68,6 +68,16 @@ async function resolveChat(companySlug: string, agentSlug: string): Promise<Reso
     agentPhotoSrc: resolveAgentPhoto(agent.slug, companyAgent.photo_type, companyAgent.photo_asset_url),
   };
 }
+
+// Android Chrome/Firefox: shrink the layout viewport when the keyboard
+// opens, so the chat's header stays visible and only the message list
+// gives up room (WhatsApp-style). iOS ignores this -- ChatWidget covers it
+// via visualViewport.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
+};
 
 export async function generateMetadata({
   params,
