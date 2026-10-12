@@ -453,14 +453,16 @@ describe("Google Calendar per professional", () => {
     expect(other.json.appointment.google_event_id).toBeNull();
   });
 
-  it("lists only writable calendars, refuses an unknown one, and can create a dedicated one", async () => {
+  it("lists only owned calendars, refuses an unknown one, and can create a dedicated one", async () => {
     const s = await seed("Calendar Picker Co");
     const base = await calendarPath(s.companyId);
     expect((await api("GET", `${base}/calendars`, owner.cookieHeader)).status).toBe(409); // not connected yet
     await api("POST", `${base}/connect`, owner.cookieHeader, { code: "good-code" });
 
     const list = await api<{ calendars: { id: string; primary: boolean }[] }>("GET", `${base}/calendars`, owner.cookieHeader);
-    expect(list.json.calendars.map((c) => c.id)).toEqual(["owner@example.test", "barber-joao@group.calendar.google.com"]);
+    // Only owned ones: the calendar.events.owned scope can't write to a
+    // calendar merely shared with edit rights (João's).
+    expect(list.json.calendars.map((c) => c.id)).toEqual(["owner@example.test"]);
 
     expect((await api("PATCH", base, owner.cookieHeader, { googleCalendarId: "someone-elses" })).status).toBe(400);
 

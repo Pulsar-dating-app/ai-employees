@@ -2742,6 +2742,7 @@
         "disconnectConfirmButton": "Sì, scollega",
         "cancel": "Annulla",
         "connectError": "Si è verificato un errore durante il collegamento di Google Calendar. Riprova.",
+        "missingScopes": "Per collegarlo, seleziona tutte le autorizzazioni nella schermata di Google. Ognuna serve per verificare la tua disponibilità e per aggiungere, modificare o annullare gli appuntamenti.",
         "disconnectError": "Si è verificato un errore durante lo scollegamento. Riprova.",
         "sdkNotReady": "Ancora in caricamento — riprova tra un momento.",
         "stepOneTitle": "Collega il tuo account Google",
@@ -3072,7 +3073,8 @@
           "paragraphs": [
             "I dipendenti IA generano le risposte utilizzando modelli linguistici su larga scala gestiti da fornitori terzi affidabili. Per produrre una risposta, il contenuto della conversazione pertinente e le informazioni aziendali necessarie per il contesto vengono inviati a tale fornitore per il trattamento e restituiti a Staffra.",
             "In base ai nostri accordi con questi fornitori, essi possono trattare tali dati solo per generare la risposta e non possono utilizzarli per addestrare i propri modelli di uso generale. Non vendiamo informazioni personali e non utilizziamo il contenuto delle conversazioni a fini pubblicitari.",
-            "Quando un Cliente collega un Google Calendar, il nostro accesso alle informazioni ricevute tramite le API di Google e il loro utilizzo rispettano le Norme sui dati utente dei servizi API di Google, inclusi i requisiti di Utilizzo limitato. Utilizziamo i dati di Google Calendar solo per verificare la disponibilità e per creare, aggiornare o annullare appuntamenti per conto del Cliente, e li eliminiamo quando il Cliente scollega il calendario o chiude il proprio account. Non utilizziamo i dati utente di Google a fini pubblicitari, non li trasferiamo a intermediari di dati, non li utilizziamo per valutare il merito creditizio o a fini di prestito e non li utilizziamo per addestrare modelli di IA o di apprendimento automatico generalizzati (non personalizzati)."
+            "Quando un Cliente collega un Google Calendar, il nostro accesso alle informazioni ricevute tramite le API di Google e il loro utilizzo rispettano le Norme sui dati utente dei servizi API di Google, inclusi i requisiti di Utilizzo limitato. Utilizziamo i dati di Google Calendar solo per verificare la disponibilità e per creare, aggiornare o annullare appuntamenti per conto del Cliente, e li eliminiamo quando il Cliente scollega il calendario o chiude il proprio account. Non utilizziamo i dati utente di Google a fini pubblicitari, non li trasferiamo a intermediari di dati, non li utilizziamo per valutare il merito creditizio o a fini di prestito e non li utilizziamo per addestrare modelli di IA o di apprendimento automatico generalizzati (non personalizzati).",
+            "Il contenuto degli eventi di Google Calendar (titoli, descrizioni, partecipanti) non viene mai letto da Staffra né inviato a un fornitore di IA. L'unica informazione derivata da un Google Calendar collegato che viene usata quando un dipendente IA risponde è la disponibilità, cioè quali fasce orarie sono libere o occupate. Il nostro fornitore di IA la tratta solo per fornirci il Servizio, in base a condizioni che ne vietano l'uso per addestrare i suoi modelli."
           ]
         },
         {

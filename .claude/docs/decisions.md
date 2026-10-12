@@ -10,6 +10,12 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-12 — Granular Google Calendar scopes for OAuth verification
+
+**Decision:** the connect flow requests `calendar.events.owned`, `calendar.freebusy`, `calendar.calendarlist.readonly` and `calendar.app.created` (`src/lib/google-calendar/scopes.ts`) instead of the full `auth/calendar`. The calendar picker lists only calendars the account **owns**, and the connect route refuses a partial grant with `missing_scopes`. The privacy policy (section 4) now states that only availability (free/busy) derived from Google Calendar reaches the AI provider, never event contents.
+
+**Why:** Google's Third-Party Data Safety review rejected verification because the requested scope (`auth/calendar`) didn't string-match the Console's (`calendar.events.owned`), and the full scope isn't least-privilege. `events.owned` alone would break freeBusy, the calendar list and calendar creation, so each call gets its own narrowest scope. Tradeoff: a colleague's calendar shared with edit rights can no longer be picked; that colleague connects their own account (already the per-professional model). Event contents are never read (freeBusy returns busy intervals only), which keeps the Workspace-data-to-AI exposure to derived availability.
+
 ## 2026-10-12 — One public landing page per trade (six trades)
 
 **Decision:**

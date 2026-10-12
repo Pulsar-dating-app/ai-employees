@@ -4,8 +4,7 @@ import { GOOGLE_CALENDAR_API_BASE_URL } from "./freebusy";
 // which of that account's calendars holds the professional's appointments
 // (the barbershop owner connecting their own account once per barber and
 // giving each barber a calendar; a partner in a clinic using their own
-// primary calendar), or create a dedicated one. Both use the
-// `auth/calendar` scope the connect flow already requests.
+// primary calendar), or create a dedicated one. Scopes: see scopes.ts.
 
 export type GoogleCalendarSummary = {
   id: string;
@@ -14,10 +13,13 @@ export type GoogleCalendarSummary = {
 };
 
 // Only calendars we can write events into -- a read-only calendar (a
-// colleague's shared view, a holidays feed) can't hold appointments.
+// holidays feed) can't hold appointments, and the narrow
+// calendar.events.owned scope (scopes.ts) only writes to calendars the
+// account owns, so a colleague's calendar shared with edit rights is out
+// too: that colleague connects their own account instead.
 export async function listWritableCalendars(accessToken: string): Promise<GoogleCalendarSummary[]> {
   const url = new URL(`${GOOGLE_CALENDAR_API_BASE_URL}/calendar/v3/users/me/calendarList`);
-  url.searchParams.set("minAccessRole", "writer");
+  url.searchParams.set("minAccessRole", "owner");
   url.searchParams.set("maxResults", "250");
   const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error(`Google calendarList failed: ${await res.text()}`);

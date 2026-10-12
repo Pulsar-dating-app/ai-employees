@@ -3,6 +3,7 @@ import { api } from "./helpers/request";
 import { signUpTestUser } from "./helpers/auth";
 import { getTestServiceClient } from "./helpers/service-client";
 import { calendarPath } from "./helpers/professionals";
+import { GOOGLE_CALENDAR_SCOPES } from "@/lib/google-calendar/scopes";
 
 // Trello ticket I1. Google's real oauth2.googleapis.com/token is stood in
 // for by tests/integration/helpers/google-oauth-mock.ts (wired in via
@@ -80,6 +81,23 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
     expect(result.status).toBe(400);
   });
 
+  it("refuses a consent where the user unticked some permissions, and stores nothing", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner.cookieHeader, "Partial Scopes Cal Co");
+
+    const result = await api<{ error: string }>(
+      "POST",
+      `${await calendarPath(companyId)}/connect`,
+      owner.cookieHeader,
+      { code: "partial-scopes" },
+    );
+    expect(result.status).toBe(400);
+    expect(result.json.error).toBe("missing_scopes");
+
+    const after = await api<{ connection: unknown }>("GET", await calendarPath(companyId), owner.cookieHeader);
+    expect(after.json.connection).toBeNull();
+  });
+
   it("connects, never returns either token, and is idempotent on reconnect", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner.cookieHeader, "Connect Cal Co");
@@ -107,7 +125,7 @@ describe("Google Calendar connection (GET/DELETE /calendar, POST /calendar/conne
     expect(connected.json.connection.status).toBe("connected");
     expect(connected.json.connection.provider).toBe("google");
     expect(connected.json.connection.google_calendar_id).toBe("primary");
-    expect(connected.json.connection.scopes).toBe("https://www.googleapis.com/auth/calendar");
+    expect(connected.json.connection.scopes).toBe(GOOGLE_CALENDAR_SCOPES.join(" "));
     expect(connected.json.connection.access_token).toBeUndefined();
     expect(connected.json.connection.refresh_token).toBeUndefined();
     expect(new Date(connected.json.connection.token_expires_at).getTime()).toBeGreaterThan(Date.now());

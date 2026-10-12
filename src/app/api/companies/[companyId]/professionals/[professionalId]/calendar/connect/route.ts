@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { exchangeCodeForToken } from "@/lib/google-calendar/oauth";
+import { missingCalendarScopes } from "@/lib/google-calendar/scopes";
 import { requireProfessionalAccess } from "@/lib/professionals/route-auth";
 
 // Trello I1, per professional since 2026-09-24 -- finishes what Google
@@ -60,6 +61,13 @@ export async function POST(
       // Never leak Google's raw error text to the merchant-facing UI.
       console.error("Google Calendar token exchange failed", err);
       return NextResponse.json({ error: "Failed to connect Google Calendar" }, { status: 502 });
+    }
+
+    // Google's consent screen lets the user untick individual permissions;
+    // a half-granted connection would fail later, mid-booking, so it's
+    // refused here and the merchant is asked to tick them all.
+    if (missingCalendarScopes(scope).length > 0) {
+      return NextResponse.json({ error: "missing_scopes" }, { status: 400 });
     }
 
     // A reconnect with a different Google account gets a fresh token but
