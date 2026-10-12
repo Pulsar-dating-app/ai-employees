@@ -10,7 +10,11 @@
 
 export const VERTICALS = [
   { slug: "barbearias", key: "barber", video: "barbearia", videoSeconds: 37, videoUploaded: "2026-10-12" },
+  { slug: "saloes-de-beleza", key: "salon", video: "salao", videoSeconds: 39, videoUploaded: "2026-10-12" },
+  { slug: "manicures", key: "nails", video: "nails", videoSeconds: 33, videoUploaded: "2026-10-12" },
   { slug: "clinicas-odontologicas", key: "dental", video: "dentista", videoSeconds: 33, videoUploaded: "2026-10-12" },
+  { slug: "nutricionistas", key: "nutri", video: "nutri", videoSeconds: 39, videoUploaded: "2026-10-12" },
+  { slug: "estudios-de-pilates", key: "pilates", video: "pilates", videoSeconds: 37, videoUploaded: "2026-10-12" },
 ] as const;
 
 export type Vertical = (typeof VERTICALS)[number];

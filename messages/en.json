@@ -53,7 +53,7 @@
   "Agents": {
     "descriptions": {
       "malu": "{name} runs your storefront conversations from first hello to checkout. She learns your catalog, works out what each shopper is really after, and recommends the products that genuinely fit — answering questions about price, stock, and policies straight from what you've told her, never guessing. Warm and attentive, she nudges ready buyers toward checkout without ever getting pushy.",
-      "ana": "{name} takes bookings off your plate. She checks real availability against your opening hours, your existing appointments, and your connected calendar, then offers customers times that are genuinely free. She collects the details you need before confirming, handles reschedules and cancellations on the spot, and adds people to a waitlist when you're fully booked — all in a calm, punctual, on-brand voice."
+      "ana": "{name} takes bookings off your plate. She checks real availability against your opening hours, your existing appointments, and your connected calendar, then offers customers times that are genuinely free. She collects the details you need before confirming, handles reschedules and cancellations on the spot — all in a calm, punctual, on-brand voice."
     }
   },
   "Onboarding": {
@@ -427,7 +427,7 @@
           "name": "Ana",
           "role": "Appointments",
           "sub": "Connected to Google Calendar",
-          "desc": "Offers only times that are genuinely free, based on your opening hours, your bookings and your calendar. Reschedules and cancels on the spot, and adds people to a waitlist when you're fully booked."
+          "desc": "Offers only times that are genuinely free, based on your opening hours, your bookings and your calendar. Reschedules and cancels on the spot, and collects the details you need before confirming."
         }
       ],
       "handoffTitle": "When it matters, she brings you in",
@@ -975,6 +975,270 @@
       "finalHeading": "Your barbershop taking bookings past midnight",
       "finalSub": "Let Ana handle WhatsApp and put your attention back on whoever's in the chair."
     },
+    "salon": {
+      "navLabel": "Beauty salons",
+      "seoTitle": "AI virtual receptionist for beauty salons on WhatsApp",
+      "seoDescription": "Ana answers your salon's WhatsApp 24/7, gives prices, lets clients pick their stylist and books only open slots. Try it free for 7 days.",
+      "eyebrow": "For beauty salons",
+      "h1": "WhatsApp virtual receptionist for beauty salons",
+      "sub": "Ana answers how much a colour costs, asks which stylist the client wants and books a time where the whole service fits in the schedule. Even before the salon opens.",
+      "videoName": "Ana booking a hair colour at a beauty salon on WhatsApp",
+      "videoDescription": "A 39-second demo: at 7:52am, before the salon opens, a client asks about the price of a colour and a strand test, picks her stylist and ends up booked.",
+      "painHeading": "At a salon, whoever's holding the brush can't reply",
+      "painIntro": "Between a blow-dry, a colour and a manicure, the salon's WhatsApp fills up with questions that almost always start the same way: \"how much is it?\".",
+      "pains": [
+        {
+          "title": "An unanswered price question is a lost client",
+          "body": "Someone asking about a colour or a keratin treatment is deciding where to go. If the answer only arrives at the end of the day, she's already booked somewhere else."
+        },
+        {
+          "title": "Long services mess up the schedule",
+          "body": "A colour takes two hours, a blow-dry forty-five minutes. Booking in the chat from memory is the easiest way to overlap clients or leave gaps in the day."
+        },
+        {
+          "title": "Clients want their own stylist",
+          "body": "Every client has a stylist she trusts. Checking each stylist's schedule, message by message, takes time from the people who should be working."
+        }
+      ],
+      "chatHeading": "What a chat with Ana looks like",
+      "chatIntro": "A client messages at 7:52am, before the salon opens. Ana gives the price, answers the question and books:",
+      "chatBusiness": "Studio Bella Hair",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Hi! I'd like to colour my hair, how much is it?"
+        },
+        {
+          "from": "agent",
+          "text": "Hi! A colour here at Studio Bella Hair is R$ 320. Shall I look for a slot for you?"
+        },
+        {
+          "from": "customer",
+          "text": "Do you do a strand test first?"
+        },
+        {
+          "from": "agent",
+          "text": "We do, at no charge! The test is done before the colour to make sure you get the result you want."
+        },
+        {
+          "from": "customer",
+          "text": "Great. Anything Saturday morning with Camila?"
+        },
+        {
+          "from": "agent",
+          "text": "On Saturday morning Camila has these open slots: 9:00am, 10:00am and 11:30am. Which suits you best?"
+        },
+        {
+          "from": "customer",
+          "text": "10am works. Mariana Costa, mari.costa@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "All set, Mariana! Colour with Camila, Saturday at 10:00am. You'll get a confirmation and a reminder by email."
+        }
+      ],
+      "featuresHeading": "Built for salon life",
+      "featuresIntro": "Ana works with what the salon sets up: services, prices, staff and hours. She doesn't make up prices or promise a slot that doesn't exist.",
+      "features": [
+        {
+          "title": "Every stylist has their own schedule",
+          "body": "Add your hairdressers, manicurists and brow artists. The client picks who she wants, and Ana shows only that person's slots, taking into account which services they do."
+        },
+        {
+          "title": "The right time for every service",
+          "body": "Cut, blow-dry, colour, manicure: each service has its own length, and you can add a gap between clients. Ana only offers slots where the whole service fits."
+        },
+        {
+          "title": "Never books two clients at once",
+          "body": "Ana checks your opening hours, days off and existing bookings, including each stylist's Google Calendar. A taken slot is never offered again."
+        },
+        {
+          "title": "Prices and details right away",
+          "body": "Ana answers each service's price and whatever you add about the salon, like payment methods, address and whether the strand test is charged."
+        },
+        {
+          "title": "Rescheduling and cancelling, with rules",
+          "body": "Clients reschedule or cancel in the chat. You set the minimum notice for booking and the cancellation deadline, and Ana sticks to both."
+        },
+        {
+          "title": "Email confirmation and reminder",
+          "body": "Every confirmed booking sends the client an email, and a reminder arrives before the appointment so she doesn't forget."
+        }
+      ],
+      "spotlightHeading": "A service that needs a consultation? You approve it first",
+      "spotlightBody": "For services that need a conversation first, like a more delicate chemical treatment, turn on approval: the client's request stays pending until you confirm it in the dashboard, and she gets the answer by email. And if the client wants to talk to a person, Ana says she'll get someone and, if you allow it, hands the chat to your team with the full history.",
+      "stepsHeading": "Get started in under 30 minutes",
+      "steps": [
+        {
+          "title": "Add your services",
+          "body": "Cut, blow-dry, colour, manicure and brows: the dashboard suggests the most common salon services with their lengths, and you just adjust names, times and prices."
+        },
+        {
+          "title": "Add your staff and hours",
+          "body": "Say who works, which services each person does and on which days and hours, and connect Google Calendar if you already use it."
+        },
+        {
+          "title": "Connect WhatsApp",
+          "body": "Use the number your salon already has or a new one. From then on, Ana starts answering."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does Ana know which services each stylist does?",
+          "a": "Yes. You set the services each person does, and Ana only offers a slot with someone who actually does that service. If the client has no preference, she books whoever is free."
+        },
+        {
+          "q": "What if the price depends on hair length?",
+          "a": "Ana answers from what you set up. You can add each variation as a separate service or explain the rule in your salon details, and she uses exactly that in her answer, without making up prices."
+        },
+        {
+          "q": "Can she book long services, like a colour, without messing up the schedule?",
+          "a": "Yes. Each service has its own length, plus an optional gap between clients. Ana only offers slots where the whole service fits and never books two clients at the same time with the same stylist."
+        },
+        {
+          "q": "Can I approve each booking before it's confirmed?",
+          "a": "Yes. With approval on, the request stays pending until you approve or decline it in the dashboard, and the client gets the answer by email."
+        },
+        {
+          "q": "Do I need to change the salon's WhatsApp number?",
+          "a": "No. The connection goes through Meta's official integration, with the number you already have on WhatsApp Business or a new one. Connecting through your own Meta account, you keep using the app on your phone."
+        }
+      ],
+      "finalHeading": "Your salon taking bookings before it even opens",
+      "finalSub": "Let Ana answer prices and book appointments on WhatsApp while your team looks after whoever's in the chair."
+    },
+    "nails": {
+      "navLabel": "Nail technicians",
+      "seoTitle": "AI virtual receptionist for nail technicians on WhatsApp",
+      "seoDescription": "Ana answers your nail studio's WhatsApp 24/7, gives prices and open slots, and reschedules in the same chat when a client changes her mind. Try it free for 7 days.",
+      "eyebrow": "For nail technicians",
+      "h1": "WhatsApp virtual receptionist for nail technicians",
+      "sub": "While you're in the middle of a gel extension, Ana answers WhatsApp, gives the price, shows the open slots and books. If the client needs to change the day, she reschedules in the same chat.",
+      "videoName": "Ana booking and rescheduling a manicure and pedicure at a nail studio on WhatsApp",
+      "videoDescription": "A 33-second demo: at 10pm, with the studio closed, a client books a manicure and pedicure, remembers she can't make it and moves it to Saturday in the same chat.",
+      "painHeading": "With your hands busy, nobody answers WhatsApp",
+      "painIntro": "Nail work takes both hands, and clients don't wait. Every message left for later is a slot that might walk away.",
+      "pains": [
+        {
+          "title": "You can't leave a client to reply",
+          "body": "In the middle of polish or an extension, stopping to type isn't an option. The message waits, and the new client looks for someone else."
+        },
+        {
+          "title": "Last-minute changes leave gaps",
+          "body": "\"Oh, I can't make Friday\". Without someone to offer another slot right away, the client disappears, and Friday's slot stays empty."
+        },
+        {
+          "title": "Requests come in at night",
+          "body": "Clients remember to book their maintenance when they get home. If nobody answers, they book with whoever replies first."
+        }
+      ],
+      "chatHeading": "What a chat with Ana looks like",
+      "chatIntro": "A client messages at 10pm, with the studio closed, and then changes her mind. Ana handles both:",
+      "chatBusiness": "Ateliê das Unhas",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Hi! I'd like a manicure and pedicure Friday afternoon"
+        },
+        {
+          "from": "agent",
+          "text": "Hi! Manicure and pedicure is R$ 80. On Friday afternoon Amanda has: 2:00pm, 3:00pm and 4:30pm. Which do you prefer?"
+        },
+        {
+          "from": "customer",
+          "text": "3pm. Juliana Melo, ju.melo@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "All set, Juliana! Manicure and pedicure with Amanda, Friday at 3:00pm."
+        },
+        {
+          "from": "customer",
+          "text": "Oh, I just remembered I can't make Friday. Can we move it to Saturday?"
+        },
+        {
+          "from": "agent",
+          "text": "Of course, no problem! On Saturday Amanda has: 9:00am, 10:00am and 1:30pm. Which works best?"
+        },
+        {
+          "from": "customer",
+          "text": "10am then"
+        },
+        {
+          "from": "agent",
+          "text": "Rescheduled! Manicure and pedicure with Amanda, Saturday at 10:00am. The confirmation is on its way to your email."
+        }
+      ],
+      "featuresHeading": "Built for a fully booked schedule",
+      "featuresIntro": "Ana works with what you set up: your services, your prices and your hours. She doesn't make up prices or promise a slot that doesn't exist.",
+      "features": [
+        {
+          "title": "Reschedules in the same chat",
+          "body": "When a client needs to change the day, Ana finds another open slot and moves the booking in one go, without cancelling and rebooking. The old slot is freed up for someone else."
+        },
+        {
+          "title": "The real length of every service",
+          "body": "Polish, manicure and pedicure, gel extensions, maintenance: each service has its own time, and you can add a gap to tidy your station between clients."
+        },
+        {
+          "title": "Cancellation rules",
+          "body": "You set how many hours before a client can cancel in the chat and the minimum notice for booking. Ana sticks to both without needing you."
+        },
+        {
+          "title": "A schedule for each technician",
+          "body": "If the studio has more than one nail tech, each has their own schedule. Clients can ask for someone by name, and Ana shows only their slots."
+        },
+        {
+          "title": "Email confirmation and reminder",
+          "body": "Every confirmed booking sends the client an email, and a reminder arrives before the appointment so she doesn't forget."
+        },
+        {
+          "title": "On WhatsApp, Instagram and your website",
+          "body": "The same Ana answers on your official WhatsApp, Instagram DMs, Telegram and your website chat. Connecting through your own Meta account, you keep using WhatsApp Business on your phone."
+        }
+      ],
+      "spotlightHeading": "You stay in control of the conversation",
+      "spotlightBody": "Ana only answers from what you've set up. If a client asks about something that isn't there, or wants to talk to you, she doesn't make things up: she says she'll get someone and, if you allow it, hands over the chat with its full history. From the dashboard, you can take over any conversation whenever you like.",
+      "stepsHeading": "Get started in under 30 minutes",
+      "steps": [
+        {
+          "title": "Add your services",
+          "body": "Enter the name, length and price of each service, like manicure, pedicure, manicure and pedicure, extensions and maintenance."
+        },
+        {
+          "title": "Set your hours",
+          "body": "Enter your working days and hours and days off, and connect Google Calendar if you already use it."
+        },
+        {
+          "title": "Connect WhatsApp",
+          "body": "Use the number you already have or a new one. From then on, Ana starts answering."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Can Ana reschedule without me stepping in?",
+          "a": "Yes. When a client asks to change the day, Ana shows the open slots and moves the booking right away, within the cancellation deadline you set."
+        },
+        {
+          "q": "What if a client wants to cancel at the last minute?",
+          "a": "You set how late a client can cancel in the chat, for example 12 hours before. After that, Ana won't cancel through the chat."
+        },
+        {
+          "q": "Does she answer questions about prices?",
+          "a": "Yes, based on what you set up: each service's price and your studio details, like payment methods and address. If it isn't set up, she won't make it up."
+        },
+        {
+          "q": "Does it work if I work on my own?",
+          "a": "Yes. With a single technician, Ana books everything into your schedule. If the studio grows, just add more technicians, each with their own hours."
+        },
+        {
+          "q": "Do I need to change my WhatsApp number?",
+          "a": "No. The connection goes through Meta's official integration, with the number you already have on WhatsApp Business or a new one. Connecting through your own Meta account, you keep using the app on your phone."
+        }
+      ],
+      "finalHeading": "A full nail schedule, without putting down the brush",
+      "finalSub": "Let Ana answer, book and reschedule on WhatsApp while you work."
+    },
     "dental": {
       "navLabel": "Dental clinics",
       "seoTitle": "AI virtual receptionist for dental clinics on WhatsApp",
@@ -1106,6 +1370,270 @@
       ],
       "finalHeading": "Your clinic booking check-ups even after hours",
       "finalSub": "Let Ana answer WhatsApp and free your front desk to look after the patients in the clinic."
+    },
+    "nutri": {
+      "navLabel": "Nutritionists",
+      "seoTitle": "AI virtual receptionist for nutritionists on WhatsApp",
+      "seoDescription": "Ana answers patients on WhatsApp 24/7, explains how the appointment works, in person or online, and books only open slots. Try it free for 7 days.",
+      "eyebrow": "For nutritionists",
+      "h1": "WhatsApp virtual receptionist for nutritionists",
+      "sub": "Ana explains how the first appointment works, says whether you see patients online, gives the price and books an open slot. Even when the patient decides to start at 6am.",
+      "videoName": "Ana booking an online nutritionist appointment on WhatsApp",
+      "videoDescription": "A 39-second demo: at 6:48am, before the practice opens, someone asks how the appointment works, chooses an online appointment and ends up booked.",
+      "painHeading": "The decision to start doesn't wait for business hours",
+      "painIntro": "Plenty of people decide to sort out their eating on a Monday morning or a Sunday night. If nobody answers then, the motivation fades.",
+      "pains": [
+        {
+          "title": "First-timers have questions",
+          "body": "\"How does the appointment work?\", \"How much is it?\", \"Do you do online?\". Without a quick, clear answer, they put it off, and often don't come back."
+        },
+        {
+          "title": "You're with a patient, and WhatsApp piles up",
+          "body": "During an appointment, you can't reply to anyone. By the end of the day the list is long, and some of those patients have given up."
+        },
+        {
+          "title": "In-person and online in the same schedule",
+          "body": "Juggling both kinds of appointment, each with its own length and price, over messages is easy to get wrong."
+        }
+      ],
+      "chatHeading": "What a chat with Ana looks like",
+      "chatIntro": "Someone messages at 6:48am, before the practice opens. Ana explains, answers and books:",
+      "chatBusiness": "Nutri Viva",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Hi, I've never seen a nutritionist, how does the appointment work?"
+        },
+        {
+          "from": "agent",
+          "text": "Hi! In the first appointment Jennifer gets to know your routine and goals and puts together a meal plan for you. It costs R$ 250."
+        },
+        {
+          "from": "customer",
+          "text": "Do you do online? I live far away"
+        },
+        {
+          "from": "agent",
+          "text": "We do! The online appointment costs R$ 200 and is done by video. Would you like to book?"
+        },
+        {
+          "from": "customer",
+          "text": "Yes! Could it be Monday morning?"
+        },
+        {
+          "from": "agent",
+          "text": "Monday morning has: 8:00am, 9:30am and 10:00am. Which do you prefer?"
+        },
+        {
+          "from": "customer",
+          "text": "10am. Carla Souza, carla.souza@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "All set, Carla! Online appointment with Jennifer, Monday at 10:00am. The confirmation is on its way to your email."
+        }
+      ],
+      "featuresHeading": "Built for a practice's routine",
+      "featuresIntro": "Ana works with what you set up: appointment types, prices, hours and instructions. She doesn't create meal plans or answer health questions for you.",
+      "features": [
+        {
+          "title": "In-person, online and follow-up appointments",
+          "body": "Add each kind of appointment with its own length and price. Ana explains the difference and books whichever the patient chooses."
+        },
+        {
+          "title": "The details you need, before the appointment",
+          "body": "Name, email and phone and, if you want, date of birth and your own questions, like \"What's your goal?\". Ana asks for all of it in the chat and saves it with the booking."
+        },
+        {
+          "title": "Instructions before the appointment",
+          "body": "\"Do I need to bring anything?\". Ana answers with the instructions you set up, like bringing recent test results."
+        },
+        {
+          "title": "Only in open slots",
+          "body": "Ana checks your working hours, days off and existing bookings, including Google Calendar. She never books two patients at the same time."
+        },
+        {
+          "title": "Rescheduling and cancelling, with rules",
+          "body": "Patients reschedule or cancel in the chat, within the deadline you set. Once it has passed, Ana won't cancel through the chat."
+        },
+        {
+          "title": "Email confirmation and reminder",
+          "body": "Every confirmed appointment sends the patient an email, and a reminder arrives beforehand to help prevent no-shows."
+        }
+      ],
+      "spotlightHeading": "A question about food or health? The chat comes to you",
+      "spotlightBody": "Ana only answers from what you've set up. When a patient asks something only the nutritionist can answer, she doesn't improvise: she says she'll get you and, if you allow it, hands over the chat with its full history. The details collected in the chat are only the ones you configure, and Staffra handles them in line with the LGPD, Brazil's data protection law.",
+      "stepsHeading": "Get started in under 30 minutes",
+      "steps": [
+        {
+          "title": "Add your appointment types",
+          "body": "First appointment, follow-up and online appointment: enter the name, length and price of each."
+        },
+        {
+          "title": "Set your hours",
+          "body": "Enter your working days and hours and days off, and connect Google Calendar if you already use it."
+        },
+        {
+          "title": "Connect WhatsApp",
+          "body": "Use the number you already have or a new one. From then on, Ana starts answering."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does Ana tell in-person and online appointments apart?",
+          "a": "Yes. Each appointment type is a service with its own length and price. Ana explains the options and books the one the patient chooses."
+        },
+        {
+          "q": "Does she answer questions about diets?",
+          "a": "No. Ana handles the front desk and the schedule, based on what you've set up. Questions about food and health stay with you: she says she'll get you and, if you allow it, hands over the chat."
+        },
+        {
+          "q": "Can I collect information before the first appointment?",
+          "a": "Yes. Besides name, email and phone, you can ask for date of birth and add your own questions, like the patient's goal. Ana asks for all of it in the chat."
+        },
+        {
+          "q": "What happens to patient data?",
+          "a": "Ana only asks for the details you configure, and they're stored in your dashboard alongside the appointment. Staffra handles this information in line with the LGPD, Brazil's data protection law, as described in our privacy policy."
+        },
+        {
+          "q": "Do I need to change my WhatsApp number?",
+          "a": "No. The connection goes through Meta's official integration, with the number you already have on WhatsApp Business or a new one. Connecting through your own Meta account, you keep using the app on your phone."
+        }
+      ],
+      "finalHeading": "Your practice booking before the first coffee",
+      "finalSub": "Let Ana answer and book appointments on WhatsApp while you see patients."
+    },
+    "pilates": {
+      "navLabel": "Pilates studios",
+      "seoTitle": "AI virtual receptionist for pilates studios on WhatsApp",
+      "seoDescription": "Ana answers your pilates studio's WhatsApp 24/7, explains the trial class and books with the right instructor, only in open slots. Try it free for 7 days.",
+      "eyebrow": "For pilates studios",
+      "h1": "WhatsApp virtual receptionist for pilates studios",
+      "sub": "Ana explains how the trial class works, gives the price and books an open slot, even at 6am, when someone decides to start and the studio hasn't opened yet.",
+      "videoName": "Ana booking a pilates trial class on WhatsApp",
+      "videoDescription": "A 37-second demo: at 5:58am, before the studio opens, someone asks about the trial class and its price and ends up booked for the next morning.",
+      "painHeading": "People decide to start pilates outside studio hours",
+      "painIntro": "The urge to take care of your body shows up early, late or on the weekend. If the message goes unanswered, so does the sign-up.",
+      "pains": [
+        {
+          "title": "The trial class is the way in",
+          "body": "Someone who's never done pilates wants to know if they can try it, how much it costs and whether it's for beginners. Every unanswered question is a trial class that never happens."
+        },
+        {
+          "title": "The instructor is teaching",
+          "body": "During class, nobody can stop to answer WhatsApp. Messages pile up until the break, and some people have already given up."
+        },
+        {
+          "title": "The most wanted slots go fast",
+          "body": "Early morning and end-of-day slots are the most sought after. Replying late means losing exactly those students."
+        }
+      ],
+      "chatHeading": "What a chat with Ana looks like",
+      "chatIntro": "Someone messages at 5:58am, half an hour before the studio opens. Ana explains and books the trial class:",
+      "chatBusiness": "Equilíbrio Pilates",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Hi! I've never done pilates, can I take a class to try it?"
+        },
+        {
+          "from": "agent",
+          "text": "Of course! We have a trial class designed for beginners."
+        },
+        {
+          "from": "customer",
+          "text": "How much is it?"
+        },
+        {
+          "from": "agent",
+          "text": "The trial class costs R$ 50. Shall I look for a slot?"
+        },
+        {
+          "from": "customer",
+          "text": "Anything tomorrow early, before work?"
+        },
+        {
+          "from": "agent",
+          "text": "Tomorrow morning these slots are open: 6:30am, 7:00am and 7:30am. Which suits you best?"
+        },
+        {
+          "from": "customer",
+          "text": "7am, perfect. Fernanda Rocha, fe.rocha@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "All set, Fernanda! Trial class tomorrow at 7:00am. You'll get a confirmation by email."
+        }
+      ],
+      "featuresHeading": "Built for a studio's routine",
+      "featuresIntro": "Ana works with what the studio sets up: class types, prices, instructors and hours. She doesn't make up prices or promise a slot that doesn't exist.",
+      "features": [
+        {
+          "title": "A frictionless trial class",
+          "body": "Add the trial class with its length and price. Ana explains how it works, answers beginners' questions and books it on the spot."
+        },
+        {
+          "title": "A schedule for each instructor",
+          "body": "Each instructor has their own days and hours. A student can ask for someone by name, and Ana shows only that instructor's schedule."
+        },
+        {
+          "title": "Private classes and assessments",
+          "body": "Private class, postural assessment, trial class: each session has its own length, and you can add a gap to set up the equipment between students."
+        },
+        {
+          "title": "Rescheduling and cancelling, with rules",
+          "body": "Students reschedule or cancel in the chat. You set the minimum notice for booking and the cancellation deadline, and Ana sticks to both."
+        },
+        {
+          "title": "Email confirmation and reminder",
+          "body": "Every confirmed booking sends the student an email, and a reminder arrives before the class so they don't forget."
+        },
+        {
+          "title": "On WhatsApp, Instagram and your website",
+          "body": "The same Ana answers on your studio's official WhatsApp, Instagram DMs, Telegram and your website chat. Connecting through your own Meta account, you keep using WhatsApp Business on your phone."
+        }
+      ],
+      "spotlightHeading": "Pain, injury or restrictions? The chat goes to an instructor",
+      "spotlightBody": "Ana only answers from what the studio has set up. When a student mentions pain, an injury or a medical restriction, she doesn't improvise: she says she'll get the team and, if you allow it, hands over the chat with its full history. You can also add your own questions before booking, like \"Do you have any injuries or restrictions?\".",
+      "stepsHeading": "Get started in under 30 minutes",
+      "steps": [
+        {
+          "title": "Add your class types",
+          "body": "Trial class, private class and assessment: enter the name, length and price of each."
+        },
+        {
+          "title": "Add your instructors and hours",
+          "body": "Say who teaches on which days and hours, and connect Google Calendar if the studio already uses it."
+        },
+        {
+          "title": "Connect WhatsApp",
+          "body": "Use the number your studio already has or a new one. From then on, Ana starts answering."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does it work for group classes?",
+          "a": "Today Ana's schedule books one student per slot for each instructor. She's ideal for trial classes, private classes and assessments. Classes with several spots at the same time aren't managed by the schedule yet."
+        },
+        {
+          "q": "Does Ana explain the trial class?",
+          "a": "Yes, based on what you set up: who it's for, how much it costs, how long it lasts and what to bring. If the question is about something you haven't added, she won't make it up."
+        },
+        {
+          "q": "Can students choose their instructor?",
+          "a": "Yes. Each instructor has their own schedule. When a student asks for someone by name, Ana shows only that instructor's slots."
+        },
+        {
+          "q": "What if a student has an injury?",
+          "a": "Ana doesn't assess anything health-related. You can ask for this before booking with your own question, and when the topic needs a professional, she gets the team and, if you allow it, hands over the chat."
+        },
+        {
+          "q": "Do I need to change the studio's WhatsApp number?",
+          "a": "No. The connection goes through Meta's official integration, with the number the studio already has on WhatsApp Business or a new one. Connecting through your own Meta account, you keep using the app on your phone."
+        }
+      ],
+      "finalHeading": "Your studio booking classes before the doors open",
+      "finalSub": "Let Ana answer and book on WhatsApp while your instructors teach."
     }
   },
   "Dashboard": {
@@ -2868,7 +3396,7 @@
         "Malu for sales and Ana for appointments",
         "Official WhatsApp, Instagram, Telegram, website chat and direct link",
         "Catalog from a spreadsheet or synced with Shopify",
-        "Calendar with Google Calendar, waitlist and approval",
+        "Calendar with Google Calendar, email reminders and approval",
         "Answers only from your data, never made up",
         "Hands conversations to your team when needed",
         "Conversation inbox and performance reports",
