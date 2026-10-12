@@ -21,6 +21,7 @@ const eslintConfig = defineConfig([
     // runtime code, minified) -- already gitignored, but ESLint doesn't
     // know that on its own.
     "supabase/.temp/**",
+    "video/**",
   ]),
 ]);
 

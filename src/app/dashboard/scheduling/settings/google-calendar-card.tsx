@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import { useTranslations } from "next-intl";
@@ -23,7 +23,8 @@ declare global {
             client_id: string;
             scope: string;
             ux_mode: "popup";
-            callback: (response: { code?: string; error?: string }) => void;
+            state: string;
+            callback: (response: { code?: string; state?: string; error?: string }) => void;
             error_callback?: (error: { type?: string }) => void;
           }): GoogleCodeClient;
         };
@@ -75,7 +76,6 @@ export function GoogleCalendarCard({
   const [calendars, setCalendars] = useState<CalendarOption[] | null>(null);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarNote, setCalendarNote] = useState<string | null>(null);
-  const codeClient = useRef<GoogleCodeClient | null>(null);
   const baseUrl = `/api/companies/${companyId}/professionals/${professionalId}/calendar`;
 
   useEffect(() => {
@@ -116,41 +116,41 @@ export function GoogleCalendarCard({
     setErrorMessage(null);
     setView("connecting");
 
-    if (!codeClient.current) {
-      codeClient.current = window.google.accounts.oauth2.initCodeClient({
-        client_id: googleClientId,
-        scope: GOOGLE_CALENDAR_SCOPES.join(" "),
-        ux_mode: "popup",
-        error_callback: () => setView("idle"),
-        callback: async (response) => {
-          if (!response.code) {
+    const state = crypto.randomUUID();
+    const client = window.google.accounts.oauth2.initCodeClient({
+      client_id: googleClientId,
+      scope: GOOGLE_CALENDAR_SCOPES.join(" "),
+      ux_mode: "popup",
+      state,
+      error_callback: () => setView("idle"),
+      callback: async (response) => {
+        if (!response.code || response.state !== state) {
+          setView("idle");
+          return;
+        }
+        try {
+          const res = await fetch(`${baseUrl}/connect`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: response.code }),
+          });
+          if (!res.ok) {
+            const body = (await res.json().catch(() => null)) as { error?: string } | null;
+            setErrorMessage(body?.error === "missing_scopes" ? t("missingScopes") : t("connectError"));
             setView("idle");
             return;
           }
-          try {
-            const res = await fetch(`${baseUrl}/connect`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ code: response.code }),
-            });
-            if (!res.ok) {
-              const body = (await res.json().catch(() => null)) as { error?: string } | null;
-              setErrorMessage(body?.error === "missing_scopes" ? t("missingScopes") : t("connectError"));
-              setView("idle");
-              return;
-            }
-            const { connection: updated } = await res.json();
-            setConnection(updated ?? null);
-            setCalendars(null);
-            setView("idle");
-          } catch {
-            setErrorMessage(t("connectError"));
-            setView("idle");
-          }
-        },
-      });
-    }
-    codeClient.current.requestCode();
+          const { connection: updated } = await res.json();
+          setConnection(updated ?? null);
+          setCalendars(null);
+          setView("idle");
+        } catch {
+          setErrorMessage(t("connectError"));
+          setView("idle");
+        }
+      },
+    });
+    client.requestCode();
   }
 
   async function confirmDisconnect() {
