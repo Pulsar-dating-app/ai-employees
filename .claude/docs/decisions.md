@@ -10,6 +10,12 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-12 — Granular Google Calendar scopes for OAuth verification
+
+**Decision:** the connect flow requests `calendar.events.owned`, `calendar.freebusy`, `calendar.calendarlist.readonly` and `calendar.app.created` (`src/lib/google-calendar/scopes.ts`) instead of the full `auth/calendar`. The calendar picker lists only calendars the account **owns**, and the connect route refuses a partial grant with `missing_scopes`. The privacy policy (section 4) now states that only availability (free/busy) derived from Google Calendar reaches the AI provider, never event contents.
+
+**Why:** Google's Third-Party Data Safety review rejected verification because the requested scope (`auth/calendar`) didn't string-match the Console's (`calendar.events.owned`), and the full scope isn't least-privilege. `events.owned` alone would break freeBusy, the calendar list and calendar creation, so each call gets its own narrowest scope. Tradeoff: a colleague's calendar shared with edit rights can no longer be picked; that colleague connects their own account (already the per-professional model). Event contents are never read (freeBusy returns busy intervals only), which keeps the Workspace-data-to-AI exposure to derived availability.
+
 ## 2026-10-12 — Landing explainer video built in code (Remotion), not AI-generated footage
 
 **Decision:** the landing explainer is a motion-graphics video rendered from React with Remotion, in its own `video/` project. It is built from the real product screenshots, the Malu/Ana portraits, the brand palette and Inter, with the copy per locale in one file. It is not generated with text-to-video tools. There is no voiceover. The music and sound effects are synthesized in code (`video/scripts/synth-audio.mjs`) rather than taken from a stock library, so there's no licence to track and every effect is locked to its animation frame.

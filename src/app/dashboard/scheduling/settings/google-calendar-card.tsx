@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CHEVRON } from "@/components/ui/select";
 import { SettingsBlock } from "@/components/ui/settings-block";
 import { useSectionStatus } from "./settings-shell";
+import { GOOGLE_CALENDAR_SCOPES } from "@/lib/google-calendar/scopes";
 
 type GoogleCodeClient = { requestCode: () => void };
 declare global {
@@ -41,8 +42,6 @@ type Connection = {
 type CalendarOption = { id: string; name: string; primary: boolean };
 
 type View = "loading" | "idle" | "connecting" | "disconnecting" | "confirmingDisconnect";
-
-const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
 
 const SELECT_CLASSES =
   "h-11 w-full min-w-0 rounded-xl border border-outline-variant/70 bg-surface-container-lowest pl-3.5 text-sm text-on-surface outline-none transition-[border-color,box-shadow] hover:border-outline focus:border-primary focus:shadow-[0_0_0_4px_rgba(53,37,205,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
@@ -120,7 +119,7 @@ export function GoogleCalendarCard({
     const state = crypto.randomUUID();
     const client = window.google.accounts.oauth2.initCodeClient({
       client_id: googleClientId,
-      scope: CALENDAR_SCOPE,
+      scope: GOOGLE_CALENDAR_SCOPES.join(" "),
       ux_mode: "popup",
       state,
       error_callback: () => setView("idle"),
@@ -136,7 +135,8 @@ export function GoogleCalendarCard({
             body: JSON.stringify({ code: response.code }),
           });
           if (!res.ok) {
-            setErrorMessage(t("connectError"));
+            const body = (await res.json().catch(() => null)) as { error?: string } | null;
+            setErrorMessage(body?.error === "missing_scopes" ? t("missingScopes") : t("connectError"));
             setView("idle");
             return;
           }

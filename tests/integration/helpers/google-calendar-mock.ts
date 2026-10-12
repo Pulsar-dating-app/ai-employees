@@ -72,7 +72,7 @@ export function startGoogleCalendarMock(): Promise<{ url: string; stop: () => Pr
 
     if (url.pathname === "/calendar/v3/users/me/calendarList" && req.method === "GET") {
       const minRole = url.searchParams.get("minAccessRole");
-      const items = MOCK_CALENDARS.filter((c) => minRole !== "writer" || c.accessRole !== "reader");
+      const items = MOCK_CALENDARS.filter((c) => minRole !== "owner" || c.accessRole === "owner");
       return send(200, { items });
     }
     if (url.pathname === "/calendar/v3/calendars" && req.method === "POST") {

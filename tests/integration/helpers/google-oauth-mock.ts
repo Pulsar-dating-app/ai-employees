@@ -1,5 +1,6 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { GOOGLE_CALENDAR_SCOPES } from "@/lib/google-calendar/scopes";
 
 // Stands in for Google's real oauth2.googleapis.com/token endpoint in
 // integration tests. Same reasoning as graph-api-mock.ts: the route handler
@@ -12,6 +13,8 @@ import type { AddressInfo } from "node:net";
 // - code === "trigger-token-failure" -> the exchange fails outright
 // - code === "good-code-no-refresh" -> succeeds but omits refresh_token,
 //   simulating a real reconnect that didn't force prompt=consent
+// - code === "partial-scopes" -> succeeds, but the user unticked all but
+//   one permission on Google's consent screen
 // - anything else -> succeeds with a fresh refresh_token
 export function startGoogleOAuthMock(): Promise<{ url: string; stop: () => Promise<void> }> {
   const server: Server = createServer((req, res) => {
@@ -36,8 +39,12 @@ export function startGoogleOAuthMock(): Promise<{ url: string; stop: () => Promi
         access_token: "mock-google-access-token",
         token_type: "Bearer",
         expires_in: 3599,
-        scope: "https://www.googleapis.com/auth/calendar",
+        scope: GOOGLE_CALENDAR_SCOPES.join(" "),
       };
+
+      if (code === "partial-scopes") {
+        return send(200, { ...base, scope: GOOGLE_CALENDAR_SCOPES[0], refresh_token: "mock-google-refresh-token" });
+      }
 
       if (code === "good-code-no-refresh") {
         return send(200, base);
