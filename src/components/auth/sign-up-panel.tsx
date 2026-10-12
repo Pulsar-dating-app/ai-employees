@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/locales";
+import { localizeHref } from "@/i18n/routing";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { SignUpForm } from "./sign-up-form";
 import logo from "../../../public/logo.png";
@@ -27,7 +28,7 @@ export function SignUpPanel() {
       <div className="flex items-center justify-between border-t border-outline-variant pt-4">
         <p className="text-sm text-on-surface-variant">
           {t("haveAccount")}{" "}
-          <Link href="/?auth=login" replace className="font-medium text-primary hover:underline">
+          <Link href={localizeHref(locale as Locale, "/?auth=login")} replace className="font-medium text-primary hover:underline">
             {t("loginLink")}
           </Link>
         </p>

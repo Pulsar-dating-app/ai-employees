@@ -1,11 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { setLocale } from "@/lib/i18n/actions";
 import { LOCALE_META, SUPPORTED_LOCALES, type Locale } from "@/i18n/locales";
+import { localizedPath, parseLocalizedPath } from "@/i18n/routing";
 import { CheckIcon } from "@/components/ui/icons";
 
 const MENU_WIDTH = 208;
@@ -25,6 +26,7 @@ function GlobeIcon(props: React.SVGProps<SVGSVGElement>) {
 export function LanguageSwitcher({ currentLocale }: { currentLocale: Locale }) {
   const t = useTranslations("LanguageSwitcher");
   const router = useRouter();
+  const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [placement, setPlacement] = useState({ up: false, alignLeft: false });
@@ -73,7 +75,17 @@ export function LanguageSwitcher({ currentLocale }: { currentLocale: Locale }) {
     setGreeting(next);
     startTransition(async () => {
       await setLocale(next);
-      router.refresh();
+      // Public pages have one URL per language (src/i18n/routing.ts), so
+      // switching there means going to the other URL — as a full load, since
+      // a client-side navigation would keep the root layout's `<html lang>`
+      // and message bundle from the old language. Elsewhere the cookie alone
+      // decides and a refresh re-renders everything.
+      const localized = parseLocalizedPath(pathname);
+      if (localized) {
+        window.location.assign(localizedPath(next, localized.basePath) + window.location.search + window.location.hash);
+      } else {
+        router.refresh();
+      }
     });
   }
 

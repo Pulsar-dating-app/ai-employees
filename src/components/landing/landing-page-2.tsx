@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/locales";
+import { localizeHref, localizedPath } from "@/i18n/routing";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { landingV2Sans } from "./fonts";
 import { BrandLogo } from "./brand-logos";
@@ -24,8 +25,6 @@ import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
 import logo from "../../../public/logo.png";
 
-const HIRE = "/?auth=signup";
-const LOGIN = "/?auth=login";
 const MALU_CHAT = "/talk/staffra-2/malu";
 
 const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -75,6 +74,9 @@ export async function LandingPageV2() {
   const steps = t.raw("rag.steps") as Step[];
   const sources = t.raw("rag.sources") as Source[];
   const locale = (await getLocale()) as Locale;
+  // Keep visitors on their language's URL (/en, /it…) — see src/i18n/routing.ts.
+  const HIRE = localizeHref(locale, "/?auth=signup");
+  const LOGIN = localizeHref(locale, "/?auth=login");
   const faqs = t.raw("faq.items") as Faq[];
   const heroChat = t.raw("hero.chat") as HeroChatCopy;
   const footerCols = t.raw("footer.columns") as FooterCol[];
@@ -85,7 +87,7 @@ export async function LandingPageV2() {
     >
       <ScrollHeader>
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-2 px-4 sm:h-20 md:px-10">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href={localizedPath(locale, "/")} className="flex items-center gap-2">
             <Image src={logo} alt="Staffra" sizes="88px" className="h-7 w-auto object-contain sm:h-8" priority />
           </Link>
 
@@ -477,7 +479,7 @@ export async function LandingPageV2() {
                 {col.links.map((link) => (
                   <a
                     key={link.label}
-                    href={link.href}
+                    href={localizeHref(locale, link.href)}
                     className="text-[14px] leading-[24px] text-[#464555] transition-colors hover:text-[#1b1b24]"
                   >
                     {link.label}

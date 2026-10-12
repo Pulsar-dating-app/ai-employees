@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/locales";
+import { localizedPath } from "@/i18n/routing";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { landingV2Sans } from "@/components/landing/fonts";
 import logo from "../../../public/logo.png";
@@ -10,8 +11,8 @@ import logo from "../../../public/logo.png";
 // with inline hex colors and the Inter face, matching landing-page-2.tsx --
 // these pages sit next to the landing, not inside the dashboard design
 // system. All copy resolves from the `Legal` namespace in messages/{en,pt}.json,
-// so the site-wide language toggle (cookie + router.refresh) drives them like
-// every other surface.
+// and each language has its own URL (/privacy, /en/privacy, … — see
+// src/i18n/routing.ts), so every link here stays on the reader's language.
 
 type LegalDoc = "privacy" | "terms";
 
@@ -41,13 +42,13 @@ export async function LegalDocument({ doc }: { doc: LegalDoc }) {
     >
       <nav className="sticky top-0 z-50 border-b border-[#edeeef] bg-[#f8f9fa]/80 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-[880px] items-center justify-between px-4 md:px-6">
-          <Link href="/">
+          <Link href={localizedPath(locale as Locale, "/")}>
             <Image src={logo} alt="Staffra" className="h-11 w-auto" priority />
           </Link>
           <div className="flex items-center gap-4">
             <LanguageSwitcher currentLocale={locale as Locale} />
             <Link
-              href="/"
+              href={localizedPath(locale as Locale, "/")}
               className="text-[14px] font-medium text-[#464555] transition-colors hover:text-[#3525cd]"
             >
               {t("nav.back")}
@@ -107,13 +108,13 @@ export async function LegalDocument({ doc }: { doc: LegalDoc }) {
 
         <footer className="mt-16 flex flex-col gap-3 border-t border-[#e7e8e9] pt-8 text-[15px] text-[#464555] sm:flex-row sm:items-center sm:justify-between">
           <Link
-            href={`/${other}`}
+            href={localizedPath(locale as Locale, `/${other}`)}
             className="font-medium text-[#3525cd] transition-colors hover:brightness-90"
           >
             {t(`${other}.title`)}
           </Link>
           <Link
-            href="/"
+            href={localizedPath(locale as Locale, "/")}
             className="transition-colors hover:text-[#3525cd]"
           >
             {t("nav.back")}

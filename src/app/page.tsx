@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { localizedAlternates } from "@/i18n/routing";
+import type { Locale } from "@/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
 import { LandingPageV2 } from "@/components/landing/landing-page-2";
 import { AuthModalController } from "@/components/auth/auth-modal-controller";
@@ -9,10 +11,12 @@ import { LandingJsonLd } from "@/components/seo/landing-json-ld";
 
 // `?auth=signup` / `?auth=login` render the same landing with an overlay —
 // self-referential canonical so Google folds those query variants into the
-// bare `/` rather than treating them as duplicate pages.
-export const metadata: Metadata = {
-  alternates: { canonical: "/" },
-};
+// bare `/` (or `/en`, `/it`) rather than treating them as duplicate pages.
+// Also re-exported by `[locale]/page.tsx`, so it reads the URL's locale.
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = (await getLocale()) as Locale;
+  return { alternates: localizedAlternates("/", locale) };
+}
 
 // Signed-in visitors go straight to the app; everyone else sees the real
 // public landing page instead of being bounced to /login. Login / sign-up

@@ -10,6 +10,23 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-11 — Per-locale URLs for the public pages only; Portuguese at the unprefixed URLs
+
+**Decision:**
+- **Scope:** the indexable public pages (`/`, `/privacy`, `/terms`) get one URL per language: Portuguese unprefixed, English and Italian under `/en` and `/it` (`src/app/[locale]/` re-exports the unprefixed pages). The authenticated app, auth redirects and `/talk/*` keep the 2026-08-25 cookie/Accept-Language negotiation unchanged.
+- **Mechanism:** `src/proxy.ts` decides from the path (`routePublicRequest` in `src/i18n/routing.ts`) and forwards the locale as the `x-staffra-locale` request header, which `resolveLocale()` trusts above the cookie. The header is stripped on every other request so it can't be spoofed.
+- **Redirects:** `/pt…` 308s to the unprefixed URL. An unprefixed page 307s (with `Vary: Cookie, Accept-Language`) to `/en`/`/it` when the `locale` cookie, else Accept-Language, prefers another language. With neither (crawlers), it serves Portuguese.
+- **Cookie pinning:** when a served public page's language differs from what the app would resolve, the proxy writes the `locale` cookie. This replaces "no cookie until the user picks one" for that case.
+- **Switcher:** on a public page it does a full load of the other URL, not `router.refresh()`.
+- **SEO:** self-canonical plus reciprocal `hreflang` (`pt-BR`, `en`, `it`, `x-default` → the Portuguese page) on every localized page and in the sitemap.
+
+**Why:** Googlebot sends no Accept-Language and no cookie, so the negotiated `/` was only ever indexed in English (confirmed live: `lang="en"`, no hreflang) while the market is Brazil. The 2026-08-25 entry rejected locale URLs because of the cost of rewriting every `redirect()`/`Link` in the app; scoping them to the three public pages avoids that cost entirely. Portuguese takes the unprefixed URLs so existing links and authority land on the language that matters.
+- **Proxy header instead of next-intl routing:** the root layout (which owns `<html lang>` and the message provider) sits above `[locale]`, and a header is available to it on the first render.
+- **Cookie pinning:** layouts survive client-side navigation, so a `/en` reader with a Portuguese browser would otherwise log in to a dashboard with mixed languages.
+- **Full-load switch:** a soft navigation keeps the root layout's `lang` and message bundle stale (seen in testing).
+
+**How to apply:** a new public, indexable page goes in `LOCALIZED_PATHS` (`src/i18n/routing.ts`), gets a re-export under `src/app/[locale]/`, calls `localizedAlternates()` in its metadata and goes in `sitemap.ts`'s `PAGES`. Links to localized pages from public surfaces go through `localizeHref()`/`localizedPath()`, never a literal `"/"` or `"/?auth=…"`. A new language still needs no routing change: every supported locale other than `pt` is automatically a prefix.
+
 ## 2026-10-08 — A subscription created by hand in Stripe links to its company by customer
 
 **Decision:**
