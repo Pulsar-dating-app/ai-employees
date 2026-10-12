@@ -1,4 +1,5 @@
 import { isSupportedLocale, localeFromAcceptLanguage, SUPPORTED_LOCALES, type Locale } from "./locales";
+import { VERTICALS, verticalPath } from "@/lib/verticals/catalog";
 
 // Per-locale URLs for the public, indexable pages only. Search engines crawl
 // without cookies or Accept-Language, so a page whose language is negotiated
@@ -17,7 +18,7 @@ export const UNPREFIXED_LOCALE: Locale = "pt";
 /** Locales that live under a `/<locale>` prefix (`/en`, `/it/privacy`, …). */
 export const PREFIXED_LOCALES: readonly Locale[] = SUPPORTED_LOCALES.filter((l) => l !== UNPREFIXED_LOCALE);
 
-export const LOCALIZED_PATHS = ["/", "/privacy", "/terms"] as const;
+export const LOCALIZED_PATHS = ["/", "/privacy", "/terms", ...VERTICALS.map(verticalPath)] as const;
 export type LocalizedPath = (typeof LOCALIZED_PATHS)[number];
 
 /** Request header the proxy sets with the URL's locale; it outranks the cookie in resolveLocale(). */

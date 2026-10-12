@@ -134,3 +134,21 @@ describe("shouldPinLocaleCookie", () => {
     expect(shouldPinLocaleCookie({ served: "pt", cookieLocale: undefined, acceptLanguage: null })).toBe(true);
   });
 });
+
+describe("per-trade pages", () => {
+  it("are localized public pages in every language", () => {
+    expect(parseLocalizedPath("/para/barbearias")).toEqual({ locale: "pt", basePath: "/para/barbearias" });
+    expect(parseLocalizedPath("/en/para/clinicas-odontologicas")).toEqual({
+      locale: "en",
+      basePath: "/para/clinicas-odontologicas",
+    });
+    expect(parseLocalizedPath("/para/unknown")).toBeNull();
+    expect(localizedPath("it", "/para/barbearias")).toBe("/it/para/barbearias");
+  });
+
+  it("redirect to the visitor's language like the home page", () => {
+    expect(
+      routePublicRequest({ pathname: "/para/barbearias", search: "", cookieLocale: "en", acceptLanguage: null }),
+    ).toEqual({ kind: "redirect", location: "/en/para/barbearias", permanent: false });
+  });
+});

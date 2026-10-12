@@ -107,3 +107,84 @@ export function buildLandingGraph(input: {
 
   return { "@context": "https://schema.org", "@graph": graph };
 }
+
+export type BreadcrumbEntry = { name: string; url: string };
+export type VideoEntry = {
+  name: string;
+  description: string;
+  thumbnailUrl: string;
+  contentUrl: string;
+  /** ISO 8601 date the video was published. */
+  uploadDate: string;
+  /** ISO 8601 duration, e.g. "PT37S". */
+  duration: string;
+};
+
+export function buildBreadcrumbList(id: string, entries: BreadcrumbEntry[]): JsonLdNode {
+  return {
+    "@type": "BreadcrumbList",
+    "@id": id,
+    itemListElement: entries.map((entry, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: entry.name,
+      item: entry.url,
+    })),
+  };
+}
+
+export function buildVideoObject(id: string, video: VideoEntry): JsonLdNode {
+  return {
+    "@type": "VideoObject",
+    "@id": id,
+    name: video.name,
+    description: video.description,
+    thumbnailUrl: video.thumbnailUrl,
+    contentUrl: video.contentUrl,
+    uploadDate: video.uploadDate,
+    duration: video.duration,
+    publisher: { "@id": ORG_ID },
+  };
+}
+
+/**
+ * The `@graph` for a per-trade page (`/para/<slug>`): the page itself, its
+ * breadcrumb trail and its demo video. Organization and WebSite are repeated
+ * so the `@id` references resolve within the page, as Google reads each page
+ * on its own.
+ */
+export function buildVerticalPageGraph(input: {
+  siteName: string;
+  siteDescription: string;
+  url: string;
+  name: string;
+  description: string;
+  inLanguage: string;
+  breadcrumbs: BreadcrumbEntry[];
+  video: VideoEntry;
+}): JsonLdNode {
+  const breadcrumbId = `${input.url}#breadcrumb`;
+  const videoId = `${input.url}#video`;
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      buildOrganization(input.siteName),
+      buildWebSite(input.siteName, input.siteDescription),
+      {
+        "@type": "WebPage",
+        "@id": `${input.url}#webpage`,
+        url: input.url,
+        name: input.name,
+        description: input.description,
+        inLanguage: input.inLanguage,
+        isPartOf: { "@id": WEBSITE_ID },
+        about: { "@id": ORG_ID },
+        breadcrumb: { "@id": breadcrumbId },
+        video: { "@id": videoId },
+      },
+      buildBreadcrumbList(breadcrumbId, input.breadcrumbs),
+      buildVideoObject(videoId, input.video),
+    ],
+  };
+}

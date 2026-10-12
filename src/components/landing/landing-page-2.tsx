@@ -2,8 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/locales";
-import { localizeHref, localizedPath } from "@/i18n/routing";
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { localizeHref } from "@/i18n/routing";
 import { landingV2Sans } from "./fonts";
 import { BrandLogo } from "./brand-logos";
 import { ChannelShowcase, type ChannelItem } from "./channel-showcase";
@@ -12,18 +11,17 @@ import { PricingSection } from "./pricing-section";
 import { CalendarIcon } from "@/components/ui/icons";
 import { SalesContactDialog } from "./sales-contact-dialog";
 import { ShaderBackground } from "@/components/ui/shader-background";
-import { ScrollHeader } from "./scroll-header";
 import { ShutterReveal } from "./shutter-reveal";
 import { SlideReveal } from "./slide-reveal";
 import { CascadeText } from "./cascade-text";
 import { ProductTour } from "./product-tour";
 import { ValueSection } from "./value-calculator";
 import { HeroChatDemo, type HeroChatCopy } from "./hero-chat-demo";
+import { SiteFooter, SiteHeader } from "./site-chrome";
 import { TalkToMaluButton } from "./talk-to-malu-button";
 import { LANDING_PLANS } from "./landing-plans";
 import maluImg from "../../../public/agents/sales-1.png";
 import anaImg from "../../../public/agents/secretary-1.png";
-import logo from "../../../public/logo.png";
 
 const MALU_CHAT = "/talk/staffra-2/malu";
 
@@ -41,7 +39,6 @@ type Agent = {
 type Step = { title: string; desc: string };
 type Source = { title: string; sub: string };
 type Faq = { q: string; a: string };
-type FooterCol = { title: string; links: { label: string; href: string }[] };
 
 const AGENT_STYLES = [
   {
@@ -76,57 +73,14 @@ export async function LandingPageV2() {
   const locale = (await getLocale()) as Locale;
   // Keep visitors on their language's URL (/en, /it…) — see src/i18n/routing.ts.
   const HIRE = localizeHref(locale, "/?auth=signup");
-  const LOGIN = localizeHref(locale, "/?auth=login");
   const faqs = t.raw("faq.items") as Faq[];
   const heroChat = t.raw("hero.chat") as HeroChatCopy;
-  const footerCols = t.raw("footer.columns") as FooterCol[];
 
   return (
     <div
       className={`${landingV2Sans.className} landing-v2-root min-h-screen scroll-smooth bg-[#fcf8ff] text-[#1b1b24] antialiased [&_section]:scroll-mt-24`}
     >
-      <ScrollHeader>
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-2 px-4 sm:h-20 md:px-10">
-          <Link href={localizedPath(locale, "/")} className="flex items-center gap-2">
-            <Image src={logo} alt="Staffra" sizes="88px" className="h-7 w-auto object-contain sm:h-8" priority />
-          </Link>
-
-          <nav className="hidden items-center gap-2 lg:flex">
-            {[
-              { label: t("header.navAgents"), href: "#workforce" },
-              { label: t("header.navChannels"), href: "#canais" },
-              { label: t("header.navPricing"), href: "#planos" },
-              { label: t("header.navDemo"), href: "#demo" },
-            ].map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="rounded-lg px-3 py-2 text-[14px] font-semibold text-[#464555] transition-colors hover:bg-[#f5f2ff] hover:text-[#1b1b24]"
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-1 sm:gap-2">
-            <LanguageSwitcher currentLocale={locale} />
-            <Link
-              href={LOGIN}
-              aria-label={t("header.login")}
-              className="group inline-flex h-9 items-center justify-center rounded-lg px-2 text-[14px] font-semibold text-[#1b1b24] transition-colors hover:bg-[#f5f2ff] hover:text-[#3525cd] sm:h-11 sm:px-3"
-            >
-              <CascadeText text={t("header.login")} />
-            </Link>
-            <Link
-              href={HIRE}
-              aria-label={t("header.trial")}
-              className="group inline-flex h-9 items-center justify-center rounded-lg bg-[#3525cd] px-3.5 text-[14px] font-semibold text-white shadow-[0_4px_32px_rgba(79,70,229,0.04)] transition-all hover:bg-[#4f46e5] hover:text-[#dad7ff] sm:h-11 sm:px-6"
-            >
-              <CascadeText text={t("header.trial")} />
-            </Link>
-          </div>
-        </div>
-      </ScrollHeader>
+      <SiteHeader locale={locale} />
 
       <main className="w-full bg-[#fcf8ff] pt-16 sm:pt-20">
         <div className="relative w-full overflow-hidden">
@@ -456,43 +410,7 @@ export async function LandingPageV2() {
         </section>
       </main>
 
-      <footer className="w-full bg-white pb-12 pt-12 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="mx-auto max-w-[1440px] px-4 md:px-10">
-          <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
-            <div className="flex flex-col items-start gap-3 lg:col-span-2">
-              <Image src={logo} alt="Staffra" sizes="88px" className="h-8 w-auto self-start object-contain" />
-              <p className="max-w-sm text-[16px] leading-[24px] text-[#464555]">{t("footer.blurb")}</p>
-              <div className="flex items-center gap-3 pt-2">
-                {["share", "public", "mail"].map((icon) => (
-                  <span
-                    key={icon}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5f2ff] text-[#464555]"
-                  >
-                    <M name={icon} size={20} />
-                  </span>
-                ))}
-              </div>
-            </div>
-            {footerCols.map((col) => (
-              <div key={col.title} className="flex flex-col gap-1.5">
-                <span className="mb-2 text-[14px] font-semibold text-[#1b1b24]">{col.title}</span>
-                {col.links.map((link) => (
-                  <a
-                    key={link.label}
-                    href={localizeHref(locale, link.href)}
-                    className="text-[14px] leading-[24px] text-[#464555] transition-colors hover:text-[#1b1b24]"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col items-center justify-between gap-2 pt-6 text-[12px] font-semibold tracking-[0.02em] text-[#464555] md:flex-row">
-            <p>{t("footer.rights")}</p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter locale={locale} />
     </div>
   );
 }
