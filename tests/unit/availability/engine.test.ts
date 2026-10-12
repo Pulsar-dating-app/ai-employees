@@ -24,35 +24,54 @@ describe("computeAvailableSlots", () => {
     expect(slots).toEqual([]);
   });
 
-  it("chunks a window by duration + buffer, with the returned end excluding the buffer", () => {
+  it("steps a quarter-hour grid whatever the service length, with the returned end excluding the buffer", () => {
     const slots = computeAvailableSlots({
       timezone: "UTC",
       from: "2026-08-31",
       to: "2026-08-31",
       durationMinutes: 30,
-      bufferMinutes: 15,
+      bufferMinutes: 5,
       businessHours: [MON_9_TO_12],
       busy: [],
       now: new Date("2026-08-01T00:00:00Z"),
     });
 
-    // 09:00-12:00 stepped by 45min (30+15) -> 09:00, 09:45, 10:30, 11:15.
-    // 12:00 itself isn't a valid start since 12:00+30 would exceed the
-    // window's end... wait: last candidate is 11:15, next would be 12:00,
-    // and 12:00+30=12:30 > windowEnd(12:00), so it's excluded correctly.
+    // 09:00-12:00 every 15 min (not every 30+5, which skipped 10:00); the
+    // last start is 11:30, since 11:45+30 would run past closing.
     expect(slots.map((s) => s.start)).toEqual([
       "2026-08-31T09:00:00.000Z",
+      "2026-08-31T09:15:00.000Z",
+      "2026-08-31T09:30:00.000Z",
       "2026-08-31T09:45:00.000Z",
+      "2026-08-31T10:00:00.000Z",
+      "2026-08-31T10:15:00.000Z",
       "2026-08-31T10:30:00.000Z",
+      "2026-08-31T10:45:00.000Z",
+      "2026-08-31T11:00:00.000Z",
       "2026-08-31T11:15:00.000Z",
+      "2026-08-31T11:30:00.000Z",
     ]);
     expect(slots[0].end).toBe("2026-08-31T09:30:00.000Z"); // duration only, no buffer
   });
 
+  it("starts on the next quarter hour when opening time isn't on one", () => {
+    const slots = computeAvailableSlots({
+      timezone: "UTC",
+      from: "2026-08-31",
+      to: "2026-08-31",
+      durationMinutes: 30,
+      bufferMinutes: 0,
+      businessHours: [{ day_of_week: 1, start_time: "09:10", end_time: "10:00" }],
+      busy: [],
+      now: new Date("2026-08-01T00:00:00Z"),
+    });
+    expect(slots.map((s) => s.start)).toEqual(["2026-08-31T09:15:00.000Z", "2026-08-31T09:30:00.000Z"]);
+  });
+
   it("offers a slot whose trailing buffer spills past closing time, as long as the visible appointment fits", () => {
-    // 09:00-10:00 window, 45min duration + 30min buffer: 09:00 fits (ends
-    // 09:45, well inside); next candidate would be 09:00+75min=10:15, but
-    // 10:15+45=11:00 > windowEnd(10:00) so it's excluded. Only one slot.
+    // 09:00-10:00 window, 45min duration + 30min buffer: 09:00 and 09:15
+    // fit (the visible part ends by 10:00, the buffer runs past it); 09:30
+    // would end at 10:15, past closing.
     const slots = computeAvailableSlots({
       timezone: "UTC",
       from: "2026-08-31",
@@ -63,14 +82,18 @@ describe("computeAvailableSlots", () => {
       busy: [],
       now: new Date("2026-08-01T00:00:00Z"),
     });
-    expect(slots).toHaveLength(1);
-    expect(slots[0]).toEqual({ start: "2026-08-31T09:00:00.000Z", end: "2026-08-31T09:45:00.000Z" });
+    expect(slots).toEqual([
+      { start: "2026-08-31T09:00:00.000Z", end: "2026-08-31T09:45:00.000Z" },
+      { start: "2026-08-31T09:15:00.000Z", end: "2026-08-31T10:00:00.000Z" },
+    ]);
   });
 
   it("blocks exactly the reserved (buffer-inclusive) interval of an existing appointment", () => {
-    // 09:00-12:00, 30min duration + 15min buffer -> candidates at 09:00,
-    // 09:45, 10:30, 11:15. An appointment reserving 09:45-10:30 (its own
-    // 30+15) should block only the 09:45 candidate.
+    // 09:00-12:00, 30min duration + 15min buffer. An appointment reserving
+    // 09:45-10:30 (its own 30+15) blocks every start whose 30+15 reservation
+    // overlaps it -- 09:15 (until 10:00) through 10:15 -- and nothing else:
+    // 09:00 ends its reservation exactly at 09:45, 10:30 starts exactly at
+    // the appointment's end.
     const slots = computeAvailableSlots({
       timezone: "UTC",
       from: "2026-08-31",
@@ -84,7 +107,10 @@ describe("computeAvailableSlots", () => {
     expect(slots.map((s) => s.start)).toEqual([
       "2026-08-31T09:00:00.000Z",
       "2026-08-31T10:30:00.000Z",
+      "2026-08-31T10:45:00.000Z",
+      "2026-08-31T11:00:00.000Z",
       "2026-08-31T11:15:00.000Z",
+      "2026-08-31T11:30:00.000Z",
     ]);
   });
 
@@ -104,21 +130,21 @@ describe("computeAvailableSlots", () => {
     expect(slots.map((s) => s.start)).toContain("2026-08-31T10:30:00.000Z");
   });
 
-  it("packs adjacent bookings back-to-back with no gap when buffer is 0", () => {
+  it("offers the quarter hour right after another service's booking ends, leaving no gap", () => {
+    // A 40+5 min booking at 09:00 holds the chair until 09:45; a 30+5 min
+    // service is offered from exactly 09:45 (the old per-service grid of
+    // 09:00/09:35/10:10 would have left 09:45-10:10 empty).
     const slots = computeAvailableSlots({
       timezone: "UTC",
       from: "2026-08-31",
       to: "2026-08-31",
-      durationMinutes: 60,
-      bufferMinutes: 0,
+      durationMinutes: 30,
+      bufferMinutes: 5,
       businessHours: [{ day_of_week: 1, start_time: "09:00", end_time: "11:00" }],
-      busy: [],
+      busy: [{ start: "2026-08-31T09:00:00.000Z", end: "2026-08-31T09:45:00.000Z" }],
       now: new Date("2026-08-01T00:00:00Z"),
     });
-    expect(slots.map((s) => s.start)).toEqual([
-      "2026-08-31T09:00:00.000Z",
-      "2026-08-31T10:00:00.000Z",
-    ]);
+    expect(slots[0].start).toBe("2026-08-31T09:45:00.000Z");
   });
 
   it("excludes past slots relative to the injected now", () => {
@@ -173,6 +199,7 @@ describe("computeAvailableSlots", () => {
     });
     expect(slots.map((s) => s.start)).toEqual([
       "2026-08-31T12:00:00.000Z",
+      "2026-08-31T12:15:00.000Z",
       "2026-08-31T12:30:00.000Z",
     ]);
   });

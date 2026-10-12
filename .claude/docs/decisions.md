@@ -10,6 +10,12 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-12 — One global 15-minute slot grid; customers never see the buffer
+
+**Decision:** `computeAvailableSlots` offers starts on a clock-aligned 15-minute grid for every service, instead of stepping by each service's `duration + buffer` from opening time. `find_available_slots` returns up to 48 slots (a full 12-hour day). The `endsAt`/`endsAtLabel` Ana gets from `book_appointment`, `reschedule_appointment` and `list_my_appointments` is the service's own end; `appointments.ends_at` keeps the buffer for overlap checks.
+
+**Why:** found in live testing on Barbearia Navalha. A 30+5 min Barba only offered 09:00, 09:35, 10:10…, so Ana refused a free 10:00. We considered allowing any minute, but the suggestions need a finite list, and arbitrary starts leave unusable gaps between bookings. The old per-service grid also left gaps, because it ignored where other services' bookings ended (a 40+5 Corte at 09:00 frees the chair at 09:45; Barba's next start was 10:10). A shared quarter-hour grid is simple, matches the times customers ask for, and caps any gap at 15 minutes. The confirmation said "10:10 to 10:45" for a 30-minute service because the result echoed `ends_at`. The buffer is the professional's cleanup time, the same reasoning as the 2026-09-04 Google event fix.
+
 ## 2026-10-12 — Granular Google Calendar scopes for OAuth verification
 
 **Decision:** the connect flow requests `calendar.events.owned`, `calendar.freebusy`, `calendar.calendarlist.readonly` and `calendar.app.created` (`src/lib/google-calendar/scopes.ts`) instead of the full `auth/calendar`. The calendar picker lists only calendars the account **owns**, and the connect route refuses a partial grant with `missing_scopes`. The privacy policy (section 4) now states that only availability (free/busy) derived from Google Calendar reaches the AI provider, never event contents.
