@@ -10,6 +10,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-12 — Landing explainer video built in code (Remotion), not AI-generated footage
+
+**Decision:** the landing explainer is a motion-graphics video rendered from React with Remotion, in its own `video/` project. It is built from the real product screenshots, the Malu/Ana portraits, the brand palette and Inter, with the copy per locale in one file. It is not generated with text-to-video tools. There is no voiceover. The music and sound effects are synthesized in code (`video/scripts/synth-audio.mjs`) rather than taken from a stock library, so there's no licence to track and every effect is locked to its animation frame.
+
+**Why:** the brief was "professional and trustworthy". Showing the real dashboard and real-looking conversations is what earns trust, and generated footage reads as generic and can't show the actual product. Code also makes PT/EN/IT versions a data swap, and the video can be re-rendered when the UI changes.
+
+**How to apply:** change scene copy in `video/src/copy.ts` and re-render. If the tour screenshots are retaken, re-check the highlight fractions. To swap in a licensed track or add a voiceover, replace the `lounge` `<Audio>` in `Soundtrack.tsx`, or add one next to it.
+
 ## 2026-10-12 — One public landing page per trade (six trades)
 
 **Decision:**
