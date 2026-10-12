@@ -64,7 +64,10 @@ import { notifyAppointmentConfirmed } from "@/lib/email/appointments";
 // tool-loop.ts), where a result lets Ana honestly tell the customer the
 // slot was taken and offer another, the same pattern as create_checkout_link.
 
-const MAX_SLOTS_RETURNED = 20;
+// Sized for one full day on the 15-minute slot grid (a 12-hour day is 48
+// starts, merged across professionals), so a one-day lookup -- "tomorrow
+// afternoon?" -- is never cut to the morning.
+const MAX_SLOTS_RETURNED = 48;
 
 // Abuse guard found in live testing: nothing stopped a single customer from
 // booking dozens of slots on the same day in one conversation, effectively
@@ -875,6 +878,10 @@ async function book(
   // -- a `requested` one pending manual approval never touches the merchant's
   // calendar (I3). Best-effort: syncAppointmentConfirmed never throws, and a
   // null return just leaves google_event_id null.
+  // The customer-facing end: the buffer (cleanup after the service) only
+  // blocks the professional's chair, it's not part of the customer's time.
+  const visibleEndsAt = calendarVisibleEndsAt(appointment.starts_at as string, service.duration_minutes);
+
   if (status === "confirmed") {
     const synced = await syncAppointmentConfirmed(assigned.id, {
       serviceName: service.name,
@@ -883,7 +890,7 @@ async function book(
       // nameless) -- `customer.name` was read before the blank-fill above.
       customerName: customer.name ?? customerPatch.name ?? "",
       startsAt: appointment.starts_at as string,
-      visibleEndsAt: calendarVisibleEndsAt(appointment.starts_at as string, service.duration_minutes),
+      visibleEndsAt,
       summary: appointment.summary as string | null,
     });
     if (synced) {
@@ -906,9 +913,9 @@ async function book(
     serviceName: service.name as string,
     ...(writeCtx.active.length > 1 ? { professionalName: assigned.name } : {}),
     startsAt: appointment.starts_at as string,
-    endsAt: appointment.ends_at as string,
+    endsAt: visibleEndsAt,
     startsAtLabel: formatWallClock(appointment.starts_at as string, timezone),
-    endsAtLabel: formatWallClock(appointment.ends_at as string, timezone),
+    endsAtLabel: formatWallClock(visibleEndsAt, timezone),
     timezone,
   };
 }
@@ -1019,7 +1026,7 @@ async function listMyAppointments(
     client.from("companies").select("timezone").eq("id", companyId).maybeSingle(),
     client
       .from("appointments")
-      .select("id, starts_at, ends_at, status, professional_id, services(name), professionals(name)")
+      .select("id, starts_at, ends_at, status, professional_id, services(name, duration_minutes), professionals(name)")
       .eq("company_id", companyId)
       .in("customer_id", [...customerIds])
       .not("status", "in", "(cancelled,no_show)")
@@ -1035,8 +1042,15 @@ async function listMyAppointments(
     company?.timezone && isValidTimeZone(company.timezone) ? company.timezone : "UTC";
 
   return (rows ?? []).map((row) => {
-    const service = row.services as { name: string } | { name: string }[] | null;
-    const serviceName = Array.isArray(service) ? (service[0]?.name ?? "") : (service?.name ?? "");
+    type ServiceRef = { name: string; duration_minutes: number };
+    const serviceRow = row.services as ServiceRef | ServiceRef[] | null;
+    const service = Array.isArray(serviceRow) ? serviceRow[0] : serviceRow;
+    const serviceName = service?.name ?? "";
+    // ends_at includes the service's buffer; the customer is told when the
+    // service itself ends.
+    const endsAt = service
+      ? calendarVisibleEndsAt(row.starts_at as string, service.duration_minutes)
+      : (row.ends_at as string);
     const professional = row.professionals as { name: string } | { name: string }[] | null;
     const professionalName = Array.isArray(professional) ? professional[0]?.name : professional?.name;
     return {
@@ -1046,9 +1060,9 @@ async function listMyAppointments(
         ? { professionalId: row.professional_id as string, professionalName: professionalName ?? "" }
         : {}),
       startsAt: row.starts_at as string,
-      endsAt: row.ends_at as string,
+      endsAt,
       startsAtLabel: formatWallClock(row.starts_at as string, timezone),
-      endsAtLabel: formatWallClock(row.ends_at as string, timezone),
+      endsAtLabel: formatWallClock(endsAt, timezone),
       status: row.status as string,
       timezone,
     };
@@ -1219,9 +1233,9 @@ async function reschedule(
     serviceName: service.name as string,
     ...(writeCtx.active.length > 1 ? { professionalName: target.name } : {}),
     startsAt: startDate.toISOString(),
-    endsAt: endsAt.toISOString(),
+    endsAt: visibleEndsAt,
     startsAtLabel: formatWallClock(startDate.toISOString(), timezone),
-    endsAtLabel: formatWallClock(endsAt.toISOString(), timezone),
+    endsAtLabel: formatWallClock(visibleEndsAt, timezone),
     timezone,
   };
 }

@@ -128,7 +128,7 @@ describe("Availability GET /api/companies/:id/services/:serviceId/availability",
     );
     expect(res.status).toBe(200);
     expect(res.json.googleCalendarChecked).toBe(false);
-    expect(res.json.slots).toHaveLength(2); // 09:00, 09:30
+    expect(res.json.slots).toHaveLength(3); // 09:00, 09:15, 09:30 (15-minute grid)
   });
 
   it("excludes a slot covered by an existing appointment", async () => {

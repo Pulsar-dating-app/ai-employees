@@ -156,8 +156,8 @@ export type BusinessHoursCheckInput = {
 // a time this accepts is always one computeAvailableSlots would have
 // offered as a valid window to book *something* in -- but deliberately does
 // NOT require alignment to the step grid computeAvailableSlots walks (e.g. a
-// 9:15 start inside a 9:00-17:00 window passes here even though
-// computeAvailableSlots would only ever have offered 9:00/9:30/...): this
+// 9:10 start inside a 9:00-17:00 window passes here even though
+// computeAvailableSlots would only ever have offered 9:00/9:15/...): this
 // check's job is "is the business open long enough for this," not "is this
 // exactly one of the suggested slots" -- a merchant manually booking a
 // custom time isn't required to land on the grid.
@@ -213,6 +213,15 @@ export function isDuringTimeOff(
   );
 }
 
+// 2026-10-12 -- slot starts sit on one global quarter-hour grid (9:00, 9:15,
+// 9:30...), whatever the service. The old step was duration + buffer counted
+// from opening time, so a 30+5 min service only ever offered 9:00, 9:35,
+// 10:10... -- a free 10:00 was never offered, and each service's grid ignored
+// where other bookings ended, leaving gaps. A shared quarter-hour grid keeps
+// any gap under 15 min. Aligned on the epoch, which lands on local quarter
+// hours too: every real UTC offset is a multiple of 15 min.
+export const SLOT_STEP_MINUTES = 15;
+
 export function computeAvailableSlots(input: ComputeAvailableSlotsInput): AvailableSlot[] {
   const {
     timezone,
@@ -226,7 +235,7 @@ export function computeAvailableSlots(input: ComputeAvailableSlotsInput): Availa
     now = new Date(),
   } = input;
 
-  const stepMs = (durationMinutes + bufferMinutes) * 60_000;
+  const stepMs = SLOT_STEP_MINUTES * 60_000;
   const durationMs = durationMinutes * 60_000;
   // The earliest a slot is allowed to start: now, plus the merchant's
   // minimum booking lead time (J7).
@@ -246,7 +255,8 @@ export function computeAvailableSlots(input: ComputeAvailableSlotsInput): Availa
       const windowStart = zonedTimeToUtc(date, window.start_time, timezone).getTime();
       const windowEnd = zonedTimeToUtc(date, window.end_time, timezone).getTime();
 
-      for (let start = windowStart; start + durationMs <= windowEnd; start += stepMs) {
+      const firstStart = Math.ceil(windowStart / stepMs) * stepMs;
+      for (let start = firstStart; start + durationMs <= windowEnd; start += stepMs) {
         // At the default lead time of 0 this is exactly the old `start <=
         // now` past-slot filter.
         if (start <= earliestStartMs) continue;

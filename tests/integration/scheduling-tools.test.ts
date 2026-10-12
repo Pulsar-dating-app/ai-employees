@@ -576,8 +576,11 @@ describe("book_appointment", () => {
       status: "confirmed",
       google_event_id: null,
     });
-    // ends_at bakes in duration + buffer (60 + 15).
+    // ends_at bakes in duration + buffer (60 + 15)...
     expect(row.ends_at).toBe(`${BOOKING_DATE}T10:15:00+00:00`);
+    // ...but the customer is told when the service ends: the buffer only
+    // blocks the professional's chair.
+    expect(result.endsAt).toBe(`${BOOKING_DATE}T10:00:00.000Z`);
   });
 
   it("stores the professional-facing summary Ana passes", async () => {
@@ -971,7 +974,11 @@ describe("through a full AgentEngine.run", () => {
 describe("list_my_appointments", () => {
   it("returns this customer's upcoming appointments, soonest first, excluding cancelled", async () => {
     const seed = await seedConversation(owner, "List Mine Co");
-    const serviceId = await createService(owner, seed.companyId, { name: "Consulta", duration_minutes: 30 });
+    const serviceId = await createService(owner, seed.companyId, {
+      name: "Consulta",
+      duration_minutes: 30,
+      buffer_minutes: 10,
+    });
     await setBusinessHours(owner, seed.companyId);
     const ctx = toolCtxFor(seed);
 
@@ -997,7 +1004,13 @@ describe("list_my_appointments", () => {
     };
 
     expect(result.appointments.map((a) => a.id)).toEqual([earlier.appointmentId, later.appointmentId]);
-    expect(result.appointments[0]).toMatchObject({ serviceName: "Consulta", status: "confirmed", timezone: "UTC" });
+    expect(result.appointments[0]).toMatchObject({
+      serviceName: "Consulta",
+      status: "confirmed",
+      timezone: "UTC",
+      // The service's own end, not the buffer-inclusive ends_at (10:40).
+      endsAt: `${BOOKING_DATE}T10:30:00.000Z`,
+    });
   });
 
   it("finds appointments under a stated email that aren't tied to this conversation", async () => {
