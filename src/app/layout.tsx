@@ -3,6 +3,8 @@ import { Inter, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { SITE_URL, absoluteUrl } from "@/lib/seo/site";
+import { intlTag, type Locale } from "@/i18n/locales";
+import { localizedPath } from "@/i18n/routing";
 import "./globals.css";
 
 // Inter is the Staffra "Human-Centric AI" design-system typeface (Stitch).
@@ -25,6 +27,7 @@ const geistMono = Geist_Mono({
 // relative OG/canonical URL resolve against the canonical origin.
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Seo");
+  const locale = (await getLocale()) as Locale;
   const title = t("defaultTitle");
   const description = t("description");
   const siteName = t("siteName");
@@ -58,7 +61,8 @@ export async function generateMetadata(): Promise<Metadata> {
     // tags (with width/height/type). Setting `images` here would override them.
     openGraph: {
       type: "website",
-      url: absoluteUrl("/"),
+      url: absoluteUrl(localizedPath(locale, "/")),
+      locale: intlTag(locale).replace("-", "_"),
       siteName,
       title,
       description,

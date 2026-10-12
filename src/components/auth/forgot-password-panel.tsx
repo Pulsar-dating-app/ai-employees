@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/locales";
+import { localizeHref } from "@/i18n/routing";
 import { ForgotPasswordForm } from "./forgot-password-form";
 import logo from "../../../public/logo.png";
 
 export function ForgotPasswordPanel({ initialError }: { initialError?: string | null }) {
   const t = useTranslations("Auth.forgotPassword");
+  const locale = useLocale() as Locale;
 
   return (
     <div className="flex flex-col gap-6">
@@ -22,7 +25,7 @@ export function ForgotPasswordPanel({ initialError }: { initialError?: string | 
       <ForgotPasswordForm initialError={initialError} />
 
       <div className="border-t border-outline-variant pt-4">
-        <Link href="/?auth=login" replace className="text-sm font-medium text-primary hover:underline">
+        <Link href={localizeHref(locale, "/?auth=login")} replace className="text-sm font-medium text-primary hover:underline">
           {t("backToLogin")}
         </Link>
       </div>

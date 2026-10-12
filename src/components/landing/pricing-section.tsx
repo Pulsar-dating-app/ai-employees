@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/locales";
+import { localizeHref } from "@/i18n/routing";
 import clsx from "clsx";
 import type { BillingPeriod } from "@/lib/billing/plans";
 import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
@@ -19,7 +21,6 @@ import {
   type WhatsAppMode,
 } from "./landing-plans";
 
-const HIRE = "/?auth=signup";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
 const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -209,6 +210,7 @@ function ManagedBox() {
 
 export function PricingSection() {
   const t = useTranslations("LandingV2.pricing");
+  const locale = useLocale() as Locale;
   const plans = t.raw("plans") as LandingPlan[];
   const included = t.raw("included") as string[];
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
@@ -342,7 +344,7 @@ export function PricingSection() {
                       </SalesContactDialog>
                     ) : (
                       <Link
-                        href={HIRE}
+                        href={localizeHref(locale, "/?auth=signup")}
                         aria-label={plan.cta}
                         className={clsx(
                           "group inline-flex h-12 w-full items-center justify-center rounded-xl text-[15px] font-semibold transition-[background-color,color,box-shadow]",

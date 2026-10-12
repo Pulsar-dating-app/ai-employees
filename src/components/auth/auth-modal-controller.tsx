@@ -2,7 +2,9 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/locales";
+import { localizedPath } from "@/i18n/routing";
 import { AuthOverlay } from "./auth-overlay";
 import { LoginPanel } from "./login-panel";
 import { SignUpPanel } from "./sign-up-panel";
@@ -25,6 +27,7 @@ export function AuthModalController() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tErrors = useTranslations("Auth.errors");
+  const locale = useLocale() as Locale;
   const queryMode = searchParams.get("auth");
   const hasResetError = searchParams.get("reset_error") === "1";
 
@@ -53,7 +56,7 @@ export function AuthModalController() {
   if (!isMode(queryMode)) return null;
 
   return (
-    <AuthOverlay key={queryMode} closeTo="/">
+    <AuthOverlay key={queryMode} closeTo={localizedPath(locale, "/")}>
       {queryMode === "login" ? (
         <LoginPanel />
       ) : queryMode === "signup" ? (

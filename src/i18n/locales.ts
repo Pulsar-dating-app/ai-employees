@@ -2,6 +2,10 @@ export const SUPPORTED_LOCALES = ["en", "pt", "it"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
 
+/** The explicit language preference — written by the switcher and by the proxy (see ./routing.ts). */
+export const LOCALE_COOKIE = "locale";
+export const LOCALE_COOKIE_OPTIONS = { maxAge: 60 * 60 * 24 * 365, path: "/", sameSite: "lax" } as const;
+
 export const LOCALE_META: Record<Locale, { endonym: string; greeting: string; intlTag: string }> = {
   en: { endonym: "English", greeting: "Hello", intlTag: "en-US" },
   pt: { endonym: "Português", greeting: "Olá", intlTag: "pt-BR" },

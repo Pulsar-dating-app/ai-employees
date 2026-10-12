@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { LOCALE_COOKIE, LOCALE_COOKIE_OPTIONS } from "@/i18n/locales";
+import { LOCALE_REQUEST_HEADER, routePublicRequest, shouldPinLocaleCookie } from "@/i18n/routing";
 
 export async function proxy(request: NextRequest) {
   // Safety net for a Supabase auth email whose `redirectTo` doesn't
@@ -15,7 +17,31 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return await updateSession(request);
+  // Per-locale URLs for the public pages (src/i18n/routing.ts): redirect to
+  // the visitor's language, or pin the page's locale for resolveLocale().
+  const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
+  const acceptLanguage = request.headers.get("accept-language");
+  const route = routePublicRequest({ pathname, search: request.nextUrl.search, cookieLocale, acceptLanguage });
+
+  if (route?.kind === "redirect") {
+    const url = new URL(route.location, request.url);
+    const response = NextResponse.redirect(url, route.permanent ? 308 : 307);
+    // The language redirect on unprefixed pages depends on these two.
+    if (!route.permanent) response.headers.set("Vary", "Cookie, Accept-Language");
+    return response;
+  }
+
+  // The locale header is always stripped first so a client can't spoof it
+  // onto a page that isn't localized.
+  const response = await updateSession(request, (headers) => {
+    headers.delete(LOCALE_REQUEST_HEADER);
+    if (route?.kind === "serve") headers.set(LOCALE_REQUEST_HEADER, route.locale);
+  });
+
+  if (route?.kind === "serve" && shouldPinLocaleCookie({ served: route.locale, cookieLocale, acceptLanguage })) {
+    response.cookies.set(LOCALE_COOKIE, route.locale, LOCALE_COOKIE_OPTIONS);
+  }
+  return response;
 }
 
 export const config = {
