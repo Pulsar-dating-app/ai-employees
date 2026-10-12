@@ -4,6 +4,8 @@ import type { Locale } from "@/i18n/locales";
 import { HREFLANG, localizeHref, localizedPath } from "@/i18n/routing";
 import { absoluteUrl } from "@/lib/seo/site";
 import { buildVerticalPageGraph } from "@/lib/seo/structured-data";
+import { GUIDES, guidePath } from "@/lib/guides/catalog";
+import { JsonLdScript, loadSchemaContext } from "@/components/seo/schema-context";
 import { VERTICALS, verticalPath, verticalVideo, type Vertical } from "@/lib/verticals/catalog";
 import { landingV2Sans } from "@/components/landing/fonts";
 import { SiteFooter, SiteHeader } from "@/components/landing/site-chrome";
@@ -31,7 +33,11 @@ const FEATURE_ICONS = ["account_tree", "bolt", "verified", "chat_bubble", "mail"
 
 export async function VerticalPage({ vertical }: { vertical: Vertical }) {
   const locale = (await getLocale()) as Locale;
-  const [t, seo] = await Promise.all([getTranslations("Verticals"), getTranslations("Seo")]);
+  const [t, tg, { site, plans }] = await Promise.all([
+    getTranslations("Verticals"),
+    getTranslations("Guides"),
+    loadSchemaContext(),
+  ]);
   const k = vertical.key;
 
   const pains = t.raw(`${k}.pains`) as Item[];
@@ -46,9 +52,12 @@ export async function VerticalPage({ vertical }: { vertical: Vertical }) {
   const video = verticalVideo(vertical);
   const others = VERTICALS.filter((v) => v.slug !== vertical.slug);
 
+  const guide = GUIDES[0];
+
   const graph = buildVerticalPageGraph({
-    siteName: seo("siteName"),
-    siteDescription: seo("description"),
+    site,
+    plans,
+    trade: t(`${k}.navLabel`),
     url: pageUrl,
     name: t(`${k}.seoTitle`),
     description: t(`${k}.seoDescription`),
@@ -71,11 +80,7 @@ export async function VerticalPage({ vertical }: { vertical: Vertical }) {
     <div
       className={`${landingV2Sans.className} landing-v2-root min-h-screen scroll-smooth bg-[#fcf8ff] text-[#1b1b24] antialiased [&_section]:scroll-mt-24`}
     >
-      <script
-        type="application/ld+json"
-        // JSON.stringify output is safe to inline; only authored copy flows in.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
-      />
+      <JsonLdScript graph={graph} />
       <SiteHeader locale={locale} onLanding={false} />
 
       <main className="w-full pt-16 sm:pt-20">
@@ -152,6 +157,16 @@ export async function VerticalPage({ vertical }: { vertical: Vertical }) {
                 {t("common.videoCaption")}
               </figcaption>
             </figure>
+          </div>
+        </section>
+
+        {/* What it is — a direct, quotable answer to the trade's main question */}
+        <section className="mx-auto max-w-[1200px] px-4 pt-16 md:px-10 lg:pt-20">
+          <div className="max-w-[820px] border-l-4 border-[#3525cd] pl-5 md:pl-7">
+            <h2 className="text-balance text-[24px] font-bold leading-[1.25] tracking-[-0.01em] sm:text-[30px]">
+              {t(`${k}.whatIsHeading`)}
+            </h2>
+            <p className="mt-3 text-[17px] leading-[29px] text-[#464555]">{t(`${k}.whatIs`)}</p>
           </div>
         </section>
 
@@ -284,6 +299,19 @@ export async function VerticalPage({ vertical }: { vertical: Vertical }) {
               </details>
             ))}
           </div>
+
+          <Link
+            href={localizedPath(locale, guidePath(guide))}
+            className="mt-12 flex items-center justify-between gap-4 rounded-2xl border border-[#d9d4ff] bg-[#f5f2ff] p-5 transition-colors hover:border-[#3525cd]"
+          >
+            <span>
+              <span className="block text-[12px] font-semibold uppercase tracking-[0.08em] text-[#3525cd]">
+                {t("common.guideLabel")}
+              </span>
+              <span className="mt-1 block text-[16px] font-semibold leading-[24px]">{tg(`${guide.key}.title`)}</span>
+            </span>
+            <M name="arrow_forward" size={20} className="shrink-0 text-[#3525cd]" />
+          </Link>
 
           {others.length > 0 ? (
             <div className="mt-12">

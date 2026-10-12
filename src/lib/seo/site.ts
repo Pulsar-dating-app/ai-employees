@@ -24,3 +24,24 @@ export const SITE_URL = normalize(
 export function absoluteUrl(path = "/"): string {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+/**
+ * The company behind Staffra — one source for the footer's legal line, the
+ * About page, the Organization schema and /llms.txt, so search engines and
+ * AI assistants see the same identity everywhere. Data, not UI copy: the
+ * labels around it live in messages/*.json (`Brand.*`).
+ */
+export const COMPANY = {
+  legalName: "PULSAR LTDA",
+  taxId: "58.261.994/0001-80",
+  email: "contato@staffra.io",
+  country: "BR",
+} as const;
+
+/**
+ * Official social profiles, emitted as the Organization's `sameAs` (the
+ * strongest "this is the same company" signal for search engines and AI
+ * assistants — other companies share the "Staffra" name). Empty until the
+ * profiles exist; add each URL here as it's created.
+ */
+export const SOCIAL_PROFILES: readonly string[] = [];

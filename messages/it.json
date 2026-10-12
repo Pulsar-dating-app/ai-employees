@@ -659,7 +659,6 @@
       "fine": "Disdici quando vuoi · Nessun costo di attivazione"
     },
     "footer": {
-      "blurb": "Dipendenti che vendono e prenotano appuntamenti su WhatsApp, Instagram e sul tuo sito.",
       "columns": [
         {
           "title": "Soluzioni",
@@ -698,6 +697,10 @@
         {
           "title": "Sicurezza e note legali",
           "links": [
+            {
+              "label": "Chi è Staffra",
+              "href": "/sobre"
+            },
             {
               "label": "Termini di servizio",
               "href": "/terms"
@@ -820,6 +823,9 @@
     },
     "widget": {
       "greeting": "Ciao! 👋 Sono Malu. Vuoi vedere come risponderei ai tuoi clienti?"
+    },
+    "trades": {
+      "heading": "Ana lavora per attività come la tua"
     }
   },
   "Verticals": {
@@ -841,7 +847,8 @@
       "pricingCta": "Vedi piani e prezzi",
       "faqHeading": "Domande frequenti",
       "othersHeading": "Ana lavora anche per",
-      "finalFine": "Disdici quando vuoi · Nessun costo di attivazione"
+      "finalFine": "Disdici quando vuoi · Nessun costo di attivazione",
+      "guideLabel": "Guida"
     },
     "barber": {
       "navLabel": "Barbieri",
@@ -849,7 +856,7 @@
       "seoDescription": "Ana risponde al WhatsApp del tuo barbiere 24 ore su 24, lascia scegliere il barbiere al cliente e prenota solo negli orari liberi. Prova gratis per 7 giorni.",
       "eyebrow": "Per barbieri",
       "h1": "Receptionist virtuale su WhatsApp per barbieri",
-      "sub": "Mentre hai la macchinetta in mano, Ana risponde su WhatsApp, chiede con quale barbiere il cliente vuole tagliarsi e prenota un orario davvero libero. Di giorno, di sera e la domenica.",
+      "sub": "Mentre hai la macchinetta in mano, Ana, la receptionist virtuale di Staffra, risponde su WhatsApp, chiede con quale barbiere il cliente vuole tagliarsi e prenota un orario davvero libero. Di giorno, di sera e la domenica.",
       "videoName": "Ana prenota taglio e barba da un barbiere su WhatsApp",
       "videoDescription": "Una demo di 37 secondi: alle 23, un cliente chiede un orario per taglio e barba, sceglie il barbiere, riceve gli orari liberi e ottiene la prenotazione confermata.",
       "painHeading": "Il WhatsApp del negozio non si ferma mentre tagli",
@@ -973,7 +980,10 @@
         }
       ],
       "finalHeading": "Il tuo negozio che prenota anche a mezzanotte",
-      "finalSub": "Lascia WhatsApp ad Ana e torna a concentrarti su chi è in poltrona."
+      "finalSub": "Lascia WhatsApp ad Ana e torna a concentrarti su chi è in poltrona.",
+      "whatIsHeading": "Cos'è una receptionist virtuale per barbieri?",
+      "whatIs": "È un'accoglienza automatica sul WhatsApp del negozio che chatta con il cliente come una persona, consulta l'agenda di ogni barbiere e fissa l'appuntamento da sola, a qualsiasi ora. Su Staffra, questa receptionist è Ana: usa solo i servizi, i prezzi e gli orari che inserisci e chiama il team quando il cliente chiede una persona.",
+      "cardLine": "Agenda per barbiere, combo taglio e barba e risposte anche a mezzanotte."
     },
     "salon": {
       "navLabel": "Saloni di bellezza",
@@ -981,7 +991,7 @@
       "seoDescription": "Ana risponde al WhatsApp del tuo salone 24 ore su 24, comunica i prezzi, lascia scegliere la professionista e prenota solo negli orari liberi. Prova gratis per 7 giorni.",
       "eyebrow": "Per saloni di bellezza",
       "h1": "Receptionist virtuale su WhatsApp per saloni di bellezza",
-      "sub": "Ana risponde quanto costa il colore, chiede con quale professionista la cliente vuole essere servita e prenota in un orario in cui il servizio ci sta tutto. Anche prima che il salone apra.",
+      "sub": "Ana, la receptionist virtuale di Staffra, risponde quanto costa il colore, chiede con quale professionista la cliente vuole essere servita e prenota in un orario in cui il servizio ci sta tutto. Anche prima che il salone apra.",
       "videoName": "Ana prenota un colore in un salone di bellezza su WhatsApp",
       "videoDescription": "Una demo di 39 secondi: alle 7:52, prima dell'apertura, una cliente chiede il prezzo del colore e della prova ciocca, sceglie la professionista e ottiene l'appuntamento.",
       "painHeading": "In salone, chi ha la spazzola in mano non può rispondere",
@@ -1105,7 +1115,10 @@
         }
       ],
       "finalHeading": "Il tuo salone che prenota ancora prima di aprire",
-      "finalSub": "Lascia che Ana risponda sui prezzi e prenoti su WhatsApp mentre il team si occupa di chi è in poltrona."
+      "finalSub": "Lascia che Ana risponda sui prezzi e prenoti su WhatsApp mentre il team si occupa di chi è in poltrona.",
+      "whatIsHeading": "Cos'è una receptionist virtuale per un salone di bellezza?",
+      "whatIs": "È un'accoglienza automatica sul WhatsApp del salone che risponde sui prezzi, chiede con quale professionista la cliente vuole essere servita e prenota in un orario in cui il servizio ci sta tutto, anche a salone chiuso. Su Staffra, questa receptionist è Ana, che lavora solo con i servizi, i prezzi e gli orari inseriti dal salone.",
+      "cardLine": "Prezzi subito, scelta della professionista e servizi lunghi senza sovrapposizioni."
     },
     "nails": {
       "navLabel": "Onicotecniche",
@@ -1113,7 +1126,7 @@
       "seoDescription": "Ana risponde al WhatsApp del tuo studio unghie 24 ore su 24, comunica prezzi e orari liberi e sposta l'appuntamento nella stessa chat quando la cliente cambia idea. Prova gratis per 7 giorni.",
       "eyebrow": "Per onicotecniche",
       "h1": "Receptionist virtuale su WhatsApp per onicotecniche",
-      "sub": "Mentre sei a metà di una ricostruzione, Ana risponde su WhatsApp, comunica il prezzo, mostra gli orari liberi e prenota. Se la cliente deve cambiare giorno, sposta l'appuntamento nella stessa chat.",
+      "sub": "Mentre sei a metà di una ricostruzione, Ana, la receptionist virtuale di Staffra, risponde su WhatsApp, comunica il prezzo, mostra gli orari liberi e prenota. Se la cliente deve cambiare giorno, sposta l'appuntamento nella stessa chat.",
       "videoName": "Ana prenota e sposta manicure e pedicure in uno studio unghie su WhatsApp",
       "videoDescription": "Una demo di 33 secondi: alle 22, a studio chiuso, una cliente prenota manicure e pedicure, si ricorda che non può venire e sposta tutto a sabato nella stessa chat.",
       "painHeading": "Con le mani occupate, nessuno risponde su WhatsApp",
@@ -1237,7 +1250,10 @@
         }
       ],
       "finalHeading": "La tua agenda unghie piena, senza posare il pennello",
-      "finalSub": "Lascia che Ana risponda, prenoti e sposti appuntamenti su WhatsApp mentre lavori."
+      "finalSub": "Lascia che Ana risponda, prenoti e sposti appuntamenti su WhatsApp mentre lavori.",
+      "whatIsHeading": "Cos'è una receptionist virtuale per onicotecniche?",
+      "whatIs": "È un'accoglienza automatica su WhatsApp che comunica i prezzi, mostra gli orari liberi, prenota e sposta le clienti senza che tu debba fermarti. Su Staffra, questa receptionist è Ana: segue i tuoi servizi, le durate e le regole di disdetta e ti passa la chat quando la cliente lo chiede.",
+      "cardLine": "Prenota e sposta nella stessa chat, con regole di disdetta."
     },
     "dental": {
       "navLabel": "Studi dentistici",
@@ -1245,7 +1261,7 @@
       "seoDescription": "Ana risponde ai pazienti su WhatsApp 24 ore su 24, spiega come funziona la prima visita e prenota con il dentista giusto, solo negli orari liberi. Prova gratis per 7 giorni.",
       "eyebrow": "Per studi dentistici",
       "h1": "Segretaria virtuale su WhatsApp per studi dentistici",
-      "sub": "Ana risponde ai pazienti su WhatsApp a qualsiasi ora, spiega come funziona la prima visita e prenota con il dentista giusto, solo negli orari liberi. La reception resta libera per chi è in studio.",
+      "sub": "Ana, la segretaria virtuale di Staffra, risponde ai pazienti su WhatsApp a qualsiasi ora, spiega come funziona la prima visita e prenota con il dentista giusto, solo negli orari liberi. La reception resta libera per chi è in studio.",
       "videoName": "Ana prenota una visita dentistica su WhatsApp",
       "videoDescription": "Una demo di 33 secondi: alle 21, un paziente chiede una visita, domanda il prezzo, sceglie il giorno e ottiene l'appuntamento con il dentista.",
       "painHeading": "La reception non riesce a fare tutto insieme",
@@ -1369,7 +1385,10 @@
         }
       ],
       "finalHeading": "Il tuo studio che prenota visite anche fuori orario",
-      "finalSub": "Lascia rispondere Ana su WhatsApp e libera la reception per i pazienti in studio."
+      "finalSub": "Lascia rispondere Ana su WhatsApp e libera la reception per i pazienti in studio.",
+      "whatIsHeading": "Cos'è una segretaria virtuale per uno studio dentistico?",
+      "whatIs": "È un'accoglienza automatica sul WhatsApp dello studio che risponde ai pazienti a qualsiasi ora, chiarisce i dubbi in base alle informazioni dello studio e fissa le visite nell'agenda di ogni dentista. Su Staffra, questa segretaria è Ana: risponde solo con ciò che lo studio ha inserito e passa al team i casi di dolore, urgenza o domande cliniche.",
+      "cardLine": "Visite prenotate fuori orario, agenda per dentista e domande sull'assicurazione."
     },
     "nutri": {
       "navLabel": "Nutrizionisti",
@@ -1377,7 +1396,7 @@
       "seoDescription": "Ana risponde ai pazienti su WhatsApp 24 ore su 24, spiega come funziona la visita, in studio o online, e prenota solo negli orari liberi. Prova gratis per 7 giorni.",
       "eyebrow": "Per nutrizionisti",
       "h1": "Segretaria virtuale su WhatsApp per nutrizionisti",
-      "sub": "Ana spiega come funziona la prima visita, dice se ricevi online, comunica il prezzo e prenota un orario libero. Anche quando il paziente decide di iniziare alle 6 del mattino.",
+      "sub": "Ana, la segretaria virtuale di Staffra, spiega come funziona la prima visita, dice se ricevi online, comunica il prezzo e prenota un orario libero. Anche quando il paziente decide di iniziare alle 6 del mattino.",
       "videoName": "Ana prenota una visita online dalla nutrizionista su WhatsApp",
       "videoDescription": "Una demo di 39 secondi: alle 6:48, prima che lo studio apra, una persona chiede come funziona la visita, sceglie la visita online e ottiene l'appuntamento.",
       "painHeading": "La decisione di iniziare non aspetta l'orario d'ufficio",
@@ -1501,15 +1520,18 @@
         }
       ],
       "finalHeading": "Il tuo studio che prenota prima del primo caffè",
-      "finalSub": "Lascia che Ana risponda e prenoti le visite su WhatsApp mentre ricevi i pazienti."
+      "finalSub": "Lascia che Ana risponda e prenoti le visite su WhatsApp mentre ricevi i pazienti.",
+      "whatIsHeading": "Cos'è una segretaria virtuale per nutrizionisti?",
+      "whatIs": "È un'accoglienza automatica su WhatsApp che spiega come funziona la visita, in studio o online, comunica i prezzi e prenota il paziente in un orario libero, anche fuori orario. Su Staffra, questa segretaria è Ana: lavora solo con ciò che inserisci e lascia a te le domande sull'alimentazione.",
+      "cardLine": "Visita in studio o online, controlli e indicazioni prima della visita."
     },
     "pilates": {
       "navLabel": "Studi di pilates",
-      "seoTitle": "Receptionist virtuale con IA per studi di pilates",
-      "seoDescription": "Ana risponde al WhatsApp del tuo studio di pilates 24 ore su 24, spiega la lezione di prova e prenota con l'istruttore giusto, solo negli orari liberi. Prova gratis per 7 giorni.",
+      "seoTitle": "Sistema di prenotazione con IA per studi di pilates",
+      "seoDescription": "Un sistema di prenotazione su WhatsApp per studi di pilates: Ana spiega la lezione di prova, comunica i prezzi e prenota con l'istruttore giusto, 24 ore su 24. Prova gratis per 7 giorni.",
       "eyebrow": "Per studi di pilates",
-      "h1": "Receptionist virtuale su WhatsApp per studi di pilates",
-      "sub": "Ana spiega come funziona la lezione di prova, comunica il prezzo e prenota un orario libero, anche alle 6 del mattino, quando la persona decide di iniziare e lo studio non ha ancora aperto.",
+      "h1": "Sistema di prenotazione su WhatsApp per studi di pilates",
+      "sub": "Ana, la receptionist virtuale di Staffra, spiega come funziona la lezione di prova, comunica il prezzo e prenota un orario libero, anche alle 6 del mattino, quando la persona decide di iniziare e lo studio non ha ancora aperto.",
       "videoName": "Ana prenota una lezione di prova di pilates su WhatsApp",
       "videoDescription": "Una demo di 37 secondi: alle 5:58, prima che lo studio apra, una persona chiede della lezione di prova e del prezzo e ottiene la lezione per la mattina dopo.",
       "painHeading": "Chi vuole iniziare pilates decide fuori dall'orario dello studio",
@@ -1633,7 +1655,340 @@
         }
       ],
       "finalHeading": "Il tuo studio che prenota lezioni prima di aprire",
-      "finalSub": "Lascia che Ana risponda e prenoti su WhatsApp mentre gli istruttori fanno lezione."
+      "finalSub": "Lascia che Ana risponda e prenoti su WhatsApp mentre gli istruttori fanno lezione.",
+      "whatIsHeading": "Cos'è un sistema di prenotazione su WhatsApp per uno studio di pilates?",
+      "whatIs": "È un'accoglienza automatica sul WhatsApp dello studio che spiega la lezione di prova, comunica i prezzi e prenota la lezione con l'istruttore giusto, solo negli orari liberi. Su Staffra, lo fa Ana, ideale per lezioni di prova, lezioni private e valutazioni, con un allievo per orario per ogni istruttore.",
+      "cardLine": "Lezione di prova, lezioni private e agenda per istruttore."
+    }
+  },
+  "Brand": {
+    "definition": "Staffra è una piattaforma brasiliana di receptionist virtuali per WhatsApp, Instagram e siti web. Ana prenota appuntamenti per attività di servizi come barbieri, saloni, studi dentistici e studi di pilates, e Malu risponde e vende per i negozi online, 24 ore su 24, usando solo le informazioni inserite dall'attività.",
+    "schemaDescription": "Staffra è una piattaforma brasiliana di receptionist virtuali con IA per WhatsApp, Instagram e siti web: Ana prenota appuntamenti per attività di servizi (barbieri, saloni, studi dentistici, nutrizionisti, studi di pilates) e Malu risponde e vende per i negozi online, 24 ore su 24, usando solo le informazioni inserite dall'attività.",
+    "legalLine": "{legalName} · CNPJ {taxId}",
+    "llms": {
+      "mainPages": "Pagine principali",
+      "byTrade": "Per tipo di attività",
+      "guides": "Guide",
+      "policies": "Informative",
+      "company": "Azienda",
+      "legalName": "Ragione sociale: {value}",
+      "taxId": "CNPJ: {value}",
+      "contact": "Contatto: {value}",
+      "site": "Sito ufficiale: {value}",
+      "pricing": "Piani e prezzi",
+      "languages": "Versioni in inglese e italiano: {en} e {it}."
+    }
+  },
+  "About": {
+    "seoTitle": "Chi è Staffra: receptionist virtuali con IA per WhatsApp",
+    "seoDescription": "Chi è Staffra: piattaforma brasiliana di receptionist virtuali per WhatsApp, Instagram e siti web, gestita da {legalName} (CNPJ {taxId}). Cosa fa, per chi è e come funziona.",
+    "breadcrumb": "Chi siamo",
+    "eyebrow": "Chi è Staffra",
+    "h1": "Receptionist virtuali su WhatsApp per le piccole attività brasiliane",
+    "whoHeading": "Per chi è",
+    "whoIntro": "Ana lavora per le attività che vivono di appuntamenti. Ogni settore ha una pagina che spiega come lavora ogni giorno:",
+    "whoSales": "Per i negozi che vendono su WhatsApp e Instagram, Malu risponde alle domande su prodotti, prezzi e disponibilità e accompagna il cliente fino al checkout del negozio.",
+    "howHeading": "Come funziona",
+    "steps": [
+      {
+        "title": "Inserisci la tua attività",
+        "body": "Servizi, prezzi, orari, professionisti e le domande che i clienti fanno più spesso. Per Malu, il catalogo da foglio di calcolo o da Shopify."
+      },
+      {
+        "title": "Colleghi i canali",
+        "body": "WhatsApp tramite il collegamento ufficiale di Meta, Instagram, Telegram, la chat del sito e un link diretto per la bio."
+      },
+      {
+        "title": "Ana e Malu rispondono",
+        "body": "Rispondono ai clienti 24 ore su 24, fissano appuntamenti e accompagnano il cliente all'acquisto. Segui tutto dal pannello e puoi prendere in mano qualsiasi conversazione."
+      }
+    ],
+    "principlesHeading": "Cosa fanno, e cosa non fanno",
+    "principles": [
+      {
+        "title": "Rispondono solo con i tuoi dati",
+        "body": "Ana e Malu usano solo quello che l'attività ha inserito. Se l'informazione non c'è, non inventano prezzi, orari o regole."
+      },
+      {
+        "title": "Passano la chat al team",
+        "body": "Quando il cliente chiede una persona o l'argomento va oltre quello che sanno, lo dicono e, se lo permetti, passano la chat con tutta la cronologia."
+      },
+      {
+        "title": "Usano WhatsApp ufficiale",
+        "body": "Il collegamento passa dall'integrazione ufficiale di Meta. Puoi usare il numero che l'attività ha già o un numero nuovo."
+      },
+      {
+        "title": "Lasciano a te le decisioni professionali",
+        "body": "In studi medici e di pilates, salute, dolore o urgenze vanno al team. Loro si occupano dell'accoglienza e dell'agenda."
+      }
+    ],
+    "factsHeading": "Staffra in breve",
+    "facts": [
+      {
+        "label": "Cos'è",
+        "value": "Una piattaforma di receptionist virtuali per WhatsApp, Instagram, Telegram e siti web"
+      },
+      {
+        "label": "Collaboratrici",
+        "value": "Ana (appuntamenti) e Malu (vendite), incluse in ogni piano"
+      },
+      {
+        "label": "Prezzo",
+        "value": "Da {price} al mese"
+      },
+      {
+        "label": "Prova gratuita",
+        "value": "7 giorni, con addebito solo dopo 7 giorni o 500 risposte, a seconda di cosa avviene prima"
+      },
+      {
+        "label": "Contratto",
+        "value": "Nessun vincolo e nessun costo di attivazione"
+      },
+      {
+        "label": "WhatsApp",
+        "value": "Collegamento ufficiale di Meta, con il numero attuale o uno nuovo"
+      },
+      {
+        "label": "Integrazioni",
+        "value": "Google Calendar, Shopify e catalogo da foglio di calcolo"
+      },
+      {
+        "label": "Configurazione",
+        "value": "Di solito meno di 30 minuti, senza programmare"
+      },
+      {
+        "label": "Lingue del sito",
+        "value": "Portoghese, inglese e italiano"
+      },
+      {
+        "label": "Pensata per",
+        "value": "Barbieri, saloni di bellezza, onicotecniche, studi dentistici, nutrizionisti, studi di pilates e negozi online"
+      }
+    ],
+    "companyHeading": "L'azienda",
+    "companyBody": "Staffra è un prodotto di {legalName}, azienda tecnologica brasiliana. I dati trattati dalla piattaforma seguono la LGPD, la legge brasiliana sulla protezione dei dati, come descritto nell'informativa sulla privacy.",
+    "company": {
+      "legalName": "Ragione sociale",
+      "taxId": "CNPJ (partita IVA brasiliana)",
+      "contact": "Contatto",
+      "website": "Sito",
+      "country": "Paese",
+      "countryValue": "Brasile"
+    },
+    "nameNote": "Esistono altre aziende con nomi simili a Staffra, in settori come la selezione del personale e l'edilizia. La Staffra delle receptionist virtuali Ana e Malu è quella del sito staffra.io, gestita da Pulsar LTDA.",
+    "ctaHeading": "Guarda Ana e Malu al lavoro per la tua attività"
+  },
+  "Guides": {
+    "whatsappScheduling": {
+      "title": "Prenotazioni automatiche su WhatsApp: come funzionano e come scegliere",
+      "seoTitle": "Prenotazioni automatiche su WhatsApp: guida completa (2026)",
+      "seoDescription": "Come funzionano le prenotazioni automatiche su WhatsApp, i 4 metodi più comuni (manuale, link, menu e receptionist virtuale), vantaggi, limiti, costi e cosa valutare prima di scegliere.",
+      "eyebrow": "Guida",
+      "breadcrumb": "Prenotazioni automatiche su WhatsApp",
+      "updatedLabel": "Aggiornata il {date}",
+      "tldrHeading": "Risposta rapida",
+      "tldr": "Le prenotazioni automatiche su WhatsApp permettono al cliente di fissare un appuntamento chattando su WhatsApp senza che nessuno del team debba rispondere subito. I metodi più comuni sono 4: rispondere a mano, inviare un link di prenotazione, usare un menu automatico di opzioni oppure una receptionist virtuale che capisce la conversazione e consulta l'agenda. Per le attività con molti messaggi o più professionisti, la receptionist virtuale è la soluzione più vicina a una vera reception.",
+      "sections": [
+        {
+          "heading": "Cosa sono le prenotazioni automatiche su WhatsApp?",
+          "paragraphs": [
+            "Il cliente fissa un appuntamento chattando su WhatsApp, senza che qualcuno dell'attività debba rispondere subito. Un sistema consulta l'agenda, propone solo gli orari liberi, registra la prenotazione e invia la conferma.",
+            "Per funzionare davvero, il sistema deve conoscere tre cose: quali servizi offre l'attività e quanto dura ciascuno, quando è disponibile ogni professionista e cosa è già prenotato."
+          ]
+        },
+        {
+          "heading": "Programmare messaggi è un'altra cosa",
+          "paragraphs": [
+            "Molti cercano \"WhatsApp programmato\" per inviare un messaggio più tardi. È una funzione diversa: utile per promemoria o annunci, ma non prenota nessun appuntamento. Questa guida parla di prenotare appuntamenti con i clienti."
+          ]
+        }
+      ],
+      "optionsHeading": "I 4 metodi più comuni per prenotare su WhatsApp",
+      "optionsIntro": "Ogni metodo risolve una parte del problema. Il migliore dipende da quanti messaggi ricevi, da quanti professionisti lavorano e da quanto vuoi che il cliente resti nella conversazione.",
+      "prosLabel": "Vantaggi",
+      "consLabel": "Limiti",
+      "bestForLabel": "Ideale per:",
+      "options": [
+        {
+          "name": "WhatsApp Business manuale",
+          "how": "Qualcuno del team risponde a ogni messaggio, controlla l'agenda e conferma l'orario. L'app aiuta con etichette, risposte rapide e messaggio di assenza.",
+          "pros": [
+            "Nessun costo oltre al tempo del team",
+            "Un'accoglienza del tutto personale"
+          ],
+          "cons": [
+            "Dipende da qualcuno libero di rispondere",
+            "I messaggi fuori orario aspettano il giorno dopo",
+            "È facile sbagliare l'agenda o prenotare due clienti nello stesso orario"
+          ],
+          "bestFor": "attività con pochi messaggi al giorno e qualcuno dedicato a rispondere."
+        },
+        {
+          "name": "App di prenotazione con link",
+          "how": "L'attività invia un link, e il cliente sceglie servizio e orario su una pagina di prenotazione fuori da WhatsApp.",
+          "pros": [
+            "L'agenda resta ordinata e mostra solo orari liberi",
+            "Funziona a qualsiasi ora"
+          ],
+          "cons": [
+            "Il cliente esce dalla conversazione, e una parte rinuncia",
+            "Le domande su prezzo, indirizzo e pagamenti continuano ad arrivare in chat",
+            "Qualcuno deve comunque inviare il link e rispondere al resto"
+          ],
+          "bestFor": "clienti abituati a prenotare online, con poche domande."
+        },
+        {
+          "name": "Menu automatico di opzioni",
+          "how": "Un messaggio automatico risponde con opzioni numerate, come \"scrivi 1 per prenotare, 2 per i prezzi\", e il cliente segue un percorso fisso fino all'orario.",
+          "pros": [
+            "Risponde subito, 24 ore su 24",
+            "Di solito costa poco"
+          ],
+          "cons": [
+            "Non capisce i messaggi scritti a modo del cliente, come \"c'è posto venerdì dopo le 18 con Rafael?\"",
+            "I percorsi fissi frustrano chi esce dal copione",
+            "Le domande fuori dal menu restano senza risposta"
+          ],
+          "bestFor": "flussi molto semplici, con pochi servizi e senza scelta del professionista."
+        },
+        {
+          "name": "Receptionist virtuale",
+          "how": "Una receptionist virtuale chatta su WhatsApp come una persona: capisce il messaggio del cliente, consulta l'agenda di ogni professionista, propone gli orari liberi, prenota, sposta e risponde alle domande in base a quello che l'attività ha inserito.",
+          "pros": [
+            "Conversazione naturale, senza uscire da WhatsApp",
+            "Risponde 24 ore su 24 e anche oltre la prenotazione",
+            "Agenda per professionista, spostamenti e disdette con regole"
+          ],
+          "cons": [
+            "Ha un canone mensile",
+            "Richiede di inserire servizi, orari e informazioni dell'attività",
+            "Usa il collegamento ufficiale di WhatsApp, che addebita le risposte oltre la quota gratuita"
+          ],
+          "bestFor": "attività con molti messaggi, più professionisti o tante richieste fuori orario."
+        }
+      ],
+      "tableHeading": "Confronto rapido",
+      "tableCriterion": "Criterio",
+      "table": [
+        {
+          "criterion": "Risponde fuori orario",
+          "values": [
+            "No",
+            "Solo se il cliente ha già il link",
+            "Sì",
+            "Sì"
+          ]
+        },
+        {
+          "criterion": "Capisce messaggi liberi",
+          "values": [
+            "Sì, se c'è qualcuno",
+            "Non applicabile",
+            "No",
+            "Sì"
+          ]
+        },
+        {
+          "criterion": "Prenota senza nessuno del team",
+          "values": [
+            "No",
+            "Sì, dalla pagina",
+            "Sì, dentro il menu",
+            "Sì"
+          ]
+        },
+        {
+          "criterion": "Scelta del professionista",
+          "values": [
+            "Manuale",
+            "Dipende dall'app",
+            "Raramente",
+            "Sì"
+          ]
+        },
+        {
+          "criterion": "Sposta e disdice",
+          "values": [
+            "Manuale",
+            "Dalla pagina, se l'app lo permette",
+            "Raramente",
+            "Sì, con regole"
+          ]
+        },
+        {
+          "criterion": "Risponde su prezzi e dubbi",
+          "values": [
+            "Sì, a mano",
+            "No",
+            "Solo ciò che è nel menu",
+            "Sì, con ciò che è stato inserito"
+          ]
+        },
+        {
+          "criterion": "Costo tipico",
+          "values": [
+            "Tempo del team",
+            "Canone mensile",
+            "Canone mensile",
+            "Canone mensile (Staffra: da {price})"
+          ]
+        }
+      ],
+      "checklistHeading": "Cosa valutare prima di scegliere",
+      "checklist": [
+        {
+          "title": "WhatsApp ufficiale",
+          "body": "Preferisci strumenti che usano il collegamento ufficiale di Meta. I collegamenti non ufficiali possono portare al blocco del numero."
+        },
+        {
+          "title": "Un'agenda vera",
+          "body": "Il sistema deve considerare orari di apertura, chiusure, durata di ogni servizio e prenotazioni esistenti, per non offrire mai lo stesso orario due volte."
+        },
+        {
+          "title": "Un professionista, un'agenda",
+          "body": "Se lavorano più persone, ognuna ha bisogno della propria agenda, e il cliente deve poter scegliere da chi andare."
+        },
+        {
+          "title": "Spostamenti e disdette",
+          "body": "Verifica se il cliente può spostare e disdire da solo e se puoi impostare regole come preavviso minimo e termine per la disdetta."
+        },
+        {
+          "title": "Passaggio a una persona",
+          "body": "Quando il cliente chiede qualcuno del team o la domanda esce dal copione, la chat deve passare a una persona con tutta la cronologia."
+        },
+        {
+          "title": "Dati dei clienti",
+          "body": "Controlla quali dati vengono chiesti, dove sono conservati e se l'azienda li tratta secondo la normativa sulla protezione dei dati (in Brasile, la LGPD)."
+        }
+      ],
+      "costHeading": "Quanto costa WhatsApp ufficiale",
+      "costBody": "Chi usa il collegamento ufficiale di WhatsApp paga a Meta le risposte oltre la quota gratuita. Su Staffra, collegandoti con il tuo account Meta, hai 1.000 risposte gratuite al mese e circa R$ 0,04 per risposta dopo, pagate direttamente a Meta. Se preferisci, puoi avere tutto tramite Staffra, con i costi già inclusi nel prezzo. I prezzi di Meta cambiano nel tempo e da paese a paese, quindi controlla il listino ufficiale prima di decidere.",
+      "staffraHeading": "Dove entra Staffra",
+      "staffraBody": "Staffra è una piattaforma brasiliana di receptionist virtuali. Ana, la receptionist per gli appuntamenti, chatta su WhatsApp, Instagram, Telegram e nella chat del sito, consulta l'agenda di ogni professionista, prenota, sposta e disdice rispettando le tue regole e invia conferma e promemoria via email. Risponde solo con ciò che l'attività ha inserito e passa la chat al team quando serve. I piani partono da {price} al mese, con 7 giorni gratuiti.",
+      "tradesHeading": "Prenotazioni automatiche per tipo di attività",
+      "tradesIntro": "Ogni settore ha le sue particolarità. Guarda come funziona nel tuo:",
+      "faq": [
+        {
+          "q": "WhatsApp Business gratuito può prenotare in automatico?",
+          "a": "Non del tutto. L'app ha messaggi di assenza e risposte rapide, ma non consulta un'agenda né conferma orari da sola. Per farlo serve un link di prenotazione o uno strumento collegato a WhatsApp ufficiale."
+        },
+        {
+          "q": "Devo cambiare il numero WhatsApp?",
+          "a": "Non per forza. Con il collegamento ufficiale di Meta puoi usare il numero che l'attività ha già su WhatsApp Business. Su Staffra, collegandoti con il tuo account Meta, continui a usare l'app sul telefono."
+        },
+        {
+          "q": "E se il cliente vuole parlare con una persona?",
+          "a": "Un buon strumento passa la chat al team con tutta la cronologia. Su Staffra, Ana lo fa quando il cliente chiede una persona o qualcosa che non è stato inserito, se lo permetti."
+        },
+        {
+          "q": "Funziona con più professionisti?",
+          "a": "Sì, purché ognuno abbia la propria agenda nel sistema. Su Staffra, il cliente può scegliere da chi andare, e Ana mostra solo gli orari di quella persona."
+        },
+        {
+          "q": "Come ridurre le assenze con le prenotazioni automatiche?",
+          "a": "Una conferma immediata e un promemoria prima dell'appuntamento aiutano il cliente a ricordare, e le regole di disdetta evitano rinunce dell'ultimo minuto. Su Staffra, conferma e promemoria arrivano via email."
+        }
+      ]
     }
   },
   "Dashboard": {
@@ -3036,7 +3391,7 @@
     "privacy": {
       "title": "Informativa sulla privacy",
       "date": "12 ottobre 2026",
-      "intro": "La presente Informativa sulla privacy spiega come Pulsar LTDA (\"Pulsar\", \"noi\"), la società che gestisce la piattaforma Staffra (\"Staffra\", il \"Servizio\"), raccoglie, utilizza, condivide e protegge le informazioni personali quando utilizzi il nostro sito web, la dashboard e i nostri servizi (insieme, il \"Servizio\"). Descrive inoltre le scelte a tua disposizione riguardo alle tue informazioni. Ti invitiamo a leggerla insieme ai nostri Termini di servizio.",
+      "intro": "La presente Informativa sulla privacy spiega come Pulsar LTDA (CNPJ 58.261.994/0001-80, \"Pulsar\", \"noi\"), la società che gestisce la piattaforma Staffra (\"Staffra\", il \"Servizio\"), raccoglie, utilizza, condivide e protegge le informazioni personali quando utilizzi il nostro sito web, la dashboard e i nostri servizi (insieme, il \"Servizio\"). Descrive inoltre le scelte a tua disposizione riguardo alle tue informazioni. Ti invitiamo a leggerla insieme ai nostri Termini di servizio.",
       "sections": [
         {
           "heading": "1. A chi si applica questa informativa",
@@ -3130,16 +3485,17 @@
         {
           "heading": "12. Contattaci",
           "paragraphs": [
-            "Pulsar LTDA gestisce la piattaforma Staffra. Per domande sulla privacy o per esercitare i tuoi diritti sui dati, scrivi a app.pulsar.contato@gmail.com.",
+            "Pulsar LTDA gestisce la piattaforma Staffra. Per domande sulla privacy o per esercitare i tuoi diritti sui dati, scrivi a contato@staffra.io.",
             "Questo indirizzo raggiunge anche il nostro Responsabile della protezione dei dati (Encarregado pelo Tratamento de Dados Pessoais ai sensi della LGPD)."
           ]
         }
-      ]
+      ],
+      "seoDescription": "Come Pulsar LTDA, l'azienda dietro Staffra, raccoglie, utilizza e protegge i dati personali nel rispetto della LGPD, e come esercitare i tuoi diritti."
     },
     "terms": {
       "title": "Termini di servizio",
-      "date": "7 ottobre 2026",
-      "intro": "I presenti Termini di servizio (\"Termini\") costituiscono un accordo vincolante tra Pulsar LTDA (\"Pulsar\", \"noi\"), la società che gestisce la piattaforma Staffra (\"Staffra\", il \"Servizio\"), e l'azienda o la persona che utilizza il nostro sito web, la dashboard e i nostri servizi (insieme, il \"Servizio\"). Creando un account o utilizzando il Servizio, accetti i presenti Termini. Se li accetti per conto di una società, dichiari di essere autorizzato a vincolarla.",
+      "date": "12 ottobre 2026",
+      "intro": "I presenti Termini di servizio (\"Termini\") costituiscono un accordo vincolante tra Pulsar LTDA (CNPJ 58.261.994/0001-80, \"Pulsar\", \"noi\"), la società che gestisce la piattaforma Staffra (\"Staffra\", il \"Servizio\"), e l'azienda o la persona che utilizza il nostro sito web, la dashboard e i nostri servizi (insieme, il \"Servizio\"). Creando un account o utilizzando il Servizio, accetti i presenti Termini. Se li accetti per conto di una società, dichiari di essere autorizzato a vincolarla.",
       "sections": [
         {
           "heading": "1. Il Servizio",
@@ -3283,10 +3639,11 @@
         {
           "heading": "19. Contattaci",
           "paragraphs": [
-            "Le domande sui presenti Termini possono essere inviate a Pulsar LTDA all'indirizzo app.pulsar.contato@gmail.com."
+            "Le domande sui presenti Termini possono essere inviate a Pulsar LTDA all'indirizzo contato@staffra.io."
           ]
         }
-      ]
+      ],
+      "seoDescription": "I termini di servizio di Staffra: piani, prova gratuita, fatturazione, disdetta e le responsabilità tra Pulsar LTDA e chi usa il servizio."
     }
   },
   "Tour": {

@@ -152,3 +152,15 @@ describe("per-trade pages", () => {
     ).toEqual({ kind: "redirect", location: "/en/para/barbearias", permanent: false });
   });
 });
+
+describe("About and guide pages", () => {
+  it("are localized public pages in every language", () => {
+    expect(parseLocalizedPath("/sobre")).toEqual({ locale: "pt", basePath: "/sobre" });
+    expect(parseLocalizedPath("/it/sobre")).toEqual({ locale: "it", basePath: "/sobre" });
+    expect(parseLocalizedPath("/en/guias/agendamento-automatico-whatsapp")).toEqual({
+      locale: "en",
+      basePath: "/guias/agendamento-automatico-whatsapp",
+    });
+    expect(parseLocalizedPath("/guias/unknown")).toBeNull();
+  });
+});

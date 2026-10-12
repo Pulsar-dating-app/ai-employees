@@ -10,6 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // Root layout's title template appends " · Staffra".
   return {
     title: t("privacy.title"),
+    description: t("privacy.seoDescription"),
     alternates: localizedAlternates("/privacy", locale),
   };
 }

@@ -18,6 +18,7 @@ import { ProductTour } from "./product-tour";
 import { ValueSection } from "./value-calculator";
 import { HeroChatDemo, type HeroChatCopy } from "./hero-chat-demo";
 import { SiteFooter, SiteHeader } from "./site-chrome";
+import { TradesSection } from "./trades-section";
 import { TalkToMaluButton } from "./talk-to-malu-button";
 import { LANDING_PLANS } from "./landing-plans";
 import maluImg from "../../../public/agents/sales-1.png";
@@ -351,6 +352,8 @@ export async function LandingPageV2() {
         </section>
 
         <PricingSection />
+
+        <TradesSection locale={locale} />
 
         <section id="faq" className="mx-auto max-w-[1440px] px-4 py-12 md:px-10">
           <div className="mx-auto mb-6 max-w-3xl text-center">

@@ -18,7 +18,28 @@ function supabaseStorageRemotePattern(): NonNullable<NextConfig["images"]>["remo
   }
 }
 
+// Baseline security headers for every response. `frame-ancestors 'self'`
+// (clickjacking protection) is applied everywhere EXCEPT `/talk/*`: the
+// widget.js snippet embeds the hosted chat at /talk/<company>/<agent> in an
+// iframe on merchants' own sites, so that path must stay frameable by any
+// origin. The app uses no camera, microphone or location, so those are off.
+const SECURITY_HEADERS = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      {
+        source: "/:path((?!talk/).*)",
+        headers: [{ key: "Content-Security-Policy", value: "frame-ancestors 'self'" }],
+      },
+    ];
+  },
   images: {
     // First real use: agent photo customization (company_agents.photo_asset_url)
     // stores a public Supabase Storage URL that <AgentPersonaCard>/

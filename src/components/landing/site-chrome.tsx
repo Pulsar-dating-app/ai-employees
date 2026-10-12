@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/locales";
 import { localizeHref, localizedPath } from "@/i18n/routing";
 import { VERTICALS, verticalPath } from "@/lib/verticals/catalog";
+import { COMPANY } from "@/lib/seo/site";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ScrollHeader } from "./scroll-header";
 import { CascadeText } from "./cascade-text";
@@ -75,7 +76,11 @@ export async function SiteHeader({ locale, onLanding = true }: { locale: Locale;
 }
 
 export async function SiteFooter({ locale, onLanding = true }: { locale: Locale; onLanding?: boolean }) {
-  const [t, tv] = await Promise.all([getTranslations("LandingV2"), getTranslations("Verticals")]);
+  const [t, tv, brand] = await Promise.all([
+    getTranslations("LandingV2"),
+    getTranslations("Verticals"),
+    getTranslations("Brand"),
+  ]);
   const footerCols = t.raw("footer.columns") as FooterCol[];
   // Links to every per-trade page from every public page — the internal
   // links that tell search engines those pages exist and matter.
@@ -90,7 +95,7 @@ export async function SiteFooter({ locale, onLanding = true }: { locale: Locale;
         <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-6">
           <div className="flex flex-col items-start gap-3 lg:col-span-2">
             <Image src={logo} alt="Staffra" sizes="88px" className="h-8 w-auto self-start object-contain" />
-            <p className="max-w-sm text-[16px] leading-[24px] text-[#464555]">{t("footer.blurb")}</p>
+            <p className="max-w-sm text-[15px] leading-[24px] text-[#464555]">{brand("definition")}</p>
             <div className="flex items-center gap-3 pt-2">
               {["share", "public", "mail"].map((icon) => (
                 <span
@@ -119,6 +124,12 @@ export async function SiteFooter({ locale, onLanding = true }: { locale: Locale;
         </div>
         <div className="flex flex-col items-center justify-between gap-2 pt-6 text-[12px] font-semibold tracking-[0.02em] text-[#464555] md:flex-row">
           <p>{t("footer.rights")}</p>
+          {/* The legal identity on every public page — it's what tells this
+              Staffra apart from other companies with the same name. */}
+          <p className="text-center font-medium md:text-right">
+            {brand("legalLine", { legalName: COMPANY.legalName, taxId: COMPANY.taxId })} ·{" "}
+            <span className="select-all">{COMPANY.email}</span>
+          </p>
         </div>
       </div>
     </footer>

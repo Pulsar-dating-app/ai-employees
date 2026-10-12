@@ -33,8 +33,10 @@ export async function resolveLocale(): Promise<Locale> {
   return localeFromAcceptLanguage(headerStore.get("accept-language"));
 }
 
-export default getRequestConfig(async () => {
-  const locale = await resolveLocale();
+// An explicit `getTranslations({ locale })` (e.g. /llms.txt, which is always
+// Portuguese) arrives as `locale` and wins over the request's own locale.
+export default getRequestConfig(async ({ locale: explicit }) => {
+  const locale = isSupportedLocale(explicit) ? explicit : await resolveLocale();
 
   return {
     locale,
