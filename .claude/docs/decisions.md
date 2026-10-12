@@ -10,6 +10,19 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-12 — One public landing page per trade, starting with barbershops and dental clinics
+
+**Decision:**
+- **Pages:** `/para/<slug>` (plus `/en/para/…`, `/it/para/…`) for each trade in `src/lib/verticals/catalog.ts`. The first two are `barbearias` and `clinicas-odontologicas`. Salons, nail studios, nutritionists and pilates follow on the same template once the first two are reviewed.
+- **Wording:** the `<title>` says "Atendente/Secretária virtual com IA para …", using the existing agreement that "IA" may appear in SEO titles only. The visible H1 and body say "atendente virtual" / "secretária virtual" / "agendamento automático", with no implementation jargon.
+- **Content rules:** every claim maps to a shipped feature, for example reminders are **email** only and there is no waitlist. There are no testimonials or statistics until real ones exist. The sample chat is real HTML text, so it can be indexed; the demo video can't be.
+- **Videos:** the demo videos (`public/verticals/<name>.mp4`, re-encoded to 720p at about 1.8 MB with a `-poster.webp`) load with `preload="none"`. They are described with `VideoObject` structured data next to `WebPage` and `BreadcrumbList`.
+- **Header/footer:** the landing's header and footer moved to `src/components/landing/site-chrome.tsx` so these pages share them. The footer gained a "Para o seu negócio" column linking every trade page from every public page.
+
+**Why:** the SEO audit (2026-10-11) found Brazilian buyers' queries are won by trade-specific pages, guides and listicles. The single homepage never mentioned barbearia, clínica or salão. Barbershops and dental clinics were the two largest gaps. Shipping two first keeps a tone or design correction cheap before it's repeated six times.
+
+**How to apply:** a new trade is one `VERTICALS` entry (slug, key, video, duration, upload date), a `Verticals.<key>` block in all three message files with the same shape as `barber`, and a re-encoded video plus poster in `public/verticals/`. Routing, hreflang, the sitemap and the footer pick it up automatically. Keep each page's copy genuinely specific to the trade (pains, sample chat, FAQ): near-duplicate pages are treated as doorway pages. Don't add trade × city pages.
+
 ## 2026-10-11 — Per-locale URLs for the public pages only; Portuguese at the unprefixed URLs
 
 **Decision:**

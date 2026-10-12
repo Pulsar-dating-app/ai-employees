@@ -3,6 +3,7 @@ import {
   buildFaqPage,
   buildLandingGraph,
   buildSoftwareApplication,
+  buildVerticalPageGraph,
   parsePriceAmount,
 } from "@/lib/seo/structured-data";
 
@@ -93,5 +94,64 @@ describe("buildLandingGraph", () => {
     });
     const types = (graph["@graph"] as Record<string, unknown>[]).map((n) => n["@type"]);
     expect(types).toEqual(["Organization", "WebSite", "SoftwareApplication"]);
+  });
+});
+
+describe("buildVerticalPageGraph", () => {
+  const url = "https://www.staffra.io/para/barbearias";
+  const graph = buildVerticalPageGraph({
+    siteName: "Staffra",
+    siteDescription: "desc",
+    url,
+    name: "Atendente virtual para barbearias",
+    description: "Page description",
+    inLanguage: "pt-BR",
+    breadcrumbs: [
+      { name: "Início", url: "https://www.staffra.io/" },
+      { name: "Barbearias", url },
+    ],
+    video: {
+      name: "Demo",
+      description: "Video description",
+      thumbnailUrl: "https://www.staffra.io/verticals/barbearia-poster.webp",
+      contentUrl: "https://www.staffra.io/verticals/barbearia.mp4",
+      uploadDate: "2026-10-12",
+      duration: "PT37S",
+    },
+  }) as { "@graph": Record<string, unknown>[] };
+  const byType = (type: string) => graph["@graph"].find((node) => node["@type"] === type)!;
+
+  it("links the page to its breadcrumb and video by @id", () => {
+    const page = byType("WebPage");
+    expect(page).toMatchObject({
+      "@id": `${url}#webpage`,
+      inLanguage: "pt-BR",
+      breadcrumb: { "@id": `${url}#breadcrumb` },
+      video: { "@id": `${url}#video` },
+    });
+    expect(byType("BreadcrumbList")["@id"]).toBe(`${url}#breadcrumb`);
+    expect(byType("VideoObject")["@id"]).toBe(`${url}#video`);
+  });
+
+  it("numbers breadcrumb positions from 1", () => {
+    expect(byType("BreadcrumbList").itemListElement).toEqual([
+      { "@type": "ListItem", position: 1, name: "Início", item: "https://www.staffra.io/" },
+      { "@type": "ListItem", position: 2, name: "Barbearias", item: url },
+    ]);
+  });
+
+  it("carries the fields Google requires on a VideoObject", () => {
+    expect(byType("VideoObject")).toMatchObject({
+      name: "Demo",
+      description: "Video description",
+      thumbnailUrl: expect.stringContaining("poster"),
+      uploadDate: "2026-10-12",
+      contentUrl: expect.stringContaining(".mp4"),
+    });
+  });
+
+  it("repeats Organization and WebSite so the @id references resolve on the page", () => {
+    expect(byType("Organization")).toBeDefined();
+    expect(byType("WebSite")).toBeDefined();
   });
 });

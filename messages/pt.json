@@ -822,6 +822,292 @@
       "greeting": "Oi! 👋 Sou a Malu. Quer ver como eu atenderia os seus clientes?"
     }
   },
+  "Verticals": {
+    "common": {
+      "footerTitle": "Para o seu negócio",
+      "breadcrumbHome": "Início",
+      "ctaTrial": "Testar 7 dias grátis",
+      "ctaVideo": "Ver a Ana agendando",
+      "trustOfficial": "WhatsApp oficial da Meta",
+      "trustPrice": "A partir de {price} por dia",
+      "trustCancel": "Cancele quando quiser",
+      "videoCaption": "Demonstração em vídeo",
+      "videoUnsupported": "Seu navegador não reproduz este vídeo.",
+      "chatSample": "Conversa de exemplo",
+      "chatOnline": "Online agora",
+      "stepLabel": "Passo {n}",
+      "pricingHeading": "Quanto custa",
+      "pricingBody": "Os planos começam em {price} por mês, com a Ana e a Malu incluídas. São 7 dias grátis: a cobrança só acontece depois de 7 dias ou de 500 respostas, o que vier primeiro. Não tem taxa de instalação, e você cancela pelo próprio painel quando quiser.",
+      "pricingCta": "Ver planos e preços",
+      "faqHeading": "Perguntas frequentes",
+      "othersHeading": "A Ana também atende",
+      "finalFine": "Cancele quando quiser · Sem taxa de instalação"
+    },
+    "barber": {
+      "navLabel": "Barbearias",
+      "seoTitle": "Atendente virtual com IA para barbearias no WhatsApp",
+      "seoDescription": "A Ana responde o WhatsApp da sua barbearia 24 horas, deixa o cliente escolher o barbeiro e marca só nos horários livres. Teste grátis por 7 dias.",
+      "eyebrow": "Para barbearias",
+      "h1": "Atendente virtual no WhatsApp para barbearias",
+      "sub": "Enquanto você está com a máquina na mão, a Ana responde o WhatsApp, pergunta com qual barbeiro o cliente quer cortar e marca no horário que está livre de verdade. De dia, de noite e no domingo.",
+      "videoName": "Ana agendando corte e barba numa barbearia pelo WhatsApp",
+      "videoDescription": "Demonstração de 37 segundos: às 23h, um cliente pede horário para corte e barba, escolhe o barbeiro, recebe os horários livres e sai com o agendamento confirmado.",
+      "painHeading": "O WhatsApp da barbearia não para enquanto você corta",
+      "painIntro": "Toda barbearia conhece a cena: a cadeira cheia, as mensagens se acumulando e o cliente que desiste porque ninguém respondeu a tempo.",
+      "pains": [
+        {
+          "title": "Mensagem sem resposta é cadeira vazia",
+          "body": "Quem chama no WhatsApp quase sempre quer horário para hoje ou amanhã. Se a resposta demora, ele marca na barbearia da esquina, e o horário que podia ser seu fica vazio."
+        },
+        {
+          "title": "O vai e volta toma o seu dia",
+          "body": "\"Tem às 15h?\", \"E com o Rafael?\", \"Pode ser mais tarde?\". Cada agendamento vira cinco mensagens, quase sempre respondidas entre um corte e outro, com a mão ocupada."
+        },
+        {
+          "title": "O cliente lembra de marcar quando a porta está fechada",
+          "body": "Muita gente decide cortar o cabelo à noite ou no domingo. Sem ninguém para responder, o pedido espera até a manhã seguinte, e o cliente já resolveu em outro lugar."
+        }
+      ],
+      "chatHeading": "Como fica uma conversa com a Ana",
+      "chatIntro": "Um cliente chama às 23h, com a barbearia fechada. A Ana resolve tudo sozinha:",
+      "chatBusiness": "Barbearia Navalha",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Fala! Tem horário pra corte e barba amanhã à tarde?"
+        },
+        {
+          "from": "agent",
+          "text": "Tenho sim! Você prefere ser atendido pelo Mateus ou pelo Rafael?"
+        },
+        {
+          "from": "customer",
+          "text": "Pode ser com o Rafael"
+        },
+        {
+          "from": "agent",
+          "text": "Amanhã à tarde o Rafael tem estes horários livres: 14:00, 15:30 e 16:00. Qual fica melhor pra você?"
+        },
+        {
+          "from": "customer",
+          "text": "16h fechou"
+        },
+        {
+          "from": "agent",
+          "text": "Perfeito! Pra confirmar, me passa seu nome completo e e-mail?"
+        },
+        {
+          "from": "customer",
+          "text": "Lucas Andrade, lucas.andrade@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "Pronto, Lucas! Corte e barba com o Rafael, amanhã às 16:00. Você vai receber a confirmação e um lembrete por e-mail antes do horário."
+        }
+      ],
+      "featuresHeading": "Feita para o dia a dia da barbearia",
+      "featuresIntro": "A Ana trabalha com o que você cadastra: seus serviços, seus barbeiros e seus horários. Nada de inventar preço ou prometer um horário que não existe.",
+      "features": [
+        {
+          "title": "Cada barbeiro com a sua agenda",
+          "body": "Cadastre o Mateus, o Rafael e quem mais atender. O cliente escolhe com quem quer cortar, e a Ana mostra só os horários daquele barbeiro. Sem preferência, ela marca com quem estiver livre, equilibrando o movimento do dia."
+        },
+        {
+          "title": "Corte, barba e combo com o tempo certo",
+          "body": "Cada serviço tem a sua duração, e você pode somar um intervalo entre um cliente e outro. Um combo de corte e barba ocupa o tempo real na agenda, sem encavalar com o próximo cliente."
+        },
+        {
+          "title": "Nunca marca dois clientes no mesmo horário",
+          "body": "A Ana considera o horário de funcionamento, as folgas e o que já está marcado, inclusive no Google Agenda de cada barbeiro. Um horário ocupado não é oferecido de novo."
+        },
+        {
+          "title": "Remarca e cancela sem você entrar na conversa",
+          "body": "Se o cliente precisa mudar o horário, a Ana resolve pelo próprio chat. Você define a antecedência mínima para marcar e até quando dá para cancelar, e ela respeita as duas regras."
+        },
+        {
+          "title": "Confirmação e lembrete por e-mail",
+          "body": "Todo agendamento confirmado gera um e-mail para o cliente, e outro chega antes do horário para ele não esquecer."
+        },
+        {
+          "title": "No WhatsApp, no Instagram e no seu site",
+          "body": "A mesma Ana responde no WhatsApp oficial da barbearia, no direct do Instagram, no Telegram e no chat do seu site. Conectando pela sua conta da Meta, você continua usando o WhatsApp Business no celular."
+        }
+      ],
+      "spotlightHeading": "E quando o cliente quer falar com você?",
+      "spotlightBody": "Se o cliente pedir para falar com o dono, ou perguntar algo que você não cadastrou, a Ana não inventa: ela avisa que vai chamar alguém e, se você permitir, passa a conversa para a sua equipe com todo o histórico. Pelo painel, você assume qualquer conversa quando quiser.",
+      "stepsHeading": "Comece em menos de 30 minutos",
+      "steps": [
+        {
+          "title": "Cadastre os serviços",
+          "body": "Corte, barba, combo e pezinho: o painel já sugere os serviços mais comuns de barbearia com as durações, e você só ajusta nomes, tempos e preços."
+        },
+        {
+          "title": "Adicione os barbeiros e os horários",
+          "body": "Informe quem atende, em quais dias e horários, e conecte o Google Agenda se vocês já usam."
+        },
+        {
+          "title": "Conecte o WhatsApp",
+          "body": "Use o número que a barbearia já tem ou um número novo. A partir daí, a Ana começa a responder."
+        }
+      ],
+      "faq": [
+        {
+          "q": "A Ana consegue marcar com um barbeiro específico?",
+          "a": "Sim. Cada barbeiro tem a própria agenda. Quando o cliente pede alguém pelo nome, a Ana mostra só os horários daquele barbeiro. Sem preferência, ela marca com quem estiver livre, equilibrando o movimento do dia."
+        },
+        {
+          "q": "E o cliente que quer um encaixe para daqui a pouco?",
+          "a": "A Ana só oferece horários que estão livres de verdade. Você define a antecedência mínima para um agendamento: se for de 1 hora, por exemplo, ela não marca nada para os próximos 60 minutos, e você não é pego de surpresa."
+        },
+        {
+          "q": "Posso aprovar cada horário antes de confirmar?",
+          "a": "Pode. Com a aprovação ligada, o pedido do cliente fica pendente até você aprovar ou recusar pelo painel, e o cliente recebe a resposta por e-mail."
+        },
+        {
+          "q": "Ela responde preço e forma de pagamento?",
+          "a": "Responde, com base no que você cadastrar: o preço de cada serviço e as informações do negócio, como formas de pagamento e endereço. Se a pergunta for sobre algo que não está cadastrado, ela não inventa a resposta."
+        },
+        {
+          "q": "Preciso trocar o número do WhatsApp da barbearia?",
+          "a": "Não. A conexão é feita pela conexão oficial da Meta, e dá para usar o número que você já tem no WhatsApp Business ou um número novo. Conectando pela sua conta da Meta, você continua usando o app no celular."
+        }
+      ],
+      "finalHeading": "Sua barbearia agendando até de madrugada",
+      "finalSub": "Deixe a Ana cuidar do WhatsApp e volte a atenção para quem está na cadeira."
+    },
+    "dental": {
+      "navLabel": "Clínicas odontológicas",
+      "seoTitle": "Secretária virtual com IA para clínicas odontológicas",
+      "seoDescription": "A Ana responde pacientes no WhatsApp 24 horas, tira dúvidas sobre a avaliação e marca com o dentista certo, só nos horários livres. Teste grátis por 7 dias.",
+      "eyebrow": "Para clínicas odontológicas",
+      "h1": "Secretária virtual no WhatsApp para clínicas odontológicas",
+      "sub": "A Ana responde os pacientes no WhatsApp a qualquer hora, explica como funciona a avaliação e marca com o dentista certo, só nos horários que estão livres. A recepção fica livre para quem está na clínica.",
+      "videoName": "Ana agendando uma avaliação odontológica pelo WhatsApp",
+      "videoDescription": "Demonstração de 33 segundos: às 21h, um paciente pede uma avaliação, pergunta o valor, escolhe o dia e sai com a consulta marcada com o dentista.",
+      "painHeading": "A recepção não dá conta de tudo ao mesmo tempo",
+      "painIntro": "Telefone tocando, paciente no balcão e o WhatsApp acumulando mensagens. Quem fica sem resposta raramente espera.",
+      "pains": [
+        {
+          "title": "Paciente novo não espera resposta",
+          "body": "Quem procura uma avaliação costuma chamar mais de uma clínica. A que responde primeiro, com horário disponível, normalmente fica com o paciente."
+        },
+        {
+          "title": "As mensagens chegam depois que a clínica fecha",
+          "body": "Muitos pacientes só têm tempo de procurar dentista à noite ou no fim de semana. Sem ninguém para responder, o pedido espera até o dia seguinte, e o paciente esfria."
+        },
+        {
+          "title": "Perguntas repetidas ocupam a recepção",
+          "body": "\"A avaliação é paga?\", \"Vocês atendem meu convênio?\", \"Qual é o endereço?\". Responder as mesmas dúvidas o dia todo tira tempo de quem está sendo atendido na clínica."
+        }
+      ],
+      "chatHeading": "Como fica uma conversa com a Ana",
+      "chatIntro": "Um paciente chama às 21h, com a recepção fechada. A Ana responde e já deixa a avaliação marcada:",
+      "chatBusiness": "Clínica Sorriso Leve",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Boa noite, gostaria de marcar uma avaliação"
+        },
+        {
+          "from": "agent",
+          "text": "Boa noite! Claro, posso te ajudar. Você tem preferência de dia?"
+        },
+        {
+          "from": "customer",
+          "text": "Antes, a avaliação é paga?"
+        },
+        {
+          "from": "agent",
+          "text": "É sim: a avaliação custa R$ 100, e o valor é abatido se você fizer o tratamento aqui na clínica."
+        },
+        {
+          "from": "customer",
+          "text": "Ótimo! Tem quinta de manhã?"
+        },
+        {
+          "from": "agent",
+          "text": "Quinta de manhã o Dr. Jorge tem estes horários: 08:00, 09:00 e 10:30. Qual fica melhor?"
+        },
+        {
+          "from": "customer",
+          "text": "9h. Roberto Lima, roberto.lima@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "Pronto, Roberto! Avaliação com o Dr. Jorge, quinta às 09:00. Você vai receber a confirmação e um lembrete por e-mail."
+        }
+      ],
+      "featuresHeading": "Feita para a rotina da clínica",
+      "featuresIntro": "A Ana trabalha com o que a clínica cadastra: procedimentos, dentistas, horários e informações do consultório. Ela não inventa preço nem promete um horário que não existe.",
+      "features": [
+        {
+          "title": "Agenda separada por dentista",
+          "body": "Cada dentista tem os próprios dias e horários. O paciente pode pedir um profissional pelo nome, e a Ana mostra só a agenda dele. Sem preferência, ela marca com quem estiver livre."
+        },
+        {
+          "title": "Duração certa para cada procedimento",
+          "body": "Avaliação, limpeza, restauração: cada procedimento tem a sua duração, e você pode somar um intervalo para preparar a sala entre um paciente e outro."
+        },
+        {
+          "title": "Os dados que a clínica precisa, antes de marcar",
+          "body": "Nome, e-mail e telefone e, se quiser, CPF, data de nascimento e perguntas suas, como \"Qual é o seu convênio?\" ou \"É a sua primeira consulta?\". A Ana pede tudo na conversa e registra no agendamento."
+        },
+        {
+          "title": "Aprovação da recepção, se a clínica preferir",
+          "body": "Com a aprovação ligada, o pedido do paciente fica pendente até a recepção confirmar pelo painel. O paciente recebe a confirmação ou a recusa por e-mail."
+        },
+        {
+          "title": "Remarcação e cancelamento com regras",
+          "body": "O paciente remarca ou cancela pelo próprio chat, dentro do prazo que a clínica definir. Passado o prazo, a Ana não cancela pelo chat."
+        },
+        {
+          "title": "Confirmação e lembrete por e-mail",
+          "body": "Cada consulta confirmada gera um e-mail para o paciente, e um lembrete chega antes do horário para ajudar a evitar faltas."
+        }
+      ],
+      "spotlightHeading": "Dor, urgência ou dúvida clínica? A conversa vai para a equipe",
+      "spotlightBody": "A Ana responde só com base no que a clínica cadastrou. Quando o paciente relata dor ou urgência, ou pergunta algo que só um dentista pode avaliar, ela não improvisa: avisa que vai chamar a equipe e, se você permitir, passa a conversa com todo o histórico para alguém da clínica. Pelo painel, a recepção assume qualquer conversa quando quiser.",
+      "stepsHeading": "Comece em menos de 30 minutos",
+      "steps": [
+        {
+          "title": "Cadastre os procedimentos",
+          "body": "Avaliação, limpeza, clareamento: informe o nome, a duração e, se quiser, o preço de cada procedimento."
+        },
+        {
+          "title": "Adicione os dentistas e os horários",
+          "body": "Defina os dias e horários de cada profissional e as folgas da clínica, e conecte o Google Agenda se a equipe já usa."
+        },
+        {
+          "title": "Conecte o WhatsApp da clínica",
+          "body": "Use o número que a clínica já tem ou um número novo. A partir daí, a Ana começa a atender."
+        }
+      ],
+      "faq": [
+        {
+          "q": "A Ana sabe responder se atendemos convênio?",
+          "a": "Sabe, se a clínica cadastrar essa informação. Ela responde com base nas informações do negócio, como convênios aceitos, valor da avaliação e formas de pagamento. Você também pode incluir a pergunta \"Qual é o seu convênio?\" entre os dados pedidos antes de marcar."
+        },
+        {
+          "q": "Ela marca procedimentos mais longos sem bagunçar a agenda?",
+          "a": "Sim. Cada procedimento tem a sua duração, mais um intervalo opcional entre pacientes. A Ana só oferece horários em que o procedimento cabe inteiro e nunca marca dois pacientes no mesmo horário com o mesmo dentista."
+        },
+        {
+          "q": "E se o paciente quiser falar com uma pessoa?",
+          "a": "A Ana avisa que vai chamar a equipe e, se você permitir, passa a conversa para a recepção com todo o histórico. Pelo painel, qualquer pessoa da equipe pode assumir a conversa quando quiser."
+        },
+        {
+          "q": "Como ficam os dados dos pacientes?",
+          "a": "A Ana pede só os dados que a clínica configurar, e eles ficam no painel da clínica, junto com o agendamento. A Staffra trata essas informações conforme a LGPD, como descrito na nossa política de privacidade."
+        },
+        {
+          "q": "Dá para usar o número que a clínica já tem?",
+          "a": "Dá. A conexão é feita pela conexão oficial da Meta, com o número que a clínica já usa no WhatsApp Business ou com um número novo. Conectando pela sua conta da Meta, a recepção continua usando o app no celular."
+        }
+      ],
+      "finalHeading": "Sua clínica marcando avaliações até fora do horário",
+      "finalSub": "Deixe a Ana responder o WhatsApp e libere a recepção para cuidar dos pacientes na clínica."
+    }
+  },
   "Dashboard": {
     "logout": "Sair",
     "workspaceLabel": "Espaço de trabalho",

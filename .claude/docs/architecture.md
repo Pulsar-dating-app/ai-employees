@@ -594,6 +594,18 @@ Baseline SEO shipped in the "[SEO] MR1/MR2" cards (2026-09-07). See decisions.md
 - The landing's `widget.js` `<script>` was switched to `next/script` with `strategy="lazyOnload"` (was a synchronous `<script>` — an eslint error and an LCP cost on the most SEO-important page).
 - **Landing Core Web Vitals:** the Material Symbols icon *font* (render-blocking `<link>` to fonts.googleapis.com) was replaced with inline SVG — `src/components/landing/landing-icons.tsx`, same `<M name=… />` API (see decisions.md 2026-09-07). Every landing `<Image>` now carries a `sizes` prop so `next/image` serves a right-sized candidate instead of the intrinsic-width density srcset (the 512×512 agent portraits were shipping at ~10× their 48–96px render). Geist Mono stays — it backs `--font-mono` for the dashboard's `font-mono` code blocks and is never fetched on the landing.
 
+### Per-trade landing pages (`/para/<slug>`)
+
+One public page per trade, for search queries like "atendente virtual para barbearia" (decisions.md 2026-10-12).
+- `src/lib/verticals/catalog.ts` — `VERTICALS` (slug, message key, demo video name, duration, upload date). It is client-safe, because `src/i18n/routing.ts` builds `LOCALIZED_PATHS` from it, so each trade automatically gets `/para/<slug>`, `/en/para/<slug>`, `/it/para/<slug>`, hreflang, sitemap entries and the proxy's language redirect.
+- `src/app/para/[vertical]/page.tsx` — metadata (SEO title, description, `localizedAlternates`, a full `openGraph` block, since a page-level one replaces the root's) and the page. 404s an unknown slug. `src/app/[locale]/para/[vertical]/page.tsx` re-exports it.
+- `src/components/verticals/vertical-page.tsx` — the server-rendered template:
+  - hero with breadcrumb, H1, CTAs and the demo `<video preload="none">`;
+  - pains, a sample chat as real text, features plus a "spotlight" block, steps, pricing (computed from `LANDING_PLANS` like the landing), a FAQ as `<details>` (no FAQPage markup, since Google retired FAQ rich results), links to the other trades, and a final CTA.
+  - It also renders the page's JSON-LD (`buildVerticalPageGraph` in `src/lib/seo/structured-data.ts`: WebPage + BreadcrumbList + VideoObject, with Organization/WebSite repeated so the `@id`s resolve).
+- Copy: `Verticals.common` (shared labels) and `Verticals.<key>` (everything trade-specific) in all three message files. The demo videos are in Portuguese, and `common.videoCaption` says so in EN/IT.
+- `src/components/landing/site-chrome.tsx` — `SiteHeader` / `SiteFooter`, shared with the landing. Their `#section` links stay in-page on the landing (`onLanding`, the default) and point at the localized home (`/en#planos`) elsewhere. The footer's first link column lists every trade page.
+
 ### Product catalog API (Trello B3)
 
 Route Handlers under `src/app/api/companies/[companyId]/products/`, following A3/B1's shape (explicit `requireMember` check for a clean 403, file-local, duplicated per file rather than shared):

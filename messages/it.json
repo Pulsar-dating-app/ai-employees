@@ -822,6 +822,292 @@
       "greeting": "Ciao! 👋 Sono Malu. Vuoi vedere come risponderei ai tuoi clienti?"
     }
   },
+  "Verticals": {
+    "common": {
+      "footerTitle": "Per la tua attività",
+      "breadcrumbHome": "Home",
+      "ctaTrial": "Prova gratis per 7 giorni",
+      "ctaVideo": "Guarda Ana prenotare",
+      "trustOfficial": "WhatsApp ufficiale di Meta",
+      "trustPrice": "Da {price} al giorno",
+      "trustCancel": "Disdici quando vuoi",
+      "videoCaption": "Video dimostrativo (in portoghese)",
+      "videoUnsupported": "Il tuo browser non riesce a riprodurre questo video.",
+      "chatSample": "Chat di esempio",
+      "chatOnline": "Online ora",
+      "stepLabel": "Passo {n}",
+      "pricingHeading": "Quanto costa",
+      "pricingBody": "I piani partono da {price} al mese, con Ana e Malu incluse. I primi 7 giorni sono gratuiti: l'addebito arriva solo dopo 7 giorni o 500 risposte, a seconda di cosa avviene prima. Non ci sono costi di attivazione e puoi disdire dal pannello quando vuoi.",
+      "pricingCta": "Vedi piani e prezzi",
+      "faqHeading": "Domande frequenti",
+      "othersHeading": "Ana lavora anche per",
+      "finalFine": "Disdici quando vuoi · Nessun costo di attivazione"
+    },
+    "barber": {
+      "navLabel": "Barbieri",
+      "seoTitle": "Receptionist virtuale con IA per barbieri su WhatsApp",
+      "seoDescription": "Ana risponde al WhatsApp del tuo barbiere 24 ore su 24, lascia scegliere il barbiere al cliente e prenota solo negli orari liberi. Prova gratis per 7 giorni.",
+      "eyebrow": "Per barbieri",
+      "h1": "Receptionist virtuale su WhatsApp per barbieri",
+      "sub": "Mentre hai la macchinetta in mano, Ana risponde su WhatsApp, chiede con quale barbiere il cliente vuole tagliarsi e prenota un orario davvero libero. Di giorno, di sera e la domenica.",
+      "videoName": "Ana prenota taglio e barba da un barbiere su WhatsApp",
+      "videoDescription": "Una demo di 37 secondi: alle 23, un cliente chiede un orario per taglio e barba, sceglie il barbiere, riceve gli orari liberi e ottiene la prenotazione confermata.",
+      "painHeading": "Il WhatsApp del negozio non si ferma mentre tagli",
+      "painIntro": "Ogni barbiere conosce la scena: la poltrona occupata, i messaggi che si accumulano e il cliente che rinuncia perché nessuno ha risposto in tempo.",
+      "pains": [
+        {
+          "title": "Un messaggio senza risposta è una poltrona vuota",
+          "body": "Chi scrive su WhatsApp vuole quasi sempre un orario per oggi o domani. Se la risposta tarda, prenota dal barbiere all'angolo, e l'orario che poteva essere tuo resta vuoto."
+        },
+        {
+          "title": "Il botta e risposta ti ruba la giornata",
+          "body": "\"Hai posto alle 15?\", \"E con Rafael?\", \"Si può più tardi?\". Ogni prenotazione diventa cinque messaggi, spesso scritti tra un taglio e l'altro, con le mani occupate."
+        },
+        {
+          "title": "Il cliente si ricorda di prenotare a negozio chiuso",
+          "body": "Molti decidono di tagliarsi i capelli la sera o la domenica. Senza nessuno che risponda, la richiesta aspetta fino al mattino dopo, e il cliente ha già risolto altrove."
+        }
+      ],
+      "chatHeading": "Com'è una chat con Ana",
+      "chatIntro": "Un cliente scrive alle 23, a negozio chiuso. Ana sistema tutto da sola:",
+      "chatBusiness": "Barbearia Navalha",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Ciao! Hai posto per taglio e barba domani pomeriggio?"
+        },
+        {
+          "from": "agent",
+          "text": "Certo! Preferisci Mateus o Rafael?"
+        },
+        {
+          "from": "customer",
+          "text": "Va bene Rafael"
+        },
+        {
+          "from": "agent",
+          "text": "Domani pomeriggio Rafael ha questi orari liberi: 14:00, 15:30 e 16:00. Quale ti va meglio?"
+        },
+        {
+          "from": "customer",
+          "text": "Alle 16, perfetto"
+        },
+        {
+          "from": "agent",
+          "text": "Perfetto! Per confermare, mi mandi nome completo ed email?"
+        },
+        {
+          "from": "customer",
+          "text": "Lucas Andrade, lucas.andrade@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "Fatto, Lucas! Taglio e barba con Rafael, domani alle 16:00. Riceverai la conferma e un promemoria via email prima dell'appuntamento."
+        }
+      ],
+      "featuresHeading": "Pensata per la giornata del barbiere",
+      "featuresIntro": "Ana lavora con quello che imposti tu: i tuoi servizi, i tuoi barbieri e i tuoi orari. Niente prezzi inventati, niente orari promessi che non esistono.",
+      "features": [
+        {
+          "title": "Ogni barbiere con la sua agenda",
+          "body": "Aggiungi Mateus, Rafael e chiunque altro tagli. Il cliente sceglie con chi vuole tagliarsi, e Ana mostra solo gli orari di quel barbiere. Senza preferenze, prenota con chi è libero, distribuendo il lavoro della giornata."
+        },
+        {
+          "title": "Taglio, barba e combo con i tempi giusti",
+          "body": "Ogni servizio ha la sua durata, e puoi aggiungere una pausa tra un cliente e l'altro. Un combo taglio e barba occupa il suo tempo reale in agenda, senza sovrapporsi al cliente successivo."
+        },
+        {
+          "title": "Mai due clienti nello stesso orario",
+          "body": "Ana tiene conto degli orari di apertura, dei giorni liberi e di quello che è già prenotato, anche nel Google Calendar di ogni barbiere. Un orario occupato non viene più offerto."
+        },
+        {
+          "title": "Sposta e cancella senza che tu intervenga",
+          "body": "Se il cliente deve cambiare orario, Ana risolve direttamente in chat. Tu decidi il preavviso minimo per prenotare e fino a quando si può disdire, e lei rispetta entrambe le regole."
+        },
+        {
+          "title": "Conferma e promemoria via email",
+          "body": "Ogni prenotazione confermata invia un'email al cliente, e un'altra arriva prima dell'appuntamento perché non se ne dimentichi."
+        },
+        {
+          "title": "Su WhatsApp, Instagram e sul tuo sito",
+          "body": "La stessa Ana risponde sul WhatsApp ufficiale del negozio, nei direct di Instagram, su Telegram e nella chat del tuo sito. Collegandoti con il tuo account Meta, continui a usare WhatsApp Business sul telefono."
+        }
+      ],
+      "spotlightHeading": "E se il cliente vuole parlare con te?",
+      "spotlightBody": "Se il cliente chiede del titolare, o chiede qualcosa che non hai inserito, Ana non inventa: avvisa che chiamerà qualcuno e, se lo permetti, passa la chat al tuo team con tutta la cronologia. Dal pannello puoi prendere in mano qualsiasi conversazione quando vuoi.",
+      "stepsHeading": "Inizia in meno di 30 minuti",
+      "steps": [
+        {
+          "title": "Inserisci i servizi",
+          "body": "Taglio, barba, combo e rifinitura: il pannello suggerisce già i servizi più comuni da barbiere con le durate, e tu sistemi solo nomi, tempi e prezzi."
+        },
+        {
+          "title": "Aggiungi barbieri e orari",
+          "body": "Indica chi lavora, in quali giorni e orari, e collega Google Calendar se lo usate già."
+        },
+        {
+          "title": "Collega WhatsApp",
+          "body": "Usa il numero che il negozio ha già o un numero nuovo. Da lì in poi, Ana inizia a rispondere."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Ana può prenotare con un barbiere specifico?",
+          "a": "Sì. Ogni barbiere ha la sua agenda. Quando il cliente chiede qualcuno per nome, Ana mostra solo gli orari di quel barbiere. Senza preferenze, prenota con chi è libero, distribuendo il lavoro della giornata."
+        },
+        {
+          "q": "E il cliente che vuole un posto tra poco?",
+          "a": "Ana offre solo orari davvero liberi. Tu decidi il preavviso minimo per una prenotazione: se è di 1 ora, per esempio, non prenota nulla nei prossimi 60 minuti, così non vieni preso alla sprovvista."
+        },
+        {
+          "q": "Posso approvare ogni orario prima della conferma?",
+          "a": "Sì. Con l'approvazione attiva, la richiesta del cliente resta in sospeso finché non la approvi o la rifiuti dal pannello, e il cliente riceve la risposta via email."
+        },
+        {
+          "q": "Risponde su prezzi e metodi di pagamento?",
+          "a": "Sì, in base a quello che inserisci: il prezzo di ogni servizio e le informazioni dell'attività, come metodi di pagamento e indirizzo. Se la domanda riguarda qualcosa che non hai inserito, non inventa la risposta."
+        },
+        {
+          "q": "Devo cambiare il numero WhatsApp del negozio?",
+          "a": "No. Il collegamento passa dall'integrazione ufficiale di Meta, e puoi usare il numero che hai già su WhatsApp Business o un numero nuovo. Collegandoti con il tuo account Meta, continui a usare l'app sul telefono."
+        }
+      ],
+      "finalHeading": "Il tuo negozio che prenota anche a mezzanotte",
+      "finalSub": "Lascia WhatsApp ad Ana e torna a concentrarti su chi è in poltrona."
+    },
+    "dental": {
+      "navLabel": "Studi dentistici",
+      "seoTitle": "Segretaria virtuale con IA per studi dentistici",
+      "seoDescription": "Ana risponde ai pazienti su WhatsApp 24 ore su 24, spiega come funziona la prima visita e prenota con il dentista giusto, solo negli orari liberi. Prova gratis per 7 giorni.",
+      "eyebrow": "Per studi dentistici",
+      "h1": "Segretaria virtuale su WhatsApp per studi dentistici",
+      "sub": "Ana risponde ai pazienti su WhatsApp a qualsiasi ora, spiega come funziona la prima visita e prenota con il dentista giusto, solo negli orari liberi. La reception resta libera per chi è in studio.",
+      "videoName": "Ana prenota una visita dentistica su WhatsApp",
+      "videoDescription": "Una demo di 33 secondi: alle 21, un paziente chiede una visita, domanda il prezzo, sceglie il giorno e ottiene l'appuntamento con il dentista.",
+      "painHeading": "La reception non riesce a fare tutto insieme",
+      "painIntro": "Il telefono che squilla, un paziente al bancone e WhatsApp che si riempie di messaggi. Chi resta senza risposta raramente aspetta.",
+      "pains": [
+        {
+          "title": "Il nuovo paziente non aspetta la risposta",
+          "body": "Chi cerca una prima visita di solito scrive a più di uno studio. Quello che risponde per primo, con un orario disponibile, di solito si tiene il paziente."
+        },
+        {
+          "title": "I messaggi arrivano dopo la chiusura",
+          "body": "Molti pazienti hanno tempo di cercare un dentista solo la sera o nel fine settimana. Senza nessuno che risponda, la richiesta aspetta fino al giorno dopo, e il paziente perde interesse."
+        },
+        {
+          "title": "Le domande ripetute tengono occupata la reception",
+          "body": "\"La visita è a pagamento?\", \"Accettate la mia assicurazione?\", \"Qual è l'indirizzo?\". Rispondere alle stesse domande tutto il giorno toglie tempo ai pazienti in studio."
+        }
+      ],
+      "chatHeading": "Com'è una chat con Ana",
+      "chatIntro": "Un paziente scrive alle 21, a reception chiusa. Ana risponde e fissa subito la visita:",
+      "chatBusiness": "Clínica Sorriso Leve",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Buonasera, vorrei prenotare una visita"
+        },
+        {
+          "from": "agent",
+          "text": "Buonasera! Certo, ti aiuto volentieri. Hai un giorno preferito?"
+        },
+        {
+          "from": "customer",
+          "text": "Prima, la visita è a pagamento?"
+        },
+        {
+          "from": "agent",
+          "text": "Sì: la visita costa R$ 100, e l'importo viene scalato se fai il trattamento qui allo studio."
+        },
+        {
+          "from": "customer",
+          "text": "Ottimo! Hai giovedì mattina?"
+        },
+        {
+          "from": "agent",
+          "text": "Giovedì mattina il Dr. Jorge ha questi orari: 08:00, 09:00 e 10:30. Quale preferisci?"
+        },
+        {
+          "from": "customer",
+          "text": "Alle 9. Roberto Lima, roberto.lima@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "Fatto, Roberto! Visita con il Dr. Jorge, giovedì alle 09:00. Riceverai la conferma e un promemoria via email."
+        }
+      ],
+      "featuresHeading": "Pensata per la routine dello studio",
+      "featuresIntro": "Ana lavora con quello che lo studio inserisce: prestazioni, dentisti, orari e informazioni dello studio. Non inventa prezzi e non promette orari che non esistono.",
+      "features": [
+        {
+          "title": "Un'agenda separata per ogni dentista",
+          "body": "Ogni dentista ha i suoi giorni e orari. Il paziente può chiedere un professionista per nome, e Ana mostra solo la sua agenda. Senza preferenze, prenota con chi è libero."
+        },
+        {
+          "title": "La durata giusta per ogni prestazione",
+          "body": "Visita, igiene, otturazione: ogni prestazione ha la sua durata, e puoi aggiungere una pausa per preparare la sala tra un paziente e l'altro."
+        },
+        {
+          "title": "I dati che servono allo studio, prima di prenotare",
+          "body": "Nome, email e telefono e, se vuoi, codice fiscale brasiliano (CPF), data di nascita e domande tue, come \"Qual è la tua assicurazione?\" o \"È la tua prima visita?\". Ana chiede tutto in chat e lo salva nella prenotazione."
+        },
+        {
+          "title": "Approvazione della reception, se lo studio preferisce",
+          "body": "Con l'approvazione attiva, la richiesta del paziente resta in sospeso finché la reception non la conferma dal pannello. Il paziente riceve la conferma o il rifiuto via email."
+        },
+        {
+          "title": "Spostamenti e disdette con regole",
+          "body": "Il paziente sposta o disdice in chat, entro il termine stabilito dallo studio. Superato il termine, Ana non disdice tramite chat."
+        },
+        {
+          "title": "Conferma e promemoria via email",
+          "body": "Ogni appuntamento confermato invia un'email al paziente, e un promemoria arriva prima dell'orario per aiutare a evitare le assenze."
+        }
+      ],
+      "spotlightHeading": "Dolore, urgenza o una domanda clinica? La chat passa al team",
+      "spotlightBody": "Ana risponde solo in base a quello che lo studio ha inserito. Quando il paziente parla di dolore o urgenza, o chiede qualcosa che solo un dentista può valutare, non improvvisa: avvisa che chiamerà il team e, se lo permetti, passa la chat con tutta la cronologia a qualcuno dello studio. Dal pannello, la reception può prendere in mano qualsiasi conversazione quando vuole.",
+      "stepsHeading": "Inizia in meno di 30 minuti",
+      "steps": [
+        {
+          "title": "Inserisci le prestazioni",
+          "body": "Visita, igiene, sbiancamento: indica il nome, la durata e, se vuoi, il prezzo di ogni prestazione."
+        },
+        {
+          "title": "Aggiungi dentisti e orari",
+          "body": "Imposta i giorni e gli orari di ogni dentista e le chiusure dello studio, e collega Google Calendar se il team lo usa già."
+        },
+        {
+          "title": "Collega il WhatsApp dello studio",
+          "body": "Usa il numero che lo studio ha già o un numero nuovo. Da lì in poi, Ana inizia a rispondere."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Ana sa dire quali assicurazioni accettate?",
+          "a": "Sì, se lo studio inserisce questa informazione. Risponde in base ai dati dell'attività, come assicurazioni accettate, prezzo della visita e metodi di pagamento. Puoi anche aggiungere la domanda \"Qual è la tua assicurazione?\" ai dati richiesti prima di prenotare."
+        },
+        {
+          "q": "Prenota le prestazioni più lunghe senza scombinare l'agenda?",
+          "a": "Sì. Ogni prestazione ha la sua durata, più una pausa facoltativa tra i pazienti. Ana offre solo orari in cui la prestazione ci sta tutta e non prenota mai due pazienti nello stesso orario con lo stesso dentista."
+        },
+        {
+          "q": "E se il paziente vuole parlare con una persona?",
+          "a": "Ana avvisa che chiamerà il team e, se lo permetti, passa la chat alla reception con tutta la cronologia. Dal pannello, chiunque del team può prendere in mano la conversazione quando vuole."
+        },
+        {
+          "q": "Che fine fanno i dati dei pazienti?",
+          "a": "Ana chiede solo i dati che lo studio configura, e restano nel pannello dello studio insieme all'appuntamento. Staffra tratta queste informazioni nel rispetto della LGPD, la legge brasiliana sulla protezione dei dati, come descritto nella nostra informativa sulla privacy."
+        },
+        {
+          "q": "Possiamo usare il numero che lo studio ha già?",
+          "a": "Sì. Il collegamento passa dall'integrazione ufficiale di Meta, con il numero che lo studio usa già su WhatsApp Business o con un numero nuovo. Collegandoti con il tuo account Meta, la reception continua a usare l'app sul telefono."
+        }
+      ],
+      "finalHeading": "Il tuo studio che prenota visite anche fuori orario",
+      "finalSub": "Lascia rispondere Ana su WhatsApp e libera la reception per i pazienti in studio."
+    }
+  },
   "Dashboard": {
     "logout": "Esci",
     "workspaceLabel": "Area di lavoro",

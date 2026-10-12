@@ -822,6 +822,292 @@
       "greeting": "Hi! 👋 I'm Malu. Want to see how I'd help your customers?"
     }
   },
+  "Verticals": {
+    "common": {
+      "footerTitle": "For your business",
+      "breadcrumbHome": "Home",
+      "ctaTrial": "Try free for 7 days",
+      "ctaVideo": "Watch Ana book",
+      "trustOfficial": "Official WhatsApp by Meta",
+      "trustPrice": "From {price} a day",
+      "trustCancel": "Cancel anytime",
+      "videoCaption": "Demo video (in Portuguese)",
+      "videoUnsupported": "Your browser can't play this video.",
+      "chatSample": "Sample chat",
+      "chatOnline": "Online now",
+      "stepLabel": "Step {n}",
+      "pricingHeading": "Pricing",
+      "pricingBody": "Plans start at {price} a month, with both Ana and Malu included. The first 7 days are free: you're only charged after 7 days or 500 replies, whichever comes first. There's no setup fee, and you can cancel from your dashboard anytime.",
+      "pricingCta": "See plans and pricing",
+      "faqHeading": "Frequently asked questions",
+      "othersHeading": "Ana also works for",
+      "finalFine": "Cancel anytime · No setup fee"
+    },
+    "barber": {
+      "navLabel": "Barbershops",
+      "seoTitle": "AI virtual receptionist for barbershops on WhatsApp",
+      "seoDescription": "Ana answers your barbershop's WhatsApp 24/7, lets clients pick their barber and books only open slots. Try it free for 7 days.",
+      "eyebrow": "For barbershops",
+      "h1": "WhatsApp virtual receptionist for barbershops",
+      "sub": "While you've got the clippers in hand, Ana answers WhatsApp, asks which barber the client wants and books a slot that's actually free. Day, night and Sunday.",
+      "videoName": "Ana booking a haircut and beard trim at a barbershop on WhatsApp",
+      "videoDescription": "A 37-second demo: at 11pm, a client asks for a haircut and beard trim, picks a barber, gets the open slots and ends up with a confirmed booking.",
+      "painHeading": "Your barbershop's WhatsApp never stops while you cut",
+      "painIntro": "Every barbershop knows the scene: a full chair, messages piling up, and the client who gives up because nobody answered in time.",
+      "pains": [
+        {
+          "title": "An unanswered message is an empty chair",
+          "body": "Whoever messages on WhatsApp almost always wants a slot today or tomorrow. If the reply takes too long, they book down the street, and the slot that could have been yours stays empty."
+        },
+        {
+          "title": "The back-and-forth eats your day",
+          "body": "\"Is 3pm free?\", \"What about with Rafael?\", \"Can it be later?\". Every booking turns into five messages, usually answered between cuts with your hands full."
+        },
+        {
+          "title": "Clients think of booking when you're closed",
+          "body": "Plenty of people decide to get a haircut at night or on Sunday. With nobody to reply, the request waits until the next morning, and by then they've gone somewhere else."
+        }
+      ],
+      "chatHeading": "What a chat with Ana looks like",
+      "chatIntro": "A client messages at 11pm, with the shop closed. Ana handles it all on her own:",
+      "chatBusiness": "Barbearia Navalha",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Hey! Any time for a haircut and beard tomorrow afternoon?"
+        },
+        {
+          "from": "agent",
+          "text": "Sure! Would you like Mateus or Rafael?"
+        },
+        {
+          "from": "customer",
+          "text": "Rafael works"
+        },
+        {
+          "from": "agent",
+          "text": "Tomorrow afternoon Rafael has these open slots: 2:00pm, 3:30pm and 4:00pm. Which one suits you?"
+        },
+        {
+          "from": "customer",
+          "text": "4pm, done"
+        },
+        {
+          "from": "agent",
+          "text": "Perfect! To confirm, can you send me your full name and email?"
+        },
+        {
+          "from": "customer",
+          "text": "Lucas Andrade, lucas.andrade@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "All set, Lucas! Haircut and beard with Rafael, tomorrow at 4:00pm. You'll get a confirmation and a reminder by email before your appointment."
+        }
+      ],
+      "featuresHeading": "Built for barbershop life",
+      "featuresIntro": "Ana works with what you set up: your services, your barbers and your hours. No made-up prices, no promising a slot that doesn't exist.",
+      "features": [
+        {
+          "title": "Every barber has their own schedule",
+          "body": "Add Mateus, Rafael and whoever else cuts. The client picks who they want, and Ana shows only that barber's slots. With no preference, she books whoever is free, balancing the day."
+        },
+        {
+          "title": "Haircut, beard and combos with the right timing",
+          "body": "Each service has its own length, and you can add a gap between clients. A haircut-and-beard combo takes up its real time on the schedule, without running into the next client."
+        },
+        {
+          "title": "Never books two clients at once",
+          "body": "Ana checks your opening hours, days off and existing bookings, including each barber's Google Calendar. A taken slot is never offered again."
+        },
+        {
+          "title": "Reschedules and cancels without you stepping in",
+          "body": "If a client needs to change the time, Ana sorts it out in the chat. You set the minimum notice for booking and the cancellation deadline, and she sticks to both."
+        },
+        {
+          "title": "Email confirmation and reminder",
+          "body": "Every confirmed booking sends the client an email, and another one arrives before the appointment so they don't forget."
+        },
+        {
+          "title": "On WhatsApp, Instagram and your website",
+          "body": "The same Ana answers on your shop's official WhatsApp, Instagram DMs, Telegram and your website chat. Connecting through your own Meta account, you keep using WhatsApp Business on your phone."
+        }
+      ],
+      "spotlightHeading": "What if the client wants to talk to you?",
+      "spotlightBody": "If a client asks for the owner, or asks about something you haven't set up, Ana doesn't make things up: she says she'll get someone and, if you allow it, hands the chat to your team with the full history. From the dashboard, you can take over any conversation whenever you like.",
+      "stepsHeading": "Get started in under 30 minutes",
+      "steps": [
+        {
+          "title": "Add your services",
+          "body": "Haircut, beard, combo and line-up: the dashboard suggests the most common barbershop services with their lengths, and you just adjust names, times and prices."
+        },
+        {
+          "title": "Add your barbers and hours",
+          "body": "Say who cuts on which days and hours, and connect Google Calendar if you already use it."
+        },
+        {
+          "title": "Connect WhatsApp",
+          "body": "Use the number your shop already has or a new one. From then on, Ana starts answering."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Can Ana book with a specific barber?",
+          "a": "Yes. Every barber has their own schedule. When a client asks for someone by name, Ana shows only that barber's slots. With no preference, she books whoever is free, balancing the day."
+        },
+        {
+          "q": "What about a client who wants a slot right now?",
+          "a": "Ana only offers slots that are genuinely free. You set the minimum notice for a booking: at 1 hour, for example, she won't book anything in the next 60 minutes, so you're never caught off guard."
+        },
+        {
+          "q": "Can I approve each booking before it's confirmed?",
+          "a": "Yes. With approval on, the client's request stays pending until you approve or decline it in the dashboard, and the client gets the answer by email."
+        },
+        {
+          "q": "Does she answer questions about prices and payment?",
+          "a": "She does, based on what you set up: each service's price and your business details, like payment methods and address. If the question is about something you haven't added, she won't make up an answer."
+        },
+        {
+          "q": "Do I need to change my shop's WhatsApp number?",
+          "a": "No. The connection goes through Meta's official integration, and you can use the number you already have on WhatsApp Business or a new one. Connecting through your own Meta account, you keep using the app on your phone."
+        }
+      ],
+      "finalHeading": "Your barbershop taking bookings past midnight",
+      "finalSub": "Let Ana handle WhatsApp and put your attention back on whoever's in the chair."
+    },
+    "dental": {
+      "navLabel": "Dental clinics",
+      "seoTitle": "AI virtual receptionist for dental clinics on WhatsApp",
+      "seoDescription": "Ana answers patients on WhatsApp 24/7, explains how the first appointment works and books with the right dentist, only in open slots. Try it free for 7 days.",
+      "eyebrow": "For dental clinics",
+      "h1": "WhatsApp virtual receptionist for dental clinics",
+      "sub": "Ana answers patients on WhatsApp at any hour, explains how the first appointment works and books them with the right dentist, only in slots that are free. Your front desk stays free for the patients in the clinic.",
+      "videoName": "Ana booking a dental check-up on WhatsApp",
+      "videoDescription": "A 33-second demo: at 9pm, a patient asks for a check-up, asks about the price, picks a day and ends up booked with the dentist.",
+      "painHeading": "The front desk can't do everything at once",
+      "painIntro": "The phone ringing, a patient at the counter and WhatsApp piling up. Whoever goes unanswered rarely waits.",
+      "pains": [
+        {
+          "title": "New patients don't wait for a reply",
+          "body": "People looking for a check-up usually message more than one clinic. The one that answers first, with an open slot, usually gets the patient."
+        },
+        {
+          "title": "Messages arrive after the clinic closes",
+          "body": "Many patients only have time to look for a dentist at night or on weekends. With nobody to reply, the request waits until the next day, and the patient cools off."
+        },
+        {
+          "title": "Repeat questions tie up the front desk",
+          "body": "\"Is the check-up paid?\", \"Do you take my insurance?\", \"What's the address?\". Answering the same questions all day takes time away from the patients in the clinic."
+        }
+      ],
+      "chatHeading": "What a chat with Ana looks like",
+      "chatIntro": "A patient messages at 9pm, with the front desk closed. Ana answers and books the check-up:",
+      "chatBusiness": "Clínica Sorriso Leve",
+      "chat": [
+        {
+          "from": "customer",
+          "text": "Good evening, I'd like to book a check-up"
+        },
+        {
+          "from": "agent",
+          "text": "Good evening! Of course, happy to help. Do you have a preferred day?"
+        },
+        {
+          "from": "customer",
+          "text": "First, is the check-up paid?"
+        },
+        {
+          "from": "agent",
+          "text": "It is: the check-up costs R$ 100, and it's deducted if you go ahead with treatment here at the clinic."
+        },
+        {
+          "from": "customer",
+          "text": "Great! Anything Thursday morning?"
+        },
+        {
+          "from": "agent",
+          "text": "On Thursday morning Dr. Jorge has these slots: 8:00am, 9:00am and 10:30am. Which works best?"
+        },
+        {
+          "from": "customer",
+          "text": "9am. Roberto Lima, roberto.lima@email.com"
+        },
+        {
+          "from": "agent",
+          "text": "All set, Roberto! Check-up with Dr. Jorge, Thursday at 9:00am. You'll get a confirmation and a reminder by email."
+        }
+      ],
+      "featuresHeading": "Built for a clinic's routine",
+      "featuresIntro": "Ana works with what the clinic sets up: procedures, dentists, hours and practice details. She doesn't make up prices or promise a slot that doesn't exist.",
+      "features": [
+        {
+          "title": "A separate schedule for each dentist",
+          "body": "Each dentist has their own days and hours. A patient can ask for someone by name, and Ana shows only their schedule. With no preference, she books whoever is free."
+        },
+        {
+          "title": "The right length for every procedure",
+          "body": "Check-up, cleaning, filling: each procedure has its own length, and you can add a gap to prepare the room between patients."
+        },
+        {
+          "title": "The details the clinic needs, before booking",
+          "body": "Name, email and phone and, if you want, Brazilian tax ID (CPF), date of birth and your own questions, like \"What's your insurance plan?\" or \"Is this your first visit?\". Ana asks for all of it in the chat and saves it with the booking."
+        },
+        {
+          "title": "Front-desk approval, if the clinic prefers",
+          "body": "With approval on, the patient's request stays pending until the front desk confirms it in the dashboard. The patient gets the confirmation or the decline by email."
+        },
+        {
+          "title": "Rescheduling and cancelling, with rules",
+          "body": "Patients reschedule or cancel in the chat, within the deadline the clinic sets. Once it has passed, Ana won't cancel through the chat."
+        },
+        {
+          "title": "Email confirmation and reminder",
+          "body": "Every confirmed appointment sends the patient an email, and a reminder arrives beforehand to help prevent no-shows."
+        }
+      ],
+      "spotlightHeading": "Pain, urgency or a clinical question? The chat goes to your team",
+      "spotlightBody": "Ana only answers from what the clinic has set up. When a patient mentions pain or urgency, or asks something only a dentist can assess, she doesn't improvise: she says she'll get the team and, if you allow it, hands the chat with its full history to someone at the clinic. From the dashboard, the front desk can take over any conversation whenever they like.",
+      "stepsHeading": "Get started in under 30 minutes",
+      "steps": [
+        {
+          "title": "Add your procedures",
+          "body": "Check-up, cleaning, whitening: enter the name, the length and, if you like, the price of each procedure."
+        },
+        {
+          "title": "Add your dentists and hours",
+          "body": "Set each dentist's days and hours and the clinic's days off, and connect Google Calendar if the team already uses it."
+        },
+        {
+          "title": "Connect the clinic's WhatsApp",
+          "body": "Use the number the clinic already has or a new one. From then on, Ana starts answering."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Can Ana tell patients which insurance plans you take?",
+          "a": "Yes, if the clinic adds that information. She answers from your business details, like accepted insurance plans, the check-up price and payment methods. You can also add \"What's your insurance plan?\" to the details collected before booking."
+        },
+        {
+          "q": "Can she book longer procedures without messing up the schedule?",
+          "a": "Yes. Each procedure has its own length, plus an optional gap between patients. Ana only offers slots where the whole procedure fits, and never books two patients at the same time with the same dentist."
+        },
+        {
+          "q": "What if the patient wants to talk to a person?",
+          "a": "Ana says she'll get the team and, if you allow it, hands the chat to the front desk with the full history. From the dashboard, anyone on the team can take over the conversation whenever they like."
+        },
+        {
+          "q": "What happens to patient data?",
+          "a": "Ana only asks for the details the clinic configures, and they're stored in the clinic's dashboard alongside the appointment. Staffra handles this information in line with the LGPD, Brazil's data protection law, as described in our privacy policy."
+        },
+        {
+          "q": "Can we use the number the clinic already has?",
+          "a": "Yes. The connection goes through Meta's official integration, with the number the clinic already uses on WhatsApp Business or a new one. Connecting through your own Meta account, the front desk keeps using the app on their phone."
+        }
+      ],
+      "finalHeading": "Your clinic booking check-ups even after hours",
+      "finalSub": "Let Ana answer WhatsApp and free your front desk to look after the patients in the clinic."
+    }
+  },
   "Dashboard": {
     "logout": "Log out",
     "workspaceLabel": "Workspace",
