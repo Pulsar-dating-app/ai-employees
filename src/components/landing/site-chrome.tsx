@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/locales";
 import { localizeHref, localizedPath } from "@/i18n/routing";
 import { VERTICALS, verticalPath } from "@/lib/verticals/catalog";
-import { COMPANY } from "@/lib/seo/site";
+import { COMPANY, SOCIAL_LINKS } from "@/lib/seo/site";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ScrollHeader } from "./scroll-header";
 import { CascadeText } from "./cascade-text";
@@ -88,6 +88,11 @@ export async function SiteFooter({ locale, onLanding = true }: { locale: Locale;
     title: tv("common.footerTitle"),
     links: VERTICALS.map((v) => ({ label: tv(`${v.key}.navLabel`), href: verticalPath(v) })),
   };
+  const socialLinks = [
+    { icon: "linkedin", href: SOCIAL_LINKS.linkedin, label: brand("social.linkedin"), external: true },
+    { icon: "instagram", href: SOCIAL_LINKS.instagram, label: brand("social.instagram"), external: true },
+    { icon: "mail", href: `mailto:${COMPANY.email}`, label: brand("social.email"), external: false },
+  ];
 
   return (
     <footer className="w-full bg-white pb-12 pt-12 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -97,13 +102,17 @@ export async function SiteFooter({ locale, onLanding = true }: { locale: Locale;
             <Image src={logo} alt="Staffra" sizes="88px" className="h-8 w-auto self-start object-contain" />
             <p className="max-w-sm text-[15px] leading-[24px] text-[#464555]">{brand("definition")}</p>
             <div className="flex items-center gap-3 pt-2">
-              {["share", "public", "mail"].map((icon) => (
-                <span
+              {socialLinks.map(({ icon, href, label, external }) => (
+                <a
                   key={icon}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5f2ff] text-[#464555]"
+                  href={href}
+                  aria-label={label}
+                  title={label}
+                  {...(external ? { target: "_blank", rel: "me noopener" } : {})}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5f2ff] text-[#464555] transition-colors hover:bg-[#e2dfff] hover:text-[#3525cd]"
                 >
                   <M name={icon} size={20} />
-                </span>
+                </a>
               ))}
             </div>
           </div>

@@ -71,6 +71,25 @@ const ICONS: Record<string, Draw> = {
       </>
     ),
   },
+  linkedin: {
+    ...S,
+    body: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="3" />
+        <path d="M8 11v6M8 7.5v.01M12 17v-6m0 2.5a2.5 2.5 0 0 1 5 0V17" />
+      </>
+    ),
+  },
+  instagram: {
+    ...S,
+    body: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <path d="M17.5 6.5v.01" />
+      </>
+    ),
+  },
   mail: {
     ...S,
     body: (
@@ -126,17 +145,6 @@ const ICONS: Record<string, Draw> = {
     ),
   },
   send: { ...S, body: <path d="M4 4 20 12 4 20l3-8z M7 12h13" /> },
-  share: {
-    ...S,
-    body: (
-      <>
-        <circle cx="6" cy="12" r="2.5" />
-        <circle cx="18" cy="6" r="2.5" />
-        <circle cx="18" cy="18" r="2.5" />
-        <path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6" />
-      </>
-    ),
-  },
   shopping_bag: {
     ...S,
     body: (
