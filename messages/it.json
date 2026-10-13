@@ -1668,6 +1668,11 @@
     "definition": "Staffra è una piattaforma brasiliana di receptionist virtuali per WhatsApp, Instagram e siti web. Ana prenota appuntamenti per attività di servizi come barbieri, saloni, studi dentistici e studi di pilates, e Malu risponde e vende per i negozi online, 24 ore su 24, usando solo le informazioni inserite dall'attività.",
     "schemaDescription": "Staffra è una piattaforma brasiliana di receptionist virtuali con IA per WhatsApp, Instagram e siti web: Ana prenota appuntamenti per attività di servizi (barbieri, saloni, studi dentistici, nutrizionisti, studi di pilates) e Malu risponde e vende per i negozi online, 24 ore su 24, usando solo le informazioni inserite dall'attività.",
     "legalLine": "{legalName} · CNPJ {taxId}",
+    "social": {
+      "linkedin": "Staffra su LinkedIn",
+      "instagram": "Staffra su Instagram",
+      "email": "Scrivi un'email a Staffra"
+    },
     "llms": {
       "mainPages": "Pagine principali",
       "byTrade": "Per tipo di attività",

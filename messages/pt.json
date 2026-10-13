@@ -1668,6 +1668,11 @@
     "definition": "A Staffra é uma plataforma brasileira de atendentes virtuais para WhatsApp, Instagram e site. A Ana agenda horários para negócios de serviço, como barbearias, salões, clínicas e estúdios, e a Malu atende e vende para lojas, 24 horas por dia, usando só as informações que o negócio cadastra.",
     "schemaDescription": "A Staffra é uma plataforma brasileira de atendentes virtuais com IA para WhatsApp, Instagram e sites: a Ana agenda horários para negócios de serviço (barbearias, salões, clínicas odontológicas, nutricionistas, estúdios de pilates) e a Malu atende e vende para lojas, 24 horas por dia, usando só as informações que o negócio cadastra.",
     "legalLine": "{legalName} · CNPJ {taxId}",
+    "social": {
+      "linkedin": "Staffra no LinkedIn",
+      "instagram": "Staffra no Instagram",
+      "email": "Enviar um e-mail para a Staffra"
+    },
     "llms": {
       "mainPages": "Páginas principais",
       "byTrade": "Por tipo de negócio",
