@@ -191,9 +191,6 @@ export async function AboutPage() {
               </div>
             ))}
           </dl>
-          <p className="mt-6 max-w-[720px] rounded-2xl border border-[#d9d4ff] bg-[#f5f2ff] p-5 text-[15px] leading-[25px] text-[#464555]">
-            {t("nameNote")}
-          </p>
         </section>
 
         {/* CTA */}
