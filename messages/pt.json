@@ -2,7 +2,7 @@
   "Seo": {
     "siteName": "Staffra",
     "defaultTitle": "Staffra — Contrate funcionários de IA que vendem, atendem e agendam 24/7",
-    "description": "A Malu vende e a Ana agenda pelo WhatsApp, Instagram e pelo seu site, 24 horas por dia, com os seus preços, estoque e horários. Pronto em minutos, sem programar.",
+    "description": "A Malu vende e a Ana agenda pelo WhatsApp, Instagram e seu site, 24 horas por dia, com seus preços, estoque e horários reais. Pronto em minutos, sem programar.",
     "ogHeadline": "Contrate funcionários de IA que vendem, atendem e agendam 24/7",
     "ogSubtitle": "Pelo WhatsApp, Instagram e pelo seu site, com os seus preços e horários. Pronto em minutos, sem programar.",
     "ogAlt": "Staffra — funcionários de IA que vendem, atendem e agendam pelo WhatsApp, Instagram e pelo seu site"
@@ -991,7 +991,7 @@
     "salon": {
       "navLabel": "Salões de beleza",
       "seoTitle": "Atendente virtual com IA para salões de beleza no WhatsApp",
-      "seoDescription": "A Ana responde o WhatsApp do seu salão 24 horas, informa preços, deixa a cliente escolher a profissional e agenda só nos horários livres. Teste grátis por 7 dias.",
+      "seoDescription": "A Ana responde o WhatsApp do seu salão 24h, informa preços, deixa a cliente escolher a profissional e agenda só nos horários livres. Teste grátis por 7 dias.",
       "eyebrow": "Para salões de beleza",
       "h1": "Atendente virtual no WhatsApp para salões de beleza",
       "sub": "A Ana, atendente virtual da Staffra, responde quanto custa a coloração, pergunta com qual profissional a cliente quer ser atendida e marca no horário em que o serviço cabe inteiro na agenda. Antes mesmo de o salão abrir.",
@@ -1126,7 +1126,7 @@
     "nails": {
       "navLabel": "Manicures e nail designers",
       "seoTitle": "Atendente virtual com IA para manicures e nail designers",
-      "seoDescription": "A Ana responde o WhatsApp do seu ateliê de unhas 24 horas, passa preço e horários livres, e remarca na mesma conversa quando a cliente muda de ideia. Teste grátis por 7 dias.",
+      "seoDescription": "A Ana responde o WhatsApp do seu ateliê de unhas 24h, passa preços e horários livres e remarca na mesma conversa. Teste grátis por 7 dias.",
       "eyebrow": "Para manicures e nail designers",
       "h1": "Atendente virtual no WhatsApp para manicures e nail designers",
       "sub": "Enquanto você está no meio de um alongamento, a Ana, atendente virtual da Staffra, responde o WhatsApp, passa o preço, mostra os horários livres e marca. Se a cliente precisar mudar o dia, ela remarca na mesma conversa.",
@@ -1396,7 +1396,7 @@
     "nutri": {
       "navLabel": "Nutricionistas",
       "seoTitle": "Secretária virtual com IA para nutricionistas no WhatsApp",
-      "seoDescription": "A Ana responde os pacientes no WhatsApp 24 horas, explica como funciona a consulta, presencial ou online, e agenda só nos horários livres. Teste grátis por 7 dias.",
+      "seoDescription": "A Ana responde seus pacientes no WhatsApp 24h, explica a consulta presencial ou online e agenda só nos horários livres. Teste grátis por 7 dias.",
       "eyebrow": "Para nutricionistas",
       "h1": "Secretária virtual no WhatsApp para nutricionistas",
       "sub": "A Ana, secretária virtual da Staffra, explica como funciona a primeira consulta, informa se você atende online, passa o valor e marca no horário livre. Mesmo quando o paciente decide começar às 6h da manhã.",
@@ -1531,7 +1531,7 @@
     "pilates": {
       "navLabel": "Estúdios de pilates",
       "seoTitle": "Sistema de agendamento com IA para estúdios de pilates",
-      "seoDescription": "Sistema de agendamento pelo WhatsApp para estúdios de pilates: a Ana explica a aula experimental, informa valores e marca com o instrutor certo, 24 horas. Teste grátis por 7 dias.",
+      "seoDescription": "Agendamento pelo WhatsApp para estúdios de pilates: a Ana explica a aula experimental, informa valores e marca com o instrutor certo. Teste grátis por 7 dias.",
       "eyebrow": "Para estúdios de pilates",
       "h1": "Sistema de agendamento pelo WhatsApp para estúdios de pilates",
       "sub": "A Ana, atendente virtual da Staffra, explica como funciona a aula experimental, responde o valor e marca no horário livre, mesmo às 6h da manhã, quando a pessoa decide começar e o estúdio ainda nem abriu.",
@@ -1689,7 +1689,7 @@
   },
   "About": {
     "seoTitle": "Sobre a Staffra: atendentes virtuais com IA para WhatsApp",
-    "seoDescription": "Quem é a Staffra: plataforma brasileira de atendentes virtuais para WhatsApp, Instagram e site, operada pela {legalName} (CNPJ {taxId}). O que faz, para quem e como funciona.",
+    "seoDescription": "Quem é a Staffra: plataforma brasileira de atendentes virtuais para WhatsApp, Instagram e site, da {legalName}. O que faz, para quem e como funciona.",
     "breadcrumb": "Sobre",
     "eyebrow": "Sobre a Staffra",
     "h1": "Atendentes virtuais no WhatsApp para pequenos negócios brasileiros",
@@ -1789,7 +1789,7 @@
     "whatsappScheduling": {
       "title": "Agendamento automático pelo WhatsApp: como funciona e como escolher",
       "seoTitle": "Agendamento automático pelo WhatsApp: guia completo (2026)",
-      "seoDescription": "Como funciona o agendamento automático pelo WhatsApp, as 4 formas mais comuns (manual, link, menu e atendente virtual), vantagens, limitações, custos e o que avaliar antes de escolher.",
+      "seoDescription": "Como funciona o agendamento automático pelo WhatsApp: as 4 formas mais comuns, vantagens, limitações, custos e o que avaliar antes de escolher.",
       "eyebrow": "Guia",
       "breadcrumb": "Agendamento automático pelo WhatsApp",
       "updatedLabel": "Atualizado em {date}",

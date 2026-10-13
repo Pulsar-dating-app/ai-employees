@@ -2,7 +2,7 @@
   "Seo": {
     "siteName": "Staffra",
     "defaultTitle": "Staffra — Hire AI employees that sell, support and book 24/7",
-    "description": "Malu sells and Ana books appointments on WhatsApp, Instagram and your website, around the clock, with your real prices, stock and hours. Ready in minutes, no code.",
+    "description": "Malu sells and Ana books appointments on WhatsApp, Instagram and your website, 24/7, with your real prices, stock and hours. Ready in minutes, no code.",
     "ogHeadline": "Hire AI employees that sell, support and book 24/7",
     "ogSubtitle": "On WhatsApp, Instagram and your website, with your real prices and hours. Ready in minutes, no code.",
     "ogAlt": "Staffra — AI employees that sell, support and book on WhatsApp, Instagram and your site"
@@ -1126,7 +1126,7 @@
     "nails": {
       "navLabel": "Nail technicians",
       "seoTitle": "AI virtual receptionist for nail technicians on WhatsApp",
-      "seoDescription": "Ana answers your nail studio's WhatsApp 24/7, gives prices and open slots, and reschedules in the same chat when a client changes her mind. Try it free for 7 days.",
+      "seoDescription": "Ana answers your nail studio's WhatsApp 24/7, gives prices and open slots, and reschedules in the same chat. Try it free for 7 days.",
       "eyebrow": "For nail technicians",
       "h1": "WhatsApp virtual receptionist for nail technicians",
       "sub": "While you're in the middle of a gel extension, Ana, Staffra's virtual receptionist, answers WhatsApp, gives the price, shows the open slots and books. If the client needs to change the day, she reschedules in the same chat.",
@@ -1531,7 +1531,7 @@
     "pilates": {
       "navLabel": "Pilates studios",
       "seoTitle": "AI booking system for pilates studios on WhatsApp",
-      "seoDescription": "A WhatsApp booking system for pilates studios: Ana explains the trial class, gives prices and books with the right instructor, around the clock. Try it free for 7 days.",
+      "seoDescription": "WhatsApp booking for pilates studios: Ana explains the trial class, gives prices and books with the right instructor, 24/7. Try it free for 7 days.",
       "eyebrow": "For pilates studios",
       "h1": "WhatsApp booking system for pilates studios",
       "sub": "Ana, Staffra's virtual receptionist, explains how the trial class works, gives the price and books an open slot, even at 6am, when someone decides to start and the studio hasn't opened yet.",
@@ -1689,7 +1689,7 @@
   },
   "About": {
     "seoTitle": "About Staffra: AI virtual receptionists for WhatsApp",
-    "seoDescription": "Who Staffra is: a Brazilian platform of virtual receptionists for WhatsApp, Instagram and websites, operated by {legalName} (CNPJ {taxId}). What it does, who it's for and how it works.",
+    "seoDescription": "Who Staffra is: a Brazilian platform of virtual receptionists for WhatsApp, Instagram and websites, run by {legalName}. What it does and who it's for.",
     "breadcrumb": "About",
     "eyebrow": "About Staffra",
     "h1": "Virtual receptionists on WhatsApp for Brazilian small businesses",
@@ -1789,7 +1789,7 @@
     "whatsappScheduling": {
       "title": "Automatic booking on WhatsApp: how it works and how to choose",
       "seoTitle": "Automatic WhatsApp booking: the complete guide (2026)",
-      "seoDescription": "How automatic appointment booking on WhatsApp works, the 4 most common approaches (manual, link, menu and virtual receptionist), their strengths, limits and costs, and what to check before choosing.",
+      "seoDescription": "How automatic appointment booking on WhatsApp works: the 4 most common approaches, their strengths, limits and costs, and what to check before choosing.",
       "eyebrow": "Guide",
       "breadcrumb": "Automatic booking on WhatsApp",
       "updatedLabel": "Updated {date}",

@@ -2,7 +2,7 @@
   "Seo": {
     "siteName": "Staffra",
     "defaultTitle": "Staffra — Assumi dipendenti IA che vendono, assistono e prenotano 24/7",
-    "description": "Malu vende e Ana prenota appuntamenti su WhatsApp, Instagram e sul tuo sito, a qualsiasi ora, con i tuoi prezzi, le tue scorte e i tuoi orari reali. Pronta in pochi minuti, senza codice.",
+    "description": "Malu vende e Ana prenota su WhatsApp, Instagram e sul tuo sito, 24 ore su 24, con i tuoi prezzi, scorte e orari reali. Pronta in pochi minuti, senza codice.",
     "ogHeadline": "Assumi dipendenti IA che vendono, assistono e prenotano 24/7",
     "ogSubtitle": "Su WhatsApp, Instagram e sul tuo sito, con i tuoi prezzi e orari reali. Pronta in pochi minuti, senza codice.",
     "ogAlt": "Staffra — dipendenti IA che vendono, assistono e prenotano su WhatsApp, Instagram e sul tuo sito"
@@ -991,7 +991,7 @@
     "salon": {
       "navLabel": "Saloni di bellezza",
       "seoTitle": "Receptionist virtuale con IA per saloni di bellezza",
-      "seoDescription": "Ana risponde al WhatsApp del tuo salone 24 ore su 24, comunica i prezzi, lascia scegliere la professionista e prenota solo negli orari liberi. Prova gratis per 7 giorni.",
+      "seoDescription": "Ana risponde al WhatsApp del tuo salone 24 ore su 24, comunica i prezzi e prenota con la professionista scelta, solo negli orari liberi. Prova gratis 7 giorni.",
       "eyebrow": "Per saloni di bellezza",
       "h1": "Receptionist virtuale su WhatsApp per saloni di bellezza",
       "sub": "Ana, la receptionist virtuale di Staffra, risponde quanto costa il colore, chiede con quale professionista la cliente vuole essere servita e prenota in un orario in cui il servizio ci sta tutto. Anche prima che il salone apra.",
@@ -1126,7 +1126,7 @@
     "nails": {
       "navLabel": "Onicotecniche",
       "seoTitle": "Receptionist virtuale con IA per onicotecniche su WhatsApp",
-      "seoDescription": "Ana risponde al WhatsApp del tuo studio unghie 24 ore su 24, comunica prezzi e orari liberi e sposta l'appuntamento nella stessa chat quando la cliente cambia idea. Prova gratis per 7 giorni.",
+      "seoDescription": "Ana risponde al WhatsApp del tuo studio unghie 24 ore su 24, comunica prezzi e orari liberi e sposta l'appuntamento in chat. Prova gratis per 7 giorni.",
       "eyebrow": "Per onicotecniche",
       "h1": "Receptionist virtuale su WhatsApp per onicotecniche",
       "sub": "Mentre sei a metà di una ricostruzione, Ana, la receptionist virtuale di Staffra, risponde su WhatsApp, comunica il prezzo, mostra gli orari liberi e prenota. Se la cliente deve cambiare giorno, sposta l'appuntamento nella stessa chat.",
@@ -1261,7 +1261,7 @@
     "dental": {
       "navLabel": "Studi dentistici",
       "seoTitle": "Segretaria virtuale con IA per studi dentistici",
-      "seoDescription": "Ana risponde ai pazienti su WhatsApp 24 ore su 24, spiega come funziona la prima visita e prenota con il dentista giusto, solo negli orari liberi. Prova gratis per 7 giorni.",
+      "seoDescription": "Ana risponde ai pazienti su WhatsApp 24 ore su 24, spiega la prima visita e prenota con il dentista giusto negli orari liberi. Prova gratis per 7 giorni.",
       "eyebrow": "Per studi dentistici",
       "h1": "Segretaria virtuale su WhatsApp per studi dentistici",
       "sub": "Ana, la segretaria virtuale di Staffra, risponde ai pazienti su WhatsApp a qualsiasi ora, spiega come funziona la prima visita e prenota con il dentista giusto, solo negli orari liberi. La reception resta libera per chi è in studio.",
@@ -1396,7 +1396,7 @@
     "nutri": {
       "navLabel": "Nutrizionisti",
       "seoTitle": "Segretaria virtuale con IA per nutrizionisti su WhatsApp",
-      "seoDescription": "Ana risponde ai pazienti su WhatsApp 24 ore su 24, spiega come funziona la visita, in studio o online, e prenota solo negli orari liberi. Prova gratis per 7 giorni.",
+      "seoDescription": "Ana risponde ai pazienti su WhatsApp 24 ore su 24, spiega la visita in studio o online e prenota solo negli orari liberi. Prova gratis per 7 giorni.",
       "eyebrow": "Per nutrizionisti",
       "h1": "Segretaria virtuale su WhatsApp per nutrizionisti",
       "sub": "Ana, la segretaria virtuale di Staffra, spiega come funziona la prima visita, dice se ricevi online, comunica il prezzo e prenota un orario libero. Anche quando il paziente decide di iniziare alle 6 del mattino.",
@@ -1531,7 +1531,7 @@
     "pilates": {
       "navLabel": "Studi di pilates",
       "seoTitle": "Sistema di prenotazione con IA per studi di pilates",
-      "seoDescription": "Un sistema di prenotazione su WhatsApp per studi di pilates: Ana spiega la lezione di prova, comunica i prezzi e prenota con l'istruttore giusto, 24 ore su 24. Prova gratis per 7 giorni.",
+      "seoDescription": "Prenotazioni su WhatsApp per studi di pilates: Ana spiega la lezione di prova, comunica i prezzi e prenota con l'istruttore giusto. Prova gratis per 7 giorni.",
       "eyebrow": "Per studi di pilates",
       "h1": "Sistema di prenotazione su WhatsApp per studi di pilates",
       "sub": "Ana, la receptionist virtuale di Staffra, spiega come funziona la lezione di prova, comunica il prezzo e prenota un orario libero, anche alle 6 del mattino, quando la persona decide di iniziare e lo studio non ha ancora aperto.",
@@ -1689,7 +1689,7 @@
   },
   "About": {
     "seoTitle": "Chi è Staffra: receptionist virtuali con IA per WhatsApp",
-    "seoDescription": "Chi è Staffra: piattaforma brasiliana di receptionist virtuali per WhatsApp, Instagram e siti web, gestita da {legalName} (CNPJ {taxId}). Cosa fa, per chi è e come funziona.",
+    "seoDescription": "Chi è Staffra: piattaforma brasiliana di receptionist virtuali per WhatsApp, Instagram e siti web, gestita da {legalName}. Cosa fa e per chi è.",
     "breadcrumb": "Chi siamo",
     "eyebrow": "Chi è Staffra",
     "h1": "Receptionist virtuali su WhatsApp per le piccole attività brasiliane",
@@ -1789,7 +1789,7 @@
     "whatsappScheduling": {
       "title": "Prenotazioni automatiche su WhatsApp: come funzionano e come scegliere",
       "seoTitle": "Prenotazioni automatiche su WhatsApp: guida completa (2026)",
-      "seoDescription": "Come funzionano le prenotazioni automatiche su WhatsApp, i 4 metodi più comuni (manuale, link, menu e receptionist virtuale), vantaggi, limiti, costi e cosa valutare prima di scegliere.",
+      "seoDescription": "Come funzionano le prenotazioni automatiche su WhatsApp: i 4 metodi più comuni, vantaggi, limiti, costi e cosa valutare prima di scegliere.",
       "eyebrow": "Guida",
       "breadcrumb": "Prenotazioni automatiche su WhatsApp",
       "updatedLabel": "Aggiornata il {date}",
