@@ -199,7 +199,7 @@ describe("buildVerticalPageGraph", () => {
       name: "Demo",
       description: "Video description",
       thumbnailUrl: expect.stringContaining("poster"),
-      uploadDate: "2026-10-12",
+      uploadDate: "2026-10-12T00:00:00-03:00",
       contentUrl: expect.stringContaining(".mp4"),
       inLanguage: "pt-BR",
     });

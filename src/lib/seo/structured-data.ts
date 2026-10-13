@@ -161,6 +161,10 @@ export function buildBreadcrumbList(id: string, entries: BreadcrumbEntry[]): Jso
   };
 }
 
+export function toDateTime(date: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T00:00:00-03:00` : date;
+}
+
 export function buildVideoObject(id: string, video: VideoEntry): JsonLdNode {
   return {
     "@type": "VideoObject",
@@ -169,7 +173,7 @@ export function buildVideoObject(id: string, video: VideoEntry): JsonLdNode {
     description: video.description,
     thumbnailUrl: video.thumbnailUrl,
     contentUrl: video.contentUrl,
-    uploadDate: video.uploadDate,
+    uploadDate: toDateTime(video.uploadDate),
     duration: video.duration,
     // The demo videos are recorded in Portuguese whatever the page language.
     inLanguage: "pt-BR",
