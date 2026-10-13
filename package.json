@@ -14,7 +14,8 @@
     "test:integration:env:up": "supabase start",
     "test:integration:env:reset": "supabase db reset",
     "test:integration:env:down": "supabase stop",
-    "backfill:product-embeddings": "node scripts/backfill-product-embeddings.mjs"
+    "backfill:product-embeddings": "node scripts/backfill-product-embeddings.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

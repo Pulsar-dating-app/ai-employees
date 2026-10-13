@@ -1,48 +1,30 @@
-import { getTranslations } from "next-intl/server";
-import {
-  buildLandingGraph,
-  type FaqEntry,
-  type PricingPlan,
-} from "@/lib/seo/structured-data";
-import { LANDING_PLANS } from "@/components/landing/landing-plans";
+import { getLocale, getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/locales";
+import { HREFLANG, localizedPath } from "@/i18n/routing";
+import { absoluteUrl } from "@/lib/seo/site";
+import { buildLandingGraph, type FaqEntry } from "@/lib/seo/structured-data";
+import { JsonLdScript, loadSchemaContext } from "./schema-context";
 
-const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
-
-// Server component: emits the landing page's schema.org graph
-// (Organization + WebSite + SoftwareApplication + FAQPage) as a single
+// Server component: emits the landing page's schema.org graph (Organization,
+// WebSite, WebPage, SoftwareApplication with offers, FAQPage) as a single
 // JSON-LD script. The FAQ content is the same message data the visible
-// landing sections render. The 3 self-serve plans' `price` is the same
-// "own Meta account" monthly price the visible pricing cards show
-// (landing-plans.ts), so the structured data matches the page. Enterprise
-// (contact-us) has no fixed price, so it keeps the message file's static
-// label ("Customizado"/"Custom").
+// landing sections render, so the structured data can't drift from the page.
 export async function LandingJsonLd() {
-  const [seo, landing] = await Promise.all([
+  const locale = (await getLocale()) as Locale;
+  const [{ site, plans }, seo, landing] = await Promise.all([
+    loadSchemaContext(),
     getTranslations("Seo"),
     getTranslations("LandingV2"),
   ]);
 
-  const faq = (landing.raw("faq.items") as FaqEntry[]) ?? [];
-  const plans = (
-    (landing.raw("pricing.plans") as { tier: string; name: string; desc?: string; price?: string }[]) ?? []
-  ).map((plan): PricingPlan => {
-    const landingPlan = LANDING_PLANS.find((p) => p.tier === plan.tier.toLowerCase());
-    const price = landingPlan ? BRL.format(landingPlan.ownCents / 100) : (plan.price ?? "");
-    return { name: plan.name, desc: plan.desc, price };
-  });
-
   const graph = buildLandingGraph({
-    siteName: seo("siteName"),
-    description: seo("description"),
+    site,
+    url: absoluteUrl(localizedPath(locale, "/")),
+    name: seo("defaultTitle"),
+    inLanguage: HREFLANG[locale],
     plans,
-    faq,
+    faq: (landing.raw("faq.items") as FaqEntry[]) ?? [],
   });
 
-  return (
-    <script
-      type="application/ld+json"
-      // JSON.stringify output is safe to inline; no user input flows in here.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
-    />
-  );
+  return <JsonLdScript graph={graph} />;
 }

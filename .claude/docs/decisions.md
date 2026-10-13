@@ -30,6 +30,21 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 **How to apply:** change scene copy in `video/src/copy.ts` and re-render. If the tour screenshots are retaken, re-check the highlight fractions. To swap in a licensed track or add a voiceover, replace the `lounge` `<Audio>` in `Soundtrack.tsx`, or add one next to it.
 
+## 2026-10-12 — GEO: one canonical brand identity everywhere, an About page, a buyer's guide and llms.txt
+
+**Decision:**
+- **Canonical brand definition:** `Brand.definition` is one short, factual paragraph (what Staffra is, its two staff, who they serve, "only uses the business's own information"). It is repeated verbatim on the landing's "Para o seu negócio" block, the footer, the About page and `/llms.txt`. `Brand.schemaDescription` is the same text with "IA"; it appears only in JSON-LD, never as visible copy.
+- **Company identity in one constant:** `COMPANY` in `src/lib/seo/site.ts` holds PULSAR LTDA, the CNPJ and contato@staffra.io. It feeds the footer's legal line, the About page, `/llms.txt` and the Organization schema (`legalName`, `taxID`, `contactPoint`, `areaServed`, square logo). `SOCIAL_PROFILES` (empty for now) becomes `sameAs` as profiles are created. The legal documents now use contato@staffra.io and state the CNPJ.
+- **`/sobre`:** a company-only About page (no founders yet, by choice) with the definition, who it's for, how it works, what Ana and Malu won't do, a fact sheet in short quotable lines and the legal identity. Its schema is an `AboutPage`. Telling this Staffra apart from same-name companies is left to the structured data (legal name, CNPJ, URL, `sameAs`), not visible copy, which read oddly.
+- **Guides:** `/guias/<slug>` (`src/lib/guides/catalog.ts`). The first is "Agendamento automático pelo WhatsApp", which compares the four approaches by **category** (manual WhatsApp Business, booking link, options menu, virtual receptionist), never by competitor name, and states Staffra's limits honestly. Its schema is an `Article`. The visible copy avoids "chatbot"/"robô" (the menu category is "menu automático de opções").
+- **Trade pages:** each gets a question-shaped "O que é …?" block with a 40–60 word direct answer, and its hero names Staffra. Pilates is retargeted from the consumer query "aula experimental" to "sistema de agendamento para estúdios de pilates".
+- **`/llms.txt`:** generated from the same copy and catalogs (`src/lib/seo/llms.ts`, `src/app/llms.txt/route.ts`), always in Portuguese.
+- **IndexNow:** `npm run indexnow` submits the sitemap to IndexNow, because ChatGPT's web search leans on Bing's index. The key file is `public/<key>.txt`.
+
+**Why:** Being recommended by ChatGPT, Perplexity or Google's AI answers depends on the model being able to (1) tell which "Staffra" this is, since other companies share the name; (2) state what it is in one consistent sentence; (3) quote facts such as price, trial and channels without guessing; and (4) find a page that answers the broad comparison question buyers actually ask. The 2nd SEO audit scored authority 20/100 and found the trade pages never named the brand. A competitor-by-name comparison was avoided because those claims can't be kept verified.
+
+**How to apply:** change the brand pitch in `Brand.definition` (all three files) and nowhere else. Add a social profile by appending its URL to `SOCIAL_PROFILES`. A new guide is a `GUIDES` entry plus a `Guides.<key>` block shaped like `whatsappScheduling`, with routing, sitemap, llms.txt and the landing/trade links following automatically. Bump a page's `updated` date (catalog entries, or `PAGES` in `sitemap.ts`) when its copy changes. After deploying public-page changes, run `npm run indexnow`.
+
 ## 2026-10-12 — One public landing page per trade (six trades)
 
 **Decision:**

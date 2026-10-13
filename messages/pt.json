@@ -659,7 +659,6 @@
       "fine": "Cancele quando quiser · Sem taxa de instalação"
     },
     "footer": {
-      "blurb": "Funcionárias que vendem e agendam pelo WhatsApp, pelo Instagram e pelo seu site.",
       "columns": [
         {
           "title": "Soluções",
@@ -698,6 +697,10 @@
         {
           "title": "Segurança & Legal",
           "links": [
+            {
+              "label": "Sobre a Staffra",
+              "href": "/sobre"
+            },
             {
               "label": "Termos de Serviço",
               "href": "/terms"
@@ -820,6 +823,9 @@
     },
     "widget": {
       "greeting": "Oi! 👋 Sou a Malu. Quer ver como eu atenderia os seus clientes?"
+    },
+    "trades": {
+      "heading": "A Ana atende negócios como o seu"
     }
   },
   "Verticals": {
@@ -841,7 +847,8 @@
       "pricingCta": "Ver planos e preços",
       "faqHeading": "Perguntas frequentes",
       "othersHeading": "A Ana também atende",
-      "finalFine": "Cancele quando quiser · Sem taxa de instalação"
+      "finalFine": "Cancele quando quiser · Sem taxa de instalação",
+      "guideLabel": "Guia"
     },
     "barber": {
       "navLabel": "Barbearias",
@@ -849,7 +856,7 @@
       "seoDescription": "A Ana responde o WhatsApp da sua barbearia 24 horas, deixa o cliente escolher o barbeiro e marca só nos horários livres. Teste grátis por 7 dias.",
       "eyebrow": "Para barbearias",
       "h1": "Atendente virtual no WhatsApp para barbearias",
-      "sub": "Enquanto você está com a máquina na mão, a Ana responde o WhatsApp, pergunta com qual barbeiro o cliente quer cortar e marca no horário que está livre de verdade. De dia, de noite e no domingo.",
+      "sub": "Enquanto você está com a máquina na mão, a Ana, atendente virtual da Staffra, responde o WhatsApp, pergunta com qual barbeiro o cliente quer cortar e marca no horário que está livre de verdade. De dia, de noite e no domingo.",
       "videoName": "Ana agendando corte e barba numa barbearia pelo WhatsApp",
       "videoDescription": "Demonstração de 37 segundos: às 23h, um cliente pede horário para corte e barba, escolhe o barbeiro, recebe os horários livres e sai com o agendamento confirmado.",
       "painHeading": "O WhatsApp da barbearia não para enquanto você corta",
@@ -973,7 +980,10 @@
         }
       ],
       "finalHeading": "Sua barbearia agendando até de madrugada",
-      "finalSub": "Deixe a Ana cuidar do WhatsApp e volte a atenção para quem está na cadeira."
+      "finalSub": "Deixe a Ana cuidar do WhatsApp e volte a atenção para quem está na cadeira.",
+      "whatIsHeading": "O que é uma atendente virtual para barbearias?",
+      "whatIs": "É um atendimento automático no WhatsApp da barbearia que conversa com o cliente como uma pessoa, consulta a agenda de cada barbeiro e marca o horário sozinho, a qualquer hora. Na Staffra, essa atendente é a Ana: ela usa só os serviços, preços e horários que você cadastra e chama a equipe quando o cliente pede uma pessoa.",
+      "cardLine": "Agenda por barbeiro, combos de corte e barba e respostas até de madrugada."
     },
     "salon": {
       "navLabel": "Salões de beleza",
@@ -981,7 +991,7 @@
       "seoDescription": "A Ana responde o WhatsApp do seu salão 24 horas, informa preços, deixa a cliente escolher a profissional e agenda só nos horários livres. Teste grátis por 7 dias.",
       "eyebrow": "Para salões de beleza",
       "h1": "Atendente virtual no WhatsApp para salões de beleza",
-      "sub": "A Ana responde quanto custa a coloração, pergunta com qual profissional a cliente quer ser atendida e marca no horário em que o serviço cabe inteiro na agenda. Antes mesmo de o salão abrir.",
+      "sub": "A Ana, atendente virtual da Staffra, responde quanto custa a coloração, pergunta com qual profissional a cliente quer ser atendida e marca no horário em que o serviço cabe inteiro na agenda. Antes mesmo de o salão abrir.",
       "videoName": "Ana agendando uma coloração num salão de beleza pelo WhatsApp",
       "videoDescription": "Demonstração de 39 segundos: às 7h52, antes de o salão abrir, uma cliente pergunta o preço da coloração e o teste de mecha, escolhe a profissional e sai com o horário marcado.",
       "painHeading": "No salão, quem está com a escova na mão não consegue responder",
@@ -1105,7 +1115,10 @@
         }
       ],
       "finalHeading": "Seu salão agendando antes mesmo de abrir",
-      "finalSub": "Deixe a Ana responder preços e marcar horários no WhatsApp enquanto a equipe cuida de quem está na cadeira."
+      "finalSub": "Deixe a Ana responder preços e marcar horários no WhatsApp enquanto a equipe cuida de quem está na cadeira.",
+      "whatIsHeading": "O que é uma atendente virtual para salão de beleza?",
+      "whatIs": "É um atendimento automático no WhatsApp do salão que responde preços, pergunta com qual profissional a cliente quer ser atendida e marca no horário em que o serviço cabe na agenda, mesmo com o salão fechado. Na Staffra, essa atendente é a Ana, que trabalha só com os serviços, preços e horários que o salão cadastra.",
+      "cardLine": "Preços na hora, escolha da profissional e serviços longos sem encavalar."
     },
     "nails": {
       "navLabel": "Manicures e nail designers",
@@ -1113,7 +1126,7 @@
       "seoDescription": "A Ana responde o WhatsApp do seu ateliê de unhas 24 horas, passa preço e horários livres, e remarca na mesma conversa quando a cliente muda de ideia. Teste grátis por 7 dias.",
       "eyebrow": "Para manicures e nail designers",
       "h1": "Atendente virtual no WhatsApp para manicures e nail designers",
-      "sub": "Enquanto você está no meio de um alongamento, a Ana responde o WhatsApp, passa o preço, mostra os horários livres e marca. Se a cliente precisar mudar o dia, ela remarca na mesma conversa.",
+      "sub": "Enquanto você está no meio de um alongamento, a Ana, atendente virtual da Staffra, responde o WhatsApp, passa o preço, mostra os horários livres e marca. Se a cliente precisar mudar o dia, ela remarca na mesma conversa.",
       "videoName": "Ana agendando e remarcando mão e pé num ateliê de unhas pelo WhatsApp",
       "videoDescription": "Demonstração de 33 segundos: às 22h, com o ateliê fechado, uma cliente marca mão e pé, lembra que não vai conseguir ir e remarca para sábado na mesma conversa.",
       "painHeading": "Com as mãos ocupadas, ninguém responde o WhatsApp",
@@ -1237,7 +1250,10 @@
         }
       ],
       "finalHeading": "Sua agenda de unhas cheia, sem largar o pincel",
-      "finalSub": "Deixe a Ana responder, marcar e remarcar no WhatsApp enquanto você atende."
+      "finalSub": "Deixe a Ana responder, marcar e remarcar no WhatsApp enquanto você atende.",
+      "whatIsHeading": "O que é uma atendente virtual para manicures e nail designers?",
+      "whatIs": "É um atendimento automático no WhatsApp que passa preços, mostra os horários livres, marca e remarca as clientes sem você largar o que está fazendo. Na Staffra, essa atendente é a Ana: ela segue os seus serviços, durações e regras de cancelamento e passa a conversa para você quando a cliente pede.",
+      "cardLine": "Marca e remarca na mesma conversa, com regras de cancelamento."
     },
     "dental": {
       "navLabel": "Clínicas odontológicas",
@@ -1245,7 +1261,7 @@
       "seoDescription": "A Ana responde pacientes no WhatsApp 24 horas, tira dúvidas sobre a avaliação e marca com o dentista certo, só nos horários livres. Teste grátis por 7 dias.",
       "eyebrow": "Para clínicas odontológicas",
       "h1": "Secretária virtual no WhatsApp para clínicas odontológicas",
-      "sub": "A Ana responde os pacientes no WhatsApp a qualquer hora, explica como funciona a avaliação e marca com o dentista certo, só nos horários que estão livres. A recepção fica livre para quem está na clínica.",
+      "sub": "A Ana, secretária virtual da Staffra, responde os pacientes no WhatsApp a qualquer hora, explica como funciona a avaliação e marca com o dentista certo, só nos horários que estão livres. A recepção fica livre para quem está na clínica.",
       "videoName": "Ana agendando uma avaliação odontológica pelo WhatsApp",
       "videoDescription": "Demonstração de 33 segundos: às 21h, um paciente pede uma avaliação, pergunta o valor, escolhe o dia e sai com a consulta marcada com o dentista.",
       "painHeading": "A recepção não dá conta de tudo ao mesmo tempo",
@@ -1369,7 +1385,10 @@
         }
       ],
       "finalHeading": "Sua clínica marcando avaliações até fora do horário",
-      "finalSub": "Deixe a Ana responder o WhatsApp e libere a recepção para cuidar dos pacientes na clínica."
+      "finalSub": "Deixe a Ana responder o WhatsApp e libere a recepção para cuidar dos pacientes na clínica.",
+      "whatIsHeading": "O que é uma secretária virtual para clínica odontológica?",
+      "whatIs": "É um atendimento automático no WhatsApp da clínica que responde pacientes a qualquer hora, tira dúvidas com base nas informações da clínica e marca consultas na agenda de cada dentista. Na Staffra, essa secretária é a Ana: ela responde só com o que a clínica cadastrou e passa para a equipe os casos de dor, urgência ou dúvidas clínicas.",
+      "cardLine": "Avaliações marcadas fora do horário, agenda por dentista e convênio."
     },
     "nutri": {
       "navLabel": "Nutricionistas",
@@ -1377,7 +1396,7 @@
       "seoDescription": "A Ana responde os pacientes no WhatsApp 24 horas, explica como funciona a consulta, presencial ou online, e agenda só nos horários livres. Teste grátis por 7 dias.",
       "eyebrow": "Para nutricionistas",
       "h1": "Secretária virtual no WhatsApp para nutricionistas",
-      "sub": "A Ana explica como funciona a primeira consulta, informa se você atende online, passa o valor e marca no horário livre. Mesmo quando o paciente decide começar às 6h da manhã.",
+      "sub": "A Ana, secretária virtual da Staffra, explica como funciona a primeira consulta, informa se você atende online, passa o valor e marca no horário livre. Mesmo quando o paciente decide começar às 6h da manhã.",
       "videoName": "Ana agendando uma consulta online com nutricionista pelo WhatsApp",
       "videoDescription": "Demonstração de 39 segundos: às 6h48, antes de o consultório abrir, uma pessoa pergunta como funciona a consulta, escolhe a consulta online e sai com o horário marcado.",
       "painHeading": "A decisão de começar não espera o horário comercial",
@@ -1501,15 +1520,18 @@
         }
       ],
       "finalHeading": "Seu consultório agendando antes do primeiro café",
-      "finalSub": "Deixe a Ana responder e marcar as consultas no WhatsApp enquanto você atende."
+      "finalSub": "Deixe a Ana responder e marcar as consultas no WhatsApp enquanto você atende.",
+      "whatIsHeading": "O que é uma secretária virtual para nutricionistas?",
+      "whatIs": "É um atendimento automático no WhatsApp que explica como funciona a consulta, presencial ou online, informa valores e agenda o paciente no horário livre, mesmo fora do expediente. Na Staffra, essa secretária é a Ana: ela trabalha só com o que você cadastra e deixa as dúvidas sobre alimentação para você.",
+      "cardLine": "Consulta presencial ou online, retorno e orientações antes da consulta."
     },
     "pilates": {
       "navLabel": "Estúdios de pilates",
-      "seoTitle": "Atendente virtual com IA para estúdios de pilates",
-      "seoDescription": "A Ana responde o WhatsApp do seu estúdio de pilates 24 horas, explica a aula experimental e agenda com o instrutor certo, só nos horários livres. Teste grátis por 7 dias.",
+      "seoTitle": "Sistema de agendamento com IA para estúdios de pilates",
+      "seoDescription": "Sistema de agendamento pelo WhatsApp para estúdios de pilates: a Ana explica a aula experimental, informa valores e marca com o instrutor certo, 24 horas. Teste grátis por 7 dias.",
       "eyebrow": "Para estúdios de pilates",
-      "h1": "Atendente virtual no WhatsApp para estúdios de pilates",
-      "sub": "A Ana explica como funciona a aula experimental, responde o valor e marca no horário livre, mesmo às 6h da manhã, quando a pessoa decide começar e o estúdio ainda nem abriu.",
+      "h1": "Sistema de agendamento pelo WhatsApp para estúdios de pilates",
+      "sub": "A Ana, atendente virtual da Staffra, explica como funciona a aula experimental, responde o valor e marca no horário livre, mesmo às 6h da manhã, quando a pessoa decide começar e o estúdio ainda nem abriu.",
       "videoName": "Ana agendando uma aula experimental de pilates pelo WhatsApp",
       "videoDescription": "Demonstração de 37 segundos: às 5h58, antes de o estúdio abrir, uma pessoa pergunta sobre a aula experimental, o valor e sai com a aula marcada para a manhã seguinte.",
       "painHeading": "Quem quer começar pilates decide fora do horário do estúdio",
@@ -1633,7 +1655,339 @@
         }
       ],
       "finalHeading": "Seu estúdio marcando aulas antes de abrir as portas",
-      "finalSub": "Deixe a Ana responder e agendar no WhatsApp enquanto os instrutores dão aula."
+      "finalSub": "Deixe a Ana responder e agendar no WhatsApp enquanto os instrutores dão aula.",
+      "whatIsHeading": "O que é um sistema de agendamento pelo WhatsApp para estúdio de pilates?",
+      "whatIs": "É um atendimento automático no WhatsApp do estúdio que explica a aula experimental, informa valores e marca a aula com o instrutor certo, só nos horários livres. Na Staffra, quem faz isso é a Ana, ideal para aulas experimentais, aulas particulares e avaliações, com um aluno por horário em cada instrutor.",
+      "cardLine": "Aula experimental, aulas particulares e agenda por instrutor."
+    }
+  },
+  "Brand": {
+    "definition": "A Staffra é uma plataforma brasileira de atendentes virtuais para WhatsApp, Instagram e site. A Ana agenda horários para negócios de serviço, como barbearias, salões, clínicas e estúdios, e a Malu atende e vende para lojas, 24 horas por dia, usando só as informações que o negócio cadastra.",
+    "schemaDescription": "A Staffra é uma plataforma brasileira de atendentes virtuais com IA para WhatsApp, Instagram e sites: a Ana agenda horários para negócios de serviço (barbearias, salões, clínicas odontológicas, nutricionistas, estúdios de pilates) e a Malu atende e vende para lojas, 24 horas por dia, usando só as informações que o negócio cadastra.",
+    "legalLine": "{legalName} · CNPJ {taxId}",
+    "llms": {
+      "mainPages": "Páginas principais",
+      "byTrade": "Por tipo de negócio",
+      "guides": "Guias",
+      "policies": "Políticas",
+      "company": "Empresa",
+      "legalName": "Razão social: {value}",
+      "taxId": "CNPJ: {value}",
+      "contact": "Contato: {value}",
+      "site": "Site oficial: {value}",
+      "pricing": "Planos e preços",
+      "languages": "Versões em inglês e italiano: {en} e {it}."
+    }
+  },
+  "About": {
+    "seoTitle": "Sobre a Staffra: atendentes virtuais com IA para WhatsApp",
+    "seoDescription": "Quem é a Staffra: plataforma brasileira de atendentes virtuais para WhatsApp, Instagram e site, operada pela {legalName} (CNPJ {taxId}). O que faz, para quem e como funciona.",
+    "breadcrumb": "Sobre",
+    "eyebrow": "Sobre a Staffra",
+    "h1": "Atendentes virtuais no WhatsApp para pequenos negócios brasileiros",
+    "whoHeading": "Para quem é",
+    "whoIntro": "A Ana atende negócios que vivem de agenda. Cada ramo tem uma página explicando como ela funciona no dia a dia:",
+    "whoSales": "Para lojas que vendem pelo WhatsApp e pelo Instagram, a Malu responde dúvidas sobre produtos, preços e estoque e leva o cliente até o checkout da loja.",
+    "howHeading": "Como funciona",
+    "steps": [
+      {
+        "title": "Você cadastra o seu negócio",
+        "body": "Serviços, preços, horários, profissionais e as informações que os clientes costumam perguntar. Para a Malu, o catálogo por planilha ou pelo Shopify."
+      },
+      {
+        "title": "Conecta os canais",
+        "body": "WhatsApp pela conexão oficial da Meta, Instagram, Telegram, chat no site e um link direto para a bio."
+      },
+      {
+        "title": "A Ana e a Malu atendem",
+        "body": "Elas respondem os clientes 24 horas, marcam horários e levam o cliente até a compra. Você acompanha tudo pelo painel e assume qualquer conversa."
+      }
+    ],
+    "principlesHeading": "O que elas fazem, e o que não fazem",
+    "principles": [
+      {
+        "title": "Respondem só com os seus dados",
+        "body": "A Ana e a Malu usam apenas o que o negócio cadastrou. Se a informação não estiver lá, elas não inventam preço, horário ou política."
+      },
+      {
+        "title": "Passam a conversa para a equipe",
+        "body": "Quando o cliente pede uma pessoa ou o assunto foge do que elas sabem, elas avisam e, se você permitir, passam a conversa com todo o histórico."
+      },
+      {
+        "title": "Usam o WhatsApp oficial",
+        "body": "A conexão é feita pela integração oficial da Meta. Dá para usar o número que o negócio já tem ou um número novo."
+      },
+      {
+        "title": "Deixam decisões profissionais com você",
+        "body": "Em clínicas e estúdios, assuntos de saúde, dor ou urgência vão para a equipe. Elas cuidam do atendimento e da agenda."
+      }
+    ],
+    "factsHeading": "A Staffra em resumo",
+    "facts": [
+      {
+        "label": "O que é",
+        "value": "Plataforma de atendentes virtuais para WhatsApp, Instagram, Telegram e site"
+      },
+      {
+        "label": "Funcionárias",
+        "value": "Ana (agendamentos) e Malu (vendas), incluídas em todos os planos"
+      },
+      {
+        "label": "Preço",
+        "value": "A partir de {price} por mês"
+      },
+      {
+        "label": "Teste grátis",
+        "value": "7 dias, com cobrança só depois de 7 dias ou de 500 respostas, o que vier primeiro"
+      },
+      {
+        "label": "Contrato",
+        "value": "Sem fidelidade e sem taxa de instalação"
+      },
+      {
+        "label": "WhatsApp",
+        "value": "Conexão oficial da Meta, com o número atual ou um novo"
+      },
+      {
+        "label": "Integrações",
+        "value": "Google Agenda, Shopify e catálogo por planilha"
+      },
+      {
+        "label": "Configuração",
+        "value": "Em geral, menos de 30 minutos, sem programar"
+      },
+      {
+        "label": "Idiomas do site",
+        "value": "Português, inglês e italiano"
+      },
+      {
+        "label": "Feita para",
+        "value": "Barbearias, salões de beleza, manicures, clínicas odontológicas, nutricionistas, estúdios de pilates e lojas online"
+      }
+    ],
+    "companyHeading": "A empresa",
+    "companyBody": "A Staffra é um produto da {legalName}, empresa brasileira de tecnologia. Os dados tratados pela plataforma seguem a LGPD, como descrito na política de privacidade.",
+    "company": {
+      "legalName": "Razão social",
+      "taxId": "CNPJ",
+      "contact": "Contato",
+      "website": "Site",
+      "country": "País",
+      "countryValue": "Brasil"
+    },
+    "ctaHeading": "Veja a Ana e a Malu atendendo o seu negócio"
+  },
+  "Guides": {
+    "whatsappScheduling": {
+      "title": "Agendamento automático pelo WhatsApp: como funciona e como escolher",
+      "seoTitle": "Agendamento automático pelo WhatsApp: guia completo (2026)",
+      "seoDescription": "Como funciona o agendamento automático pelo WhatsApp, as 4 formas mais comuns (manual, link, menu e atendente virtual), vantagens, limitações, custos e o que avaliar antes de escolher.",
+      "eyebrow": "Guia",
+      "breadcrumb": "Agendamento automático pelo WhatsApp",
+      "updatedLabel": "Atualizado em {date}",
+      "tldrHeading": "Resposta rápida",
+      "tldr": "Agendamento automático pelo WhatsApp é quando o cliente marca um horário conversando no WhatsApp sem que ninguém da equipe precise responder na hora. Existem 4 formas comuns: responder manualmente, enviar um link de agenda, usar um menu automático de opções ou usar uma atendente virtual que entende a conversa e consulta a agenda. Para negócios com muitas mensagens ou mais de um profissional, a atendente virtual é a que mais se aproxima de uma recepcionista.",
+      "sections": [
+        {
+          "heading": "O que é agendamento automático pelo WhatsApp?",
+          "paragraphs": [
+            "É quando o cliente marca um horário conversando pelo WhatsApp, sem que alguém do negócio precise responder na hora. Um sistema consulta a agenda, oferece só os horários livres, registra o agendamento e envia a confirmação.",
+            "Para funcionar de verdade, o sistema precisa saber três coisas: quais serviços o negócio oferece e quanto tempo cada um leva, quando cada profissional está disponível e o que já está marcado."
+          ]
+        },
+        {
+          "heading": "Agendar mensagens não é a mesma coisa",
+          "paragraphs": [
+            "Muita gente procura \"agendamento automático no WhatsApp\" querendo programar o envio de uma mensagem para mais tarde. Essa é outra função: serve para lembrar ou divulgar, mas não marca horário nenhum. Este guia trata de agendar horários com clientes."
+          ]
+        }
+      ],
+      "optionsHeading": "As 4 formas mais comuns de agendar pelo WhatsApp",
+      "optionsIntro": "Cada forma resolve uma parte do problema. A melhor depende de quantas mensagens você recebe, de quantos profissionais atendem e de quanto você quer que o cliente fique dentro da conversa.",
+      "prosLabel": "Vantagens",
+      "consLabel": "Limitações",
+      "bestForLabel": "Indicado para:",
+      "options": [
+        {
+          "name": "WhatsApp Business manual",
+          "how": "Alguém da equipe responde cada mensagem, consulta a agenda e confirma o horário. O app ajuda com etiquetas, respostas rápidas e mensagem de ausência.",
+          "pros": [
+            "Sem custo além do tempo da equipe",
+            "Atendimento totalmente pessoal"
+          ],
+          "cons": [
+            "Depende de alguém disponível para responder",
+            "Mensagens fora do horário esperam até o dia seguinte",
+            "É fácil errar a agenda ou marcar dois clientes no mesmo horário"
+          ],
+          "bestFor": "negócios com poucas mensagens por dia e alguém dedicado a responder."
+        },
+        {
+          "name": "App de agenda com link",
+          "how": "O negócio envia um link, e o cliente escolhe o serviço e o horário numa página de agendamento fora do WhatsApp.",
+          "pros": [
+            "A agenda fica organizada e mostra só horários livres",
+            "Funciona a qualquer hora"
+          ],
+          "cons": [
+            "O cliente sai da conversa, e parte desiste no caminho",
+            "Dúvidas como preço, endereço e formas de pagamento continuam chegando no chat",
+            "Alguém ainda precisa enviar o link e responder o resto"
+          ],
+          "bestFor": "clientes acostumados a agendar online, com poucas dúvidas."
+        },
+        {
+          "name": "Menu automático de opções",
+          "how": "Uma mensagem automática responde com opções numeradas, como \"digite 1 para agendar, 2 para preços\", e o cliente segue um caminho fixo até escolher o horário.",
+          "pros": [
+            "Responde na hora, 24 horas",
+            "Costuma ter custo baixo"
+          ],
+          "cons": [
+            "Não entende mensagens escritas do jeito do cliente, como \"tem sexta depois das 18h com o Rafael?\"",
+            "Caminhos fixos frustram quem foge do roteiro",
+            "Dúvidas fora do menu ficam sem resposta"
+          ],
+          "bestFor": "fluxos muito simples, com poucos serviços e sem escolha de profissional."
+        },
+        {
+          "name": "Atendente virtual",
+          "how": "Uma atendente virtual conversa no próprio WhatsApp como uma pessoa: entende a mensagem do cliente, consulta a agenda de cada profissional, oferece os horários livres, marca, remarca e responde dúvidas com base no que o negócio cadastrou.",
+          "pros": [
+            "Conversa natural, sem o cliente sair do WhatsApp",
+            "Atende 24 horas e responde dúvidas além do agendamento",
+            "Agenda por profissional, remarcação e cancelamento com regras"
+          ],
+          "cons": [
+            "Tem mensalidade",
+            "Exige cadastrar serviços, horários e informações do negócio",
+            "Usa a conexão oficial do WhatsApp, que cobra por resposta acima da cota gratuita"
+          ],
+          "bestFor": "negócios com volume de mensagens, mais de um profissional ou muitos pedidos fora do horário."
+        }
+      ],
+      "tableHeading": "Comparação rápida",
+      "tableCriterion": "Critério",
+      "table": [
+        {
+          "criterion": "Responde fora do horário",
+          "values": [
+            "Não",
+            "Só se o cliente já tiver o link",
+            "Sim",
+            "Sim"
+          ]
+        },
+        {
+          "criterion": "Entende mensagens livres",
+          "values": [
+            "Sim, se alguém estiver lá",
+            "Não se aplica",
+            "Não",
+            "Sim"
+          ]
+        },
+        {
+          "criterion": "Marca sem ninguém da equipe",
+          "values": [
+            "Não",
+            "Sim, pela página",
+            "Sim, dentro do menu",
+            "Sim"
+          ]
+        },
+        {
+          "criterion": "Escolha de profissional",
+          "values": [
+            "Manual",
+            "Depende do app",
+            "Raramente",
+            "Sim"
+          ]
+        },
+        {
+          "criterion": "Remarca e cancela",
+          "values": [
+            "Manual",
+            "Pela página, se o app permitir",
+            "Raramente",
+            "Sim, com regras"
+          ]
+        },
+        {
+          "criterion": "Responde preço e dúvidas",
+          "values": [
+            "Sim, manualmente",
+            "Não",
+            "Só o que está no menu",
+            "Sim, com o que foi cadastrado"
+          ]
+        },
+        {
+          "criterion": "Custo típico",
+          "values": [
+            "Tempo da equipe",
+            "Mensalidade",
+            "Mensalidade",
+            "Mensalidade (Staffra: a partir de {price})"
+          ]
+        }
+      ],
+      "checklistHeading": "O que avaliar antes de escolher",
+      "checklist": [
+        {
+          "title": "WhatsApp oficial",
+          "body": "Prefira ferramentas que usam a conexão oficial da Meta. Conexões não oficiais podem levar ao bloqueio do número."
+        },
+        {
+          "title": "Agenda de verdade",
+          "body": "O sistema precisa considerar horário de funcionamento, folgas, a duração de cada serviço e o que já está marcado, para nunca oferecer o mesmo horário duas vezes."
+        },
+        {
+          "title": "Um profissional, uma agenda",
+          "body": "Se mais de uma pessoa atende, cada uma precisa da própria agenda, e o cliente deve poder escolher com quem quer ser atendido."
+        },
+        {
+          "title": "Remarcação e cancelamento",
+          "body": "Veja se o cliente consegue remarcar e cancelar sozinho e se você pode definir prazos, como antecedência mínima e limite para cancelar."
+        },
+        {
+          "title": "Passar para uma pessoa",
+          "body": "Quando o cliente pede alguém da equipe ou a dúvida foge do roteiro, a conversa deve ir para uma pessoa com o histórico completo."
+        },
+        {
+          "title": "Dados dos clientes",
+          "body": "Confira quais dados são pedidos, onde ficam guardados e se a empresa trata essas informações conforme a LGPD."
+        }
+      ],
+      "costHeading": "Quanto custa o WhatsApp oficial",
+      "costBody": "Quem usa a conexão oficial do WhatsApp paga à Meta pelas respostas acima da cota gratuita. Na Staffra, conectando com a sua conta da Meta, são 1.000 respostas grátis por mês e cerca de R$ 0,04 por resposta depois disso, pagas direto à Meta. Quem prefere pode contratar tudo pela Staffra, com as taxas já incluídas no preço. Os valores da Meta mudam com o tempo e por país, então confira a tabela oficial antes de decidir.",
+      "staffraHeading": "Onde a Staffra entra",
+      "staffraBody": "A Staffra é uma plataforma brasileira de atendentes virtuais. A Ana, atendente de agendamentos, conversa no WhatsApp, no Instagram, no Telegram e no chat do site, consulta a agenda de cada profissional, marca, remarca e cancela respeitando as suas regras e envia confirmação e lembrete por e-mail. Ela responde só com o que o negócio cadastrou e passa a conversa para a equipe quando necessário. Os planos começam em {price} por mês, com 7 dias grátis.",
+      "tradesHeading": "Agendamento automático por tipo de negócio",
+      "tradesIntro": "Cada ramo tem suas particularidades. Veja como funciona no seu:",
+      "faq": [
+        {
+          "q": "Dá para fazer agendamento automático no WhatsApp Business gratuito?",
+          "a": "Não de forma completa. O app tem mensagem de ausência e respostas rápidas, mas não consulta uma agenda nem confirma horários sozinho. Para isso é preciso enviar um link de agendamento ou usar uma ferramenta ligada à conexão oficial do WhatsApp."
+        },
+        {
+          "q": "Preciso trocar o número do WhatsApp?",
+          "a": "Não necessariamente. Com a conexão oficial da Meta, dá para usar o número que o negócio já tem no WhatsApp Business. Na Staffra, conectando pela sua conta da Meta, você continua usando o app no celular."
+        },
+        {
+          "q": "E se o cliente quiser falar com uma pessoa?",
+          "a": "Uma boa ferramenta passa a conversa para a equipe com o histórico completo. Na Staffra, a Ana faz isso quando o cliente pede uma pessoa ou pergunta algo que não está cadastrado, se você permitir."
+        },
+        {
+          "q": "Funciona com mais de um profissional?",
+          "a": "Sim, desde que cada profissional tenha a própria agenda no sistema. Na Staffra, o cliente pode escolher com quem quer ser atendido, e a Ana mostra só os horários daquela pessoa."
+        },
+        {
+          "q": "Como reduzir faltas com agendamento automático?",
+          "a": "Confirmação imediata e lembrete antes do horário ajudam o cliente a não esquecer, e regras de cancelamento evitam desistências em cima da hora. Na Staffra, a confirmação e o lembrete são enviados por e-mail."
+        }
+      ]
     }
   },
   "Dashboard": {
@@ -3036,7 +3390,7 @@
     "privacy": {
       "title": "Política de Privacidade",
       "date": "12 de outubro de 2026",
-      "intro": "Esta Política de Privacidade explica como a Pulsar LTDA (\"Pulsar\", \"nós\"), empresa responsável pela plataforma Staffra (\"Staffra\", o \"Serviço\"), coleta, usa, compartilha e protege dados pessoais quando você utiliza nosso site, painel e serviços (em conjunto, o \"Serviço\"). Ela também descreve as opções que você tem sobre seus dados. Leia-a em conjunto com nossos Termos de Serviço.",
+      "intro": "Esta Política de Privacidade explica como a Pulsar LTDA (CNPJ 58.261.994/0001-80, \"Pulsar\", \"nós\"), empresa responsável pela plataforma Staffra (\"Staffra\", o \"Serviço\"), coleta, usa, compartilha e protege dados pessoais quando você utiliza nosso site, painel e serviços (em conjunto, o \"Serviço\"). Ela também descreve as opções que você tem sobre seus dados. Leia-a em conjunto com nossos Termos de Serviço.",
       "sections": [
         {
           "heading": "1. Quem esta política abrange",
@@ -3130,16 +3484,17 @@
         {
           "heading": "12. Fale conosco",
           "paragraphs": [
-            "A Pulsar LTDA é responsável pela plataforma Staffra. Para dúvidas de privacidade ou para exercer seus direitos, escreva para app.pulsar.contato@gmail.com.",
+            "A Pulsar LTDA é responsável pela plataforma Staffra. Para dúvidas de privacidade ou para exercer seus direitos, escreva para contato@staffra.io.",
             "Esse endereço também fala com o nosso Encarregado pelo Tratamento de Dados Pessoais (DPO), conforme a LGPD."
           ]
         }
-      ]
+      ],
+      "seoDescription": "Como a Pulsar LTDA, empresa responsável pela Staffra, coleta, usa e protege dados pessoais conforme a LGPD, e como exercer os seus direitos."
     },
     "terms": {
       "title": "Termos de Serviço",
-      "date": "7 de outubro de 2026",
-      "intro": "Estes Termos de Serviço (\"Termos\") são um acordo vinculante entre a Pulsar LTDA (\"Pulsar\", \"nós\"), empresa responsável pela plataforma Staffra (\"Staffra\", o \"Serviço\"), e a empresa ou pessoa que utiliza nosso site, painel e serviços (em conjunto, o \"Serviço\"). Ao criar uma conta ou usar o Serviço, você concorda com estes Termos. Se você estiver concordando em nome de uma empresa, declara ter poderes para vinculá-la.",
+      "date": "12 de outubro de 2026",
+      "intro": "Estes Termos de Serviço (\"Termos\") são um acordo vinculante entre a Pulsar LTDA (CNPJ 58.261.994/0001-80, \"Pulsar\", \"nós\"), empresa responsável pela plataforma Staffra (\"Staffra\", o \"Serviço\"), e a empresa ou pessoa que utiliza nosso site, painel e serviços (em conjunto, o \"Serviço\"). Ao criar uma conta ou usar o Serviço, você concorda com estes Termos. Se você estiver concordando em nome de uma empresa, declara ter poderes para vinculá-la.",
       "sections": [
         {
           "heading": "1. O Serviço",
@@ -3283,10 +3638,11 @@
         {
           "heading": "19. Fale conosco",
           "paragraphs": [
-            "Dúvidas sobre estes Termos podem ser enviadas à Pulsar LTDA pelo e-mail app.pulsar.contato@gmail.com."
+            "Dúvidas sobre estes Termos podem ser enviadas à Pulsar LTDA pelo e-mail contato@staffra.io."
           ]
         }
-      ]
+      ],
+      "seoDescription": "Os termos de uso da Staffra: planos, teste grátis, cobrança, cancelamento e as responsabilidades entre a Pulsar LTDA e quem usa o serviço."
     }
   },
   "Tour": {
