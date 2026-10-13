@@ -2,7 +2,10 @@
   "Seo": {
     "siteName": "Staffra",
     "defaultTitle": "Staffra — Hire AI employees that sell, support and book 24/7",
-    "description": "Malu sells and Ana books appointments on WhatsApp, Instagram and your website, around the clock, with your real prices, stock and hours. Ready in minutes, no code."
+    "description": "Malu sells and Ana books appointments on WhatsApp, Instagram and your website, around the clock, with your real prices, stock and hours. Ready in minutes, no code.",
+    "ogHeadline": "Hire AI employees that sell, support and book 24/7",
+    "ogSubtitle": "On WhatsApp, Instagram and your website, with your real prices and hours. Ready in minutes, no code.",
+    "ogAlt": "Staffra — AI employees that sell, support and book on WhatsApp, Instagram and your site"
   },
   "Auth": {
     "close": "Close",

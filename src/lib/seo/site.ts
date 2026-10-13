@@ -41,7 +41,9 @@ export const COMPANY = {
 /**
  * Official social profiles, emitted as the Organization's `sameAs` (the
  * strongest "this is the same company" signal for search engines and AI
- * assistants — other companies share the "Staffra" name). Empty until the
- * profiles exist; add each URL here as it's created.
+ * assistants — other companies share the "Staffra" name). Add each URL here
+ * as it's created.
  */
-export const SOCIAL_PROFILES: readonly string[] = [];
+export const SOCIAL_PROFILES: readonly string[] = [
+  "https://www.linkedin.com/company/staffra-io",
+];

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { intlTag, type Locale } from "@/i18n/locales";
-import { localizedAlternates, localizedPath } from "@/i18n/routing";
-import { absoluteUrl } from "@/lib/seo/site";
+import type { Locale } from "@/i18n/locales";
+import { localizedAlternates } from "@/i18n/routing";
+import { socialMetadata } from "@/lib/seo/social";
 import { findGuide, guidePath } from "@/lib/guides/catalog";
 import { GuidePage } from "@/components/guides/guide-page";
 
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: PageProps<"/guias/[guide]">):
   if (!guide) notFound();
 
   const locale = (await getLocale()) as Locale;
-  const [t, seo] = await Promise.all([getTranslations("Guides"), getTranslations("Seo")]);
+  const t = await getTranslations("Guides");
   const path = guidePath(guide);
   // Root layout's title template appends " · Staffra".
   const title = t(`${guide.key}.seoTitle`);
@@ -25,17 +25,13 @@ export async function generateMetadata({ params }: PageProps<"/guias/[guide]">):
     title,
     description,
     alternates: localizedAlternates(path, locale),
-    openGraph: {
-      type: "article",
-      url: absoluteUrl(localizedPath(locale, path)),
-      siteName: seo("siteName"),
-      locale: intlTag(locale).replace("-", "_"),
+    ...(await socialMetadata({
+      locale,
+      path,
       title,
       description,
-      publishedTime: guide.published,
-      modifiedTime: guide.updated,
-    },
-    twitter: { card: "summary_large_image", title, description },
+      openGraph: { type: "article", publishedTime: guide.published, modifiedTime: guide.updated },
+    })),
   };
 }
 

@@ -2,7 +2,10 @@
   "Seo": {
     "siteName": "Staffra",
     "defaultTitle": "Staffra — Contrate funcionários de IA que vendem, atendem e agendam 24/7",
-    "description": "A Malu vende e a Ana agenda pelo WhatsApp, Instagram e pelo seu site, 24 horas por dia, com os seus preços, estoque e horários. Pronto em minutos, sem programar."
+    "description": "A Malu vende e a Ana agenda pelo WhatsApp, Instagram e pelo seu site, 24 horas por dia, com os seus preços, estoque e horários. Pronto em minutos, sem programar.",
+    "ogHeadline": "Contrate funcionários de IA que vendem, atendem e agendam 24/7",
+    "ogSubtitle": "Pelo WhatsApp, Instagram e pelo seu site, com os seus preços e horários. Pronto em minutos, sem programar.",
+    "ogAlt": "Staffra — funcionários de IA que vendem, atendem e agendam pelo WhatsApp, Instagram e pelo seu site"
   },
   "Auth": {
     "close": "Fechar",

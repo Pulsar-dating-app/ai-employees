@@ -11,7 +11,7 @@ import {
   SOFTWARE_ID,
   type SiteIdentity,
 } from "@/lib/seo/structured-data";
-import { COMPANY } from "@/lib/seo/site";
+import { COMPANY, SOCIAL_PROFILES } from "@/lib/seo/site";
 
 // The public pages' schema.org graphs are built from the same message data
 // the visible sections render. These tests pin the shapes search engines and
@@ -73,8 +73,8 @@ describe("buildOrganization", () => {
     expect(logo.width as number).toBeGreaterThanOrEqual(112);
   });
 
-  it("omits sameAs while there are no social profiles", () => {
-    expect(org).not.toHaveProperty("sameAs");
+  it("links the official social profiles as sameAs", () => {
+    expect(org.sameAs).toEqual([...SOCIAL_PROFILES]);
   });
 });
 
