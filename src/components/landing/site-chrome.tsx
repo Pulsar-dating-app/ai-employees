@@ -91,6 +91,7 @@ export async function SiteFooter({ locale, onLanding = true }: { locale: Locale;
   const socialLinks = [
     { icon: "linkedin", href: SOCIAL_LINKS.linkedin, label: brand("social.linkedin"), external: true },
     { icon: "instagram", href: SOCIAL_LINKS.instagram, label: brand("social.instagram"), external: true },
+    { icon: "youtube", href: SOCIAL_LINKS.youtube, label: brand("social.youtube"), external: true },
     { icon: "mail", href: `mailto:${COMPANY.email}`, label: brand("social.email"), external: false },
   ];
 

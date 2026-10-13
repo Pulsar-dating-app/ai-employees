@@ -1,7 +1,7 @@
 {
   "Seo": {
     "siteName": "Staffra",
-    "defaultTitle": "Staffra — Assumi dipendenti IA che vendono, assistono e prenotano 24/7",
+    "defaultTitle": "Staffra — Dipendenti IA che vendono, assistono e prenotano 24/7",
     "description": "Malu vende e Ana prenota su WhatsApp, Instagram e sul tuo sito, 24 ore su 24, con i tuoi prezzi, scorte e orari reali. Pronta in pochi minuti, senza codice.",
     "ogHeadline": "Assumi dipendenti IA che vendono, assistono e prenotano 24/7",
     "ogSubtitle": "Su WhatsApp, Instagram e sul tuo sito, con i tuoi prezzi e orari reali. Pronta in pochi minuti, senza codice.",
@@ -1671,6 +1671,7 @@
     "social": {
       "linkedin": "Staffra su LinkedIn",
       "instagram": "Staffra su Instagram",
+      "youtube": "Staffra su YouTube",
       "email": "Scrivi un'email a Staffra"
     },
     "llms": {
