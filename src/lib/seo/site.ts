@@ -47,6 +47,7 @@ export const COMPANY = {
 export const SOCIAL_LINKS = {
   linkedin: "https://www.linkedin.com/company/staffra-io",
   instagram: "https://www.instagram.com/staffra.io/",
+  youtube: "https://www.youtube.com/channel/UCS-QCh5ytfi2UBDTsfJirew",
 } as const;
 
 export const SOCIAL_PROFILES: readonly string[] = Object.values(SOCIAL_LINKS);

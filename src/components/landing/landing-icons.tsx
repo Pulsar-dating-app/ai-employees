@@ -90,6 +90,15 @@ const ICONS: Record<string, Draw> = {
       </>
     ),
   },
+  youtube: {
+    ...S,
+    body: (
+      <>
+        <rect x="2.5" y="5" width="19" height="14" rx="4" />
+        <path d="m10 9.5 4.5 2.5-4.5 2.5z" />
+      </>
+    ),
+  },
   mail: {
     ...S,
     body: (
