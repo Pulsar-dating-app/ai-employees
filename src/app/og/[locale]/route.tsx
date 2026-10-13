@@ -1,18 +1,7 @@
 import { ImageResponse } from "next/og";
-
-// The share card shown when a link to the site is posted to WhatsApp,
-// LinkedIn, X, Slack, etc. Generated (not a static file) so the copy stays
-// in one place and a brand-colour tweak is a code change, not a re-export
-// from a design tool. Statically optimised at build time — no request-time
-// data is read here.
-//
-// Text-only on purpose: no font or image file is read, so there is nothing
-// that can fail the build on a path or runtime difference. Palette matches
-// the landing (src/components/landing/landing-page-2.tsx).
-
-export const alt = "Staffra — AI employees that sell, support and book on WhatsApp, Instagram and your site";
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+import { getTranslations } from "next-intl/server";
+import { SUPPORTED_LOCALES } from "@/i18n/locales";
+import { OG_IMAGE_SIZE } from "@/lib/seo/social";
 
 const PRIMARY = "#3525cd";
 const INK = "#1b1b24";
@@ -20,7 +9,16 @@ const INK_SOFT = "#464555";
 const SURFACE = "#fcf8ff";
 const FIXED = "#e2dfff";
 
-export default function OpengraphImage() {
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return SUPPORTED_LOCALES.map((locale) => ({ locale }));
+}
+
+export async function GET(_request: Request, { params }: RouteContext<"/og/[locale]">) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Seo" });
+
   return new ImageResponse(
     (
       <div
@@ -46,21 +44,21 @@ export default function OpengraphImage() {
             letterSpacing: "-0.01em",
           }}
         >
-          Staffra
+          {t("siteName")}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div
             style={{
-              fontSize: 68,
+              fontSize: 64,
               fontWeight: 700,
-              lineHeight: 1.05,
+              lineHeight: 1.08,
               letterSpacing: "-0.02em",
               color: INK,
-              maxWidth: 900,
+              maxWidth: 980,
             }}
           >
-            Hire AI employees that sell, support and book 24/7
+            {t("ogHeadline")}
           </div>
           <div
             style={{
@@ -68,11 +66,10 @@ export default function OpengraphImage() {
               fontSize: 30,
               fontWeight: 400,
               color: INK_SOFT,
-              maxWidth: 860,
+              maxWidth: 900,
             }}
           >
-            Trained on your documents and catalogue. Live on Official WhatsApp,
-            Instagram, Telegram and your website in under 15 minutes.
+            {t("ogSubtitle")}
           </div>
         </div>
 
@@ -82,6 +79,6 @@ export default function OpengraphImage() {
         </div>
       </div>
     ),
-    size,
+    OG_IMAGE_SIZE,
   );
 }

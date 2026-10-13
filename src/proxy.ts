@@ -57,6 +57,6 @@ export const config = {
     // round-trip on them would add latency for nothing -- there is no
     // cookie to refresh in the first place. `api/cron/` is guarded by a
     // bearer CRON_SECRET inside the route, not by a session.
-    "/((?!_next/static|_next/image|favicon.ico|c/|api/chat/|api/sales-contact|talk/|api/webhooks/|api/cron/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|og/|c/|api/chat/|api/sales-contact|talk/|api/webhooks/|api/cron/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

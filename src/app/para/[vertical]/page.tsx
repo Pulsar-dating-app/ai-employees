@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { intlTag, type Locale } from "@/i18n/locales";
-import { localizedAlternates, localizedPath } from "@/i18n/routing";
-import { absoluteUrl } from "@/lib/seo/site";
+import type { Locale } from "@/i18n/locales";
+import { localizedAlternates } from "@/i18n/routing";
+import { socialMetadata } from "@/lib/seo/social";
 import { findVertical, verticalPath } from "@/lib/verticals/catalog";
 import { VerticalPage } from "@/components/verticals/vertical-page";
 
@@ -16,7 +16,6 @@ export async function generateMetadata({ params }: PageProps<"/para/[vertical]">
 
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("Verticals");
-  const seo = await getTranslations("Seo");
   const path = verticalPath(vertical);
   // Root layout's title template appends " · Staffra".
   const title = t(`${vertical.key}.seoTitle`);
@@ -26,17 +25,7 @@ export async function generateMetadata({ params }: PageProps<"/para/[vertical]">
     title,
     description,
     alternates: localizedAlternates(path, locale),
-    // A page-level openGraph replaces the root one wholesale, so it repeats
-    // the shared fields; the image still comes from app/opengraph-image.tsx.
-    openGraph: {
-      type: "website",
-      url: absoluteUrl(localizedPath(locale, path)),
-      siteName: seo("siteName"),
-      locale: intlTag(locale).replace("-", "_"),
-      title,
-      description,
-    },
-    twitter: { card: "summary_large_image", title, description },
+    ...(await socialMetadata({ locale, path, title, description })),
   };
 }
 

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { SITE_URL, absoluteUrl } from "@/lib/seo/site";
-import { intlTag, type Locale } from "@/i18n/locales";
-import { localizedPath } from "@/i18n/routing";
+import { SITE_URL } from "@/lib/seo/site";
+import { socialMetadata } from "@/lib/seo/social";
+import type { Locale } from "@/i18n/locales";
 import "./globals.css";
 
 // Inter is the Staffra "Human-Centric AI" design-system typeface (Stitch).
@@ -56,22 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     applicationName: siteName,
     ...(verification ? { verification } : {}),
-    // `images` is deliberately omitted — the app/opengraph-image.tsx and
-    // app/twitter-image.tsx file conventions generate the card and inject the
-    // tags (with width/height/type). Setting `images` here would override them.
-    openGraph: {
-      type: "website",
-      url: absoluteUrl(localizedPath(locale, "/")),
-      locale: intlTag(locale).replace("-", "_"),
-      siteName,
-      title,
-      description,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-    },
+    ...(await socialMetadata({ locale, path: "/", title, description })),
   };
 }
 
