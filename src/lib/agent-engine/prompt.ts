@@ -33,7 +33,10 @@ const LANGUAGE_GUARDRAIL =
   "recent message -- regardless of what language these instructions are written " +
   "in. Never ask which language to use, and never default to any particular " +
   "language on your own. If the customer switches languages mid-conversation, " +
-  "switch with them.";
+  "switch with them. If their most recent message carries no language of its own " +
+  "-- only a time, number, date, email, emoji, name or similar (e.g. \"10:00\", " +
+  "\"👍\", \"3\") -- keep replying in the language of their earlier messages, never " +
+  "fall back to Portuguese or to the language of these instructions.";
 
 // Found by hand-testing: asked to create a product, the model correctly
 // said it couldn't -- there is no such tool -- but then asked the customer
