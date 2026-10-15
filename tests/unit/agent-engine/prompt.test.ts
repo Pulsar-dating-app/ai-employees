@@ -443,10 +443,12 @@ describe("buildSystemPrompt", () => {
   });
 
   // Found chat-testing Ana on a clinic: a symptom got a full medical briefing
-  // plus "não consigo avaliar sintomas" in the same message. SCOPE_GUARDRAIL's
+  // plus "não consigo avaliar sintomas" in the same message. Later narrowed so
+  // a symptom given as the reason for booking doesn't trigger the fixed
+  // emergency-room line. SCOPE_GUARDRAIL's
   // "medical advice" line never fired because a symptom is on topic for a
   // clinic, so this rule is separate -- and it has to come after SCOPE.
-  it("always includes a guardrail that answers symptoms with one short line, then offers the earliest time or the team", () => {
+  it("always includes a guardrail that books a symptom given as the reason and keeps the fixed line for guidance requests", () => {
     const agentConfig: AgentConfig = {
       slug: "ana",
       role: "Scheduling Assistant",
@@ -463,9 +465,14 @@ describe("buildSystemPrompt", () => {
     // The follow-up ("should I go to the ER?") is where the detailed advice
     // came from last time.
     expect(prompt).toContain("Give the same short line again on any follow-up");
-    // The offer belongs to the same first message, however serious the symptom
-    // sounds -- chat testing showed the model skipping it for chest pain.
-    expect(prompt).toContain("In that same first message");
+    // A symptom given as the reason for booking is not a guidance request: the
+    // emergency-room line answered "dor de dente, quero uma avaliação" before.
+    expect(prompt).toContain("Only when the customer asks you for that kind of guidance");
+    expect(prompt).toContain("do not mention emergency rooms");
+    expect(prompt).toContain("pick the service that best fits");
+    // The offer belongs to the same message as the line -- chat testing showed
+    // the model skipping it for chest pain.
+    expect(prompt).toContain("In that same message");
     expect(prompt).toContain("look up the earliest opening");
     expect(prompt).toContain("offer to connect them with the team instead");
     expect(prompt.indexOf("you never give medical guidance")).toBeGreaterThan(

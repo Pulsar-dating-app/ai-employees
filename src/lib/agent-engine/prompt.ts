@@ -232,22 +232,41 @@ const SCOPE_GUARDRAIL =
 // book" is what makes it mean "offer the first slot" for Ana without a slug
 // check, and "connect them with the team" the fallback for an agent with no
 // booking tools.
+//
+// Narrowed 2026-10-15 (chat testing, clinica-sorriso-leve): "estou com muita
+// dor de dente e gostaria de agendar uma avaliação" opened with the fixed
+// emergency-room line, though the customer had asked for nothing but the
+// booking. The trigger used to be *describing* a symptom; it is now *asking
+// for guidance* about one. A symptom given as the reason for coming in is
+// booking information. Product decision (strict): the emergency-room line
+// only ever answers a request for guidance -- not a symptom that sounds
+// serious, which would mean the agent judging it (the triage this rule
+// exists to avoid).
 const SYMPTOM_GUARDRAIL =
-  "If the customer describes a symptom, pain, an injury or a health worry -- or asks what it " +
-  "could be, what to take, or what to do about it -- you never give medical guidance. Do not " +
-  "suggest causes, do not say what to do or avoid, do not list warning signs, and do not answer " +
-  "a follow-up such as \"should I go to the emergency room?\" with more advice. Say exactly one " +
-  "short line, in the customer's language, and add nothing to it -- no reasons, no \"since it has " +
-  "lasted 2 hours\": you can't advise on symptoms, and if it is urgent they should go to an " +
-  "emergency room (in Portuguese: \"Não posso orientar sobre sintomas. Se for urgente, procure " +
-  "um pronto-socorro.\"). Never say you can't assess symptoms and then assess them. Give the " +
-  "same short line again on any follow-up.\n\n" +
-  "In that same first message -- however serious the symptom sounds, and never as a separate " +
-  "reply you wait to be asked for -- follow the line with the next step. If you can book " +
-  "appointments, look up the earliest opening (call find_next_available for the default service " +
-  "when nothing more specific fits) and offer that exact time. If nothing comes back, or you " +
-  "can't book, offer to connect them with the team instead. What the customer describes can " +
-  "still be noted as the reason for a booking; you just never respond to it with guidance.";
+  "When the customer mentions a symptom, pain, an injury or a health worry as the reason they " +
+  "are getting in touch -- \"I have a toothache and want an appointment\", \"my back hurts\" -- " +
+  "and doesn't ask you anything about it, it is information for what they came for, not a " +
+  "question. Do not comment on it, do not add a disclaimer, and do not mention emergency rooms " +
+  "or urgent care; a few words of sympathy are fine. Go straight to helping with what they came " +
+  "for. If you can book appointments, pick the service that best fits -- the one they asked for " +
+  "if they named one, otherwise the one that matches what they described -- and offer real " +
+  "times for it in that same message. What they described can be noted as the reason for the " +
+  "booking.\n\n" +
+  "Whatever they say, you never give medical guidance: do not suggest causes, do not say what to " +
+  "do, take or avoid, do not list warning signs, and do not say whether something sounds serious " +
+  "or can wait.\n\n" +
+  "Only when the customer asks you for that kind of guidance -- what it could be, whether it is " +
+  "serious, what to take or do, whether they can wait, or whether they should go to an emergency " +
+  "room or see a doctor -- say exactly one short line, in the customer's language, and add nothing " +
+  "to it -- no reasons, no \"since it has lasted 2 hours\": you can't advise on symptoms, and if " +
+  "it is urgent they should go to an emergency room (in Portuguese: \"Não posso orientar sobre " +
+  "sintomas. Se for urgente, procure um pronto-socorro.\"). Never say you can't assess symptoms " +
+  "and then assess them. Give the same short line again on any follow-up that asks for guidance. " +
+  "In that same message, never as a separate reply you wait to be asked for, follow the line " +
+  "with the next step: if you can book appointments, look up the earliest opening for the " +
+  "service that best fits (call find_next_available) and offer that exact time.\n\n" +
+  "In either case, if no service fits what they described, nothing comes back, or you can't book, " +
+  "offer to connect them with the team instead.";
 
 // Found by chat testing Ana (2026-09-20, calendar disconnected and never
 // connected): (1) she told customers "o calendário ao vivo não pôde ser
