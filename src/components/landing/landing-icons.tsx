@@ -126,6 +126,43 @@ const ICONS: Record<string, Draw> = {
       </>
     ),
   },
+  play_arrow: { ...S, body: <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" /> },
+  pause: {
+    ...S,
+    body: (
+      <>
+        <rect x="6.5" y="5" width="3.5" height="14" rx="1" fill="currentColor" />
+        <rect x="14" y="5" width="3.5" height="14" rx="1" fill="currentColor" />
+      </>
+    ),
+  },
+  volume_up: {
+    ...S,
+    body: (
+      <>
+        <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+        <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+      </>
+    ),
+  },
+  volume_off: {
+    ...S,
+    body: (
+      <>
+        <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+        <path d="m16 9.5 5 5m0-5-5 5" />
+      </>
+    ),
+  },
+  replay: {
+    ...S,
+    body: (
+      <>
+        <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" />
+        <path d="M4.5 4.5v4h4" />
+      </>
+    ),
+  },
   play_circle: {
     ...S,
     body: (

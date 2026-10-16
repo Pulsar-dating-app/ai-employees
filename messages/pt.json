@@ -335,6 +335,22 @@
         }
       ]
     },
+    "video": {
+      "heading": "Veja a Ana enchendo uma agenda em 50 segundos",
+      "sub": "Do primeiro “oi” ao horário confirmado, sem ninguém do seu negócio parar o que está fazendo.",
+      "label": "Vídeo: a Ana responde clientes no WhatsApp e marca horários sozinha",
+      "play": "Assistir ao vídeo",
+      "duration": "50 s",
+      "pause": "Pausar",
+      "resume": "Continuar",
+      "soundOn": "Ouvir com som",
+      "soundOff": "Tirar o som",
+      "replay": "Assistir de novo",
+      "progress": "Progresso do vídeo",
+      "endTitle": "Coloque a Ana para encher a sua agenda.",
+      "endSub": "Teste a Ana no seu negócio por 7 dias.",
+      "languageNote": ""
+    },
     "channels": {
       "heading": "Uma funcionária, todos os seus canais",
       "sub": "Conecte ao WhatsApp oficial, ao Instagram, ao Telegram e ao seu site. É a mesma funcionária, com a mesma memória, em todos eles.",

@@ -15,6 +15,7 @@ import { ShutterReveal } from "./shutter-reveal";
 import { SlideReveal } from "./slide-reveal";
 import { CascadeText } from "./cascade-text";
 import { ProductTour } from "./product-tour";
+import { VideoSpotlight } from "./video-spotlight";
 import { ValueSection } from "./value-calculator";
 import { HeroChatDemo, type HeroChatCopy } from "./hero-chat-demo";
 import { SiteFooter, SiteHeader } from "./site-chrome";
@@ -162,6 +163,8 @@ export async function LandingPageV2() {
             </div>
           </div>
         </section>
+
+        <VideoSpotlight hireHref={HIRE} />
 
         <section id="workforce" className="w-full bg-[#f5f2ff] py-12">
           <div className="mx-auto max-w-[1440px] px-4 md:px-10">

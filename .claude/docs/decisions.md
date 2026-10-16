@@ -28,6 +28,14 @@ Record of notable decisions and the reasoning behind them, newest first.
 
 **Why:** Google's Third-Party Data Safety review rejected verification because the requested scope (`auth/calendar`) didn't string-match the Console's (`calendar.events.owned`), and the full scope isn't least-privilege. `events.owned` alone would break freeBusy, the calendar list and calendar creation, so each call gets its own narrowest scope. Tradeoff: a colleague's calendar shared with edit rights can no longer be picked; that colleague connects their own account (already the per-professional model). Event contents are never read (freeBusy returns busy intervals only), which keeps the Workspace-data-to-AI exposure to derived availability.
 
+## 2026-10-16 — Ana sales video as a dark "spotlight" section right after the hero
+
+**Decision:** the landing gets a dedicated `#video` section (`video-spotlight.tsx`) between the "works with" strip and the workforce cards. It plays a 49s Ana-focused sales video ("a atendente virtual que enche a sua agenda"): muted autoplay in view, a prominent "Ouvir com som", an end card with the trial CTA, and the trial CTA, "Ver planos" and trust checks below the player. It is the only dark band on a lilac page.
+
+**Why:** cold visitors needed to understand the product in seconds and see it working before the long scroll. The angle is "more bookings", not only after-hours coverage, at the owner's request. Every claim in the video maps to a shipped feature, with no invented metrics. A price/payback scene was cut from the video at the owner's request, so Staffra pricing stays in the hero and pricing sections, not the video.
+
+**How to apply:** to change the video, edit `video/src/promo/Promo.tsx`, render with `npm run render:promo` inside `video/`, re-encode to `public/landing-v2/video/ana-agenda.mp4` (CRF about 25, `+faststart`) and regenerate the poster. Keep `src` static with `preload="none"`, because a dynamic `src` breaks mobile autoplay.
+
 ## 2026-10-12 — Landing explainer video built in code (Remotion), not AI-generated footage
 
 **Decision:** the landing explainer is a motion-graphics video rendered from React with Remotion, in its own `video/` project. It is built from the real product screenshots, the Malu/Ana portraits, the brand palette and Inter, with the copy per locale in one file. It is not generated with text-to-video tools. There is no voiceover. The music and sound effects are synthesized in code (`video/scripts/synth-audio.mjs`) rather than taken from a stock library, so there's no licence to track and every effect is locked to its animation frame.

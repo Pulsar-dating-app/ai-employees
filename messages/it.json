@@ -335,6 +335,22 @@
         }
       ]
     },
+    "video": {
+      "heading": "Guarda Ana riempire un'agenda in 50 secondi",
+      "sub": "Dal primo “ciao” all'appuntamento confermato, senza che nessuno della tua attività interrompa quello che sta facendo.",
+      "label": "Video: Ana risponde ai clienti su WhatsApp e prenota gli appuntamenti da sola",
+      "play": "Guarda il video",
+      "duration": "50 s",
+      "pause": "Pausa",
+      "resume": "Riprendi",
+      "soundOn": "Attiva l'audio",
+      "soundOff": "Disattiva l'audio",
+      "replay": "Guarda di nuovo",
+      "progress": "Avanzamento del video",
+      "endTitle": "Metti Ana al lavoro per riempire la tua agenda.",
+      "endSub": "Prova Ana nella tua attività per 7 giorni.",
+      "languageNote": "Video in portoghese"
+    },
     "channels": {
       "heading": "Una dipendente, tutti i tuoi canali",
       "sub": "Collegati a WhatsApp ufficiale, Instagram, Telegram e al tuo sito. Stessa dipendente, stessa memoria, ovunque.",

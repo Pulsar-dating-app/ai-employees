@@ -335,6 +335,22 @@
         }
       ]
     },
+    "video": {
+      "heading": "Watch Ana fill a schedule in 50 seconds",
+      "sub": "From the first “hi” to a confirmed booking, without anyone on your team stopping what they're doing.",
+      "label": "Video: Ana answers customers on WhatsApp and books appointments on her own",
+      "play": "Watch the video",
+      "duration": "50 s",
+      "pause": "Pause",
+      "resume": "Resume",
+      "soundOn": "Turn sound on",
+      "soundOff": "Mute",
+      "replay": "Watch again",
+      "progress": "Video progress",
+      "endTitle": "Put Ana to work filling your schedule.",
+      "endSub": "Try Ana in your business for 7 days.",
+      "languageNote": "Video in Portuguese"
+    },
     "channels": {
       "heading": "One employee, all your channels",
       "sub": "Connect to official WhatsApp, Instagram, Telegram and your website. Same employee, same memory, everywhere.",

@@ -24,6 +24,7 @@ Constraints:
 THESIS: a page that answers buying questions in order and repeats one action. The sections run:
 1. Hero
 2. Strip of tools it works with
+2b. Watch: `#video`, a dark spotlight band with the 49s Ana sales video (muted autoplay in view, "Ouvir com som", an end card with the trial CTA), followed by the trial CTA and "Ver planos". It is the page's one cinema moment, and its signature is the conic light sweep around the frame
 3. Who: Malu and Ana cards, each with "Contratar a {name}"
 4. Where: the channel showcase
 5. See it: `#demo`, a 5-step tour of real dashboard screenshots (Conversas, Canais, Catálogo, Agenda, Desempenho), captured from a seeded sample account and labelled "Capturas reais do painel, com dados de exemplo". Shown on mobile too, as a zoomed crop
