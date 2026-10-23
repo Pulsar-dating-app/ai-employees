@@ -37,27 +37,37 @@ function initialHours(): Record<number, DayHours | null> {
   return initial;
 }
 
-export function ServicesSetup({ companyId, agentName }: { companyId: string; agentName: string }) {
+export function ServicesSetup({
+  companyId,
+  agentName,
+  initialTrade,
+}: {
+  companyId: string;
+  agentName: string;
+  initialTrade?: ServicePresetTrade | null;
+}) {
   const t = useTranslations("Onboarding.setup.services");
   const router = useRouter();
 
-  const [trade, setTrade] = useState<ServicePresetTrade | null>(null);
-  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [trade, setTrade] = useState<ServicePresetTrade | null>(initialTrade ?? null);
+  const [drafts, setDrafts] = useState<Draft[]>(() => (initialTrade ? draftsFor(initialTrade) : []));
   const [hours, setHours] = useState<Record<number, DayHours | null>>(initialHours);
   const [lines, setLines] = useState<FeedLine[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function draftsFor(next: ServicePresetTrade): Draft[] {
+    return SERVICE_PRESETS[next].map((preset) => ({
+      id: `${next}-${preset.key}`,
+      name: t(`presets.${next}.${preset.key}`),
+      durationMinutes: preset.durationMinutes,
+      price: "",
+    }));
+  }
+
   function chooseTrade(next: ServicePresetTrade) {
     setTrade(next);
-    setDrafts(
-      SERVICE_PRESETS[next].map((preset) => ({
-        id: `${next}-${preset.key}`,
-        name: t(`presets.${next}.${preset.key}`),
-        durationMinutes: preset.durationMinutes,
-        price: "",
-      })),
-    );
+    setDrafts(draftsFor(next));
   }
 
   function updateDraft(id: string, patch: Partial<Draft>) {

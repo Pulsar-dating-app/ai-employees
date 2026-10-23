@@ -3840,5 +3840,146 @@
     "body": "The person in charge of {company} removed your access. If this is a mistake, talk to them: they can add you back with this same email. You can also set up a business of your own.",
     "startOwn": "Set up my own business",
     "logout": "Log out"
+  },
+  "Quiz": {
+    "metaTitle": "Build your plan | Staffra",
+    "back": "Back",
+    "progress": "Question {current} of {total}",
+    "business": {
+      "title": "What's your business?",
+      "subtitle": "So we can set up the right service for you.",
+      "options": {
+        "barber": "Barbershop",
+        "salon": "Beauty salon",
+        "nails": "Nail salon",
+        "aesthetics": "Aesthetics clinic",
+        "dental": "Dental clinic",
+        "nutri": "Nutritionist",
+        "pilates": "Pilates studio",
+        "otherScheduling": "Other appointment-based business",
+        "store": "Store / I sell products"
+      }
+    },
+    "volume": {
+      "title": "How many conversations do you handle a day?",
+      "subtitle": "Roughly, across WhatsApp and Instagram.",
+      "unit": "a day",
+      "options": {
+        "low": "Up to 10",
+        "mid": "10 to 30",
+        "high": "More than 30"
+      }
+    },
+    "pain": {
+      "title": "What weighs on your day the most?",
+      "subtitle": "Pick the one that sounds most like you.",
+      "options": {
+        "ana": {
+          "slowReplies": "I reply late and customers give up",
+          "afterHours": "I lose customers who message after hours",
+          "busywork": "I spend too much time booking and rescheduling"
+        },
+        "malu": {
+          "slowReplies": "I reply late and customers give up",
+          "afterHours": "I lose sales from people who message after hours",
+          "busywork": "I answer the same questions all day"
+        }
+      }
+    },
+    "building": "Building your plan…",
+    "chat": {
+      "ana": [
+        {
+          "from": "customer",
+          "text": "Hi! Any openings tomorrow morning?"
+        },
+        {
+          "from": "agent",
+          "text": "Yes! Tomorrow morning I have 9:00, 10:30 and 11:00 free. Which works best?"
+        },
+        {
+          "from": "customer",
+          "text": "10:30, please"
+        },
+        {
+          "from": "agent",
+          "text": "Done, tomorrow at 10:30 is confirmed. You'll get a reminder before your appointment."
+        }
+      ],
+      "malu": [
+        {
+          "from": "customer",
+          "text": "Hi! Do you have these sneakers in size 39?"
+        },
+        {
+          "from": "agent",
+          "text": "Yes! The black pair in 39 is in stock for R$ 289 and arrives within 3 days."
+        },
+        {
+          "from": "customer",
+          "text": "I'll take it!"
+        },
+        {
+          "from": "agent",
+          "text": "Great! Here's the link to check out securely."
+        }
+      ]
+    },
+    "result": {
+      "eyebrow": "Your plan is ready",
+      "headline": {
+        "ana": {
+          "slowReplies": "{name} answers your customers right away and books them in.",
+          "afterHours": "{name} books appointments even while you're closed.",
+          "busywork": "{name} handles your calendar so you can focus on your clients."
+        },
+        "malu": {
+          "slowReplies": "{name} answers right away and walks customers to checkout.",
+          "afterHours": "{name} sells while your store is closed.",
+          "busywork": "{name} answers customer questions and you just watch the sales come in."
+        }
+      },
+      "role": {
+        "ana": "Booking assistant",
+        "malu": "Sales assistant"
+      },
+      "sampleLabel": "Sample conversation",
+      "planName": "{plan} plan",
+      "planReplies": "Up to {count} replies a month, on WhatsApp, Instagram and your website.",
+      "perks": {
+        "ana": [
+          "Answers 24/7, every day",
+          "Books, reschedules and confirms appointments on your calendar",
+          "Sends reminders so customers don't miss them"
+        ],
+        "malu": [
+          "Answers 24/7, every day",
+          "Replies with your real prices and stock",
+          "Sends your store's checkout link"
+        ]
+      },
+      "signUpTitle": "Start for free now",
+      "signUpSubtitle": "Create your account and put {name} to work in under 5 minutes.",
+      "cta": "Start for free",
+      "ctaNote": "No charge for the first days.",
+      "haveAccount": "Already have an account?",
+      "login": "Log in",
+      "freeBadge": "Free to start",
+      "trust": [
+        "No card to try it",
+        "Ready in 5 minutes",
+        "Cancel anytime"
+      ],
+      "chatTitle": "Watch {name} serve a customer like yours",
+      "recommended": "Recommended for you",
+      "planFit": {
+        "low": "Built for up to 10 conversations a day",
+        "mid": "Built for 10 to 30 conversations a day",
+        "high": "Built for more than 30 conversations a day"
+      },
+      "planFree": "Free",
+      "planFreeSub": "to start",
+      "stickyNote": "No card to try it"
+    }
   }
 }

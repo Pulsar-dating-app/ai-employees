@@ -17,11 +17,13 @@ export function PlanPicker({
   trialDays,
   trialAvailable,
   checkoutCancelled,
+  initialTier,
 }: {
   companyId: string;
   trialDays: number;
   trialAvailable: boolean;
   checkoutCancelled: boolean;
+  initialTier?: string | null;
 }) {
   const t = useTranslations("Onboarding.plan");
   const locale = useLocale();
@@ -44,7 +46,9 @@ export function PlanPicker({
   // catalog key -- switching the period or WhatsApp toggle swaps every
   // plan's key underneath the same tier, and the merchant's choice of *which
   // tier* should survive that, not reset to the first card.
-  const [selectedTier, setSelectedTier] = useState(plans[0]?.tier ?? "");
+  const [selectedTier, setSelectedTier] = useState<string>(
+    initialTier && plans.some((p) => p.tier === initialTier) ? initialTier : (plans[0]?.tier ?? ""),
+  );
   const selectedPlan = plans.find((p) => p.tier === selectedTier) ?? plans[0] ?? null;
 
   const [isStarting, setIsStarting] = useState(false);

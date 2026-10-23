@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { absoluteUrl } from "@/lib/seo/site";
+import { parseQuizAnswers } from "@/lib/quiz/answers";
 
 // Shape returned to `useActionState` in the auth forms — errors and the
 // sign-up "confirm your email" state render inline (in a modal or a full
@@ -51,9 +52,14 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const quiz = parseQuizAnswers(formData.get("quiz"));
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    ...(quiz ? { options: { data: { quiz } } } : {}),
+  });
 
   if (error) {
     return { error: await friendlyAuthError(error.message) };

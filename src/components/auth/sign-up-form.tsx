@@ -8,7 +8,15 @@ import { Button } from "@/components/ui/button";
 
 const INITIAL: AuthState = { error: null };
 
-export function SignUpForm() {
+export function SignUpForm({
+  quiz,
+  submitLabel,
+  submitNote,
+}: {
+  quiz?: string;
+  submitLabel?: string;
+  submitNote?: string;
+} = {}) {
   const t = useTranslations("Auth.signUp");
   const [state, formAction, pending] = useActionState(signUp, INITIAL);
 
@@ -22,6 +30,7 @@ export function SignUpForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {quiz ? <input type="hidden" name="quiz" value={quiz} /> : null}
       <Input
         label={t("emailLabel")}
         id="email"
@@ -49,9 +58,12 @@ export function SignUpForm() {
         </p>
       ) : null}
 
-      <Button type="submit" isLoading={pending} className="w-full">
-        {t("submit")}
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button type="submit" isLoading={pending} className="w-full">
+          {submitLabel ?? t("submit")}
+        </Button>
+        {submitNote ? <p className="text-center text-xs text-on-surface-variant">{submitNote}</p> : null}
+      </div>
     </form>
   );
 }

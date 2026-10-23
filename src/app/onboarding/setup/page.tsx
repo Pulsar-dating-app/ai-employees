@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirectTargetFor, resolveOnboardingState } from "@/lib/companies/onboarding-step";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { agentPhoto } from "@/lib/agents/media";
+import { quizServiceTrade } from "@/lib/quiz/answers";
+import { readQuizAnswers } from "@/lib/quiz/server";
 import { StepCard } from "../step-card";
 import { CatalogSetup } from "./catalog-setup";
 import { ServicesSetup } from "./services-setup";
@@ -27,7 +29,10 @@ export default async function OnboardingSetupPage() {
   const name = state.agentName ?? defaultAgentName(slug);
   const isScheduling = slug === "ana";
 
-  const t = await getTranslations(isScheduling ? "Onboarding.setup.services" : "Onboarding.setup.catalog");
+  const [t, quiz] = await Promise.all([
+    getTranslations(isScheduling ? "Onboarding.setup.services" : "Onboarding.setup.catalog"),
+    readQuizAnswers(user),
+  ]);
 
   return (
     <StepCard
@@ -37,7 +42,11 @@ export default async function OnboardingSetupPage() {
       portraitAlt={name}
     >
       {isScheduling ? (
-        <ServicesSetup companyId={state.companyId!} agentName={name} />
+        <ServicesSetup
+          companyId={state.companyId!}
+          agentName={name}
+          initialTrade={quiz ? quizServiceTrade(quiz) : null}
+        />
       ) : (
         <CatalogSetup companyId={state.companyId!} agentName={name} />
       )}

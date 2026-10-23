@@ -3840,5 +3840,146 @@
     "body": "O responsável por {company} removeu seu acesso. Se for um engano, fale com ele: ele pode te adicionar de novo com este mesmo e-mail. Você também pode criar o seu próprio negócio.",
     "startOwn": "Criar meu próprio negócio",
     "logout": "Sair"
+  },
+  "Quiz": {
+    "metaTitle": "Monte seu plano | Staffra",
+    "back": "Voltar",
+    "progress": "Pergunta {current} de {total}",
+    "business": {
+      "title": "Qual é o seu negócio?",
+      "subtitle": "Assim a gente monta o atendimento certo pra você.",
+      "options": {
+        "barber": "Barbearia",
+        "salon": "Salão de beleza",
+        "nails": "Manicure / esmalteria",
+        "aesthetics": "Clínica de estética",
+        "dental": "Clínica odontológica",
+        "nutri": "Nutricionista",
+        "pilates": "Estúdio de pilates",
+        "otherScheduling": "Outro negócio com horário marcado",
+        "store": "Loja / vendo produtos"
+      }
+    },
+    "volume": {
+      "title": "Quantas conversas você atende por dia?",
+      "subtitle": "Mais ou menos, somando WhatsApp e Instagram.",
+      "unit": "por dia",
+      "options": {
+        "low": "Até 10",
+        "mid": "De 10 a 30",
+        "high": "Mais de 30"
+      }
+    },
+    "pain": {
+      "title": "O que mais pesa no seu dia hoje?",
+      "subtitle": "Escolha a que mais parece com você.",
+      "options": {
+        "ana": {
+          "slowReplies": "Demoro pra responder e o cliente desiste",
+          "afterHours": "Perco clientes que chamam fora do horário",
+          "busywork": "Gasto tempo demais marcando e remarcando horários"
+        },
+        "malu": {
+          "slowReplies": "Demoro pra responder e o cliente desiste",
+          "afterHours": "Perco vendas de quem chama fora do horário",
+          "busywork": "Respondo as mesmas perguntas o dia todo"
+        }
+      }
+    },
+    "building": "Montando seu plano…",
+    "chat": {
+      "ana": [
+        {
+          "from": "customer",
+          "text": "Oi! Tem horário amanhã de manhã?"
+        },
+        {
+          "from": "agent",
+          "text": "Tenho sim! Amanhã de manhã estão livres 9:00, 10:30 e 11:00. Qual fica melhor?"
+        },
+        {
+          "from": "customer",
+          "text": "10:30, por favor"
+        },
+        {
+          "from": "agent",
+          "text": "Prontinho, amanhã às 10:30 está confirmado. Você vai receber um lembrete antes do horário."
+        }
+      ],
+      "malu": [
+        {
+          "from": "customer",
+          "text": "Oi! Vocês têm esse tênis no 39?"
+        },
+        {
+          "from": "agent",
+          "text": "Tenho sim! O modelo preto no 39 está em estoque por R$ 289 e chega em até 3 dias."
+        },
+        {
+          "from": "customer",
+          "text": "Quero!"
+        },
+        {
+          "from": "agent",
+          "text": "Perfeito! Aqui está o link pra finalizar a compra com segurança."
+        }
+      ]
+    },
+    "result": {
+      "eyebrow": "Seu plano está pronto",
+      "headline": {
+        "ana": {
+          "slowReplies": "A {name} responde seus clientes na hora e já marca o horário.",
+          "afterHours": "A {name} marca horários mesmo com o seu negócio fechado.",
+          "busywork": "A {name} cuida da sua agenda pra você focar no atendimento."
+        },
+        "malu": {
+          "slowReplies": "A {name} responde na hora e leva o cliente até a compra.",
+          "afterHours": "A {name} vende enquanto a sua loja está fechada.",
+          "busywork": "A {name} tira as dúvidas dos clientes e você só acompanha as vendas."
+        }
+      },
+      "role": {
+        "ana": "Atendente de agendamentos",
+        "malu": "Atendente de vendas"
+      },
+      "sampleLabel": "Conversa de exemplo",
+      "planName": "Plano {plan}",
+      "planReplies": "Até {count} respostas por mês, no WhatsApp, Instagram e no seu site.",
+      "perks": {
+        "ana": [
+          "Atende 24 horas, todos os dias",
+          "Marca, remarca e confirma horários na sua agenda",
+          "Manda lembrete pro cliente não faltar"
+        ],
+        "malu": [
+          "Atende 24 horas, todos os dias",
+          "Responde com seus preços e estoque reais",
+          "Manda o link do checkout da sua loja"
+        ]
+      },
+      "signUpTitle": "Comece grátis agora",
+      "signUpSubtitle": "Crie sua conta e coloque a {name} pra trabalhar em menos de 5 minutos.",
+      "cta": "Começar grátis",
+      "ctaNote": "Sem cobrança nos primeiros dias.",
+      "haveAccount": "Já tem uma conta?",
+      "login": "Entrar",
+      "freeBadge": "Grátis para começar",
+      "trust": [
+        "Sem cartão para testar",
+        "Pronto em 5 minutos",
+        "Cancele quando quiser"
+      ],
+      "chatTitle": "Veja a {name} atendendo um cliente como o seu",
+      "recommended": "Recomendado pra você",
+      "planFit": {
+        "low": "Ideal pra quem atende até 10 conversas por dia",
+        "mid": "Ideal pra quem atende de 10 a 30 conversas por dia",
+        "high": "Ideal pra quem atende mais de 30 conversas por dia"
+      },
+      "planFree": "Grátis",
+      "planFreeSub": "para começar",
+      "stickyNote": "Sem cartão para testar"
+    }
   }
 }
