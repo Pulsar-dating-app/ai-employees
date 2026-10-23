@@ -42,7 +42,7 @@ describe("decideWhatsappSendGate (Trello D5)", () => {
 describe("decideWhatsappPlanGate", () => {
   it("allows a Meta-direct connection on a plain plan", () => {
     for (const subscription_status of ["active", "trialing"]) {
-      expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: false, whatsappAvailable: true }, "meta")).toEqual({
+      expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: false }, "meta")).toEqual({
         allow: true,
       });
     }
@@ -50,20 +50,20 @@ describe("decideWhatsappPlanGate", () => {
 
   it("allows a Twilio connection on a whatsappIncluded plan", () => {
     for (const subscription_status of ["active", "trialing"]) {
-      expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: true, whatsappAvailable: true }, "twilio")).toEqual({
+      expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: true }, "twilio")).toEqual({
         allow: true,
       });
     }
   });
 
   it("allows a Meta-direct connection on a whatsappIncluded plan", () => {
-    expect(decideWhatsappPlanGate({ subscription_status: "active", whatsappIncluded: true, whatsappAvailable: true }, "meta")).toEqual({
+    expect(decideWhatsappPlanGate({ subscription_status: "active", whatsappIncluded: true }, "meta")).toEqual({
       allow: true,
     });
   });
 
   it("blocks a Twilio connection on a plain plan", () => {
-    expect(decideWhatsappPlanGate({ subscription_status: "active", whatsappIncluded: false, whatsappAvailable: true }, "twilio")).toEqual({
+    expect(decideWhatsappPlanGate({ subscription_status: "active", whatsappIncluded: false }, "twilio")).toEqual({
       allow: false,
       reason: "no_addon",
     });
@@ -72,22 +72,11 @@ describe("decideWhatsappPlanGate", () => {
   it("blocks any connection once the subscription has lapsed", () => {
     for (const subscription_status of ["past_due", "canceled", "unpaid", "incomplete", null]) {
       for (const provider of ["meta", "twilio"] as const) {
-        expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: true, whatsappAvailable: true }, provider)).toEqual({
+        expect(decideWhatsappPlanGate({ subscription_status, whatsappIncluded: true }, provider)).toEqual({
           allow: false,
           reason: "no_addon",
         });
       }
-    }
-  });
-
-  it("blocks every provider on Staffra Free, which has no WhatsApp", () => {
-    for (const provider of ["meta", "twilio"] as const) {
-      expect(
-        decideWhatsappPlanGate(
-          { subscription_status: "active", whatsappIncluded: false, whatsappAvailable: false },
-          provider,
-        ),
-      ).toEqual({ allow: false, reason: "no_addon" });
     }
   });
 

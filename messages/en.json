@@ -245,12 +245,11 @@
       "ctaTrial": "Start free",
       "later": "I'll decide later",
       "error": "We couldn't open the checkout. Please try again.",
-      "freeFeatureChannels": "Instagram, Telegram and your website",
       "freeFeatureNoCard": "No card needed",
-      "freeNoWhatsapp": "No WhatsApp",
       "ctaFree": "Start with {plan}",
       "freeBadge": "Free forever",
-      "orPaid": "Or choose a paid plan, with WhatsApp and more replies"
+      "orPaid": "Or choose a paid plan, with more replies and the option to let us handle WhatsApp",
+      "freeWhatsappOwn": "WhatsApp on your own Meta account"
     },
     "profile": {
       "title": "First, what's your name?",
@@ -513,7 +512,7 @@
     },
     "pricing": {
       "heading": "Simple plans, with Malu and Ana in all of them",
-      "sub": "Start free, no card needed. Paid plans add official WhatsApp and more replies a month.",
+      "sub": "Start free, no card needed. Paid plans add more replies and the option to let us handle WhatsApp for you.",
       "trialNote": "7 days free. We ask for a card up front but only charge after 7 days or 500 replies, whichever comes first.",
       "featuredBadge": "Recommended",
       "periodToggle": {
@@ -526,7 +525,7 @@
       "annualSavings": "{total} a year · you save {saved}",
       "repliesMonthly": "{count} replies a month",
       "repliesNote": "Every message your team sends a customer counts as one reply.",
-      "includedTitle": "All of this in every paid plan",
+      "includedTitle": "All of this in every plan",
       "included": [
         "Malu for sales and Ana for scheduling",
         "WhatsApp, Instagram, Telegram, website chat and direct link",
@@ -602,12 +601,11 @@
         "features": [
           "No card needed",
           "Malu and Ana included",
-          "Instagram, Telegram, website chat and direct link"
+          "WhatsApp on your own Meta account, Instagram, Telegram, website chat and direct link"
         ],
-        "noWhatsapp": "No WhatsApp",
         "cta": "Try it free"
       },
-      "orPaid": "Or choose a paid plan, with WhatsApp and more replies"
+      "orPaid": "Or choose a paid plan, with more replies and the option to let us handle WhatsApp"
     },
     "salesContact": {
       "title": "Talk to a specialist",
@@ -677,7 +675,7 @@
         },
         {
           "q": "Do you use official WhatsApp? Can I keep my number?",
-          "a": "Yes. We connect through Meta's official connection, and you can use the number you already have in the WhatsApp Business app or a new one. Every paid plan includes WhatsApp (Staffra Free doesn't), and you choose how to use it: with your own Meta account, paying Meta directly and at cost (1,000 free replies a month and about R$ 0.04 each after that), or all through Staffra, with the fees already in the price. If you won't use WhatsApp, you don't need a Meta account or card and pay nothing extra."
+          "a": "Yes. We connect through Meta's official connection, and you can use the number you already have in the WhatsApp Business app or a new one. Every plan includes WhatsApp, and you choose how to use it: with your own Meta account, paying Meta directly and at cost (1,000 free replies a month and about R$ 0.04 each after that), or all through Staffra, with the fees already in the price. If you won't use WhatsApp, you don't need a Meta account or card and pay nothing extra."
         },
         {
           "q": "Is there a contract or setup fee?",
@@ -880,7 +878,7 @@
       "chatOnline": "Online now",
       "stepLabel": "Step {n}",
       "pricingHeading": "Pricing",
-      "pricingBody": "You can start free with Staffra Free: {limit, number} replies a month, no card, with Ana and Malu, just without WhatsApp. Paid plans, with WhatsApp, start at {price} a month and come with 7 days free. There's no setup fee, and you can cancel from your dashboard anytime.",
+      "pricingBody": "You can start free with Staffra Free: {limit, number} replies a month, no card, with Ana and Malu and WhatsApp connected on your own Meta account. Paid plans, with more replies and the option to let us handle WhatsApp, start at {price} a month and come with 7 days free. There's no setup fee, and you can cancel from your dashboard anytime.",
       "pricingCta": "See plans and pricing",
       "faqHeading": "Frequently asked questions",
       "othersHeading": "Ana also works for",
@@ -2403,9 +2401,7 @@
       "planChangedTitle": "Your number was disconnected because you changed plans",
       "planChangedIntro": "Your plan now uses your own Meta account, so {number} is no longer connected through Staffra. To answer on it again, reconnect it with your own account:",
       "planChangedThen": "Then click Connect below. While connecting, Meta will ask for a card to charge replies beyond the month's 1,000 free ones.",
-      "coexistenceHint": "You can keep using the WhatsApp Business app on your phone: while connecting, choose to connect the number that's already in the app.",
-      "notInFreePlanTitle": "WhatsApp isn't part of Staffra Free",
-      "notInFreePlanDescription": "Move to a paid plan to connect a WhatsApp number. Your team keeps answering on Instagram, Telegram, your website and the direct link."
+      "coexistenceHint": "You can keep using the WhatsApp Business app on your phone: while connecting, choose to connect the number that's already in the app."
     },
     "channelTabs": {
       "tablistLabel": "Ways customers can reach this employee",
@@ -3776,8 +3772,7 @@
       },
       "recommended": "Recommended",
       "wppBadgeOwn": "WhatsApp via your Meta account",
-      "wppBadgeManaged": "WhatsApp via Staffra",
-      "wppBadgeNone": "No WhatsApp"
+      "wppBadgeManaged": "WhatsApp via Staffra"
     },
     "enterprise": {
       "title": "Need higher volume or custom terms?",
@@ -3858,10 +3853,10 @@
       "body": "Start answering customers at no cost, and upgrade whenever you need more.",
       "channels": "Instagram, Telegram, website chat and direct link",
       "noCard": "No card needed",
-      "noWhatsapp": "No WhatsApp",
       "cta": "Start with {plan}",
       "badge": "Free forever",
-      "orPaid": "Or choose a paid plan, with WhatsApp and more replies"
+      "orPaid": "Or choose a paid plan, with more replies and the option to let us handle WhatsApp",
+      "whatsappOwn": "WhatsApp on your own Meta account"
     }
   },
   "AccessRemoved": {

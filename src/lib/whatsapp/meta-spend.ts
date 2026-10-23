@@ -21,7 +21,7 @@ export async function getMetaSpendSummary(
     .eq("company_id", companyId)
     .maybeSingle();
   const plan = findPlan(billing?.plan_key as string | null);
-  if (!plan || plan.whatsappIncluded || !plan.whatsappAvailable || plan.tier === "enterprise") return null;
+  if (!plan || plan.whatsappIncluded || plan.tier === "enterprise") return null;
 
   const { data: connections } = await supabase
     .from("company_whatsapp_connections")

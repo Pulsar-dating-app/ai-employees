@@ -36,12 +36,10 @@ export async function handleInboundWhatsappMessage(
     .select("plan_key, subscription_status")
     .eq("company_id", connection.company_id)
     .maybeSingle();
-  const plan = findPlan(billing?.plan_key as string | null);
   const planGate = decideWhatsappPlanGate(
     {
       subscription_status: (billing?.subscription_status as string | null) ?? null,
-      whatsappIncluded: plan?.whatsappIncluded === true,
-      whatsappAvailable: plan?.whatsappAvailable !== false,
+      whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
     },
     connection.provider,
   );

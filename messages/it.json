@@ -245,12 +245,11 @@
       "ctaTrial": "Inizia gratis",
       "later": "Decido più tardi",
       "error": "Non siamo riusciti ad aprire il checkout. Riprova.",
-      "freeFeatureChannels": "Instagram, Telegram e il tuo sito",
       "freeFeatureNoCard": "Nessuna carta richiesta",
-      "freeNoWhatsapp": "Senza WhatsApp",
       "ctaFree": "Inizia con {plan}",
       "freeBadge": "Gratis per sempre",
-      "orPaid": "Oppure scegli un piano a pagamento, con WhatsApp e più risposte"
+      "orPaid": "Oppure scegli un piano a pagamento, con più risposte e la possibilità di lasciare WhatsApp a noi",
+      "freeWhatsappOwn": "WhatsApp con il tuo account Meta"
     },
     "profile": {
       "title": "Per cominciare, come ti chiami?",
@@ -513,7 +512,7 @@
     },
     "pricing": {
       "heading": "Piani semplici, con Malu e Ana in tutti",
-      "sub": "Inizia gratis, senza carta. I piani a pagamento aggiungono WhatsApp ufficiale e più risposte al mese.",
+      "sub": "Inizia gratis, senza carta. I piani a pagamento aggiungono più risposte e la possibilità di lasciare WhatsApp interamente a noi.",
       "trialNote": "7 giorni gratis. Chiediamo una carta all'inizio ma addebitiamo solo dopo 7 giorni o 500 risposte, a seconda di cosa arriva prima.",
       "featuredBadge": "Consigliato",
       "periodToggle": {
@@ -526,7 +525,7 @@
       "annualSavings": "{total} all'anno · risparmi {saved}",
       "repliesMonthly": "{count} risposte al mese",
       "repliesNote": "Ogni messaggio che il tuo team invia a un cliente conta come una risposta.",
-      "includedTitle": "Tutto questo in ogni piano a pagamento",
+      "includedTitle": "Tutto questo in ogni piano",
       "included": [
         "Malu per le vendite e Ana per gli appuntamenti",
         "WhatsApp, Instagram, Telegram, chat del sito e link diretto",
@@ -602,12 +601,11 @@
         "features": [
           "Nessuna carta richiesta",
           "Malu e Ana incluse",
-          "Instagram, Telegram, chat del sito e link diretto"
+          "WhatsApp con il tuo account Meta, Instagram, Telegram, chat del sito e link diretto"
         ],
-        "noWhatsapp": "Senza WhatsApp",
         "cta": "Prova gratis"
       },
-      "orPaid": "Oppure scegli un piano a pagamento, con WhatsApp e più risposte"
+      "orPaid": "Oppure scegli un piano a pagamento, con più risposte e la possibilità di lasciare WhatsApp a noi"
     },
     "salesContact": {
       "title": "Parla con un esperto",
@@ -677,7 +675,7 @@
         },
         {
           "q": "Usate WhatsApp ufficiale? Posso tenere il mio numero?",
-          "a": "Sì. Ci colleghiamo tramite la connessione ufficiale di Meta e puoi usare il numero che hai già nell'app WhatsApp Business oppure uno nuovo. Ogni piano a pagamento include WhatsApp (Staffra Free no) e scegli tu come usarlo: con il tuo account Meta, pagando Meta direttamente e al costo (1.000 risposte gratuite al mese e circa R$ 0,04 l'una dopo), oppure tutto con Staffra, con le tariffe già nel prezzo. Se non usi WhatsApp, non ti servono né un account né una carta su Meta e non paghi nulla in più."
+          "a": "Sì. Ci colleghiamo tramite la connessione ufficiale di Meta e puoi usare il numero che hai già nell'app WhatsApp Business oppure uno nuovo. Ogni piano include WhatsApp e scegli tu come usarlo: con il tuo account Meta, pagando Meta direttamente e al costo (1.000 risposte gratuite al mese e circa R$ 0,04 l'una dopo), oppure tutto con Staffra, con le tariffe già nel prezzo. Se non usi WhatsApp, non ti servono né un account né una carta su Meta e non paghi nulla in più."
         },
         {
           "q": "C'è un contratto o un costo di attivazione?",
@@ -880,7 +878,7 @@
       "chatOnline": "Online ora",
       "stepLabel": "Passo {n}",
       "pricingHeading": "Quanto costa",
-      "pricingBody": "Puoi iniziare gratis con Staffra Free: {limit, number} risposte al mese, senza carta, con Ana e Malu, solo senza WhatsApp. I piani a pagamento, con WhatsApp, partono da {price} al mese e hanno 7 giorni gratuiti. Non ci sono costi di attivazione e puoi disdire dal pannello quando vuoi.",
+      "pricingBody": "Puoi iniziare gratis con Staffra Free: {limit, number} risposte al mese, senza carta, con Ana e Malu e WhatsApp collegato al tuo account Meta. I piani a pagamento, con più risposte e la possibilità di lasciare WhatsApp a noi, partono da {price} al mese e hanno 7 giorni gratuiti. Non ci sono costi di attivazione e puoi disdire dal pannello quando vuoi.",
       "pricingCta": "Vedi piani e prezzi",
       "faqHeading": "Domande frequenti",
       "othersHeading": "Ana lavora anche per",
@@ -2403,9 +2401,7 @@
       "planChangedTitle": "Il tuo numero è stato scollegato perché hai cambiato piano",
       "planChangedIntro": "Il tuo piano ora usa il tuo account Meta, quindi {number} non è più collegato tramite Staffra. Per rispondere di nuovo da lì, ricollegalo con il tuo account:",
       "planChangedThen": "Poi clicca su Collega qui sotto. Durante il collegamento, Meta ti chiederà una carta per addebitare le risposte oltre le 1.000 gratuite del mese.",
-      "coexistenceHint": "Puoi continuare a usare l'app WhatsApp Business sul telefono: durante il collegamento, scegli di collegare il numero che è già nell'app.",
-      "notInFreePlanTitle": "WhatsApp non è incluso in Staffra Free",
-      "notInFreePlanDescription": "Passa a un piano a pagamento per collegare un numero WhatsApp. Il tuo team continua a rispondere su Instagram, Telegram, sul tuo sito e tramite il link diretto."
+      "coexistenceHint": "Puoi continuare a usare l'app WhatsApp Business sul telefono: durante il collegamento, scegli di collegare il numero che è già nell'app."
     },
     "channelTabs": {
       "tablistLabel": "Come i clienti possono raggiungere questa dipendente",
@@ -3776,8 +3772,7 @@
       },
       "recommended": "Consigliato",
       "wppBadgeOwn": "WhatsApp con il tuo account Meta",
-      "wppBadgeManaged": "WhatsApp con Staffra",
-      "wppBadgeNone": "Senza WhatsApp"
+      "wppBadgeManaged": "WhatsApp con Staffra"
     },
     "enterprise": {
       "title": "Ti servono volumi più alti o condizioni su misura?",
@@ -3858,10 +3853,10 @@
       "body": "Inizia a rispondere ai clienti senza costi e passa a un piano superiore quando ti serve di più.",
       "channels": "Instagram, Telegram, chat del sito e link diretto",
       "noCard": "Nessuna carta richiesta",
-      "noWhatsapp": "Senza WhatsApp",
       "cta": "Inizia con {plan}",
       "badge": "Gratis per sempre",
-      "orPaid": "Oppure scegli un piano a pagamento, con WhatsApp e più risposte"
+      "orPaid": "Oppure scegli un piano a pagamento, con più risposte e la possibilità di lasciare WhatsApp a noi",
+      "whatsappOwn": "WhatsApp con il tuo account Meta"
     }
   },
   "AccessRemoved": {
