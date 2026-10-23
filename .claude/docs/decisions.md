@@ -10,6 +10,11 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-23 — Meta Pixel + Conversions API on the ad funnel only
+
+**Decision:** the Meta pixel runs on `/comecar` (`PageView`, `Lead` on sign-up submit) and, for quiz sign-ups only, fires `CompleteRegistration` once on arrival in onboarding. The same registration also goes server-side through the Conversions API from the `signUp` action, deduplicated by a shared `event_id`. Nothing loads outside production hosts, and nothing loads on the rest of the app.
+**Why:** the campaign should optimise for sign-ups, not clicks. Ad clicks open in Instagram's in-app browser, where the pixel alone loses a large share of events, so the conversion that matters is also sent from our server. The pixel is scoped to the funnel to keep third-party tracking off the landing and dashboard (Core Web Vitals, LGPD surface) until there's a reason to widen it. The dataset category was left unset (not health) on purpose: Meta restricts conversion data for health categories, and the person signing up is a business owner buying software.
+
 ## 2026-10-23 — The ad quiz always returns Staffra Free
 
 **Decision:** `/comecar` recommends Staffra Free to everyone. The "conversations a day" question was removed, since it only existed to pick a tier; the quiz is now two questions (business, biggest pain), one with `?ramo=`. Onboarding's plan step just keeps its Free default. Every quiz step shows a "Plano FREE · sem cartão de crédito" badge. The result says "R$ 0 para sempre" and "Sem cartão de crédito" in the hero, the plan card, the form and the phone sticky bar. The plan card lists WhatsApp, on the merchant's own Meta account, as on the onboarding plan step.

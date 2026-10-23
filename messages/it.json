@@ -3431,7 +3431,7 @@
     "lastUpdated": "Ultimo aggiornamento: {date}",
     "privacy": {
       "title": "Informativa sulla privacy",
-      "date": "12 ottobre 2026",
+      "date": "23 ottobre 2026",
       "intro": "La presente Informativa sulla privacy spiega come Pulsar LTDA (CNPJ 58.261.994/0001-80, \"Pulsar\", \"noi\"), la società che gestisce la piattaforma Staffra (\"Staffra\", il \"Servizio\"), raccoglie, utilizza, condivide e protegge le informazioni personali quando utilizzi il nostro sito web, la dashboard e i nostri servizi (insieme, il \"Servizio\"). Descrive inoltre le scelte a tua disposizione riguardo alle tue informazioni. Ti invitiamo a leggerla insieme ai nostri Termini di servizio.",
       "sections": [
         {
@@ -3450,7 +3450,7 @@
             "Dati di collegamento: token di accesso e identificativi di account che conserviamo quando un Cliente collega un canale o uno strumento di terzi, come una piattaforma di messaggistica (WhatsApp, Instagram, Telegram) o un calendario (Google Calendar).",
             "Informazioni di fatturazione: per gli abbonamenti a pagamento, il piano scelto dal Cliente e gli identificativi di cliente e abbonamento restituiti dal nostro fornitore di servizi di pagamento. Non riceviamo né conserviamo i numeri completi delle carte.",
             "Dati di utilizzo e del dispositivo: dati di log, indirizzo IP, tipo di browser, pagine visualizzate e azioni compiute nella dashboard, raccolti automaticamente per gestire e proteggere il Servizio.",
-            "Cookie: utilizziamo cookie strettamente necessari per mantenerti connesso e ricordare la tua preferenza di lingua. Non utilizziamo cookie pubblicitari."
+            "Cookie: utilizziamo cookie strettamente necessari per mantenerti connesso e ricordare la tua preferenza di lingua. Nella pagina di registrazione a cui rimandano i nostri annunci (staffra.io/comecar) utilizziamo anche il Pixel di Meta, che imposta cookie pubblicitari di Meta Platforms per misurare quante persone che hanno cliccato un annuncio hanno poi creato un account. Questi cookie non vengono usati nel pannello né nel resto del sito."
           ]
         },
         {
@@ -3461,6 +3461,7 @@
             "Per autenticare gli utenti, proteggere gli account, prevenire frodi e abusi, fatturare gli abbonamenti a pagamento e far rispettare i nostri Termini di servizio.",
             "Per fornire assistenza, rispondere alle richieste e inviare comunicazioni relative al servizio, come avvisi di sicurezza e modifiche ai nostri termini o alle nostre informative.",
             "Per analizzare l'utilizzo in forma aggregata, così da capire quali funzionalità sono utili e migliorare prestazioni e affidabilità.",
+            "Per misurare i risultati dei nostri annunci, sapendo quante persone che li hanno cliccati hanno creato un account, così da mostrarli a chi ha più probabilità di essere interessato al Servizio.",
             "Per adempiere a obblighi di legge e per accertare, esercitare o difendere un diritto in sede giudiziaria."
           ]
         },
@@ -3478,6 +3479,7 @@
           "paragraphs": [
             "Fornitori di servizi: hosting cloud, database, invio di email, monitoraggio degli errori e i fornitori di modelli di IA descritti sopra, ciascuno dei quali agisce secondo le nostre istruzioni in base a un accordo sul trattamento dei dati.",
             "Piattaforme di messaggistica e calendario: quando un Cliente collega un canale come Instagram, o un calendario, scambiamo i dati necessari per inviare e ricevere messaggi o gestire eventi tramite tale piattaforma, nel rispetto dei termini della piattaforma stessa.",
+            "Piattaforme pubblicitarie: quando qualcuno crea un account dalla pagina a cui rimandano i nostri annunci, inviamo a Meta Platforms (Facebook e Instagram), tramite il Pixel di Meta e la API Conversioni, l'evento di registrazione con l'indirizzo email trasformato in hash (non leggibile), l'indirizzo IP, il tipo di browser e gli identificatori di clic dell'annuncio. Meta usa questi dati per attribuire la registrazione all'annuncio e ottimizzare le nostre campagne, secondo la propria Informativa sui dati. Non inviamo password, dati dell'attività né contenuti delle conversazioni. Puoi limitare gli annunci personalizzati nelle impostazioni pubblicitarie del tuo account Meta e bloccare i cookie di terze parti nel browser.",
             "Fornitori di servizi di pagamento: i pagamenti degli abbonamenti e gli eventuali pagamenti effettuati tramite un link di pagamento sono gestiti da un fornitore di servizi di pagamento terzo (come Stripe). Pulsar non raccoglie né conserva i numeri completi delle carte e non è parte di una transazione tramite link di pagamento tra un Cliente e il suo Utente finale.",
             "All'interno del team di un Cliente: i dati dell'account e delle conversazioni sono visibili agli altri membri autorizzati dello stesso account aziendale, in base al loro ruolo.",
             "Obblighi legali e sicurezza: potremmo divulgare informazioni se richiesto da leggi, regolamenti o procedimenti giudiziari, o per tutelare i diritti, i beni o la sicurezza di Pulsar, dei nostri Clienti o del pubblico.",

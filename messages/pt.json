@@ -3431,7 +3431,7 @@
     "lastUpdated": "Última atualização em {date}",
     "privacy": {
       "title": "Política de Privacidade",
-      "date": "12 de outubro de 2026",
+      "date": "23 de outubro de 2026",
       "intro": "Esta Política de Privacidade explica como a Pulsar LTDA (CNPJ 58.261.994/0001-80, \"Pulsar\", \"nós\"), empresa responsável pela plataforma Staffra (\"Staffra\", o \"Serviço\"), coleta, usa, compartilha e protege dados pessoais quando você utiliza nosso site, painel e serviços (em conjunto, o \"Serviço\"). Ela também descreve as opções que você tem sobre seus dados. Leia-a em conjunto com nossos Termos de Serviço.",
       "sections": [
         {
@@ -3450,7 +3450,7 @@
             "Dados de conexão: tokens de acesso e identificadores de conta que armazenamos quando um Cliente conecta um canal ou ferramenta de terceiros, como uma plataforma de mensagens (WhatsApp, Instagram, Telegram) ou uma agenda (Google Calendar).",
             "Dados de cobrança: para assinaturas pagas, o plano escolhido pelo Cliente e os identificadores de cliente e de assinatura retornados pelo nosso processador de pagamentos. Não recebemos nem armazenamos o número completo do cartão.",
             "Dados de uso e dispositivo: registros de acesso, endereço IP, tipo de navegador, páginas visualizadas e ações realizadas no painel, coletados automaticamente para operar e proteger o Serviço.",
-            "Cookies: usamos cookies estritamente necessários para manter você conectado e lembrar sua preferência de idioma. Não usamos cookies de publicidade."
+            "Cookies: usamos cookies estritamente necessários para manter você conectado e lembrar sua preferência de idioma. Na página de cadastro para a qual nossos anúncios direcionam (staffra.io/comecar), também usamos o Pixel da Meta, que grava cookies de publicidade da Meta Platforms para medir quantas pessoas que clicaram em um anúncio chegaram a criar uma conta. Esses cookies não são usados no painel nem no restante do site."
           ]
         },
         {
@@ -3461,6 +3461,7 @@
             "Para autenticar usuários, proteger contas, prevenir fraudes e abusos, cobrar assinaturas pagas e fazer cumprir nossos Termos de Serviço.",
             "Para prestar suporte, responder solicitações e enviar avisos relacionados ao Serviço, como alertas de segurança e mudanças em nossos termos ou políticas.",
             "Para analisar o uso de forma agregada e entender quais recursos são úteis, melhorando desempenho e confiabilidade.",
+            "Para medir o resultado dos nossos anúncios, sabendo quantas pessoas que clicaram neles criaram uma conta, e assim exibi-los a quem tem mais chance de se interessar pelo Serviço.",
             "Para cumprir obrigações legais e para exercer ou defender direitos em processos."
           ]
         },
@@ -3478,6 +3479,7 @@
           "paragraphs": [
             "Prestadores de serviço: hospedagem em nuvem, banco de dados, envio de e-mails, monitoramento de erros e os provedores de IA descritos acima, cada um atuando conforme nossas instruções sob um contrato de tratamento de dados.",
             "Plataformas de mensagens e agenda: quando um Cliente conecta um canal como o Instagram, ou uma agenda, trocamos os dados necessários para enviar e receber mensagens ou gerenciar eventos por essa plataforma, sujeitos aos termos dela.",
+            "Plataformas de publicidade: quando alguém cria uma conta pela página para a qual nossos anúncios direcionam, enviamos à Meta Platforms (Facebook e Instagram), pelo Pixel da Meta e pela API de Conversões, o evento de cadastro com o e-mail transformado em hash (não legível), o endereço IP, o tipo de navegador e os identificadores de clique do anúncio. A Meta usa esses dados para atribuir o cadastro ao anúncio e otimizar nossas campanhas, conforme a Política de Dados dela. Não enviamos senha, dados do negócio nem conteúdo de conversas. Você pode limitar anúncios personalizados nas configurações de anúncios da sua conta da Meta e bloquear cookies de terceiros no seu navegador.",
             "Processadores de pagamento: os pagamentos de assinatura e quaisquer pagamentos feitos por meio de um link de pagamento são tratados por um processador terceiro (como a Stripe). A Pulsar não coleta nem armazena o número completo do cartão e não é parte de uma transação de link de pagamento entre um Cliente e seu Usuário Final.",
             "Dentro da equipe do Cliente: os dados de conta e de conversas ficam visíveis para outros integrantes autorizados da mesma conta empresarial, conforme a função de cada um.",
             "Questões legais e de segurança: podemos divulgar dados se exigido por lei, regulamento ou processo legal, ou para proteger os direitos, a propriedade ou a segurança da Pulsar, de nossos Clientes ou do público.",

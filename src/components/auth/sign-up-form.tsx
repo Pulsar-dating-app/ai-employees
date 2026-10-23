@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { signUp, type AuthState } from "@/lib/auth/actions";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,21 @@ export function SignUpForm({
   quiz,
   submitLabel,
   submitNote,
+  onSubmitAttempt,
+  onCheckEmail,
 }: {
   quiz?: string;
   submitLabel?: string;
   submitNote?: string;
+  onSubmitAttempt?: () => void;
+  onCheckEmail?: () => void;
 } = {}) {
   const t = useTranslations("Auth.signUp");
   const [state, formAction, pending] = useActionState(signUp, INITIAL);
+
+  useEffect(() => {
+    if (state.checkEmail) onCheckEmail?.();
+  }, [state.checkEmail, onCheckEmail]);
 
   if (state.checkEmail) {
     return (
@@ -29,7 +37,7 @@ export function SignUpForm({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} onSubmit={onSubmitAttempt} className="flex flex-col gap-4">
       {quiz ? <input type="hidden" name="quiz" value={quiz} /> : null}
       <Input
         label={t("emailLabel")}
