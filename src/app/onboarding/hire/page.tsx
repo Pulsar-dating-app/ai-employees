@@ -5,6 +5,8 @@ import { ONBOARDING_PATHS, redirectTargetFor, resolveOnboardingState } from "@/l
 import { defaultAgentName } from "@/lib/agents/naming";
 import { resolveAgentDescription } from "@/lib/agents/copy";
 import { agentPhoto } from "@/lib/agents/media";
+import { quizAgentSlug } from "@/lib/quiz/answers";
+import { readQuizAnswers } from "@/lib/quiz/server";
 import { StepCard } from "../step-card";
 import { HirePicker, type HireableAgent } from "./hire-picker";
 
@@ -22,8 +24,9 @@ export default async function OnboardingHirePage() {
   if (back) redirect(back);
   if (state.step !== "hire") redirect(ONBOARDING_PATHS[state.step]);
 
-  const [t, { data: agentsRaw }] = await Promise.all([
+  const [t, quiz, { data: agentsRaw }] = await Promise.all([
     getTranslations("Onboarding.hire"),
+    readQuizAnswers(user),
     // Ordered explicitly: card order decides which option a keyboard user
     // lands on first, and row order is not a design decision.
     supabase.from("agents").select("id, slug, role, description").eq("is_active", true).order("slug"),
@@ -45,7 +48,11 @@ export default async function OnboardingHirePage() {
 
   return (
     <StepCard title={t("title", { company: state.companyName ?? "" })} subtitle={t("subtitle")}>
-      <HirePicker companyId={state.companyId!} agents={agents} />
+      <HirePicker
+        companyId={state.companyId!}
+        agents={agents}
+        initialSlug={quiz ? quizAgentSlug(quiz) : null}
+      />
     </StepCard>
   );
 }

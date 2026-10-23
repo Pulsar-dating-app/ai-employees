@@ -23,13 +23,25 @@ export type HireableAgent = {
 // is wrong than it saves when it is right -- and picking who you hire is the
 // one moment in this flow where the "employee, not software" framing is
 // actually exercised.
-export function HirePicker({ companyId, agents }: { companyId: string; agents: HireableAgent[] }) {
+export function HirePicker({
+  companyId,
+  agents,
+  initialSlug,
+}: {
+  companyId: string;
+  agents: HireableAgent[];
+  initialSlug?: string | null;
+}) {
   const t = useTranslations("Onboarding.hire");
   const router = useRouter();
 
-  // Nothing is pre-selected on purpose. Arriving with a hire already chosen is
-  // the recommendation this flow refuses, just made silently by row order.
-  const [selected, setSelected] = useState<string>("");
+  // Nothing is pre-selected by guesswork or row order -- that is the
+  // recommendation this flow refuses. The one exception is a merchant who
+  // already told us their business in the /comecar quiz: starting on that
+  // answer is their choice, not ours.
+  const [selected, setSelected] = useState<string>(
+    initialSlug && agents.some((a) => a.slug === initialSlug) ? initialSlug : "",
+  );
   const [isHiring, setIsHiring] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
