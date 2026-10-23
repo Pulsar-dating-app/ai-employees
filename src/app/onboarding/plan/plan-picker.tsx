@@ -139,13 +139,12 @@ export function PlanPicker({
           </span>
 
           <ul className="flex flex-col gap-1.5 border-t border-primary-fixed pt-3 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
-            {[t("freeFeatureNoCard"), t("freeFeatureChannels")].map((feature) => (
+            {[t("freeFeatureNoCard"), t("featureChannels"), t("freeWhatsappOwn")].map((feature) => (
               <li key={feature} className="flex items-start gap-2 text-sm text-on-surface-variant">
                 <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-tertiary" />
                 {feature}
               </li>
             ))}
-            <li className="pl-[22px] text-sm text-on-surface-variant/70">{t("freeNoWhatsapp")}</li>
           </ul>
         </button>
 

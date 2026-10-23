@@ -241,7 +241,6 @@ function FreePlanCard({ locale }: { locale: Locale }) {
               {feature}
             </li>
           ))}
-          <li className="pl-[28px] text-[14px] leading-6 text-[#64748b]">{t("free.noWhatsapp")}</li>
         </ul>
         <Link
           href={localizeHref(locale, "/?auth=signup")}

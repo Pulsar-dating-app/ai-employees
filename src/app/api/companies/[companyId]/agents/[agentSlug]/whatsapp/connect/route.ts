@@ -161,15 +161,10 @@ export async function POST(
     .select("plan_key, subscription_status")
     .eq("company_id", companyId)
     .maybeSingle();
-  const plan = findPlan(billing?.plan_key as string | null);
-  const whatsappIncluded = plan?.whatsappIncluded === true;
+  const whatsappIncluded = findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true;
   const provider = whatsappProviderForPlan(whatsappIncluded);
   const planGate = decideWhatsappPlanGate(
-    {
-      subscription_status: (billing?.subscription_status as string | null) ?? null,
-      whatsappIncluded,
-      whatsappAvailable: plan?.whatsappAvailable !== false,
-    },
+    { subscription_status: (billing?.subscription_status as string | null) ?? null, whatsappIncluded },
     provider,
   );
   if (!planGate.allow) {

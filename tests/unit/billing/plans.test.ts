@@ -39,7 +39,7 @@ describe("billing plan catalog (Trello P1)", () => {
 
   // 2026-10-23 -- Staffra Free never touches Stripe, so it must stay out of
   // the self-serve (Checkout) list and every picker variant.
-  it("keeps Staffra Free card-less: no Stripe Price, no trial, R$0, 500 replies, no WhatsApp", () => {
+  it("keeps Staffra Free card-less: no Stripe Price, no trial, R$0, 500 replies, WhatsApp on the merchant's own Meta account", () => {
     const free = getPlan(FREE_PLAN_KEY);
     expect(free.displayName).toBe("Staffra Free");
     expect(free.stripeLookupKey).toBeNull();
@@ -47,18 +47,13 @@ describe("billing plan catalog (Trello P1)", () => {
     expect(free.trialReplyLimit).toBeNull();
     expect(free.priceBrlCents).toBe(0);
     expect(free.monthlyReplyLimit).toBe(500);
-    expect(free.whatsappAvailable).toBe(false);
+    // Never Twilio: whatsappProviderForPlan(false) is the merchant's own Meta account.
+    expect(free.whatsappIncluded).toBe(false);
     expect(getSelfServePlans().some((p) => p.key === FREE_PLAN_KEY)).toBe(false);
     for (const variant of VARIANTS) {
       expect(
         getSelfServePlansForVariant(variant.billingPeriod, variant.whatsappIncluded).some((p) => p.key === FREE_PLAN_KEY),
       ).toBe(false);
-    }
-  });
-
-  it("gives every paid plan WhatsApp", () => {
-    for (const plan of BILLING_PLANS.filter((p) => p.key !== FREE_PLAN_KEY)) {
-      expect(plan.whatsappAvailable, plan.key).toBe(true);
     }
   });
 

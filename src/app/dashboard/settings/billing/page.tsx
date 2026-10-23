@@ -328,12 +328,8 @@ export default async function BillingPage() {
                 <StatusPill status={status!} label={t(`status.${status}`)} />
                 {plan.tier !== "enterprise" ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1 text-[12px] font-semibold text-on-surface-variant">
-                    <WhatsAppIcon className={clsx("h-3.5 w-3.5", plan.whatsappAvailable ? "text-[#1faa55]" : "opacity-50")} />
-                    {!plan.whatsappAvailable
-                      ? t("picker.wppBadgeNone")
-                      : plan.whatsappIncluded
-                        ? t("picker.wppBadgeManaged")
-                        : t("picker.wppBadgeOwn")}
+                    <WhatsAppIcon className="h-3.5 w-3.5 text-[#1faa55]" />
+                    {plan.whatsappIncluded ? t("picker.wppBadgeManaged") : t("picker.wppBadgeOwn")}
                   </span>
                 ) : null}
               </div>

@@ -65,8 +65,9 @@ export async function activateFreePlan(service: SupabaseClient, companyId: strin
     .eq("status", "paused");
   if (resumeError) console.error("[billing] could not resume hires on Staffra Free", resumeError);
 
-  // No WhatsApp on Staffra Free, so Staffra stops paying for any Twilio number
-  // left over from an earlier `_wpp` plan.
+  // Staffra Free's WhatsApp is the merchant's own Meta account, so Staffra
+  // stops paying for any Twilio number left over from an earlier `_wpp` plan
+  // (same as the webhook does when a paid plan moves off `_wpp`).
   await releaseTwilioNumbersOffPlan(service, companyId);
   return true;
 }

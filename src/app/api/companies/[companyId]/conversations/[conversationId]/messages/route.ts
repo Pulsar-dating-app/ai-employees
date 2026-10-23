@@ -143,12 +143,10 @@ async function deliverOverWhatsapp(
   ]);
 
   if (connection) {
-    const plan = findPlan(billing?.plan_key as string | null);
     const planGate = decideWhatsappPlanGate(
       {
         subscription_status: (billing?.subscription_status as string | null) ?? null,
-        whatsappIncluded: plan?.whatsappIncluded === true,
-        whatsappAvailable: plan?.whatsappAvailable !== false,
+        whatsappIncluded: findPlan(billing?.plan_key as string | null)?.whatsappIncluded === true,
       },
       connection.provider === "twilio" ? "twilio" : "meta",
     );

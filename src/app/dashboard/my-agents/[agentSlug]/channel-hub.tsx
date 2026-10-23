@@ -84,7 +84,6 @@ export function ChannelHub({
   agentPhotoSrc,
   canEdit,
   whatsappEntitled,
-  whatsappAvailable,
   metaAppId,
   metaConfigId,
   metaSolutionId,
@@ -102,7 +101,6 @@ export function ChannelHub({
   agentPhotoSrc: string | null;
   canEdit: boolean;
   whatsappEntitled: boolean;
-  whatsappAvailable: boolean;
   metaAppId: string;
   metaConfigId: string;
   metaSolutionId: string;
@@ -229,7 +227,6 @@ export function ChannelHub({
               accent={ACCENT.whatsapp}
               canEdit={canEdit}
               whatsappEntitled={whatsappEntitled}
-              whatsappAvailable={whatsappAvailable}
               metaAppId={metaAppId}
               metaConfigId={metaConfigId}
               metaSolutionId={metaSolutionId}

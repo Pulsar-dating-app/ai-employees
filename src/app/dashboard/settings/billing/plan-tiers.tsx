@@ -220,9 +220,9 @@ function FreePlanCard({ companyId, canEdit }: { companyId: string; canEdit: bool
               <CheckIcon className="h-3.5 w-3.5 shrink-0 text-primary" />
               {t("free.channels")}
             </li>
-            <li className="flex items-center gap-2 text-on-surface-variant">
-              <WhatsAppIcon className="h-4 w-4 shrink-0 opacity-50" />
-              {t("free.noWhatsapp")}
+            <li className="flex items-center gap-2 text-on-surface">
+              <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#1faa55]" />
+              {t("free.whatsappOwn")}
             </li>
           </ul>
         </div>

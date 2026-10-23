@@ -66,7 +66,6 @@ export function ChannelsSection({
   accent,
   canEdit,
   whatsappEntitled,
-  whatsappAvailable,
   metaAppId,
   metaConfigId,
   metaSolutionId,
@@ -87,9 +86,6 @@ export function ChannelsSection({
   // so a merchant without the add-on isn't shown a connect button that
   // would just 403, or led to believe a stale connection is still live.
   whatsappEntitled: boolean;
-  // False on Staffra Free, the one plan with no WhatsApp: the locked state
-  // says so instead of "every plan includes WhatsApp".
-  whatsappAvailable: boolean;
   metaAppId: string;
   metaConfigId: string;
   metaSolutionId: string;
@@ -351,12 +347,8 @@ export function ChannelsSection({
             <LockIcon className="h-4 w-4" />
           </span>
           <div>
-            <h3 className="text-sm font-semibold text-on-surface">
-              {whatsappAvailable ? t("addonRequiredTitle") : t("notInFreePlanTitle")}
-            </h3>
-            <p className="mt-1 text-sm text-on-surface-variant">
-              {whatsappAvailable ? t("addonRequiredDescription") : t("notInFreePlanDescription")}
-            </p>
+            <h3 className="text-sm font-semibold text-on-surface">{t("addonRequiredTitle")}</h3>
+            <p className="mt-1 text-sm text-on-surface-variant">{t("addonRequiredDescription")}</p>
           </div>
           {canEdit ? (
             <Link href="/dashboard/settings/billing">

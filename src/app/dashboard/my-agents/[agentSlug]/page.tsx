@@ -69,12 +69,10 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
     supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle(),
     supabase.from("company_billing").select("plan_key, subscription_status").eq("company_id", company.id).maybeSingle(),
   ]);
-  const plan = findPlan(billing?.plan_key);
-  const whatsappIncluded = plan?.whatsappIncluded === true;
-  const whatsappAvailable = plan?.whatsappAvailable !== false;
+  const whatsappIncluded = findPlan(billing?.plan_key)?.whatsappIncluded === true;
   const whatsappProvider = whatsappProviderForPlan(whatsappIncluded);
   const whatsappEntitled = decideWhatsappPlanGate(
-    { subscription_status: billing?.subscription_status ?? null, whatsappIncluded, whatsappAvailable },
+    { subscription_status: billing?.subscription_status ?? null, whatsappIncluded },
     whatsappProvider,
   ).allow;
 
@@ -145,7 +143,6 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
           agentPhotoSrc={photoSrc}
           canEdit={canEdit}
           whatsappEntitled={whatsappEntitled}
-          whatsappAvailable={whatsappAvailable}
           metaAppId={process.env.META_APP_ID ?? ""}
           metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
           metaSolutionId={process.env.META_WHATSAPP_SOLUTION_ID ?? ""}
