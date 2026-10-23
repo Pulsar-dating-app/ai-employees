@@ -5,14 +5,13 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
-import { getPlan, getSelfServePlansForVariant, TRIAL_DAYS, TRIAL_REPLY_LIMIT, type PlanKey } from "@/lib/billing/plans";
+import { getPlan, getSelfServePlansForVariant, type PlanKey } from "@/lib/billing/plans";
+import { currentPeriodStart } from "@/lib/billing/free-plan";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { resolveAgentPhoto } from "@/lib/agents/media";
 import {
-  BadgeCheckIcon,
   CalendarIcon,
   CartIcon,
-  ChatIcon,
   ClockIcon,
   InfoIcon,
   WhatsAppIcon,
@@ -30,6 +29,8 @@ import { requireAdminPage } from "@/lib/auth/company-access";
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
 const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const DAY_MS = 86_400_000;
+const BILLING_COLUMNS =
+  "plan_key, subscription_status, current_period_start, current_period_end, cancel_at_period_end, stripe_customer_id";
 const SHELL =
   "relative overflow-hidden rounded-[28px] border border-outline-variant/60 bg-surface-container-lowest shadow-[0_1px_2px_rgba(25,28,29,0.04),0_24px_60px_-28px_rgba(53,37,205,0.22)]";
 
@@ -87,17 +88,6 @@ function TeamFaces({ team, size = "lg" }: { team: TeamMember[]; size?: "lg" | "s
   );
 }
 
-function TrialFact({ icon: Icon, children }: { icon: typeof ChatIcon; children: React.ReactNode }) {
-  return (
-    <li className="flex items-center gap-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-[0_1px_2px_rgba(25,28,29,0.06)]">
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="text-sm font-medium text-on-surface">{children}</span>
-    </li>
-  );
-}
-
 export default async function BillingPage() {
   // Company-level page: owners/admins only (members get their agenda).
   await requireAdminPage();
@@ -116,13 +106,7 @@ export default async function BillingPage() {
 
   const [{ data: membership }, { data: billingRow }, { data: userRow }, { data: teamRows }] = await Promise.all([
     supabase.from("company_users").select("role").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle(),
-    supabase
-      .from("company_billing")
-      .select(
-        "plan_key, subscription_status, current_period_start, current_period_end, cancel_at_period_end, stripe_customer_id",
-      )
-      .eq("company_id", company.id)
-      .maybeSingle(),
+    supabase.from("company_billing").select(BILLING_COLUMNS).eq("company_id", company.id).maybeSingle(),
     supabase.from("users").select("trial_used_at").eq("id", user!.id).maybeSingle(),
     supabase
       .from("company_agents")
@@ -149,13 +133,21 @@ export default async function BillingPage() {
     if (reconciled) {
       const { data: fresh } = await supabase
         .from("company_billing")
-        .select(
-          "plan_key, subscription_status, current_period_start, current_period_end, cancel_at_period_end, stripe_customer_id",
-        )
+        .select(BILLING_COLUMNS)
         .eq("company_id", company.id)
         .maybeSingle();
       billing = (fresh as Billing | null) ?? billing;
     }
+  }
+
+  // Staffra Free's month rolls here too, so the page never shows last month.
+  if (billing && (await currentPeriodStart(company.id, billing)) !== billing.current_period_start) {
+    const { data: fresh } = await supabase
+      .from("company_billing")
+      .select(BILLING_COLUMNS)
+      .eq("company_id", company.id)
+      .maybeSingle();
+    billing = (fresh as Billing | null) ?? billing;
   }
 
   let usage: { replies_used: number; reply_limit: number } | null = null;
@@ -176,6 +168,7 @@ export default async function BillingPage() {
   const hasPlan = isActive || isLapsedPayment;
 
   const plan = billing ? getPlan(billing.plan_key) : null;
+  const isFree = plan?.tier === "free";
   const renewsOn = billing?.current_period_end ? dateFmt.format(new Date(billing.current_period_end)) : null;
   const nowMs = new Date().getTime();
   const periodStartMs = billing?.current_period_start ? new Date(billing.current_period_start).getTime() : null;
@@ -202,21 +195,13 @@ export default async function BillingPage() {
       ? getSelfServePlansForVariant(plan.billingPeriod ?? "monthly", plan.whatsappIncluded)
       : [];
   const currentSelfServeIndex = currentVariantPlans.findIndex((p) => p.key === billing?.plan_key);
-  const nextSelfServePlan =
-    currentSelfServeIndex >= 0 && currentSelfServeIndex < currentVariantPlans.length - 1
+  const nextSelfServePlan = isFree
+    ? getPlan("starter")
+    : currentSelfServeIndex >= 0 && currentSelfServeIndex < currentVariantPlans.length - 1
       ? currentVariantPlans[currentSelfServeIndex + 1]
       : null;
 
   const showPanelEndTrial = status === "trialing" && !overLimit && !nearLimit;
-
-  const readyLine =
-    team.length === 1
-      ? t("hero.readyOne", { name: team[0].name })
-      : team.length > 1
-        ? t("hero.readyMany", {
-            names: new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(team.map((m) => m.name)),
-          })
-        : null;
 
   const banner = isLapsedPayment ? (
     <StatusBanner
@@ -226,6 +211,22 @@ export default async function BillingPage() {
       action={
         canEdit ? (
           <ManageBillingButton companyId={company.id} label={t("banner.pastDue.action")} variant="danger" />
+        ) : null
+      }
+    />
+  ) : isActive && overLimit && isFree ? (
+    <StatusBanner
+      tone="error"
+      title={t("banner.freeOverLimit.title")}
+      body={t("banner.freeOverLimit.body")}
+      action={
+        canEdit ? (
+          <CheckoutButton
+            companyId={company.id}
+            planKey="starter"
+            label={t("banner.freeOverLimit.action")}
+            variant="danger"
+          />
         ) : null
       }
     />
@@ -327,8 +328,12 @@ export default async function BillingPage() {
                 <StatusPill status={status!} label={t(`status.${status}`)} />
                 {plan.tier !== "enterprise" ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1 text-[12px] font-semibold text-on-surface-variant">
-                    <WhatsAppIcon className="h-3.5 w-3.5 text-[#1faa55]" />
-                    {plan.whatsappIncluded ? t("picker.wppBadgeManaged") : t("picker.wppBadgeOwn")}
+                    <WhatsAppIcon className={clsx("h-3.5 w-3.5", plan.whatsappAvailable ? "text-[#1faa55]" : "opacity-50")} />
+                    {!plan.whatsappAvailable
+                      ? t("picker.wppBadgeNone")
+                      : plan.whatsappIncluded
+                        ? t("picker.wppBadgeManaged")
+                        : t("picker.wppBadgeOwn")}
                   </span>
                 ) : null}
               </div>
@@ -368,7 +373,9 @@ export default async function BillingPage() {
                       <CalendarIcon className="h-4 w-4 opacity-70" />
                       {status === "trialing"
                         ? t("panel.trialEndsOn", { date: renewsOn ?? "" })
-                        : billing!.cancel_at_period_end
+                        : isFree && renewsOn
+                          ? t("panel.freeResetsOn", { date: renewsOn })
+                          : billing!.cancel_at_period_end
                           ? t("endsOn", { date: renewsOn ?? "" })
                           : renewsOn
                             ? t("renewsOn", { date: renewsOn })
@@ -423,7 +430,9 @@ export default async function BillingPage() {
                 <p className="text-[13px] text-on-surface-variant">{t("usage.resetsIn", { days: daysUntilReset })}</p>
               ) : null}
               {overLimit && isActive ? (
-                <p className="text-center text-[13px] font-medium text-error">{t("usage.overNote")}</p>
+                <p className="text-center text-[13px] font-medium text-error">
+                  {isFree ? t("usage.freeOverNote") : t("usage.overNote")}
+                </p>
               ) : null}
             </div>
           </section>
@@ -450,42 +459,16 @@ export default async function BillingPage() {
         </>
       ) : (
         <>
-          <section className={clsx(SHELL, "grid", trialAvailable && "lg:grid-cols-[1fr_360px]")}>
-            <div className="relative overflow-hidden px-6 py-8 sm:px-10 sm:py-10">
-              <div
-                aria-hidden="true"
-                className="billing-hero-glow pointer-events-none absolute -left-32 -top-40 h-[26rem] w-[26rem] rounded-full"
-              />
-              <div className="relative max-w-xl">
-                {isCanceled ? (
-                  <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-surface-container px-3 py-1 text-[12px] font-semibold text-on-surface-variant">
-                    <ClockIcon className="h-3.5 w-3.5" />
-                    {t("banner.canceled.title", { date: renewsOn ?? "" })}
-                  </p>
-                ) : null}
-                <h2 className="text-balance text-[34px] font-semibold leading-[1.1] tracking-[-0.025em] text-on-surface sm:text-[44px]">
-                  {isCanceled ? t("hero.reactivateTitle") : t("hero.title")}
-                </h2>
-                <p className="mt-3 max-w-lg text-body-lg text-on-surface-variant">
-                  {isCanceled ? t("hero.reactivateBody") : t("hero.body")}
-                </p>
-                {team.length > 0 ? (
-                  <div className="mt-7 flex items-center gap-3">
-                    <TeamFaces team={team} />
-                    {readyLine ? <p className="text-sm text-on-surface-variant">{readyLine}</p> : null}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            {trialAvailable ? (
-              <ul className="flex flex-col justify-center gap-4 border-t border-outline-variant/50 bg-primary-fixed/35 px-6 py-7 sm:px-8 lg:border-l lg:border-t-0">
-                <TrialFact icon={CalendarIcon}>{t("trial.days", { days: TRIAL_DAYS })}</TrialFact>
-                <TrialFact icon={ChatIcon}>{t("trial.replies", { limit: TRIAL_REPLY_LIMIT })}</TrialFact>
-                <TrialFact icon={BadgeCheckIcon}>{t("trial.converts")}</TrialFact>
-              </ul>
-            ) : null}
-          </section>
+          {/* No intro card above the plans: the page opens straight on Staffra
+              Free, the way in we want people to take. The trial terms sit
+              with the paid plans they apply to (PlanTiers). */}
+          {isCanceled ? (
+            <StatusBanner
+              tone="info"
+              title={t("banner.canceled.title", { date: renewsOn ?? "" })}
+              body={t("banner.canceled.body")}
+            />
+          ) : null}
 
           <PlanTiers companyId={company.id} canEdit={canEdit} trialAvailable={trialAvailable} />
         </>

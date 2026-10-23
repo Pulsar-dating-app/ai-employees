@@ -12,6 +12,7 @@ import { SiteFooter, SiteHeader } from "@/components/landing/site-chrome";
 import { CascadeText } from "@/components/landing/cascade-text";
 import { M } from "@/components/landing/landing-icons";
 import { LANDING_PLANS } from "@/components/landing/landing-plans";
+import { FREE_REPLY_LIMIT } from "@/lib/billing/plans";
 
 // A per-trade landing page (/para/<slug>, see src/lib/verticals/catalog.ts).
 // Same visual language as the home landing (Inter, the Stitch palette,
@@ -272,7 +273,7 @@ export async function VerticalPage({ vertical }: { vertical: Vertical }) {
               <div className="max-w-[720px]">
                 <h3 className="text-[20px] font-semibold">{t("common.pricingHeading")}</h3>
                 <p className="mt-2 text-[15px] leading-[25px] text-[#d4d2e3]">
-                  {t("common.pricingBody", { price: ENTRY_PRICE_MONTH })}
+                  {t("common.pricingBody", { price: ENTRY_PRICE_MONTH, limit: FREE_REPLY_LIMIT })}
                 </p>
               </div>
               <a

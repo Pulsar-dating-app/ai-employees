@@ -796,10 +796,6 @@ select:not(:disabled) {
   animation: billing-bar-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
-.billing-hero-glow {
-  background: radial-gradient(closest-side, rgba(195, 192, 255, 0.55), rgba(226, 223, 255, 0.2) 55%, transparent);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .inbox-indicator {
     transition: opacity 0.2s ease-out;

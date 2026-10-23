@@ -1,7 +1,7 @@
 import type Stripe from "stripe";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getStripeClient } from "./client";
-import { findPlan, getPlan, getPlanByLookupKey, type PlanKey } from "@/lib/billing/plans";
+import { FREE_PLAN_KEY, findPlan, getPlan, getPlanByLookupKey, type PlanKey } from "@/lib/billing/plans";
 import { releaseTwilioNumbersOffPlan } from "@/lib/whatsapp/plan-change";
 
 // Trello P4 -- the handlers behind POST /api/webhooks/stripe. Everything
@@ -122,6 +122,17 @@ async function syncBillingFromSubscription(
     .select("plan_key, current_period_start, subscription_status")
     .eq("company_id", companyId)
     .maybeSingle();
+
+  // On Staffra Free only a live subscription (an upgrade) may take the row
+  // over. A late event from the paid subscription it had before -- canceled,
+  // unpaid -- would otherwise knock it off the free plan into `canceled`.
+  if (
+    existing?.plan_key === FREE_PLAN_KEY &&
+    existing.subscription_status === "active" &&
+    !LIVE_STATUSES.has(subscription.status)
+  ) {
+    return;
+  }
 
   // plan_key from the current price's lookup_key; keep the old one if the
   // key isn't in plans.ts (a Price was swapped without updating the code).
@@ -368,7 +379,9 @@ export async function reconcileBillingFromStripe(
       if (!LIVE_STATUSES.has(subscription.status) && customerId) {
         subscription = (await newestLiveSubscription()) ?? subscription;
       }
-    } else if (row.subscription_status === "incomplete") {
+    } else if (row.subscription_status === "incomplete" || row.plan_key === FREE_PLAN_KEY) {
+      // Staffra Free keeps its row through an upgrade Checkout, so a lost
+      // checkout.session.completed looks like this, not like the stub.
       subscription = await newestLiveSubscription();
     }
   } catch (err) {

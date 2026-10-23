@@ -137,9 +137,11 @@ describe("Onboarding flow", () => {
     expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/plan");
   });
 
-  // The ask is last on purpose: the merchant decides after she has answered
-  // them, never before.
-  it("does not open the plan step until the proof has actually happened", async () => {
+  // 2026-10-23: the proof's "test it later" skips only the proof and lands
+  // on the plan step (Staffra Free preselected), instead of leaving the flow
+  // with no plan. Skipping it doesn't count as having seen her work, so a
+  // merchant who closes the tab comes back to the proof.
+  it("opens the plan step from the proof step without counting the proof as seen", async () => {
     const owner = await signUpTestUser("owner");
     const companyId = await createCompany(owner);
     await hire(owner, companyId, "malu");
@@ -148,46 +150,30 @@ describe("Onboarding flow", () => {
       price: 51.79,
       currency: "BRL",
     });
-
-    expect((await page("/onboarding/plan", owner.cookieHeader)).redirectedTo).toBe("/onboarding/ready");
-
-    await getTestServiceClient()
-      .from("companies")
-      .update({ proof_seen_at: new Date().toISOString() })
-      .eq("id", companyId);
 
     const plan = await page("/onboarding/plan", owner.cookieHeader);
     expect(plan.status).toBe(200);
     // Real plan names off the catalogue, not placeholders.
+    expect(plan.html).toContain("Staffra Free");
     expect(plan.html).toContain("Starter");
-  });
 
-  // The button that leaves the proof step is gated on her having answered,
-  // because the plan step is gated on the same thing. Enabling it on the
-  // *sent* message opened a gap where clicking through bounced straight back
-  // here -- the merchant's own report, and the reason `answered` is not
-  // `turns.length > 0`.
-  it("does not open the plan step on a message that has not been answered", async () => {
-    const owner = await signUpTestUser("owner");
-    const companyId = await createCompany(owner);
-    await hire(owner, companyId, "malu");
-    await api("POST", `/api/companies/${companyId}/products`, owner.cookieHeader, {
-      name: "Camiseta Tie Dye",
-      price: 51.79,
-      currency: "BRL",
-    });
-
-    const svc = getTestServiceClient();
-    const { data: before } = await svc
+    const { data: company } = await getTestServiceClient()
       .from("companies")
       .select("proof_seen_at")
       .eq("id", companyId)
       .single();
-    // Nothing has been answered, so the flag the step depends on is unset...
-    expect((before as { proof_seen_at: string | null }).proof_seen_at).toBeNull();
-    // ...and the step refuses, which is exactly what the UI must not let the
-    // merchant walk into.
-    expect((await page("/onboarding/plan", owner.cookieHeader)).redirectedTo).toBe("/onboarding/ready");
+    expect((company as { proof_seen_at: string | null }).proof_seen_at).toBeNull();
+    expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/ready");
+  });
+
+  // Only the proof may be skipped: a merchant with nothing for her to work
+  // with yet still can't jump to the plan.
+  it("does not open the plan step before the setup is done", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hire(owner, companyId, "malu");
+
+    expect((await page("/onboarding/plan", owner.cookieHeader)).redirectedTo).toBe("/onboarding/setup");
   });
 
   it("keeps the proof flag out of the merchant's own reach", async () => {

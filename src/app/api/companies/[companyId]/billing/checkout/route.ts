@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { getSelfServePlans, TRIAL_DAYS } from "@/lib/billing/plans";
+import { FREE_PLAN_KEY, getSelfServePlans, TRIAL_DAYS } from "@/lib/billing/plans";
+import { activateFreePlan } from "@/lib/billing/free-plan";
 import { reconcileBillingFromStripe } from "@/lib/stripe/webhooks";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { resolveLocale } from "@/i18n/request";
@@ -164,6 +165,40 @@ export async function POST(
     !!billing?.stripe_subscription_id &&
     LIVE_SUBSCRIPTION_STATUSES.includes(billing.subscription_status as string);
 
+  // Allowlisted, never free-form: this rides into a URL Stripe echoes back.
+  const returnPath =
+    typeof body?.returnTo === "string" && CHECKOUT_RETURN_ALLOWED.includes(body.returnTo)
+      ? body.returnTo
+      : undefined;
+
+  // --- Staffra Free: no Stripe, no card ---------------------------------
+  // Activated right here. A paying subscriber has to cancel first (the
+  // Portal) -- moving them would leave a live Stripe subscription billing a
+  // company that's on the free plan. Picking it again while already on it is
+  // a no-op, never a quota reset.
+  if (planKey === FREE_PLAN_KEY) {
+    if (hasLiveSubscription) {
+      return NextResponse.json(
+        {
+          error: "Cancel your current subscription before moving to Staffra Free.",
+          code: "free_requires_no_subscription",
+        },
+        { status: 409 },
+      );
+    }
+    try {
+      await activateFreePlan(createServiceClient(), companyId);
+    } catch (err) {
+      console.error(`billing checkout: Staffra Free activation failed for company ${companyId}`, err);
+      return NextResponse.json({ error: "Could not activate Staffra Free" }, { status: 500 });
+    }
+    return NextResponse.json({
+      ok: true,
+      mode: "free",
+      url: `${resolveCheckoutBaseUrl()}${returnPath ?? "/dashboard/settings/billing"}?checkout=success`,
+    });
+  }
+
   if (hasLiveSubscription) {
     if (!billing!.stripe_customer_id) {
       return NextResponse.json(
@@ -247,12 +282,9 @@ export async function POST(
   }
 
   // --- No subscription yet -> Checkout ----------------------------------
-  // Allowlisted, never free-form: this rides into a URL Stripe echoes back.
-  const returnPath =
-    typeof body?.returnTo === "string" && CHECKOUT_RETURN_ALLOWED.includes(body.returnTo)
-      ? body.returnTo
-      : undefined;
-
+  // A company on Staffra Free lands here too when it upgrades: its row keeps
+  // plan_key 'free' / 'active' until the webhook syncs the new subscription,
+  // so an abandoned Checkout leaves it on the free plan.
   if (planKey === "enterprise") {
     return NextResponse.json(
       {

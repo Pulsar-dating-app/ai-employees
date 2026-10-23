@@ -244,7 +244,13 @@
       "cta": "Escolher plano",
       "ctaTrial": "Começar grátis",
       "later": "Decido depois",
-      "error": "Não conseguimos abrir o checkout. Tente de novo."
+      "error": "Não conseguimos abrir o checkout. Tente de novo.",
+      "freeFeatureChannels": "Instagram, Telegram e seu site",
+      "freeFeatureNoCard": "Sem cartão de crédito",
+      "freeNoWhatsapp": "Sem WhatsApp",
+      "ctaFree": "Começar com o {plan}",
+      "freeBadge": "Grátis para sempre",
+      "orPaid": "Ou escolha um plano pago, com WhatsApp e mais respostas"
     },
     "profile": {
       "title": "Primeiro: qual é o seu nome?",
@@ -266,14 +272,14 @@
       "navChannels": "Canais & WhatsApp",
       "navPricing": "Planos & Preços",
       "navDemo": "Demonstração",
-      "trial": "Testar 7 dias grátis",
+      "trial": "Testar grátis",
       "login": "Entrar"
     },
     "hero": {
       "headlinePre": "Seu próximo cliente pode chegar às 23h.",
       "headlineHighlight": "Quem vai responder?",
       "sub": "A Malu vende e a Ana agenda pelo WhatsApp, a qualquer hora, com os seus preços, estoque e horários de verdade, sem inventar nada. Tudo pronto em minutos, sem programar.",
-      "ctaPrimary": "Testar 7 dias grátis",
+      "ctaPrimary": "Testar grátis",
       "ctaSecondary": "Converse com a Malu agora",
       "trust1": "WhatsApp oficial da Meta",
       "trust2": "A partir de {price} por dia",
@@ -348,14 +354,14 @@
       "replay": "Assistir de novo",
       "progress": "Progresso do vídeo",
       "endTitle": "Coloque a Ana para encher a sua agenda.",
-      "endSub": "Teste a Ana no seu negócio por 7 dias.",
+      "endSub": "Teste a Ana no seu negócio de graça.",
       "languageNote": ""
     },
     "channels": {
       "heading": "Uma funcionária, todos os seus canais",
       "sub": "Conecte ao WhatsApp oficial, ao Instagram, ao Telegram e ao seu site. É a mesma funcionária, com a mesma memória, em todos eles.",
       "tablistLabel": "Selecionar canal",
-      "cta": "Testar 7 dias grátis",
+      "cta": "Testar grátis",
       "items": [
         {
           "key": "whatsapp",
@@ -507,7 +513,7 @@
     },
     "pricing": {
       "heading": "Planos simples, com a Malu e a Ana em todos",
-      "sub": "Todos os planos vêm com WhatsApp oficial, Instagram, Telegram, chat no site e link direto. O que muda é quantas respostas sua equipe pode enviar.",
+      "sub": "Comece grátis, sem cartão. Nos planos pagos você ganha o WhatsApp oficial e mais respostas por mês.",
       "trialNote": "7 dias grátis. Pedimos o cartão no início, mas só cobramos depois de 7 dias ou de 500 respostas, o que vier primeiro.",
       "featuredBadge": "Recomendado",
       "periodToggle": {
@@ -520,7 +526,7 @@
       "annualSavings": "{total} por ano · você economiza {saved}",
       "repliesMonthly": "{count} respostas por mês",
       "repliesNote": "Cada mensagem que sua equipe envia para um cliente conta como uma resposta.",
-      "includedTitle": "Tudo isso em todos os planos",
+      "includedTitle": "Tudo isso em todos os planos pagos",
       "included": [
         "Malu para vendas e Ana para agendamentos",
         "WhatsApp, Instagram, Telegram, chat no site e link direto",
@@ -589,7 +595,19 @@
         "managedLine": "WhatsApp incluso, nada a pagar à Meta",
         "managedSub": "Preço fechado, sem cobrança à parte.",
         "footnote": "Estimativa para respostas a clientes no Brasil até 24 h depois da última mensagem deles. Lembretes de agendamento custam cerca de R$ 0,04 cada e mensagens promocionais cerca de R$ 0,38."
-      }
+      },
+      "free": {
+        "badge": "Grátis para sempre",
+        "desc": "Para começar a atender sem gastar nada.",
+        "features": [
+          "Sem cartão de crédito",
+          "Malu e Ana incluídas",
+          "Instagram, Telegram, chat no site e link direto"
+        ],
+        "noWhatsapp": "Sem WhatsApp",
+        "cta": "Testar grátis"
+      },
+      "orPaid": "Ou escolha um plano pago, com WhatsApp e mais respostas"
     },
     "salesContact": {
       "title": "Falar com especialista",
@@ -659,7 +677,7 @@
         },
         {
           "q": "Vocês usam o WhatsApp oficial? Posso usar meu número atual?",
-          "a": "Sim. A conexão é feita pela conexão oficial da Meta, e dá para usar o número que você já tem no app WhatsApp Business ou um número novo. Todo plano inclui WhatsApp, e você escolhe como usar: com sua conta da Meta, pagando a Meta direto e ao custo (1.000 respostas grátis por mês e cerca de R$ 0,04 cada depois disso), ou tudo pela Staffra, com as taxas já no preço. Se não for usar o WhatsApp, não precisa de conta nem de cartão na Meta e não paga nada a mais."
+          "a": "Sim. A conexão é feita pela conexão oficial da Meta, e dá para usar o número que você já tem no app WhatsApp Business ou um número novo. Todo plano pago inclui WhatsApp (o Staffra Free não inclui), e você escolhe como usar: com sua conta da Meta, pagando a Meta direto e ao custo (1.000 respostas grátis por mês e cerca de R$ 0,04 cada depois disso), ou tudo pela Staffra, com as taxas já no preço. Se não for usar o WhatsApp, não precisa de conta nem de cartão na Meta e não paga nada a mais."
         },
         {
           "q": "Tem fidelidade ou taxa de instalação?",
@@ -674,7 +692,7 @@
     "finalCta": {
       "heading": "Às 23h, a Malu e a Ana respondem por você.",
       "sub": "Contrate a Malu e a Ana hoje e deixe o WhatsApp atendendo enquanto você cuida do resto.",
-      "ctaPrimary": "Testar 7 dias grátis",
+      "ctaPrimary": "Testar grátis",
       "fine": "Cancele quando quiser · Sem taxa de instalação"
     },
     "footer": {
@@ -851,7 +869,7 @@
     "common": {
       "footerTitle": "Para o seu negócio",
       "breadcrumbHome": "Início",
-      "ctaTrial": "Testar 7 dias grátis",
+      "ctaTrial": "Testar grátis",
       "ctaVideo": "Ver a Ana agendando",
       "trustOfficial": "WhatsApp oficial da Meta",
       "trustPrice": "A partir de {price} por dia",
@@ -862,7 +880,7 @@
       "chatOnline": "Online agora",
       "stepLabel": "Passo {n}",
       "pricingHeading": "Quanto custa",
-      "pricingBody": "Os planos começam em {price} por mês, com a Ana e a Malu incluídas. São 7 dias grátis: a cobrança só acontece depois de 7 dias ou de 500 respostas, o que vier primeiro. Não tem taxa de instalação, e você cancela pelo próprio painel quando quiser.",
+      "pricingBody": "Dá para começar grátis com o Staffra Free: {limit, number} respostas por mês, sem cartão e com a Ana e a Malu, só sem WhatsApp. Os planos pagos, com WhatsApp, começam em {price} por mês e têm 7 dias grátis. Não tem taxa de instalação, e você cancela pelo próprio painel quando quiser.",
       "pricingCta": "Ver planos e preços",
       "faqHeading": "Perguntas frequentes",
       "othersHeading": "A Ana também atende",
@@ -872,7 +890,7 @@
     "barber": {
       "navLabel": "Barbearias",
       "seoTitle": "Atendente virtual com IA para barbearias no WhatsApp",
-      "seoDescription": "A Ana responde o WhatsApp da sua barbearia 24 horas, deixa o cliente escolher o barbeiro e marca só nos horários livres. Teste grátis por 7 dias.",
+      "seoDescription": "A Ana responde o WhatsApp da sua barbearia 24 horas, deixa o cliente escolher o barbeiro e marca só nos horários livres. Teste grátis.",
       "eyebrow": "Para barbearias",
       "h1": "Atendente virtual no WhatsApp para barbearias",
       "sub": "Enquanto você está com a máquina na mão, a Ana, atendente virtual da Staffra, responde o WhatsApp, pergunta com qual barbeiro o cliente quer cortar e marca no horário que está livre de verdade. De dia, de noite e no domingo.",
@@ -1007,7 +1025,7 @@
     "salon": {
       "navLabel": "Salões de beleza",
       "seoTitle": "Atendente virtual com IA para salões de beleza no WhatsApp",
-      "seoDescription": "A Ana responde o WhatsApp do seu salão 24h, informa preços, deixa a cliente escolher a profissional e agenda só nos horários livres. Teste grátis por 7 dias.",
+      "seoDescription": "A Ana responde o WhatsApp do seu salão 24h, informa preços, deixa a cliente escolher a profissional e agenda só nos horários livres. Teste grátis.",
       "eyebrow": "Para salões de beleza",
       "h1": "Atendente virtual no WhatsApp para salões de beleza",
       "sub": "A Ana, atendente virtual da Staffra, responde quanto custa a coloração, pergunta com qual profissional a cliente quer ser atendida e marca no horário em que o serviço cabe inteiro na agenda. Antes mesmo de o salão abrir.",
@@ -1142,7 +1160,7 @@
     "nails": {
       "navLabel": "Manicures e nail designers",
       "seoTitle": "Atendente virtual com IA para manicures e nail designers",
-      "seoDescription": "A Ana responde o WhatsApp do seu ateliê de unhas 24h, passa preços e horários livres e remarca na mesma conversa. Teste grátis por 7 dias.",
+      "seoDescription": "A Ana responde o WhatsApp do seu ateliê de unhas 24h, passa preços e horários livres e remarca na mesma conversa. Teste grátis.",
       "eyebrow": "Para manicures e nail designers",
       "h1": "Atendente virtual no WhatsApp para manicures e nail designers",
       "sub": "Enquanto você está no meio de um alongamento, a Ana, atendente virtual da Staffra, responde o WhatsApp, passa o preço, mostra os horários livres e marca. Se a cliente precisar mudar o dia, ela remarca na mesma conversa.",
@@ -1277,7 +1295,7 @@
     "dental": {
       "navLabel": "Clínicas odontológicas",
       "seoTitle": "Secretária virtual com IA para clínicas odontológicas",
-      "seoDescription": "A Ana responde pacientes no WhatsApp 24 horas, tira dúvidas sobre a avaliação e marca com o dentista certo, só nos horários livres. Teste grátis por 7 dias.",
+      "seoDescription": "A Ana responde pacientes no WhatsApp 24 horas, tira dúvidas sobre a avaliação e marca com o dentista certo, só nos horários livres. Teste grátis.",
       "eyebrow": "Para clínicas odontológicas",
       "h1": "Secretária virtual no WhatsApp para clínicas odontológicas",
       "sub": "A Ana, secretária virtual da Staffra, responde os pacientes no WhatsApp a qualquer hora, explica como funciona a avaliação e marca com o dentista certo, só nos horários que estão livres. A recepção fica livre para quem está na clínica.",
@@ -1412,7 +1430,7 @@
     "nutri": {
       "navLabel": "Nutricionistas",
       "seoTitle": "Secretária virtual com IA para nutricionistas no WhatsApp",
-      "seoDescription": "A Ana responde seus pacientes no WhatsApp 24h, explica a consulta presencial ou online e agenda só nos horários livres. Teste grátis por 7 dias.",
+      "seoDescription": "A Ana responde seus pacientes no WhatsApp 24h, explica a consulta presencial ou online e agenda só nos horários livres. Teste grátis.",
       "eyebrow": "Para nutricionistas",
       "h1": "Secretária virtual no WhatsApp para nutricionistas",
       "sub": "A Ana, secretária virtual da Staffra, explica como funciona a primeira consulta, informa se você atende online, passa o valor e marca no horário livre. Mesmo quando o paciente decide começar às 6h da manhã.",
@@ -1547,7 +1565,7 @@
     "pilates": {
       "navLabel": "Estúdios de pilates",
       "seoTitle": "Sistema de agendamento com IA para estúdios de pilates",
-      "seoDescription": "Agendamento pelo WhatsApp para estúdios de pilates: a Ana explica a aula experimental, informa valores e marca com o instrutor certo. Teste grátis por 7 dias.",
+      "seoDescription": "Agendamento pelo WhatsApp para estúdios de pilates: a Ana explica a aula experimental, informa valores e marca com o instrutor certo. Teste grátis.",
       "eyebrow": "Para estúdios de pilates",
       "h1": "Sistema de agendamento pelo WhatsApp para estúdios de pilates",
       "sub": "A Ana, atendente virtual da Staffra, explica como funciona a aula experimental, responde o valor e marca no horário livre, mesmo às 6h da manhã, quando a pessoa decide começar e o estúdio ainda nem abriu.",
@@ -2385,7 +2403,9 @@
       "planChangedTitle": "Seu número foi desconectado porque você mudou de plano",
       "planChangedIntro": "Seu plano agora usa a sua própria conta da Meta, então o {number} saiu da conexão pela Staffra. Para voltar a atender por ele, conecte de novo pela sua conta:",
       "planChangedThen": "Depois, clique em Conectar abaixo. Durante a conexão, a Meta vai pedir um cartão para cobrar as respostas além das 1.000 grátis do mês.",
-      "coexistenceHint": "Você pode continuar usando o app WhatsApp Business no celular: durante a conexão, escolha conectar o número que já está no app."
+      "coexistenceHint": "Você pode continuar usando o app WhatsApp Business no celular: durante a conexão, escolha conectar o número que já está no app.",
+      "notInFreePlanTitle": "O WhatsApp não faz parte do Staffra Free",
+      "notInFreePlanDescription": "Mude para um plano pago para conectar um número de WhatsApp. Seu time continua atendendo no Instagram, no Telegram, no seu site e pelo link direto."
     },
     "channelTabs": {
       "tablistLabel": "Formas de os clientes falarem com este funcionário",
@@ -3730,13 +3750,19 @@
       "canceled": {
         "title": "Seu plano encerrou em {date}",
         "body": "Sua equipe parou de responder. Escolha um plano para reativá-la."
+      },
+      "freeOverLimit": {
+        "title": "Você usou todas as respostas do Staffra Free deste mês",
+        "body": "Sua equipe parou de responder até as respostas renovarem. Mude de plano para ela voltar a responder agora.",
+        "action": "Mudar de plano"
       }
     },
     "usage": {
       "label": "Respostas neste período",
       "count": "{used, number} de {limit, number} respostas",
       "resetsIn": "{days, plural, one {Renova em # dia} other {Renova em # dias}}",
-      "overNote": "Acima do limite do plano — respondendo com a tolerância."
+      "overNote": "Acima do limite do plano — respondendo com a tolerância.",
+      "freeOverNote": "Limite atingido — sua equipe está pausada até as respostas renovarem."
     },
     "plan": {
       "replies": "{limit, number} respostas por mês",
@@ -3750,20 +3776,13 @@
       },
       "recommended": "Recomendado",
       "wppBadgeOwn": "WhatsApp pela sua conta da Meta",
-      "wppBadgeManaged": "WhatsApp pela Staffra"
+      "wppBadgeManaged": "WhatsApp pela Staffra",
+      "wppBadgeNone": "Sem WhatsApp"
     },
     "enterprise": {
       "title": "Precisa de mais volume ou condições sob medida?",
       "body": "Planos Enterprise são combinados com nosso time.",
       "cta": "Fale com a gente"
-    },
-    "hero": {
-      "title": "Coloque sua equipe para trabalhar",
-      "reactivateTitle": "Traga sua equipe de volta",
-      "body": "Escolha quanto sua equipe responde por mês. Você pode trocar de plano quando quiser.",
-      "reactivateBody": "Escolha um plano e sua equipe volta a responder seus clientes.",
-      "readyOne": "{name} já pode começar",
-      "readyMany": "{names} já podem começar"
     },
     "trial": {
       "days": "{days} dias grátis",
@@ -3806,7 +3825,8 @@
       "noUsage": "Nenhuma resposta contada neste período ainda.",
       "trialEndsOn": "O teste acaba em {date}",
       "paymentPending": "Aguardando um pagamento aprovado",
-      "teamReplies": "Respostas enviadas pela sua equipe neste período"
+      "teamReplies": "Respostas enviadas pela sua equipe neste período",
+      "freeResetsOn": "Respostas renovam em {date}"
     },
     "whatsappMode": {
       "label": "Como você quer usar o WhatsApp?",
@@ -3833,6 +3853,15 @@
       "alert80": "Você já usou 80% do máximo de {ceiling} com a Meta neste mês.",
       "alert100": "Você chegou ao máximo de {ceiling} com a Meta neste mês. A Meta segue cobrando cada resposta no seu cartão.",
       "footnote": "Estimativa calculada a partir das respostas enviadas, a até R$ 0,04 cada depois das 1.000 grátis de cada número. O valor exato está na fatura da Meta."
+    },
+    "free": {
+      "body": "Comece a atender seus clientes sem custo e mude de plano quando precisar de mais.",
+      "channels": "Instagram, Telegram, chat do site e link direto",
+      "noCard": "Sem cartão de crédito",
+      "noWhatsapp": "Sem WhatsApp",
+      "cta": "Começar com o {plan}",
+      "badge": "Grátis para sempre",
+      "orPaid": "Ou escolha um plano pago, com WhatsApp e mais respostas"
     }
   },
   "AccessRemoved": {

@@ -6,20 +6,24 @@ import { WhatsAppModeChoice } from "@/components/billing/whatsapp-mode-choice";
 import { metaMaxCents } from "@/lib/whatsapp/meta-pricing";
 import { useTranslations } from "next-intl";
 import {
+  FREE_PLAN_KEY,
   findPlan,
   fullYearPriceCents,
+  getPlan,
   getSelfServePlansForVariant,
+  TRIAL_DAYS,
+  TRIAL_REPLY_LIMIT,
   type BillingPeriod,
   type BillingPlan,
   type PlanKey,
 } from "@/lib/billing/plans";
-import { ChatIcon, CheckIcon } from "@/components/ui/icons";
+import { BadgeCheckIcon, CalendarIcon, ChatIcon, CheckIcon, WhatsAppIcon } from "@/components/ui/icons";
 import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 import { CheckoutButton } from "./billing-actions";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
 const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-const TIER_RANK = { starter: 0, intermediate: 1, pro: 2, enterprise: 3 } as const;
+const TIER_RANK = { free: -1, starter: 0, intermediate: 1, pro: 2, enterprise: 3 } as const;
 
 function PeriodSwitch({
   value,
@@ -182,6 +186,62 @@ function TierCard({
   );
 }
 
+// Staffra Free, offered only to a company with no plan, as the first option:
+// it has no period or WhatsApp variant, so it leads above the toggled grid
+// instead of sitting inside it.
+function FreePlanCard({ companyId, canEdit }: { companyId: string; canEdit: boolean }) {
+  const t = useTranslations("Billing");
+  const plan = getPlan(FREE_PLAN_KEY);
+  return (
+    <div className="billing-card-in relative overflow-hidden rounded-[24px] bg-primary-fixed/40 p-6 shadow-[0_1px_2px_rgba(25,28,29,0.04),0_28px_60px_-28px_rgba(53,37,205,0.45)] ring-2 ring-primary sm:p-8">
+      <span className="absolute -top-px left-6 inline-flex items-center rounded-b-xl bg-primary px-3 py-1 text-[12px] font-semibold text-on-primary">
+        {t("free.badge")}
+      </span>
+      <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+        <div className="flex flex-col gap-3">
+          <h3 className="text-xl font-semibold tracking-tight text-on-surface">{plan.displayName}</h3>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-[40px] font-semibold leading-none tracking-[-0.03em] text-on-surface tabular-nums">
+              {BRL.format(0)}
+            </span>
+            <span className="text-sm text-on-surface-variant">{t("perMonth")}</span>
+          </div>
+          <p className="max-w-xl text-body-md text-on-surface-variant">{t("free.body")}</p>
+          <ul className="mt-1 grid grid-cols-1 gap-x-6 gap-y-2 text-sm font-medium sm:grid-cols-2">
+            <li className="flex items-center gap-2 text-on-surface">
+              <ChatIcon className="h-4 w-4 shrink-0 text-primary" />
+              {t("plan.replies", { limit: plan.monthlyReplyLimit ?? 0 })}
+            </li>
+            <li className="flex items-center gap-2 text-on-surface">
+              <CheckIcon className="h-3.5 w-3.5 shrink-0 text-primary" />
+              {t("free.noCard")}
+            </li>
+            <li className="flex items-center gap-2 text-on-surface">
+              <CheckIcon className="h-3.5 w-3.5 shrink-0 text-primary" />
+              {t("free.channels")}
+            </li>
+            <li className="flex items-center gap-2 text-on-surface-variant">
+              <WhatsAppIcon className="h-4 w-4 shrink-0 opacity-50" />
+              {t("free.noWhatsapp")}
+            </li>
+          </ul>
+        </div>
+        {canEdit ? (
+          <div className="shrink-0 lg:w-64">
+            <CheckoutButton
+              companyId={companyId}
+              planKey={FREE_PLAN_KEY}
+              variant="primary"
+              label={t("free.cta", { plan: plan.displayName })}
+              fullWidth
+            />
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function PlanTiers({
   companyId,
   canEdit,
@@ -252,6 +312,33 @@ export function PlanTiers({
 
   return (
     <div className="flex flex-col gap-8">
+      {!current ? (
+        <>
+          <FreePlanCard companyId={companyId} canEdit={canEdit} />
+          <div className="flex items-center gap-4">
+            <span className="h-px flex-1 bg-outline-variant/60" />
+            <p className="text-center text-sm font-medium text-on-surface-variant">{t("free.orPaid")}</p>
+            <span className="h-px flex-1 bg-outline-variant/60" />
+          </div>
+          {trialAvailable ? (
+            <ul className="-mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-on-surface">
+              <li className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4 shrink-0 text-primary" />
+                {t("trial.days", { days: TRIAL_DAYS })}
+              </li>
+              <li className="flex items-center gap-2">
+                <ChatIcon className="h-4 w-4 shrink-0 text-primary" />
+                {t("trial.replies", { limit: TRIAL_REPLY_LIMIT })}
+              </li>
+              <li className="flex items-center gap-2">
+                <BadgeCheckIcon className="h-4 w-4 shrink-0 text-primary" />
+                {t("trial.converts")}
+              </li>
+            </ul>
+          ) : null}
+        </>
+      ) : null}
+
       {/* Shown in change mode too: an existing subscriber can move to any of
           the 12 variants (period and WhatsApp included), not just another
           tier of their current one. */}

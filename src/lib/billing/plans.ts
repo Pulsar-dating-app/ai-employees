@@ -40,10 +40,11 @@
 // period decoupled from the Stripe billing anchor -- real engineering work,
 // out of scope while these numbers are still placeholders.
 
-export type PlanTier = "starter" | "intermediate" | "pro" | "enterprise";
+export type PlanTier = "free" | "starter" | "intermediate" | "pro" | "enterprise";
 export type BillingPeriod = "monthly" | "annual";
 
 export type PlanKey =
+  | "free"
   | "starter"
   | "starter_annual"
   | "starter_wpp"
@@ -79,6 +80,9 @@ export interface BillingPlan {
    * = the merchant's own Meta account: the number connects to Meta directly
    * and Meta bills the merchant's card (see `whatsappProviderForPlan`). */
   whatsappIncluded: boolean;
+  /** Whether the plan can use WhatsApp at all. Only Staffra Free can't; every
+   * paid plan can, either way `whatsappIncluded` says. */
+  whatsappAvailable: boolean;
   /**
    * Stripe Price `lookup_key`. Runtime code resolves the Price by this
    * (`resolvePriceId`, stripe/prices.ts), never by a hard-coded id: ids
@@ -117,9 +121,20 @@ export interface BillingPlan {
    * `null` for contact-us plans -- Enterprise has no fixed price to show.
    */
   priceBrlCents: number | null;
-  /** Self-serve = reachable via Stripe Checkout. Enterprise is contact-us. */
+  /** Self-serve = reachable via Stripe Checkout. Enterprise is contact-us;
+   * Staffra Free is activated directly, with no Checkout (see FREE_PLAN_KEY). */
   isSelfServe: boolean;
 }
+
+/**
+ * Staffra Free (2026-10-23): permanent, no card, no Stripe at all, no
+ * WhatsApp. Its monthly period is opened and rolled by the
+ * `activate_free_plan` / `roll_free_plan_period` SQL functions
+ * (src/lib/billing/free-plan.ts) instead of by the Stripe webhook, and its
+ * quota is a hard stop with no grace band (enforcement.ts).
+ */
+export const FREE_PLAN_KEY = "free" satisfies PlanKey;
+export const FREE_REPLY_LIMIT = 500;
 
 // Monthly prices per tier (2026-10-02, owner's numbers). Every plan includes
 // WhatsApp; the two prices are the two ways to pay Meta for it: the plain
@@ -175,6 +190,7 @@ function tierPlans(
       tier,
       billingPeriod: "monthly",
       whatsappIncluded: false,
+      whatsappAvailable: true,
       stripeLookupKey: `${lookupPrefix}_monthly`,
       monthlyReplyLimit: base.monthlyReplyLimit,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
@@ -187,6 +203,7 @@ function tierPlans(
       tier,
       billingPeriod: "annual",
       whatsappIncluded: false,
+      whatsappAvailable: true,
       stripeLookupKey: `${lookupPrefix}_annual`,
       // 12 months' worth in one lump sum -- see the file-level "KNOWN GAP" note.
       monthlyReplyLimit: base.monthlyReplyLimit * 12,
@@ -200,6 +217,7 @@ function tierPlans(
       tier,
       billingPeriod: "monthly",
       whatsappIncluded: true,
+      whatsappAvailable: true,
       stripeLookupKey: `${lookupPrefix}_monthly_wpp`,
       monthlyReplyLimit: base.monthlyReplyLimit,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
@@ -212,6 +230,7 @@ function tierPlans(
       tier,
       billingPeriod: "annual",
       whatsappIncluded: true,
+      whatsappAvailable: true,
       stripeLookupKey: `${lookupPrefix}_annual_wpp`,
       monthlyReplyLimit: base.monthlyReplyLimit * 12,
       trialReplyLimit: TRIAL_REPLY_LIMIT,
@@ -230,6 +249,19 @@ function tierPlans(
 // `starter2` prefix is historical: the first Starter Product was archived
 // with the `starter_*` keys still on its Prices.
 export const BILLING_PLANS: readonly BillingPlan[] = [
+  {
+    key: FREE_PLAN_KEY,
+    displayName: "Staffra Free",
+    tier: "free",
+    billingPeriod: "monthly",
+    whatsappIncluded: false,
+    whatsappAvailable: false,
+    stripeLookupKey: null,
+    monthlyReplyLimit: FREE_REPLY_LIMIT,
+    trialReplyLimit: null,
+    priceBrlCents: 0,
+    isSelfServe: false,
+  },
   ...tierPlans("starter", "Starter", "starter2"),
   ...tierPlans("intermediate", "Intermediate", "intermediate"),
   ...tierPlans("pro", "Pro", "pro"),
@@ -239,6 +271,7 @@ export const BILLING_PLANS: readonly BillingPlan[] = [
     tier: "enterprise",
     billingPeriod: null,
     whatsappIncluded: false,
+    whatsappAvailable: true,
     stripeLookupKey: null,
     monthlyReplyLimit: null,
     trialReplyLimit: null,

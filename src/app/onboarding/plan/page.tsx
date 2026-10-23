@@ -32,7 +32,10 @@ export default async function OnboardingPlanPage({
   if (checkout === "success") await finishOnboarding();
 
   const state = await resolveOnboardingState(supabase);
-  const back = redirectTargetFor(state, "plan");
+  // The one step that may be skipped ahead from: the proof's "test it later"
+  // lands here. Safe since Staffra Free is preselected -- nothing charged is
+  // chosen before seeing her work unless the merchant picks it themselves.
+  const back = state.step === "ready" ? null : redirectTargetFor(state, "plan");
   if (back) redirect(back);
 
   const [t, quiz, { data: userRow }] = await Promise.all([

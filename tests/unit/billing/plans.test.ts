@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   annualPriceCents,
   BILLING_PLANS,
+  FREE_PLAN_KEY,
   findPlan,
   getPlan,
   getPlanByLookupKey,
@@ -30,10 +31,35 @@ const VARIANTS = [
 ] as const;
 
 describe("billing plan catalog (Trello P1)", () => {
-  it("has exactly the 13 known plan keys (3 tiers x 4 variants, plus enterprise), each unique", () => {
+  it("has exactly the 14 known plan keys (3 tiers x 4 variants, plus free and enterprise), each unique", () => {
     const keys = BILLING_PLANS.map((p) => p.key);
     expect(new Set(keys).size).toBe(keys.length);
-    expect(keys).toHaveLength(13);
+    expect(keys).toHaveLength(14);
+  });
+
+  // 2026-10-23 -- Staffra Free never touches Stripe, so it must stay out of
+  // the self-serve (Checkout) list and every picker variant.
+  it("keeps Staffra Free card-less: no Stripe Price, no trial, R$0, 500 replies, no WhatsApp", () => {
+    const free = getPlan(FREE_PLAN_KEY);
+    expect(free.displayName).toBe("Staffra Free");
+    expect(free.stripeLookupKey).toBeNull();
+    expect(free.isSelfServe).toBe(false);
+    expect(free.trialReplyLimit).toBeNull();
+    expect(free.priceBrlCents).toBe(0);
+    expect(free.monthlyReplyLimit).toBe(500);
+    expect(free.whatsappAvailable).toBe(false);
+    expect(getSelfServePlans().some((p) => p.key === FREE_PLAN_KEY)).toBe(false);
+    for (const variant of VARIANTS) {
+      expect(
+        getSelfServePlansForVariant(variant.billingPeriod, variant.whatsappIncluded).some((p) => p.key === FREE_PLAN_KEY),
+      ).toBe(false);
+    }
+  });
+
+  it("gives every paid plan WhatsApp", () => {
+    for (const plan of BILLING_PLANS.filter((p) => p.key !== FREE_PLAN_KEY)) {
+      expect(plan.whatsappAvailable, plan.key).toBe(true);
+    }
   });
 
   it("gives every self-serve plan a Stripe lookup key", () => {

@@ -43,12 +43,15 @@ export function whatsappProviderForPlan(whatsappIncluded: boolean): WhatsappProv
   return whatsappIncluded ? "twilio" : "meta";
 }
 
+// Staffra Free (2026-10-23) is the one plan with no WhatsApp at all
+// (`BillingPlan.whatsappAvailable`): blocked on either provider.
 export function decideWhatsappPlanGate(
-  billing: { subscription_status: string | null; whatsappIncluded: boolean } | null,
+  billing: { subscription_status: string | null; whatsappIncluded: boolean; whatsappAvailable: boolean } | null,
   provider: WhatsappProvider,
 ): WhatsappPlanGateDecision {
   const entitled =
     !!billing &&
+    billing.whatsappAvailable &&
     WHATSAPP_ENTITLED_STATUSES.has(billing.subscription_status ?? "") &&
     (provider === "meta" || billing.whatsappIncluded);
   return entitled ? { allow: true } : { allow: false, reason: "no_addon" };
