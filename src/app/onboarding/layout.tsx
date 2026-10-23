@@ -2,6 +2,7 @@ import Image from "next/image";
 import { getLocale } from "next-intl/server";
 import { StepRail } from "./step-rail";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { MetaPixel } from "@/components/meta/meta-pixel";
 import logoIcon from "../../../public/logo-icon.png";
 import type { Locale } from "@/i18n/locales";
 
@@ -38,6 +39,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
           <Image src={logoIcon} alt="Staffra" priority className="h-12 w-12 object-contain" />
         </div>
 
+        <MetaPixel />
         <StepRail />
 
         {children}

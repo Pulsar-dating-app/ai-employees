@@ -24,6 +24,7 @@ import {
 } from "@/lib/quiz/answers";
 import { ArrowRightIcon, ChevronLeftIcon, CheckIcon } from "@/components/ui/icons";
 import { SignUpForm } from "@/components/auth/sign-up-form";
+import { flushMetaRegistration, trackMetaEvent } from "@/components/meta/meta-pixel";
 import logo from "../../../public/logo.png";
 
 type Step = "business" | "pain" | "building" | "result";
@@ -175,6 +176,10 @@ export function StartQuiz({ initialBusiness }: { initialBusiness: QuizBusiness |
       ) : null}
     </div>
   );
+}
+
+function trackLead() {
+  trackMetaEvent("Lead");
 }
 
 function rememberAnswers(answers: QuizAnswers) {
@@ -357,6 +362,8 @@ function Result({ answers, locale }: { answers: QuizAnswers; locale: Locale }) {
         </div>
         <SignUpForm
           quiz={serializeQuizAnswers(answers)}
+          onSubmitAttempt={trackLead}
+          onCheckEmail={flushMetaRegistration}
           submitLabel={t("result.cta")}
           submitNote={t("result.ctaNote")}
         />

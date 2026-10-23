@@ -616,7 +616,13 @@ Where paid ads point (decisions.md 2026-10-23). Two one-tap questions (business 
 - Answers travel two ways: the `staffra_quiz` cookie (written when the last answer is picked) and `auth.users.raw_user_meta_data.quiz`, written by `signUp` from a hidden form field. Metadata wins (`readQuizAnswers`, `src/lib/quiz/server.ts`) because an ad opens in Instagram's in-app browser and the confirmation e-mail opens in the default one, where the cookie isn't.
 - Onboarding only **pre-selects** from them, never skips a step: the hire picker starts on the quiz's agent and the services step starts on the trade's preset list. The plan step needs nothing from the quiz: Staffra Free is its default selection anyway. Pilates has no preset trade, so that step starts blank.
 - Not in `LOCALIZED_PATHS` and `noindex`: it's an ad destination, not a search page, so it uses the app's cookie/Accept-Language negotiation. A signed-in visitor is redirected to `/dashboard`. Copy: `Quiz.*`.
-- There is no Meta Pixel / Conversions API in the app yet, so the ad platform can only optimise for clicks, not for quiz completion or sign-ups.
+- **Meta tracking** (pixel `2052811912105095`, `src/lib/meta/`). The pixel loads only on `staffra.io` / `www.staffra.io` (`isTrackedHost`), so local dev and previews never send events.
+  - `/comecar` fires `PageView`, and `Lead` when the sign-up form is submitted.
+  - A sign-up from the quiz (new accounts only: an existing email comes back with no identities) is a `CompleteRegistration`, sent twice with one shared `event_id` so Meta deduplicates. The browser copy is the `staffra_meta_reg` cookie set by `signUp`, flushed by `<MetaPixel />` in the onboarding layout, or right away in the "check your e-mail" case. The server copy goes to the Conversions API (`sendCapiEvent`) in `after()`, with the hashed e-mail, `_fbp` / `_fbc`, IP and user agent.
+  - `<MetaPixel />` in onboarding loads nothing unless that cookie is present, so only quiz sign-ups are tracked there.
+  - The server copy needs `META_CAPI_ACCESS_TOKEN`. Without it nothing is sent. `META_CAPI_TEST_EVENT_CODE` routes events to Events Manager's "Test events" tab. Failures are logged and never block a sign-up.
+  - Tests: `tests/unit/meta/capi-event.test.ts` (payload, hashing, host gate).
+  - The privacy policy (`Legal.privacy`, §2 cookies, §3 uses, §5 sharing) describes this: Meta advertising cookies on `/comecar` only, and what the registration event carries. Widening the pixel beyond the funnel means updating those paragraphs too, since §2 says the cookies aren't used elsewhere.
 
 ### Brand identity, About page, guides and AI-search surfaces (GEO)
 

@@ -21,7 +21,7 @@ const PAGES: { path: LocalizedPath; updated: string }[] = [
   { path: "/sobre", updated: "2026-10-12" },
   ...VERTICALS.map((v) => ({ path: verticalPath(v), updated: v.updated })),
   ...GUIDES.map((g) => ({ path: guidePath(g), updated: g.updated })),
-  { path: "/privacy", updated: "2026-10-12" },
+  { path: "/privacy", updated: "2026-10-23" },
   { path: "/terms", updated: "2026-10-12" },
 ];
 

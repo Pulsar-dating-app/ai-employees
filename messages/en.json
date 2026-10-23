@@ -3431,7 +3431,7 @@
     "lastUpdated": "Last updated {date}",
     "privacy": {
       "title": "Privacy Policy",
-      "date": "October 12, 2026",
+      "date": "October 23, 2026",
       "intro": "This Privacy Policy explains how Pulsar LTDA (CNPJ 58.261.994/0001-80, \"Pulsar\", \"we\", \"us\"), the company that operates the Staffra platform (\"Staffra\", the \"Service\"), collects, uses, shares, and protects personal information when you use our website, dashboard, and services (together, the \"Service\"). It also describes the choices you have about your information. Please read it together with our Terms of Service.",
       "sections": [
         {
@@ -3450,7 +3450,7 @@
             "Connection data: access tokens and account identifiers we store when a Customer connects a third-party channel or tool, such as a messaging platform (WhatsApp, Instagram, Telegram) or a calendar (Google Calendar).",
             "Billing information: for paid subscriptions, the plan a Customer selects and the customer and subscription identifiers returned by our payment processor. We do not receive or store full card numbers.",
             "Usage and device data: log data, IP address, browser type, pages viewed, and actions taken in the dashboard, collected automatically to operate and secure the Service.",
-            "Cookies: we use strictly necessary cookies to keep you signed in and to remember your language preference. We do not use advertising cookies."
+            "Cookies: we use strictly necessary cookies to keep you signed in and to remember your language preference. On the sign-up page our ads point to (staffra.io/comecar), we also use the Meta Pixel, which sets Meta Platforms advertising cookies to measure how many people who clicked an ad went on to create an account. These cookies are not used in the dashboard or on the rest of the site."
           ]
         },
         {
@@ -3461,6 +3461,7 @@
             "To authenticate users, secure accounts, prevent fraud and abuse, bill paid subscriptions, and enforce our Terms of Service.",
             "To provide support, respond to requests, and send service-related notices such as security alerts and changes to our terms or policies.",
             "To analyze usage in aggregate so we can understand which features are useful and improve performance and reliability.",
+            "To measure the results of our ads, knowing how many people who clicked them created an account, so we can show them to people more likely to be interested in the Service.",
             "To comply with legal obligations and to establish, exercise, or defend legal claims."
           ]
         },
@@ -3478,6 +3479,7 @@
           "paragraphs": [
             "Service providers: cloud hosting, database, email delivery, error monitoring, and the AI model providers described above, each acting on our instructions under a data processing agreement.",
             "Messaging and calendar platforms: when a Customer connects a channel such as Instagram, or a calendar, we exchange the data needed to send and receive messages or manage events through that platform, subject to that platform's own terms.",
+            "Advertising platforms: when someone creates an account from the page our ads point to, we send Meta Platforms (Facebook and Instagram), through the Meta Pixel and the Conversions API, the sign-up event with the email address hashed (unreadable), the IP address, the browser type and the ad's click identifiers. Meta uses this data to attribute the sign-up to the ad and optimize our campaigns, under its own Data Policy. We do not send passwords, business data or conversation content. You can limit personalized ads in your Meta account's ad settings and block third-party cookies in your browser.",
             "Payment processors: subscription payments and any payments made through a checkout link are handled by a third-party payment processor (such as Stripe). Pulsar does not collect or store full card numbers and is not a party to a checkout-link transaction between a Customer and its End User.",
             "Within a Customer's team: account and conversation data is visible to other authorized members of the same business account, according to their role.",
             "Legal and safety: we may disclose information if required by law, regulation, or legal process, or to protect the rights, property, or safety of Pulsar, our Customers, or the public.",
