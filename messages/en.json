@@ -2392,8 +2392,11 @@
       "reconnectNowButton": "Reconnect now",
       "billingOwnTitle": "You pay Meta directly for WhatsApp",
       "billingOwnDescription": "While connecting, Meta will ask for a card. Meta charges it directly, in reais, only for replies beyond the month's 1,000 free ones. Staffra charges nothing extra for WhatsApp.",
+      "billingFreeTitle": "On the FREE plan, WhatsApp costs nothing",
+      "billingFreeDescription": "During the connection, Meta may ask for a credit card. It's just a registration Meta requires: on the FREE plan it is never charged. The plan includes up to 500 replies a month, and Meta only charges for replies beyond 1,000 a month. So you pay nothing to Meta or to Staffra.",
       "paymentMethodTitle": "Add a card on Meta",
       "paymentMethodIntro": "Your number is connected, but your WhatsApp account on Meta has no payment method yet. Without one, Meta may block your replies.",
+      "paymentMethodFreeNote": "On the FREE plan this card is never charged: your replies always stay under Meta's 1,000 free ones a month.",
       "paymentMethodStepOpen": "Open payment settings in Meta Business Suite",
       "paymentMethodStepAdd": "Add a card to this number's WhatsApp account",
       "paymentMethodStepBack": "Come back here and click \"I've added it\"",
@@ -3994,7 +3997,7 @@
       "planFreeSub": "forever",
       "stickyNote": "FREE plan · no credit card",
       "noCard": "No credit card",
-      "planWhatsapp": "WhatsApp on your own Meta account"
+      "planWhatsapp": "WhatsApp on your own Meta account, at no cost"
     },
     "freeBadge": "FREE plan · no credit card",
     "buildingSub": "Free, no credit card."

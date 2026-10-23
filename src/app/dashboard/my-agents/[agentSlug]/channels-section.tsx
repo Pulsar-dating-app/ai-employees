@@ -70,6 +70,7 @@ export function ChannelsSection({
   metaConfigId,
   metaSolutionId,
   whatsappProvider,
+  onFreePlan,
 }: {
   companyId: string;
   agentSlug: string;
@@ -90,6 +91,10 @@ export function ChannelsSection({
   metaConfigId: string;
   metaSolutionId: string;
   whatsappProvider: WhatsappProvider;
+  // Staffra Free caps replies at 500 a month, under Meta's 1,000 free ones,
+  // so the card Meta asks for at connection is never charged. Said loudly,
+  // since the plan itself is sold as "no credit card".
+  onFreePlan: boolean;
 }) {
   const t = useTranslations("MyAgents.channels");
   const [connection, setConnection] = useState<Connection | null>(null);
@@ -398,6 +403,9 @@ export function ChannelsSection({
                       <Alert variant="warning" title={t("paymentMethodTitle")}>
                         {t("paymentMethodIntro")}
                       </Alert>
+                      {onFreePlan ? (
+                        <p className="text-sm font-medium text-on-surface">{t("paymentMethodFreeNote")}</p>
+                      ) : null}
                       <ol className="list-decimal space-y-1 pl-5 text-sm text-on-surface-variant">
                         <li>
                           <a href={META_PAYMENT_SETTINGS_URL} target="_blank" rel="noopener noreferrer" className="underline">
@@ -559,9 +567,15 @@ export function ChannelsSection({
                         </Alert>
                       ) : (
                         <>
-                          <Alert variant="info" title={t("billingOwnTitle")}>
-                            {t("billingOwnDescription")}
-                          </Alert>
+                          {onFreePlan ? (
+                            <Alert variant="info" title={t("billingFreeTitle")}>
+                              {t("billingFreeDescription")}
+                            </Alert>
+                          ) : (
+                            <Alert variant="info" title={t("billingOwnTitle")}>
+                              {t("billingOwnDescription")}
+                            </Alert>
+                          )}
                           <p className="text-sm text-on-surface-variant">{t("coexistenceHint")}</p>
                         </>
                       )}

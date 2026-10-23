@@ -8,7 +8,7 @@ import { agentDefaultPhotos, resolveAgentPhoto } from "@/lib/agents/media";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 import { buildEmbedSnippet } from "@/lib/widget/embed-snippet";
 import { resolveDefaultLauncher } from "@/lib/widget/launcher-defaults";
-import { findPlan } from "@/lib/billing/plans";
+import { findPlan, FREE_PLAN_KEY } from "@/lib/billing/plans";
 import { decideWhatsappPlanGate, whatsappProviderForPlan } from "@/lib/whatsapp/enforcement";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "../../back-link";
@@ -147,6 +147,7 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
           metaConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? ""}
           metaSolutionId={process.env.META_WHATSAPP_SOLUTION_ID ?? ""}
           whatsappProvider={whatsappProvider}
+          onFreePlan={billing?.plan_key === FREE_PLAN_KEY}
           chatUrl={chatUrl}
           embedSnippet={embedSnippet}
           telegramLink={telegramLink}

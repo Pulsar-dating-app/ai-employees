@@ -88,6 +88,7 @@ export function ChannelHub({
   metaConfigId,
   metaSolutionId,
   whatsappProvider,
+  onFreePlan,
   chatUrl,
   embedSnippet,
   telegramLink,
@@ -105,6 +106,7 @@ export function ChannelHub({
   metaConfigId: string;
   metaSolutionId: string;
   whatsappProvider: WhatsappProvider;
+  onFreePlan: boolean;
   chatUrl: string;
   embedSnippet: string;
   telegramLink: string;
@@ -231,6 +233,7 @@ export function ChannelHub({
               metaConfigId={metaConfigId}
               metaSolutionId={metaSolutionId}
               whatsappProvider={whatsappProvider}
+              onFreePlan={onFreePlan}
             />
           </div>
           <div hidden={active !== "instagram"}>
