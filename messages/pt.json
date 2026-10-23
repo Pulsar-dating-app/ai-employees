@@ -224,6 +224,7 @@
     "plan": {
       "title": "Coloque a {name} para trabalhar",
       "subtitle": "Ela está configurada e você já viu ela responder. Escolha um plano e ela começa a atender seus clientes.",
+      "subtitleSkipped": "Ela está configurada. Escolha um plano e ela começa a atender seus clientes. Dá para testar ela quando quiser.",
       "groupLabel": "Escolha um plano",
       "trialNote": "Seus primeiros {days} dias são grátis, até {limit, number} respostas. Ao atingir o que vier primeiro, sua assinatura é ativada automaticamente — e dá para cancelar quando quiser.",
       "cancelled": "Sem problema — nada foi cobrado. Escolha um plano quando quiser.",
@@ -3884,16 +3885,6 @@
         "store": "Loja / vendo produtos"
       }
     },
-    "volume": {
-      "title": "Quantas conversas você atende por dia?",
-      "subtitle": "Mais ou menos, somando WhatsApp e Instagram.",
-      "unit": "por dia",
-      "options": {
-        "low": "Até 10",
-        "mid": "De 10 a 30",
-        "high": "Mais de 30"
-      }
-    },
     "pain": {
       "title": "O que mais pesa no seu dia hoje?",
       "subtitle": "Escolha a que mais parece com você.",
@@ -3969,7 +3960,7 @@
       },
       "sampleLabel": "Conversa de exemplo",
       "planName": "Plano {plan}",
-      "planReplies": "Até {count} respostas por mês, no WhatsApp, Instagram e no seu site.",
+      "planReplies": "Até {count} respostas por mês, no WhatsApp, Instagram, Telegram e no seu site.",
       "perks": {
         "ana": [
           "Atende 24 horas, todos os dias",
@@ -3982,28 +3973,28 @@
           "Manda o link do checkout da sua loja"
         ]
       },
-      "signUpTitle": "Comece grátis agora",
+      "signUpTitle": "Crie sua conta grátis",
       "signUpSubtitle": "Crie sua conta e coloque a {name} pra trabalhar em menos de 5 minutos.",
       "cta": "Começar grátis",
-      "ctaNote": "Sem cobrança nos primeiros dias.",
+      "ctaNote": "Plano FREE. Sem cartão de crédito.",
       "haveAccount": "Já tem uma conta?",
       "login": "Entrar",
-      "freeBadge": "Grátis para começar",
+      "freeBadge": "FREE · sem cartão",
       "trust": [
-        "Sem cartão para testar",
-        "Pronto em 5 minutos",
-        "Cancele quando quiser"
+        "Sem cartão de crédito",
+        "Grátis para sempre",
+        "Pronto em 5 minutos"
       ],
       "chatTitle": "Veja a {name} atendendo um cliente como o seu",
       "recommended": "Recomendado pra você",
-      "planFit": {
-        "low": "Ideal pra quem atende até 10 conversas por dia",
-        "mid": "Ideal pra quem atende de 10 a 30 conversas por dia",
-        "high": "Ideal pra quem atende mais de 30 conversas por dia"
-      },
-      "planFree": "Grátis",
-      "planFreeSub": "para começar",
-      "stickyNote": "Sem cartão para testar"
-    }
+      "planFit": "Para começar, independente do tamanho do seu negócio",
+      "planFree": "R$ 0",
+      "planFreeSub": "para sempre",
+      "stickyNote": "Plano FREE · sem cartão de crédito",
+      "noCard": "Sem cartão de crédito",
+      "planWhatsapp": "WhatsApp com a sua conta da Meta"
+    },
+    "freeBadge": "Plano FREE · sem cartão de crédito",
+    "buildingSub": "Grátis, sem cartão de crédito."
   }
 }

@@ -1,25 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { SERVICE_PRESET_TRADES } from "@/lib/appointments/service-presets";
-import { getPlan } from "@/lib/billing/plans";
 import { VERTICALS } from "@/lib/verticals/catalog";
 import {
   businessFromVerticalSlug,
   parseQuizAnswers,
   QUIZ_BUSINESSES,
-  QUIZ_VOLUMES,
   quizAgentSlug,
   quizServiceTrade,
-  quizTier,
   serializeQuizAnswers,
   type QuizAnswers,
 } from "@/lib/quiz/answers";
 
 // The quiz answers ride through a cookie and auth metadata, both
-// visitor-controlled, and onboarding trusts them to pre-select a hire, a
-// service list and a plan. Anything malformed must come back as null rather
+// visitor-controlled, and onboarding trusts them to pre-select a hire and a
+// service list. Anything malformed must come back as null rather
 // than as a half-filled object a step would then act on.
 
-const VALID: QuizAnswers = { business: "barber", volume: "mid", pain: "afterHours" };
+const VALID: QuizAnswers = { business: "barber", pain: "afterHours" };
 
 describe("parseQuizAnswers", () => {
   it("round-trips through serialize", () => {
@@ -39,8 +36,7 @@ describe("parseQuizAnswers", () => {
     ["null", null],
     ["not JSON", "{oops"],
     ["a number", 42],
-    ["partial", { business: "barber", volume: "mid" }],
-    ["unknown volume", { ...VALID, volume: "huge" }],
+    ["partial", { business: "barber" }],
     ["unknown business", { ...VALID, business: "bakery" }],
     ["unknown pain", { ...VALID, pain: "taxes" }],
   ])("rejects %s", (_label, raw) => {
@@ -61,16 +57,6 @@ describe("mapping answers onto onboarding", () => {
       if (trade) expect(SERVICE_PRESET_TRADES).toContain(trade);
       if (b.agent === "malu") expect(trade).toBeNull();
     }
-  });
-
-  it("picks a bigger self-serve tier for each bigger volume", () => {
-    const quotas = QUIZ_VOLUMES.map((v) => {
-      const plan = getPlan(quizTier({ ...VALID, volume: v.key }));
-      expect(plan.isSelfServe).toBe(true);
-      return plan.monthlyReplyLimit!;
-    });
-    expect([...quotas].sort((a, b) => a - b)).toEqual(quotas);
-    expect(new Set(quotas).size).toBe(quotas.length);
   });
 });
 

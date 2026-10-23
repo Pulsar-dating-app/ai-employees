@@ -1,11 +1,10 @@
 import type { ServicePresetTrade } from "@/lib/appointments/service-presets";
-import type { PlanTier } from "@/lib/billing/plans";
 
-// The ad-landing quiz at /comecar. A visitor answers three one-tap questions,
+// The ad-landing quiz at /comecar. A visitor answers two one-tap questions,
 // and the answers travel into onboarding so nothing they told us is asked
-// again: the business picks the hire and the starter service list, the volume
-// picks the plan. The plan is shown without its price: the price is met at
-// the onboarding plan step, after the merchant has seen her answer. Answers
+// again: the business picks the hire and the starter service list. Every
+// result is Staffra Free (owner's call): the quiz sells the card-less way in,
+// and paid tiers are met later. Answers
 // are carried twice -- a cookie set by the quiz, and the auth user's metadata
 // written at sign-up -- because an ad click usually opens in Instagram's
 // in-app browser, while the confirmation email opens in the phone's default
@@ -35,25 +34,12 @@ export const QUIZ_BUSINESSES = [
 
 export type QuizBusiness = (typeof QUIZ_BUSINESSES)[number]["key"];
 
-// Conversations a day, bucketed so each bucket lands inside one tier's
-// monthly reply quota (roughly six replies a conversation, 26 working days):
-// up to 10 a day is ~1,600 replies (Starter, 3,000), up to 30 is ~4,700
-// (Intermediate, 6,000), more than that needs Pro.
-export const QUIZ_VOLUMES = [
-  { key: "low", tier: "starter" },
-  { key: "mid", tier: "intermediate" },
-  { key: "high", tier: "pro" },
-] as const satisfies readonly { key: string; tier: PlanTier }[];
-
-export type QuizVolume = (typeof QUIZ_VOLUMES)[number]["key"];
-
 export const QUIZ_PAINS = ["slowReplies", "afterHours", "busywork"] as const;
 
 export type QuizPain = (typeof QUIZ_PAINS)[number];
 
 export type QuizAnswers = {
   business: QuizBusiness;
-  volume: QuizVolume;
   pain: QuizPain;
 };
 
@@ -73,15 +59,14 @@ export function parseQuizAnswers(raw: unknown): QuizAnswers | null {
   }
   if (!value || typeof value !== "object") return null;
 
-  const { business, volume, pain } = value as Record<string, unknown>;
+  const { business, pain } = value as Record<string, unknown>;
   if (!isOneOf(QUIZ_BUSINESSES.map((b) => b.key), business)) return null;
-  if (!isOneOf(QUIZ_VOLUMES.map((v) => v.key), volume)) return null;
   if (!isOneOf(QUIZ_PAINS, pain)) return null;
-  return { business, volume, pain };
+  return { business, pain };
 }
 
 export function serializeQuizAnswers(answers: QuizAnswers): string {
-  return JSON.stringify({ business: answers.business, volume: answers.volume, pain: answers.pain });
+  return JSON.stringify({ business: answers.business, pain: answers.pain });
 }
 
 function businessOf(answers: QuizAnswers) {
@@ -94,10 +79,6 @@ export function quizAgentSlug(answers: QuizAnswers): "ana" | "malu" {
 
 export function quizServiceTrade(answers: QuizAnswers): ServicePresetTrade | null {
   return businessOf(answers).trade;
-}
-
-export function quizTier(answers: QuizAnswers): PlanTier {
-  return QUIZ_VOLUMES.find((v) => v.key === answers.volume)!.tier;
 }
 
 /** `?ramo=barbearias` (an ad aimed at one trade) skips the business question. */
