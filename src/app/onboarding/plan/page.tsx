@@ -6,8 +6,6 @@ import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import { TRIAL_DAYS } from "@/lib/billing/plans";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { agentPhoto } from "@/lib/agents/media";
-import { quizTier } from "@/lib/quiz/answers";
-import { readQuizAnswers } from "@/lib/quiz/server";
 import { StepCard } from "../step-card";
 import { PlanPicker } from "./plan-picker";
 
@@ -38,9 +36,8 @@ export default async function OnboardingPlanPage({
   const back = state.step === "ready" ? null : redirectTargetFor(state, "plan");
   if (back) redirect(back);
 
-  const [t, quiz, { data: userRow }] = await Promise.all([
+  const [t, { data: userRow }] = await Promise.all([
     getTranslations("Onboarding.plan"),
-    readQuizAnswers(user),
     supabase.from("users").select("trial_used_at").eq("id", user.id).maybeSingle(),
   ]);
 
@@ -49,7 +46,7 @@ export default async function OnboardingPlanPage({
   return (
     <StepCard
       title={t("title", { name })}
-      subtitle={t("subtitle", { name })}
+      subtitle={state.step === "ready" ? t("subtitleSkipped", { name }) : t("subtitle", { name })}
       portrait={agentPhoto(state.agentSlug!)}
       portraitAlt={name}
     >
@@ -58,7 +55,6 @@ export default async function OnboardingPlanPage({
         trialDays={TRIAL_DAYS}
         trialAvailable={!(userRow as { trial_used_at: string | null } | null)?.trial_used_at}
         checkoutCancelled={checkout === "cancel"}
-        initialTier={quiz ? quizTier(quiz) : null}
       />
     </StepCard>
   );

@@ -9,30 +9,27 @@ import clsx from "clsx";
 import type { Locale } from "@/i18n/locales";
 import { intlTag } from "@/i18n/locales";
 import { localizeHref } from "@/i18n/routing";
-import { getPlan } from "@/lib/billing/plans";
+import { FREE_PLAN_KEY, getPlan } from "@/lib/billing/plans";
 import { agentPhoto } from "@/lib/agents/media";
 import {
   QUIZ_BUSINESSES,
   QUIZ_COOKIE,
   QUIZ_COOKIE_MAX_AGE,
   QUIZ_PAINS,
-  QUIZ_VOLUMES,
   quizAgentSlug,
-  quizTier,
   serializeQuizAnswers,
   type QuizAnswers,
   type QuizBusiness,
   type QuizPain,
-  type QuizVolume,
 } from "@/lib/quiz/answers";
 import { ArrowRightIcon, ChevronLeftIcon, CheckIcon } from "@/components/ui/icons";
 import { SignUpForm } from "@/components/auth/sign-up-form";
 import logo from "../../../public/logo.png";
 
-type Step = "business" | "volume" | "pain" | "building" | "result";
+type Step = "business" | "pain" | "building" | "result";
 type ChatLine = { from: "customer" | "agent"; text: string };
 
-const QUESTION_STEPS = ["business", "volume", "pain"] as const;
+const QUESTION_STEPS = ["business", "pain"] as const;
 const BUILDING_MS = 1400;
 const VERTICAL_CHAT_KEYS = new Set<string>(["barber", "salon", "nails", "dental", "nutri", "pilates"]);
 const AGENT_NAMES = { ana: "Ana", malu: "Malu" } as const;
@@ -51,10 +48,9 @@ export function StartQuiz({ initialBusiness }: { initialBusiness: QuizBusiness |
 
   const [step, setStep] = useState<Step>(questions[0]);
   const [business, setBusiness] = useState<QuizBusiness | null>(initialBusiness);
-  const [volume, setVolume] = useState<QuizVolume | null>(null);
   const [pain, setPain] = useState<QuizPain | null>(null);
 
-  const answers: QuizAnswers | null = business && volume && pain ? { business, volume, pain } : null;
+  const answers: QuizAnswers | null = business && pain ? { business, pain } : null;
 
   useEffect(() => {
     if (step !== "building") return;
@@ -100,6 +96,8 @@ export function StartQuiz({ initialBusiness }: { initialBusiness: QuizBusiness |
         <span className="h-10 w-10" />
       </header>
 
+      <FreeBadge label={t("freeBadge")} />
+
       {step !== "result" ? (
         <div
           className="mb-8 flex gap-1.5"
@@ -141,27 +139,6 @@ export function StartQuiz({ initialBusiness }: { initialBusiness: QuizBusiness |
         </Question>
       ) : null}
 
-      {step === "volume" ? (
-        <Question key="volume" title={t("volume.title")} subtitle={t("volume.subtitle")}>
-          <div className="flex flex-col gap-2.5">
-            {QUIZ_VOLUMES.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                onClick={() => {
-                  setVolume(v.key);
-                  next("volume");
-                }}
-                className={clsx(OPTION, volume === v.key && "border-primary bg-primary-fixed/45")}
-              >
-                <span>{t(`volume.options.${v.key}`)}</span>
-                <span className="text-label-md font-normal text-on-surface-variant">{t("volume.unit")}</span>
-              </button>
-            ))}
-          </div>
-        </Question>
-      ) : null}
-
       {step === "pain" ? (
         <Question key="pain" title={t("pain.title")} subtitle={t("pain.subtitle")}>
           <div className="flex flex-col gap-2.5">
@@ -171,7 +148,7 @@ export function StartQuiz({ initialBusiness }: { initialBusiness: QuizBusiness |
                 type="button"
                 onClick={() => {
                   setPain(p);
-                  if (business && volume) rememberAnswers({ business, volume, pain: p });
+                  if (business) rememberAnswers({ business, pain: p });
                   next("pain");
                 }}
                 className={clsx(OPTION, pain === p && "border-primary bg-primary-fixed/45")}
@@ -189,6 +166,7 @@ export function StartQuiz({ initialBusiness }: { initialBusiness: QuizBusiness |
           <p role="status" className="text-headline-md font-semibold tracking-tight text-on-surface">
             {t("building")}
           </p>
+          <p className="text-body-md text-on-surface-variant">{t("buildingSub")}</p>
         </div>
       ) : null}
 
@@ -228,7 +206,7 @@ function Result({ answers, locale }: { answers: QuizAnswers; locale: Locale }) {
   const tVerticals = useTranslations("Verticals");
   const slug = quizAgentSlug(answers);
   const name = AGENT_NAMES[slug];
-  const plan = getPlan(quizTier(answers));
+  const plan = getPlan(FREE_PLAN_KEY);
   const count = new Intl.NumberFormat(intlTag(locale));
 
   const chat = (
@@ -236,7 +214,7 @@ function Result({ answers, locale }: { answers: QuizAnswers; locale: Locale }) {
       ? (tVerticals.raw(`${answers.business}.chat`) as ChatLine[])
       : (t.raw(`chat.${slug}`) as ChatLine[])
   ).slice(0, 4);
-  const perks = t.raw(`result.perks.${slug}`) as string[];
+  const perks = [t("result.planWhatsapp"), ...(t.raw(`result.perks.${slug}`) as string[])];
   const trust = t.raw("result.trust") as string[];
   const photo = agentPhoto(slug);
 
@@ -344,11 +322,15 @@ function Result({ answers, locale }: { answers: QuizAnswers; locale: Locale }) {
           <span className="text-body-lg font-semibold text-on-surface">
             {t("result.planName", { plan: plan.displayName })}
           </span>
-          <span className="text-sm text-on-surface-variant">{t(`result.planFit.${answers.volume}`)}</span>
+          <span className="text-sm text-on-surface-variant">{t("result.planFit")}</span>
         </div>
         <p className="flex items-baseline gap-2">
           <span className="text-headline-lg font-bold tracking-tight text-[#0b8a45]">{t("result.planFree")}</span>
           <span className="text-body-md font-medium text-on-surface-variant">{t("result.planFreeSub")}</span>
+        </p>
+        <p className="inline-flex items-center gap-2 self-start rounded-full bg-[#d9fdd3] px-3 py-1 text-label-md font-semibold text-[#0b5c2e]">
+          <CheckIcon className="h-3.5 w-3.5" />
+          {t("result.noCard")}
         </p>
         <p className="rounded-md bg-primary-fixed/50 px-3 py-2 text-label-md text-on-surface">
           {t("result.planReplies", { count: count.format(plan.monthlyReplyLimit ?? 0) })}
@@ -426,6 +408,15 @@ function StickyCta({
       <p className="mt-1.5 text-center text-label-sm text-on-surface-variant">{note}</p>
     </div>,
     document.body,
+  );
+}
+
+function FreeBadge({ label }: { label: string }) {
+  return (
+    <p className="mb-6 inline-flex items-center gap-1.5 self-center rounded-full border border-[#0b8a45]/25 bg-[#d9fdd3] px-3.5 py-1.5 text-label-md font-bold text-[#0b5c2e] shadow-sm">
+      <CheckIcon className="h-3.5 w-3.5" />
+      {label}
+    </p>
   );
 }
 

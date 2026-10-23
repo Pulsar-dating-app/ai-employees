@@ -224,6 +224,7 @@
     "plan": {
       "title": "Put {name} to work",
       "subtitle": "She's set up and you've seen her answer. Choose a plan and she starts taking your customers.",
+      "subtitleSkipped": "She's set up. Choose a plan and she starts taking your customers. You can test her whenever you like.",
       "groupLabel": "Choose a plan",
       "trialNote": "Your first {days} days are free, up to {limit, number} replies. Whichever comes first activates your subscription automatically — and you can cancel any time.",
       "cancelled": "No problem — nothing was charged. Pick a plan whenever you're ready.",
@@ -3884,16 +3885,6 @@
         "store": "Store / I sell products"
       }
     },
-    "volume": {
-      "title": "How many conversations do you handle a day?",
-      "subtitle": "Roughly, across WhatsApp and Instagram.",
-      "unit": "a day",
-      "options": {
-        "low": "Up to 10",
-        "mid": "10 to 30",
-        "high": "More than 30"
-      }
-    },
     "pain": {
       "title": "What weighs on your day the most?",
       "subtitle": "Pick the one that sounds most like you.",
@@ -3969,7 +3960,7 @@
       },
       "sampleLabel": "Sample conversation",
       "planName": "{plan} plan",
-      "planReplies": "Up to {count} replies a month, on WhatsApp, Instagram and your website.",
+      "planReplies": "Up to {count} replies a month, on WhatsApp, Instagram, Telegram and your website.",
       "perks": {
         "ana": [
           "Answers 24/7, every day",
@@ -3982,28 +3973,28 @@
           "Sends your store's checkout link"
         ]
       },
-      "signUpTitle": "Start for free now",
+      "signUpTitle": "Create your free account",
       "signUpSubtitle": "Create your account and put {name} to work in under 5 minutes.",
       "cta": "Start for free",
-      "ctaNote": "No charge for the first days.",
+      "ctaNote": "FREE plan. No credit card.",
       "haveAccount": "Already have an account?",
       "login": "Log in",
-      "freeBadge": "Free to start",
+      "freeBadge": "FREE · no card",
       "trust": [
-        "No card to try it",
-        "Ready in 5 minutes",
-        "Cancel anytime"
+        "No credit card",
+        "Free forever",
+        "Ready in 5 minutes"
       ],
       "chatTitle": "Watch {name} serve a customer like yours",
       "recommended": "Recommended for you",
-      "planFit": {
-        "low": "Built for up to 10 conversations a day",
-        "mid": "Built for 10 to 30 conversations a day",
-        "high": "Built for more than 30 conversations a day"
-      },
-      "planFree": "Free",
-      "planFreeSub": "to start",
-      "stickyNote": "No card to try it"
-    }
+      "planFit": "To get started, whatever the size of your business",
+      "planFree": "R$ 0",
+      "planFreeSub": "forever",
+      "stickyNote": "FREE plan · no credit card",
+      "noCard": "No credit card",
+      "planWhatsapp": "WhatsApp on your own Meta account"
+    },
+    "freeBadge": "FREE plan · no credit card",
+    "buildingSub": "Free, no credit card."
   }
 }

@@ -17,13 +17,11 @@ export function PlanPicker({
   trialDays,
   trialAvailable,
   checkoutCancelled,
-  initialTier,
 }: {
   companyId: string;
   trialDays: number;
   trialAvailable: boolean;
   checkoutCancelled: boolean;
-  initialTier?: string | null;
 }) {
   const t = useTranslations("Onboarding.plan");
   const locale = useLocale();
@@ -47,13 +45,10 @@ export function PlanPicker({
   // plan's key underneath the same tier, and the merchant's choice of *which
   // tier* should survive that, not reset to the first card.
   // Staffra Free leads and starts selected: it's the way in we want people to
-  // take -- unless the ad quiz already recommended a paid tier, which the
-  // merchant was just shown as "your plan". Free has no period/WhatsApp
+  // take, and the plan the ad quiz promised. Free has no period/WhatsApp
   // variants, so the toggles never swap it out from under the selection.
   const freePlan = getPlan(FREE_PLAN_KEY);
-  const [selectedTier, setSelectedTier] = useState<string>(
-    initialTier && plans.some((p) => p.tier === initialTier) ? initialTier : freePlan.tier,
-  );
+  const [selectedTier, setSelectedTier] = useState<string>(freePlan.tier);
   const freeSelected = selectedTier === freePlan.tier;
   const selectedPlan = freeSelected
     ? freePlan
