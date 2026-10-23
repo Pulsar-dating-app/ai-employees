@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
+import { currentPeriodStart } from "./free-plan";
 
 export type UsageSummary = { used: number; limit: number };
 
@@ -17,16 +18,22 @@ export async function getUsageSummary(
 
   const { data: billing } = await supabase
     .from("company_billing")
-    .select("current_period_start")
+    .select("plan_key, current_period_start, current_period_end")
     .eq("company_id", companyId)
     .maybeSingle();
   if (!billing?.current_period_start) return null;
+
+  const periodStart = await currentPeriodStart(companyId, {
+    plan_key: billing.plan_key as string | null,
+    current_period_start: billing.current_period_start as string,
+    current_period_end: billing.current_period_end as string | null,
+  });
 
   const { data: usage } = await supabase
     .from("company_message_usage")
     .select("replies_used, reply_limit")
     .eq("company_id", companyId)
-    .eq("period_start", billing.current_period_start as string)
+    .eq("period_start", periodStart as string)
     .maybeSingle();
   if (!usage) return null;
 

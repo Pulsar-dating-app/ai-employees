@@ -100,4 +100,24 @@ describe("decideReplyGate (Trello P7)", () => {
       decideReplyGate(trialing, { replies_used: 500, reply_limit: 500 }, { graceMultiplier: 1.2 }),
     ).toEqual({ allow: true, overPlan: true });
   });
+
+  // 2026-10-23 -- Staffra Free: a hard stop exactly at the quota, with no
+  // grace band and regardless of the ops kill switch.
+  const free = { subscription_status: "active", current_period_start: "2026-10-01T00:00:00Z", plan_key: "free" };
+
+  it("allows a Staffra Free company under its quota", () => {
+    expect(decideReplyGate(free, { replies_used: 499, reply_limit: 500 })).toEqual({
+      allow: true,
+      overPlan: false,
+    });
+  });
+
+  it("blocks a Staffra Free company at its quota, ignoring grace and a disarmed hard stop", () => {
+    for (const options of [{}, { graceMultiplier: 1.2 }, { hardStopEnabled: false }]) {
+      expect(decideReplyGate(free, { replies_used: 500, reply_limit: 500 }, options)).toEqual({
+        allow: false,
+        reason: "grace_exceeded",
+      });
+    }
+  });
 });

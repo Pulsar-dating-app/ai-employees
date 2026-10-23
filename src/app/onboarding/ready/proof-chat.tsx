@@ -8,7 +8,6 @@ import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { SendIcon } from "@/components/ui/icons";
 import { LinkifiedText } from "@/components/chat/linkified-text";
-import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 
 type Turn = { role: "customer" | "agent"; content: string };
 
@@ -202,17 +201,15 @@ export function ProofChat({
         </p>
       ) : null}
 
-      {/* Same exit as every earlier step's own "skip": a plain text link, not
-          a second button competing with Continue. finishOnboarding parks the
-          merchant same as it does there -- nothing here traps her either. */}
-      <form action={finishOnboarding}>
-        <button
-          type="submit"
-          className="w-fit rounded-md text-label-md font-medium text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
-        >
-          {t("skip")}
-        </button>
-      </form>
+      {/* A plain text link, not a second button competing with Continue. It
+          skips only the proof: leaving here without a plan would park the hire
+          when Staffra Free is one click away on the next step. */}
+      <Link
+        href="/onboarding/plan"
+        className="w-fit rounded-md text-label-md font-medium text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
+      >
+        {t("skip")}
+      </Link>
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-primary-fixed pt-6">
         <p className="mr-auto text-label-sm text-on-surface-variant">

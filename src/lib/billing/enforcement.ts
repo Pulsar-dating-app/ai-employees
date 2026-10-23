@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { endTrialNow } from "@/lib/stripe/billing";
 import { classifyUsage, getFreeReplyAllowance, isHardStopEnabled } from "./limits";
+import { FREE_PLAN_KEY } from "./plans";
+import { currentPeriodStart } from "./free-plan";
 
 // Trello P7 -- the single pre-run decision every inbound channel makes
 // before calling AgentEngine.run(), plus the one metering call it makes
@@ -40,6 +42,7 @@ export type PreBillingFacts = {
 type BillingFacts = {
   subscription_status: string;
   current_period_start: string | null;
+  plan_key?: string | null;
 } | null;
 
 type UsageFacts = { replies_used: number; reply_limit: number } | null;
@@ -97,6 +100,10 @@ export type ReplyGateOptions = {
  * stretching the free ride. A trialing company only ever gets blocked via
  * the `lapsed` branch above, on a later call once a genuine payment failure
  * has flipped `subscription_status` away from `trialing`.
+ *
+ * Staffra Free (2026-10-23) also gets no grace head-room, but the other way
+ * round: reaching its quota blocks (`grace_exceeded`) even with the hard stop
+ * disarmed -- there's no payment behind it to justify any overflow.
  */
 export function decideReplyGate(
   billing: BillingFacts,
@@ -111,11 +118,13 @@ export function decideReplyGate(
   if (!usage) return { allow: true, overPlan: false };
 
   const isTrialing = billing.subscription_status === "trialing";
-  const graceMultiplier = isTrialing ? 1 : options.graceMultiplier;
+  const isFree = billing.plan_key === FREE_PLAN_KEY;
+  const graceMultiplier = isTrialing || isFree ? 1 : options.graceMultiplier;
   const standing = classifyUsage(usage.replies_used, usage.reply_limit, graceMultiplier);
   if (standing === "within") return { allow: true, overPlan: false };
   if (standing === "over_plan") return { allow: true, overPlan: true };
   if (isTrialing) return { allow: true, overPlan: true };
+  if (isFree) return { allow: false, reason: "grace_exceeded" };
 
   const hardStop = options.hardStopEnabled ?? isHardStopEnabled();
   return hardStop ? { allow: false, reason: "grace_exceeded" } : { allow: true, overPlan: true };
@@ -135,7 +144,7 @@ export async function evaluateReplyGate(
 
   const { data: billing } = await supabase
     .from("company_billing")
-    .select("subscription_status, current_period_start, stripe_subscription_id")
+    .select("subscription_status, current_period_start, current_period_end, stripe_subscription_id, plan_key")
     .eq("company_id", companyId)
     .maybeSingle();
 
@@ -168,11 +177,21 @@ export async function evaluateReplyGate(
   // billing row's current_period_start (same join record_ai_reply makes).
   // A null current_period_start (an incomplete stub from the P3 checkout
   // route) can't match anything -- and that status is already blocked above.
+  // Staffra Free rolls into its next month here, before the read.
+  const periodStart = await currentPeriodStart(
+    companyId,
+    {
+      plan_key: billing.plan_key as string | null,
+      current_period_start: billing.current_period_start as string | null,
+      current_period_end: billing.current_period_end as string | null,
+    },
+    supabase,
+  );
   const { data: usage } = await supabase
     .from("company_message_usage")
     .select("replies_used, reply_limit")
     .eq("company_id", companyId)
-    .eq("period_start", billing.current_period_start as string)
+    .eq("period_start", periodStart as string)
     .maybeSingle();
 
   const usageFacts = usage
@@ -182,7 +201,8 @@ export async function evaluateReplyGate(
   const decision = decideReplyGate(
     {
       subscription_status: billing.subscription_status as string,
-      current_period_start: billing.current_period_start as string | null,
+      current_period_start: periodStart,
+      plan_key: billing.plan_key as string | null,
     },
     usageFacts,
     options,

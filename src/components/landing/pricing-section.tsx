@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/locales";
 import { localizeHref } from "@/i18n/routing";
 import clsx from "clsx";
-import type { BillingPeriod } from "@/lib/billing/plans";
+import { FREE_PLAN_KEY, getPlan, type BillingPeriod } from "@/lib/billing/plans";
 import { useSlidingIndicator } from "@/components/ui/use-sliding-indicator";
 import { SalesContactDialog } from "./sales-contact-dialog";
 import { CascadeText } from "./cascade-text";
@@ -208,6 +208,53 @@ function ManagedBox() {
   );
 }
 
+// Staffra Free leads the section: it's the way in we push. No period or
+// WhatsApp option applies to it, so it sits above those toggles.
+function FreePlanCard({ locale }: { locale: Locale }) {
+  const t = useTranslations("LandingV2.pricing");
+  const plan = getPlan(FREE_PLAN_KEY);
+  const features = t.raw("free.features") as string[];
+  return (
+    <div className="billing-card-in relative mx-auto mb-10 max-w-5xl rounded-[24px] bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_28px_60px_-28px_rgba(53,37,205,0.5)] ring-2 ring-[#3525cd] sm:p-8">
+      <span className="absolute -top-3 left-6 rounded-full bg-[#3525cd] px-3 py-1 text-[12px] font-semibold text-white shadow-[0_6px_16px_-6px_rgba(53,37,205,0.6)]">
+        {t("free.badge")}
+      </span>
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+        <div>
+          <h3 className="text-[22px] font-semibold text-[#0f172a]">{plan.displayName}</h3>
+          <p className="mt-1 text-[15px] leading-6 text-[#464555]">{t("free.desc")}</p>
+          <p className="mt-4 flex items-baseline gap-1.5">
+            <span className="text-[40px] font-semibold leading-none tracking-[-0.025em] text-[#0f172a] tabular-nums">
+              {BRL_WHOLE.format(0)}
+            </span>
+            <span className="text-[14px] text-[#464555]">{t("perMonth")}</span>
+          </p>
+          <p className="mt-3 flex items-center gap-2 text-[15px] font-semibold text-[#0f172a]">
+            <M name="chat_bubble" size={18} className="shrink-0 text-[#3525cd]" />
+            {t("repliesMonthly", { count: new Intl.NumberFormat("pt-BR").format(plan.monthlyReplyLimit ?? 0) })}
+          </p>
+        </div>
+        <ul className="flex flex-col gap-2.5 lg:border-l lg:border-[#efecf8] lg:pl-10">
+          {features.map((feature) => (
+            <li key={feature} className="flex items-start gap-2.5 text-[15px] leading-6 text-[#0f172a]">
+              <M name="check_circle" size={18} className="mt-0.5 shrink-0 text-[#10b981]" />
+              {feature}
+            </li>
+          ))}
+          <li className="pl-[28px] text-[14px] leading-6 text-[#64748b]">{t("free.noWhatsapp")}</li>
+        </ul>
+        <Link
+          href={localizeHref(locale, "/?auth=signup")}
+          aria-label={t("free.cta")}
+          className="group inline-flex h-12 shrink-0 items-center justify-center rounded-xl bg-[#3525cd] px-8 text-[15px] font-semibold text-white shadow-[0_10px_24px_-10px_rgba(53,37,205,0.7)] transition-[background-color,box-shadow] hover:bg-[#4f46e5] lg:w-60"
+        >
+          <CascadeText text={t("free.cta")} />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export function PricingSection() {
   const t = useTranslations("LandingV2.pricing");
   const locale = useLocale() as Locale;
@@ -228,6 +275,14 @@ export function PricingSection() {
             {t("heading")}
           </h2>
           <p className="mt-3 text-[17px] leading-[26px] text-[#464555]">{t("sub")}</p>
+        </div>
+
+        <FreePlanCard locale={locale} />
+
+        <div className="mx-auto mb-8 flex max-w-5xl items-center gap-4">
+          <span className="h-px flex-1 bg-[#e7e3f7]" />
+          <p className="text-center text-[15px] font-semibold text-[#464555]">{t("orPaid")}</p>
+          <span className="h-px flex-1 bg-[#e7e3f7]" />
         </div>
 
         <div className="mx-auto mb-10 flex max-w-3xl flex-col items-center gap-5">
