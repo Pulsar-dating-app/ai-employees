@@ -10,6 +10,11 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-24 — The hire step asks how the business works, not who to hire
+
+**Decision:** `/onboarding/hire` now asks "Como o seu negócio funciona?" and shows two options. "Vendo serviços com horário marcado" hires Ana, and "Vendo produtos" hires Malu. Each option has an "Ideal para" box with example businesses and one small line saying who will answer ("Quem atende: Ana, assistente de agendamentos"). The agent's long marketing blurb and the DB `role` (English, "Scheduling Assistant") are no longer shown there. All copy is `Onboarding.hire.options.<slug>` in the message files. Nothing is pre-selected, so a merchant outside the quiz still makes the choice.
+**Why:** owner feedback. The old step was a wall of text with English role labels, and it asked the merchant to choose between two people they had never heard of. The question they can answer is what kind of business they run, the same one the `/comecar` quiz asks. This keeps the 2026-09-16 "a choice, not a recommendation" stance, but asks the question in the merchant's terms.
+
 ## 2026-10-24 — The onboarding plan step has no "decide later"
 
 **Decision:** the "Decido depois" link on `/onboarding/plan` is gone. The step ends with one button, and Staffra Free is the default selection, so the default way out of onboarding is "Começar com o Staffra Free". A merchant who wants a paid plan picks it on the same screen.

@@ -13,16 +13,15 @@ import { OnboardingLoader } from "../onboarding-loader";
 export type HireableAgent = {
   slug: string;
   name: string;
-  role: string;
-  blurb: string;
   photo: string | null;
 };
 
-// Deliberately a choice, never a recommendation. A classifier guessing the
-// merchant's business at the moment of highest expectation costs more when it
-// is wrong than it saves when it is right -- and picking who you hire is the
-// one moment in this flow where the "employee, not software" framing is
-// actually exercised.
+// The merchant picks how their business works, not an agent: "I sell
+// services by appointment" or "I sell products", each with the kinds of
+// business it fits. That answer decides who is hired, the same way the
+// /comecar quiz does, and the agent shows up as who will answer customers.
+// Nothing is pre-selected by guesswork or row order; the one exception is a
+// quiz answer reaching this step (normally the quiz skips it entirely).
 export function HirePicker({
   companyId,
   agents,
@@ -98,7 +97,7 @@ export function HirePicker({
                 }
               }}
               className={clsx(
-                "group relative flex flex-col items-start gap-3 rounded-lg border p-5 text-left transition-all duration-200",
+                "relative flex flex-col items-start gap-4 rounded-lg border p-5 text-left transition-all duration-200",
                 "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25",
                 "disabled:cursor-not-allowed disabled:opacity-70",
                 active
@@ -110,40 +109,33 @@ export function HirePicker({
                 aria-hidden
                 className={clsx(
                   "absolute right-4 top-4 flex h-5 w-5 items-center justify-center rounded-full transition-all duration-200",
-                  active
-                    ? "scale-100 bg-primary text-on-primary opacity-100"
-                    : "scale-75 bg-transparent opacity-0",
+                  active ? "scale-100 bg-primary text-on-primary opacity-100" : "scale-75 bg-transparent opacity-0",
                 )}
               >
                 <CheckIcon className="h-3 w-3" />
               </span>
 
-              <span className="relative h-16 w-16 overflow-hidden rounded-full bg-primary-fixed ring-1 ring-primary-fixed">
-                {agent.photo ? (
-                  <Image
-                    src={agent.photo}
-                    alt=""
-                    fill
-                    sizes="64px"
-                    className="object-cover object-top"
-                  />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center text-headline-md font-semibold text-primary">
-                    {agent.name.charAt(0)}
-                  </span>
-                )}
+              <span className="pr-7 text-body-lg font-semibold tracking-tight text-on-surface">
+                {t(`options.${agent.slug}.title`)}
               </span>
 
-              <span className="flex flex-col gap-0.5">
-                <span className="text-body-lg font-semibold tracking-tight text-on-surface">
-                  {agent.name}
-                </span>
+              <span className="flex w-full flex-col gap-1 rounded-md bg-white/80 px-3.5 py-3 ring-1 ring-primary-fixed">
                 <span className="text-label-sm font-semibold uppercase tracking-[0.1em] text-primary">
-                  {agent.role}
+                  {t("idealFor")}
                 </span>
+                <span className="text-sm leading-relaxed text-on-surface">{t(`options.${agent.slug}.ideal`)}</span>
               </span>
 
-              <span className="text-sm leading-relaxed text-on-surface-variant">{agent.blurb}</span>
+              <span className="mt-auto flex items-center gap-2.5">
+                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-primary-fixed ring-1 ring-primary-fixed">
+                  {agent.photo ? (
+                    <Image src={agent.photo} alt="" fill sizes="32px" className="object-cover object-top" />
+                  ) : null}
+                </span>
+                <span className="text-label-md text-on-surface-variant">
+                  {t("whoAnswers", { name: agent.name, role: t(`options.${agent.slug}.role`) })}
+                </span>
+              </span>
             </button>
           );
         })}
@@ -163,9 +155,7 @@ export function HirePicker({
           disabled={!selected}
           onClick={handleHire}
         >
-          {selected
-            ? t("cta", { name: agents.find((a) => a.slug === selected)?.name ?? "" })
-            : t("ctaEmpty")}
+          {selected ? t("cta") : t("ctaEmpty")}
         </Button>
       </StepActions>
     </div>

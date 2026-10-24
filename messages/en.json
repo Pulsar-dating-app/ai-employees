@@ -77,13 +77,27 @@
       "profile": "You"
     },
     "hire": {
-      "title": "Who are you hiring for {company}?",
-      "subtitle": "Each one does a different job. You can hire the other one later, from your team page.",
-      "groupLabel": "Choose who to hire",
-      "cta": "Hire {name}",
+      "title": "How does your business work?",
+      "subtitle": "Pick the option that fits you best. We'll put the right person in front of your customers.",
+      "groupLabel": "How your business works",
+      "cta": "Continue",
       "error": "Something went wrong. Please try again.",
       "errorPlan": "Your plan needs to be active before you can hire.",
-      "ctaEmpty": "Choose someone first"
+      "ctaEmpty": "Pick an option",
+      "idealFor": "Ideal for",
+      "whoAnswers": "Who answers: {name}, {role}",
+      "options": {
+        "ana": {
+          "title": "I sell services by appointment",
+          "ideal": "Practices, beauty salons, barbershops, nail salons, dentists, nutritionists, pilates studios, aesthetics clinics…",
+          "role": "booking assistant"
+        },
+        "malu": {
+          "title": "I sell products",
+          "ideal": "Online stores, e-commerce, Instagram shops, resellers, clothing, cosmetics and electronics stores…",
+          "role": "sales assistant"
+        }
+      }
     },
     "setup": {
       "catalog": {

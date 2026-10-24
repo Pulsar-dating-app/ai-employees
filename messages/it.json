@@ -77,13 +77,27 @@
       "profile": "Tu"
     },
     "hire": {
-      "title": "Chi assumi per {company}?",
-      "subtitle": "Ognuna fa un lavoro diverso. Potrai assumere l'altra più avanti, dalla pagina del tuo team.",
-      "groupLabel": "Scegli chi assumere",
-      "cta": "Assumi {name}",
+      "title": "Come funziona la tua attività?",
+      "subtitle": "Scegli l'opzione più adatta a te. Mettiamo la persona giusta a servire i tuoi clienti.",
+      "groupLabel": "Come funziona la tua attività",
+      "cta": "Continua",
       "error": "Si è verificato un errore. Riprova.",
       "errorPlan": "Il tuo piano deve essere attivo prima di poter assumere.",
-      "ctaEmpty": "Prima scegli qualcuno"
+      "ctaEmpty": "Scegli un'opzione",
+      "idealFor": "Ideale per",
+      "whoAnswers": "Chi risponde: {name}, {role}",
+      "options": {
+        "ana": {
+          "title": "Vendo servizi su appuntamento",
+          "ideal": "Studi professionali, saloni di bellezza, barbieri, centri unghie, dentisti, nutrizionisti, studi di pilates, centri estetici…",
+          "role": "assistente agli appuntamenti"
+        },
+        "malu": {
+          "title": "Vendo prodotti",
+          "ideal": "Negozi online, e-commerce, negozi su Instagram, rivenditori, negozi di abbigliamento, cosmetici ed elettronica…",
+          "role": "assistente alle vendite"
+        }
+      }
     },
     "setup": {
       "catalog": {

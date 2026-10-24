@@ -77,13 +77,27 @@
       "profile": "Você"
     },
     "hire": {
-      "title": "Quem você vai contratar para a {company}?",
-      "subtitle": "Cada uma faz um trabalho diferente. Dá para contratar a outra depois, na página da sua equipe.",
-      "groupLabel": "Escolha quem contratar",
-      "cta": "Contratar {name}",
+      "title": "Como o seu negócio funciona?",
+      "subtitle": "Escolha a opção que mais combina com você. A gente coloca a pessoa certa para atender seus clientes.",
+      "groupLabel": "Como o seu negócio funciona",
+      "cta": "Continuar",
       "error": "Algo deu errado. Tente de novo.",
       "errorPlan": "Seu plano precisa estar ativo para contratar.",
-      "ctaEmpty": "Escolha alguém primeiro"
+      "ctaEmpty": "Escolha uma opção",
+      "idealFor": "Ideal para",
+      "whoAnswers": "Quem atende: {name}, {role}",
+      "options": {
+        "ana": {
+          "title": "Vendo serviços com horário marcado",
+          "ideal": "Consultórios, salões de beleza, barbearias, manicures, dentistas, nutricionistas, estúdios de pilates, clínicas de estética…",
+          "role": "assistente de agendamentos"
+        },
+        "malu": {
+          "title": "Vendo produtos",
+          "ideal": "Lojas online, e-commerces, lojas no Instagram, revendedoras, lojas de roupas, cosméticos, eletrônicos…",
+          "role": "assistente de vendas"
+        }
+      }
     },
     "setup": {
       "catalog": {
