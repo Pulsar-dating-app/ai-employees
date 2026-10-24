@@ -2929,7 +2929,7 @@
       "editDialogTitle": "Modifica servizio",
       "cancelButton": "Annulla",
       "nameLabel": "Nome",
-      "namePlaceholder": "es. Taglio",
+      "namePlaceholder": "es.: Ceretta alle ascelle",
       "descriptionLabel": "Descrizione",
       "durationLabel": "Durata (minuti)",
       "durationPlaceholder": "es. 30",
@@ -2954,7 +2954,8 @@
       },
       "professionalsLabel": "Chi lo esegue",
       "professionalsAll": "Tutti",
-      "professionalsHint": "I clienti possono prenotare questo servizio solo con i professionisti selezionati qui."
+      "professionalsHint": "I clienti possono prenotare questo servizio solo con i professionisti selezionati qui.",
+      "descriptionPlaceholder": "es.: Cera calda. Entrambe le ascelle incluse. Evita il sole per 24 ore."
     },
     "menu": {
       "search": "Cerca servizi",
@@ -4018,5 +4019,23 @@
     },
     "freeBadge": "Piano FREE · senza carta di credito",
     "buildingSub": "Gratis, senza carta di credito."
+  },
+  "ServiceTips": {
+    "title": "Consiglio: scrivilo come lo chiedono i clienti",
+    "intro": "Il tuo team risponde ai clienti esattamente con ciò che è scritto qui.",
+    "items": [
+      {
+        "label": "Nome completo",
+        "text": "“Ceretta alle ascelle”, non solo “Ascelle”. “Taglio uomo”, non solo “Taglio”."
+      },
+      {
+        "label": "Prezzo",
+        "text": "con il prezzo, il tuo team risponde subito a “quanto costa?”, senza doverti chiamare."
+      },
+      {
+        "label": "Descrizione",
+        "text": "cosa è incluso, per chi è e le precauzioni. Es.: “Cera calda. Entrambe le ascelle incluse. Evita il sole per 24 ore.”"
+      }
+    ]
   }
 }

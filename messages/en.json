@@ -2929,7 +2929,7 @@
       "editDialogTitle": "Edit service",
       "cancelButton": "Cancel",
       "nameLabel": "Name",
-      "namePlaceholder": "e.g. Haircut",
+      "namePlaceholder": "e.g. Underarm waxing",
       "descriptionLabel": "Description",
       "durationLabel": "Duration (minutes)",
       "durationPlaceholder": "e.g. 30",
@@ -2954,7 +2954,8 @@
       },
       "professionalsLabel": "Who performs it",
       "professionalsAll": "Everyone",
-      "professionalsHint": "Customers can only book this service with the professionals selected here."
+      "professionalsHint": "Customers can only book this service with the professionals selected here.",
+      "descriptionPlaceholder": "e.g. Hot wax. Both underarms included. Avoid the sun for 24h."
     },
     "menu": {
       "search": "Search services",
@@ -4018,5 +4019,23 @@
     },
     "freeBadge": "FREE plan · no credit card",
     "buildingSub": "Free, no credit card."
+  },
+  "ServiceTips": {
+    "title": "Tip: write it the way customers ask",
+    "intro": "Your team answers customers with exactly what is written here.",
+    "items": [
+      {
+        "label": "Full name",
+        "text": "“Underarm waxing”, not just “Underarm”. “Men's haircut”, not just “Cut”."
+      },
+      {
+        "label": "Price",
+        "text": "with a price, your team answers “how much is it?” right away, without calling you."
+      },
+      {
+        "label": "Description",
+        "text": "what's included, who it's for and aftercare. E.g. “Hot wax. Both underarms included. Avoid the sun for 24h.”"
+      }
+    ]
   }
 }

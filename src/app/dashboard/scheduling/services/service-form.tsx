@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { ServiceTips } from "@/components/services/service-tips";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
@@ -141,6 +142,7 @@ export function ServiceForm({
 
   return (
     <div className="flex flex-col gap-3">
+      <ServiceTips />
       <Input
         id="service-name"
         label={t("nameLabel")}
@@ -152,6 +154,7 @@ export function ServiceForm({
       <Textarea
         id="service-description"
         label={t("descriptionLabel")}
+        placeholder={t("descriptionPlaceholder")}
         value={values.description}
         onChange={(e) => update("description", e.target.value)}
       />

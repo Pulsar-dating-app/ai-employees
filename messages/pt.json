@@ -2929,7 +2929,7 @@
       "editDialogTitle": "Editar serviço",
       "cancelButton": "Cancelar",
       "nameLabel": "Nome",
-      "namePlaceholder": "ex.: Corte de cabelo",
+      "namePlaceholder": "ex.: Depilação das axilas",
       "descriptionLabel": "Descrição",
       "durationLabel": "Duração (minutos)",
       "durationPlaceholder": "ex.: 30",
@@ -2954,7 +2954,8 @@
       },
       "professionalsLabel": "Quem realiza",
       "professionalsAll": "Todos",
-      "professionalsHint": "Os clientes só conseguem agendar este serviço com os profissionais selecionados aqui."
+      "professionalsHint": "Os clientes só conseguem agendar este serviço com os profissionais selecionados aqui.",
+      "descriptionPlaceholder": "ex.: Cera quente. Inclui as duas axilas. Evite sol nas 24h seguintes."
     },
     "menu": {
       "search": "Buscar serviços",
@@ -4018,5 +4019,23 @@
     },
     "freeBadge": "Plano FREE · sem cartão de crédito",
     "buildingSub": "Grátis, sem cartão de crédito."
+  },
+  "ServiceTips": {
+    "title": "Dica: cadastre do jeito que o cliente pergunta",
+    "intro": "Sua equipe responde aos clientes com exatamente o que estiver escrito aqui.",
+    "items": [
+      {
+        "label": "Nome completo",
+        "text": "“Depilação das axilas”, não só “Axila”. “Corte masculino”, não só “Corte”."
+      },
+      {
+        "label": "Preço",
+        "text": "com o preço, sua equipe responde “quanto custa?” na hora, sem precisar te chamar."
+      },
+      {
+        "label": "Descrição",
+        "text": "o que está incluso, para quem é e cuidados. Ex.: “Cera quente. Inclui as duas axilas. Evite sol nas 24h seguintes.”"
+      }
+    ]
   }
 }
