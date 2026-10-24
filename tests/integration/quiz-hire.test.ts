@@ -60,6 +60,51 @@ describe("Hiring the ad quiz's agent", () => {
     expect(await hires(companyId)).toHaveLength(0);
   });
 
+  async function render(path: string, cookie: string) {
+    const { baseUrl } = getTestEnv();
+    const res = await fetch(`${baseUrl}${path}`, {
+      headers: { cookie, "accept-language": "pt-BR" },
+      redirect: "manual",
+    });
+    return { status: res.status, html: res.status === 200 ? await res.text() : "" };
+  }
+
+  async function hireAna(user: TestUser, companyId: string) {
+    await api("POST", `/api/companies/${companyId}/agents/ana`, user.cookieHeader, {});
+  }
+
+  const STALE_QUIZ_COOKIE = `staffra_quiz=${encodeURIComponent(JSON.stringify({ business: "barber", pain: "afterHours" }))}`;
+
+  it("gives an account created outside /comecar the full flow, even with an old quiz cookie", async () => {
+    const owner = await signUpTestUser("quiz-hire-landing");
+    const companyId = await createCompany(owner);
+    const cookie = `${owner.cookieHeader}; ${STALE_QUIZ_COOKIE}`;
+
+    const hire = await render("/onboarding/hire", cookie);
+    expect(hire.status).toBe(200);
+    expect(hire.html).not.toContain('aria-checked="true"');
+
+    await hireAna(owner, companyId);
+    const setup = await render("/onboarding/setup", cookie);
+    expect(setup.status).toBe(200);
+    expect(setup.html).not.toContain('value="Pezinho"');
+  });
+
+  it("pre-fills from the answers saved on a /comecar account", async () => {
+    const owner = await signUpTestUser("quiz-hire-metadata");
+    await getTestServiceClient().auth.admin.updateUserById(owner.userId, {
+      user_metadata: { quiz: { business: "barber", pain: "afterHours" } },
+    });
+    const companyId = await createCompany(owner);
+
+    const hire = await render("/onboarding/hire", owner.cookieHeader);
+    expect(hire.html).toContain('aria-checked="true"');
+
+    await hireAna(owner, companyId);
+    const setup = await render("/onboarding/setup", owner.cookieHeader);
+    expect(setup.html).toContain('value="Pezinho"');
+  });
+
   it("falls back to the hire step for an unknown agent", async () => {
     const owner = await signUpTestUser("quiz-hire-unknown");
     const companyId = await createCompany(owner);

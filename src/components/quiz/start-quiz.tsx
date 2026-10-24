@@ -13,8 +13,6 @@ import { FREE_PLAN_KEY, getPlan } from "@/lib/billing/plans";
 import { agentPhoto } from "@/lib/agents/media";
 import {
   QUIZ_BUSINESSES,
-  QUIZ_COOKIE,
-  QUIZ_COOKIE_MAX_AGE,
   QUIZ_PAINS,
   quizAgentSlug,
   serializeQuizAnswers,
@@ -149,7 +147,6 @@ export function StartQuiz({ initialBusiness }: { initialBusiness: QuizBusiness |
                 type="button"
                 onClick={() => {
                   setPain(p);
-                  if (business) rememberAnswers({ business, pain: p });
                   next("pain");
                 }}
                 className={clsx(OPTION, pain === p && "border-primary bg-primary-fixed/45")}
@@ -180,10 +177,6 @@ export function StartQuiz({ initialBusiness }: { initialBusiness: QuizBusiness |
 
 function trackLead() {
   trackMetaEvent("Lead");
-}
-
-function rememberAnswers(answers: QuizAnswers) {
-  document.cookie = `${QUIZ_COOKIE}=${encodeURIComponent(serializeQuizAnswers(answers))}; path=/; max-age=${QUIZ_COOKIE_MAX_AGE}; samesite=lax`;
 }
 
 function Question({

@@ -10,6 +10,7 @@ import { StatusBanner } from "@/components/ui/status-banner";
 import { getTeamActivity, type TeamActivity } from "@/lib/agents/team-activity";
 import { HireCard, TeamBadge, type TeamMember } from "./team-badge";
 import { requireAdminPage } from "@/lib/auth/company-access";
+import { SetupPanel } from "./setup-panel";
 
 const BANNER_ACTION = {
   primary:
@@ -132,6 +133,8 @@ export default async function MyTeamPage() {
           }
         />
       ) : null}
+
+      <SetupPanel />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-headline-md font-semibold tracking-tight text-on-surface">{t("team.title")}</h2>

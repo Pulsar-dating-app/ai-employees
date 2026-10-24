@@ -2095,7 +2095,11 @@
           "title": "Collega un canale",
           "body": "WhatsApp, Instagram, la chat del tuo sito o un link diretto: dove i clienti parleranno con il tuo team. Con il link diretto, il passaggio si spunta alla prima conversazione."
         }
-      }
+      },
+      "panelTitle": "Primi passi",
+      "panelSubtitle": "{remaining, plural, one {Manca # passo} other {Mancano # passi}} perché il tuo team inizi a servire i tuoi clienti.",
+      "nextLabel": "Prossimo passo",
+      "doNow": "Fallo ora"
     },
     "member": {
       "deactivatedTitle": "La tua agenda è stata disattivata",

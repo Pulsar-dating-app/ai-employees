@@ -2095,7 +2095,11 @@
           "title": "Connect a channel",
           "body": "WhatsApp, Instagram, your site's chat or a direct link: where customers will talk to your team. With the direct link, this checks off at the first conversation."
         }
-      }
+      },
+      "panelTitle": "Getting started",
+      "panelSubtitle": "{remaining, plural, one {# step left} other {# steps left}} before your team starts serving your customers.",
+      "nextLabel": "Next step",
+      "doNow": "Do it now"
     },
     "member": {
       "deactivatedTitle": "Your schedule was turned off",

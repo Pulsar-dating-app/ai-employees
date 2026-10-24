@@ -4,16 +4,14 @@ import type { ServicePresetTrade } from "@/lib/appointments/service-presets";
 // and the answers travel into onboarding so nothing they told us is asked
 // again: the business picks the hire and the starter service list. Every
 // result is Staffra Free (owner's call): the quiz sells the card-less way in,
-// and paid tiers are met later. Answers
-// are carried twice -- a cookie set by the quiz, and the auth user's metadata
-// written at sign-up -- because an ad click usually opens in Instagram's
-// in-app browser, while the confirmation email opens in the phone's default
-// one, where the cookie does not exist.
+// and paid tiers are met later. Answers travel only in the auth user's
+// metadata, written by the /comecar sign-up form: it is what marks an account
+// as a quiz sign-up, and it survives the switch from the ad's in-app browser
+// to the one the confirmation e-mail opens in. (A browser cookie used to carry
+// them too; it outlived the quiz visit and turned unrelated sign-ups in the
+// same browser into quiz ones.)
 //
 // Client-safe: the quiz component imports it.
-
-export const QUIZ_COOKIE = "staffra_quiz";
-export const QUIZ_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
 export const QUIZ_BUSINESSES = [
   { key: "barber", agent: "ana", trade: "barber", vertical: "barbearias" },

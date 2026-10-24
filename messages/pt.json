@@ -2095,7 +2095,11 @@
           "title": "Conectar um canal",
           "body": "WhatsApp, Instagram, o chat do seu site ou um link direto: onde os clientes vão conversar com sua equipe. Pelo link direto, o passo se marca na primeira conversa."
         }
-      }
+      },
+      "panelTitle": "Primeiros passos",
+      "panelSubtitle": "{remaining, plural, one {Falta # passo} other {Faltam # passos}} para sua equipe começar a atender seus clientes.",
+      "nextLabel": "Próximo passo",
+      "doNow": "Fazer agora"
     },
     "member": {
       "deactivatedTitle": "Sua agenda foi desativada",
