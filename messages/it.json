@@ -2955,7 +2955,12 @@
       "professionalsLabel": "Chi lo esegue",
       "professionalsAll": "Tutti",
       "professionalsHint": "I clienti possono prenotare questo servizio solo con i professionisti selezionati qui.",
-      "descriptionPlaceholder": "es.: Cera calda. Entrambe le ascelle incluse. Evita il sole per 24 ore."
+      "descriptionPlaceholder": "es.: Cera calda. Entrambe le ascelle incluse. Evita il sole per 24 ore.",
+      "nudges": {
+        "shortName": "I nomi di una sola parola confondono i clienti. Meglio qualcosa come “Pulizia dentale” invece di “Pulizia”.",
+        "noDescription": "Una frase su cosa è incluso aiuta il tuo team a rispondere meglio.",
+        "noPrice": "Senza prezzo, il tuo team non può rispondere a “quanto costa?”. Lascialo vuoto solo se varia."
+      }
     },
     "menu": {
       "search": "Cerca servizi",
@@ -4026,15 +4031,15 @@
     "items": [
       {
         "label": "Nome completo",
-        "text": "“Ceretta alle ascelle”, non solo “Ascelle”. “Taglio uomo”, non solo “Taglio”."
+        "text": "“Pulizia dentale”, non solo “Pulizia”. “Ceretta alle ascelle”, non solo “Ascelle”."
       },
       {
         "label": "Prezzo",
-        "text": "con il prezzo, il tuo team risponde subito a “quanto costa?”, senza doverti chiamare."
+        "text": "così il tuo team risponde subito a “quanto costa?”."
       },
       {
         "label": "Descrizione",
-        "text": "cosa è incluso, per chi è e le precauzioni. Es.: “Cera calda. Entrambe le ascelle incluse. Evita il sole per 24 ore.”"
+        "text": "cosa è incluso e le cose importanti da sapere."
       }
     ]
   }

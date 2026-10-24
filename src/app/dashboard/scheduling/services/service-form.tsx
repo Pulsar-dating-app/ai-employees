@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ServiceTips } from "@/components/services/service-tips";
+import { LightbulbIcon } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
@@ -140,6 +141,11 @@ export function ServiceForm({
     }
   }
 
+  // Advice, never validation: these never block saving. They only show once
+  // a name is being typed, so an empty form isn't a wall of warnings.
+  const hasName = values.name.trim().length > 0;
+  const nameIsOneWord = hasName && values.name.trim().split(/\s+/).length === 1;
+
   return (
     <div className="flex flex-col gap-3">
       <ServiceTips />
@@ -151,6 +157,7 @@ export function ServiceForm({
         onChange={(e) => update("name", e.target.value)}
         maxLength={255}
       />
+      {nameIsOneWord ? <Nudge>{t("nudges.shortName")}</Nudge> : null}
       <Textarea
         id="service-description"
         label={t("descriptionLabel")}
@@ -158,6 +165,7 @@ export function ServiceForm({
         value={values.description}
         onChange={(e) => update("description", e.target.value)}
       />
+      {hasName && !values.description.trim() ? <Nudge>{t("nudges.noDescription")}</Nudge> : null}
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="min-w-0 flex-1">
@@ -209,6 +217,7 @@ export function ServiceForm({
           ]}
         />
       </div>
+      {hasName && !values.price.trim() ? <Nudge>{t("nudges.noPrice")}</Nudge> : null}
       <Input
         id="service-category"
         label={t("categoryLabel")}
@@ -279,5 +288,14 @@ export function ServiceForm({
         </Button>
       </div>
     </div>
+  );
+}
+
+function Nudge({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="-mt-1 flex items-start gap-1.5 text-xs text-[#9a6412]">
+      <LightbulbIcon className="mt-px h-3.5 w-3.5 shrink-0" />
+      {children}
+    </p>
   );
 }

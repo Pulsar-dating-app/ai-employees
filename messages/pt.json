@@ -2955,7 +2955,12 @@
       "professionalsLabel": "Quem realiza",
       "professionalsAll": "Todos",
       "professionalsHint": "Os clientes só conseguem agendar este serviço com os profissionais selecionados aqui.",
-      "descriptionPlaceholder": "ex.: Cera quente. Inclui as duas axilas. Evite sol nas 24h seguintes."
+      "descriptionPlaceholder": "ex.: Cera quente. Inclui as duas axilas. Evite sol nas 24h seguintes.",
+      "nudges": {
+        "shortName": "Nomes de uma palavra confundem o cliente. Prefira algo como “Limpeza dental” em vez de “Limpeza”.",
+        "noDescription": "Uma frase sobre o que está incluso ajuda sua equipe a responder melhor.",
+        "noPrice": "Sem preço, sua equipe não consegue responder “quanto custa?”. Deixe em branco só se o valor varia."
+      }
     },
     "menu": {
       "search": "Buscar serviços",
@@ -4026,15 +4031,15 @@
     "items": [
       {
         "label": "Nome completo",
-        "text": "“Depilação das axilas”, não só “Axila”. “Corte masculino”, não só “Corte”."
+        "text": "“Limpeza dental”, não só “Limpeza”. “Depilação das axilas”, não só “Axila”."
       },
       {
         "label": "Preço",
-        "text": "com o preço, sua equipe responde “quanto custa?” na hora, sem precisar te chamar."
+        "text": "assim sua equipe responde “quanto custa?” na hora."
       },
       {
         "label": "Descrição",
-        "text": "o que está incluso, para quem é e cuidados. Ex.: “Cera quente. Inclui as duas axilas. Evite sol nas 24h seguintes.”"
+        "text": "o que está incluso e os cuidados importantes."
       }
     ]
   }
