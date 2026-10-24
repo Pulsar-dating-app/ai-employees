@@ -5,6 +5,9 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { claimPendingInvite } from "@/lib/team/invites";
+import { quizAgentSlug } from "@/lib/quiz/answers";
+import { readQuizAnswers } from "@/lib/quiz/server";
+import { hireQuizAgent } from "@/lib/quiz/hire";
 
 // Onboarding: the one place a company is created in the UI. The hire flow
 // and Settings used to each create one inline; now they can assume it
@@ -74,6 +77,13 @@ export async function createCompany(
       .eq("company_id", companyId)
       .eq("user_id", user.id);
     if (renameError) console.error("[onboarding] renaming the owner's professional failed", renameError.message);
+  }
+
+  // Came through the ad quiz: the business they picked there already decided
+  // the hire, so the hire step is skipped instead of asked again.
+  const quiz = await readQuizAnswers(user);
+  if (quiz && companyId && (await hireQuizAgent(supabase, companyId, quizAgentSlug(quiz)))) {
+    redirect("/onboarding/setup");
   }
 
   redirect("/onboarding/hire");

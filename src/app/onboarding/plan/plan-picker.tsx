@@ -6,7 +6,6 @@ import { intlTag } from "@/i18n/locales";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "@/components/ui/icons";
-import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import { FREE_PLAN_KEY, getPlan, getSelfServePlansForVariant, type BillingPeriod } from "@/lib/billing/plans";
 import { WhatsAppModeChoice } from "@/components/billing/whatsapp-mode-choice";
 import { StepActions } from "../step-card";
@@ -256,16 +255,6 @@ export function PlanPicker({
       ) : null}
 
       <StepActions>
-        {/* Deciding later stays a real exit: she is parked, the dashboard
-            alert says why, and nothing here traps the merchant. */}
-        <form action={finishOnboarding} className="mr-auto">
-          <button
-            type="submit"
-            className="rounded-md text-label-md font-medium text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
-          >
-            {t("later")}
-          </button>
-        </form>
         <Button
           type="button"
           isLoading={isStarting}

@@ -10,6 +10,16 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-24 — The onboarding plan step has no "decide later"
+
+**Decision:** the "Decido depois" link on `/onboarding/plan` is gone. The step ends with one button, and Staffra Free is the default selection, so the default way out of onboarding is "Começar com o Staffra Free". A merchant who wants a paid plan picks it on the same screen.
+**Why:** owner's call. "Decide later" left the merchant with no plan: the hire got parked, and replies stopped after the pre-billing allowance, which is the worst first experience. Free costs nothing and needs no card, so there's nothing to defer. Closing the tab still leaves the flow open, and the merchant comes back to this step.
+
+## 2026-10-24 — Quiz sign-ups skip onboarding's hire step
+
+**Decision:** for a merchant who came through `/comecar`, `createCompany` hires the agent the quiz picked (store → Malu, anything else → Ana) and sends them straight to the services/catalogue step. The hire step is only shown if that automatic hire fails. Everyone else still chooses on the hire step, with nothing pre-selected.
+**Why:** owner's call. The quiz's business question already decides the hire, so showing a picker with the answer pre-selected is a click with no new information. This narrows the 2026-09-16 rule ("deliberately a choice, never a recommendation") to merchants who never answered the quiz. Hiring the other agent stays one click away on the team page. It's done in the server action rather than on the hire page because a write during a page render could fire on a prefetch.
+
 ## 2026-10-23 — Meta Pixel + Conversions API on the ad funnel only
 
 **Decision:** the Meta pixel runs on `/comecar` (`PageView`, `Lead` on sign-up submit) and, for quiz sign-ups only, fires `CompleteRegistration` once on arrival in onboarding. The same registration also goes server-side through the Conversions API from the `signUp` action, deduplicated by a shared `event_id`. Nothing loads outside production hosts, and nothing loads on the rest of the app.
@@ -23,7 +33,7 @@ Record of notable decisions and the reasoning behind them, newest first.
 ## 2026-10-23 — The proof step's "test it later" now leads to the plan step
 
 **Decision:** on `/onboarding/ready`, "Testo isso depois" links to `/onboarding/plan` instead of calling `finishOnboarding`. The plan page now accepts a merchant whose state is still `ready` (proof not seen). That's the one forward skip `redirectTargetFor` allows; earlier steps still bounce back. `proof_seen_at` isn't stamped on a skip, so it still means "she answered them", and a merchant who closes the tab comes back to the proof. This partly reverses 2026-09-16 ("the plan step is gated on proof_seen_at").
-**Why:** the old exit left the flow with no plan. The hire got parked and replies stopped after the 20-reply allowance, while Staffra Free was one click away. The 09-16 gate existed so nobody would be charged before seeing her work. With Free preselected on the plan step, no charge can be chosen there unless the merchant picks a paid plan themselves. Leaving with no plan is still possible through the plan step's own "decide later".
+**Why:** the old exit left the flow with no plan. The hire got parked and replies stopped after the 20-reply allowance, while Staffra Free was one click away. The 09-16 gate existed so nobody would be charged before seeing her work. With Free preselected on the plan step, no charge can be chosen there unless the merchant picks a paid plan themselves. (The plan step's own "decide later" exit was removed the next day, see 2026-10-24.)
 
 ## 2026-10-23 — Staffra Free: a permanent card-less plan, outside Stripe
 

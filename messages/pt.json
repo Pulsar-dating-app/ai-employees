@@ -244,7 +244,6 @@
       },
       "cta": "Escolher plano",
       "ctaTrial": "Começar grátis",
-      "later": "Decido depois",
       "error": "Não conseguimos abrir o checkout. Tente de novo.",
       "freeFeatureNoCard": "Sem cartão de crédito",
       "ctaFree": "Começar com o {plan}",
