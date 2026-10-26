@@ -2322,7 +2322,7 @@
       "title": "Ensine a {name} sobre o seu negócio",
       "subtitle": "Três perguntas rápidas. É o que a {name} usa para responder seus clientes sem precisar te chamar.",
       "description": {
-        "label": "O que o seu negócio faz?",
+        "label": "Como você apresentaria seu negócio a um cliente novo?",
         "placeholderBooking": "Ex.: Barbearia no centro, cortes clássicos e modernos. Atendemos só com horário marcado.",
         "placeholderSales": "Ex.: Loja de roupas femininas, do P ao GG. Enviamos para todo o Brasil."
       },
@@ -2347,6 +2347,7 @@
         "placeholder": "Rua, número, bairro, cidade"
       },
       "hint": "Dá para completar o resto mais abaixo quando quiser.",
+      "hintElsewhere": "Dá para completar o resto em Configurações quando quiser.",
       "save": "Salvar",
       "error": "Não conseguimos salvar. Tente de novo."
     },

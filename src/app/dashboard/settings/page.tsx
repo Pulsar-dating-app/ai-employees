@@ -125,9 +125,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             phone: company.phone,
             website_url: company.website_url,
             address: company.address ?? null,
-            country: company.country,
+            country: company.country ?? "BR",
             industry: company.industry ?? null,
-            currency: company.currency,
+            currency: company.currency ?? "BRL",
             timezone: company.timezone ?? null,
           }}
         />

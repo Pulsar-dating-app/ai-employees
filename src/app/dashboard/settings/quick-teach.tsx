@@ -26,11 +26,15 @@ export function QuickTeach({
   agentName,
   scheduling,
   initial,
+  returnTo = "/dashboard/settings?pronto=1",
 }: {
   companyId: string;
   agentName: string;
   scheduling: boolean;
   initial: { description: string | null; payment_policy: string | null; address: string | null };
+  // Where the saved confirmation shows: Settings, or the dashboard home,
+  // which shows this card too while the "business" setup step is pending.
+  returnTo?: string;
 }) {
   const t = useTranslations("Settings.quickTeach");
   const locale = useLocale();
@@ -85,7 +89,7 @@ export function QuickTeach({
     track("quick_teach_saved", { fields: Object.keys(patch).join(",") });
     // The page re-renders without this card (or with it, if still short of
     // the minimum) and confirms the save at the top.
-    router.replace("/dashboard/settings?pronto=1");
+    router.replace(returnTo);
     router.refresh();
   }
 
@@ -163,7 +167,7 @@ export function QuickTeach({
       ) : null}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-label-sm text-on-surface-variant">{t("hint")}</p>
+        <p className="text-label-sm text-on-surface-variant">{t(returnTo.startsWith("/dashboard/settings") ? "hint" : "hintElsewhere")}</p>
         <Button type="button" onClick={save} isLoading={isSaving} disabled={!canSave} className="w-full sm:w-auto">
           {t("save")}
         </Button>

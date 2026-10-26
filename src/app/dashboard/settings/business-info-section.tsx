@@ -121,10 +121,7 @@ export function BusinessInfoSection({ companyId, canEdit, initial }: BusinessInf
           <Select
             id="business-currency"
             label={t("currencyLabel")}
-            options={[
-              { value: "", label: t("currencyPlaceholder") },
-              ...CURRENCY_CODES.map((code) => ({ value: code, label: t(`currencyOptions.${code}`) })),
-            ]}
+            options={CURRENCY_CODES.map((code) => ({ value: code, label: t(`currencyOptions.${code}`) }))}
             {...selectProps("currency")}
           />
           <div className="flex flex-col gap-1.5">

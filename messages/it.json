@@ -2322,7 +2322,7 @@
       "title": "Insegna a {name} com'è la tua attività",
       "subtitle": "Tre domande veloci. È ciò che {name} usa per rispondere ai tuoi clienti senza doverti chiamare.",
       "description": {
-        "label": "Di cosa si occupa la tua attività?",
+        "label": "Come presenteresti la tua attività a un nuovo cliente?",
         "placeholderBooking": "Es.: Barbiere in centro, tagli classici e moderni. Solo su appuntamento.",
         "placeholderSales": "Es.: Negozio di abbigliamento donna, dalla S alla XXL. Spediamo in tutto il paese."
       },
@@ -2347,6 +2347,7 @@
         "placeholder": "Via, numero, quartiere, città"
       },
       "hint": "Puoi completare il resto più in basso quando vuoi.",
+      "hintElsewhere": "Puoi completare il resto nelle Impostazioni quando vuoi.",
       "save": "Salva",
       "error": "Non siamo riusciti a salvare. Riprova."
     },

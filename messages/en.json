@@ -2322,7 +2322,7 @@
       "title": "Teach {name} about your business",
       "subtitle": "Three quick questions. It's what {name} uses to answer your customers without having to call you.",
       "description": {
-        "label": "What does your business do?",
+        "label": "How would you introduce your business to a new customer?",
         "placeholderBooking": "E.g. Downtown barbershop, classic and modern cuts. Appointments only.",
         "placeholderSales": "E.g. Women's clothing store, sizes S to XXL. We ship nationwide."
       },
@@ -2347,6 +2347,7 @@
         "placeholder": "Street, number, neighbourhood, city"
       },
       "hint": "You can fill in the rest further down whenever you like.",
+      "hintElsewhere": "You can fill in the rest in Settings whenever you like.",
       "save": "Save",
       "error": "We couldn't save that. Please try again."
     },
