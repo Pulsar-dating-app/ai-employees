@@ -15,7 +15,7 @@ import { dueNudge, NUDGE_AFTER_MS, NUDGE_MAX_AGE_MS, type NudgeKind } from "@/li
 //
 // Off unless the deploy sets MERCHANT_NUDGES_ENABLED=true, so shipping the
 // code or scheduling the job never e-mails anyone by itself. Hourly, via the
-// same pg_cron + Vault split as the reminders (migration 20261026120100).
+// same pg_cron + Vault split as the reminders (migration 20261026134747).
 //
 // Idempotent across overlapping runs: the `merchant_nudges` row is claimed
 // (primary key company + kind) before the send, and released again if the

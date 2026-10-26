@@ -1,5 +1,5 @@
 // The funnel events the app records (table `funnel_events`, migration
-// 20261026120000). Allowlisted here because the client sends them through a
+// 20261026134706). Allowlisted here because the client sends them through a
 // server action, and anything it sends is untrusted: an unknown name is
 // dropped, and properties are cut down to a few short scalar values.
 //

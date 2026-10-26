@@ -69,5 +69,8 @@ begin
   return 'scheduled: merchant-nudges (hourly at :17)';
 end $$;
 
+-- Only the database owner (an operator in the SQL editor) schedules it.
+revoke execute on function private.schedule_merchant_nudges() from public, anon, authenticated;
+
 -- Deliberately not called here: unlike the reminders, this sends to
 -- merchants, so turning it on is an explicit production step.

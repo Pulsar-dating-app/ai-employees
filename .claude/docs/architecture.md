@@ -641,7 +641,7 @@ Where paid ads point (decisions.md 2026-10-23). Two one-tap questions (business 
 ### Funnel events and merchant nudge e-mails — 2026-10-26
 
 What happens after an ad sign-up, measured and followed up. See decisions.md 2026-10-26.
-- **`funnel_events`** (migration `20261026120000`) is insert-only for a merchant, as themselves (`user_id = auth.uid()`), into a company they belong to (or none, before one exists). No select policy, so it's read through SQL with the service role. Names are allowlisted in `src/lib/funnel/events.ts`, and properties are cut to six short scalars (`sanitizeFunnelProperties`).
+- **`funnel_events`** (migration `20261026134706`) is insert-only for a merchant, as themselves (`user_id = auth.uid()`), into a company they belong to (or none, before one exists). No select policy, so it's read through SQL with the service role. Names are allowlisted in `src/lib/funnel/events.ts`, and properties are cut to six short scalars (`sanitizeFunnelProperties`).
   - Server code calls `recordFunnelEvent(supabase, event, props)` (`record.ts`, never throws). Client components call `track()` (`client.ts`), which goes through the `trackFunnelEvent` server action and re-checks both arguments.
   - Recorded today: `onboarding_step_viewed` (from `StepRail`, in an effect, never at render), `onboarding_finished` (`completeOnboarding`, with the channel it hands off to), `plan_chosen`, `link_shared` / `link_copied` (`ShareChatLink`'s `surface`), `channel_panel_opened`, `quick_teach_saved`, `app_opened` (`AppOpenedBeacon` in the dashboard layout, once per browser per day) and `nudge_clicked`.
   - `app_opened` exists because a cookie session never signs in again: `auth.users.last_sign_in_at` does not show whether a merchant came back.
@@ -649,7 +649,7 @@ What happens after an ad sign-up, measured and followed up. See decisions.md 202
   - `onboarding_stalled` when onboarding isn't finished;
   - `not_live` when it's finished but the checklist's channel fact is false. This one carries the hosted link.
   - Only for companies 24h–7 days old, each kind at most once, never two nudges within 72h.
-  - `merchant_nudges` (migration `20261026120100`, service role only, primary key company + kind) is claimed before the send and released if the send fails, so overlapping runs never double-send.
+  - `merchant_nudges` (migration `20261026134747`, service role only, primary key company + kind) is claimed before the send and released if the send fails, so overlapping runs never double-send.
   - Copy is `src/lib/email/merchant-nudges.ts` (pt/en/it, language from `companies.country`, Portuguese when unset). Its button goes to `/api/nudges/click?k=<kind>`, which records `nudge_clicked` when the browser has a session and redirects to `/dashboard`.
   - **Off by default:** the route returns `{ enabled: false }` unless the deploy sets `MERCHANT_NUDGES_ENABLED=true`, and the migration defines `private.schedule_merchant_nudges()` without calling it. To turn it on in production, set the env var, then run `select private.schedule_merchant_nudges();` (same Vault secrets as the reminders).
 - Tests: `tests/integration/merchant-nudges.test.ts`, `tests/integration/funnel-events.test.ts`, `tests/unit/nudges/kinds.test.ts`, `tests/unit/funnel/events.test.ts`, `tests/unit/email/merchant-nudges.test.ts`.
