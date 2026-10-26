@@ -5,11 +5,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { intlTag } from "@/i18n/locales";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
-import { CheckIcon } from "@/components/ui/icons";
+import { CheckIcon, ChevronDownIcon } from "@/components/ui/icons";
 import { FREE_PLAN_KEY, getPlan, getSelfServePlansForVariant, type BillingPeriod } from "@/lib/billing/plans";
 import { WhatsAppModeChoice } from "@/components/billing/whatsapp-mode-choice";
 import { StepActions } from "../step-card";
 import { OnboardingLoader } from "../onboarding-loader";
+import { track } from "@/lib/funnel/client";
 
 export function PlanPicker({
   companyId,
@@ -53,6 +54,17 @@ export function PlanPicker({
     ? freePlan
     : (plans.find((p) => p.tier === selectedTier) ?? plans[0] ?? null);
 
+  // Paid plans start folded away. On a phone they used to sit between the
+  // free card and its button -- three priced cards and two toggles -- and a
+  // third of ad sign-ups stopped on this screen (decisions.md 2026-10-26).
+  const [showPaid, setShowPaid] = useState(false);
+  function togglePaid() {
+    // Folding them away drops a paid pick, so the button never names a plan
+    // the merchant can no longer see.
+    if (showPaid) setSelectedTier(freePlan.tier);
+    setShowPaid(!showPaid);
+  }
+
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +72,7 @@ export function PlanPicker({
     if (!selectedPlan || isStarting) return;
     setError(null);
     setIsStarting(true);
+    track("plan_chosen", { plan: selectedPlan.key });
 
     const res = await fetch(`/api/companies/${companyId}/billing/checkout`, {
       method: "POST",
@@ -81,7 +94,7 @@ export function PlanPicker({
       return;
     }
 
-    window.location.href = url;
+    window.location.assign(url);
   }
 
   return (
@@ -142,110 +155,128 @@ export function PlanPicker({
           </ul>
         </button>
 
-        <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={togglePaid}
+          aria-expanded={showPaid}
+          aria-controls="paid-plans"
+          className="flex items-center gap-4 rounded-md text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
+        >
           <span className="h-px flex-1 bg-primary-fixed" />
-          <p className="text-center text-sm font-medium text-on-surface-variant">{t("orPaid")}</p>
+          <span className="flex flex-col items-center gap-0.5 text-center">
+            <span className="flex items-center gap-1 text-sm font-semibold text-primary">
+              {showPaid ? t("hidePaid") : t("showPaid")}
+              <ChevronDownIcon
+                className={clsx("h-4 w-4 transition-transform duration-200", showPaid && "rotate-180")}
+              />
+            </span>
+            <span className="text-label-sm text-on-surface-variant">{t("orPaid")}</span>
+          </span>
           <span className="h-px flex-1 bg-primary-fixed" />
-        </div>
+        </button>
 
-        {trialAvailable && plans[0]?.trialReplyLimit != null ? (
-          <p className="rounded-lg bg-tertiary-container/15 px-4 py-3 text-body-md text-tertiary">
-            {t("trialNote", { days: trialDays, limit: plans[0].trialReplyLimit })}
-          </p>
-        ) : null}
+        {showPaid ? (
+          <div id="paid-plans" className="flex flex-col gap-7">
+            {trialAvailable && plans[0]?.trialReplyLimit != null ? (
+              <p className="rounded-lg bg-tertiary-container/15 px-4 py-3 text-body-md text-tertiary">
+                {t("trialNote", { days: trialDays, limit: plans[0].trialReplyLimit })}
+              </p>
+            ) : null}
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex rounded-lg border border-primary-fixed bg-white/70 p-1">
-            {(["monthly", "annual"] as const).map((period) => (
-              <button
-                key={period}
-                type="button"
-                onClick={() => setBillingPeriod(period)}
-                className={clsx(
-                  "rounded-md px-4 py-1.5 text-label-md font-semibold transition-colors",
-                  billingPeriod === period
-                    ? "bg-primary text-on-primary"
-                    : "text-on-surface-variant hover:text-on-surface",
-                )}
-              >
-                {t(`picker.period.${period}`)}
-              </button>
-            ))}
-          </div>
-        </div>
-        <WhatsAppModeChoice whatsappIncluded={whatsappIncluded} onChange={setWhatsappIncluded} />
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="inline-flex rounded-lg border border-primary-fixed bg-white/70 p-1">
+                {(["monthly", "annual"] as const).map((period) => (
+                  <button
+                    key={period}
+                    type="button"
+                    onClick={() => setBillingPeriod(period)}
+                    className={clsx(
+                      "rounded-md px-4 py-1.5 text-label-md font-semibold transition-colors",
+                      billingPeriod === period
+                        ? "bg-primary text-on-primary"
+                        : "text-on-surface-variant hover:text-on-surface",
+                    )}
+                  >
+                    {t(`picker.period.${period}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <WhatsAppModeChoice whatsappIncluded={whatsappIncluded} onChange={setWhatsappIncluded} />
 
-        <div className="grid items-stretch gap-4 sm:grid-cols-2">
-          {plans.map((plan, index) => {
-            const active = plan.tier === selectedTier;
-            const isRecommended = plan.tier === "intermediate";
-            const priceLabel =
-              billingPeriod === "annual"
-                ? t("perYear", { price: money.format((plan.priceBrlCents ?? 0) / 100) })
-                : t("perMonth", { price: money.format((plan.priceBrlCents ?? 0) / 100) });
-            const replyLimitLabel =
-              billingPeriod === "annual"
-                ? t("replyLimitAnnual", { count: count.format(plan.monthlyReplyLimit ?? 0) })
-                : t("replyLimit", { count: count.format(plan.monthlyReplyLimit ?? 0) });
-            const features = [t("featureChannels"), t("featureTeam"), t("featureHistory")];
-            return (
-              <button
-                key={plan.tier}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                tabIndex={active || (!selectedTier && index === 0) ? 0 : -1}
-                disabled={isStarting}
-                onClick={() => setSelectedTier(plan.tier)}
-                className={clsx(
-                  "relative flex flex-col gap-3 rounded-lg border p-5 pt-6 text-left transition-all duration-200",
-                  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25",
-                  "disabled:cursor-not-allowed disabled:opacity-70",
-                  active
-                    ? "border-primary bg-primary-fixed/45 shadow-[0_8px_24px_-12px_rgba(53,37,205,0.45)]"
-                    : isRecommended
-                      ? "border-primary/40 bg-white shadow-[0_8px_24px_-14px_rgba(53,37,205,0.35)] hover:border-primary/60"
-                      : "border-primary-fixed bg-white/70 hover:border-primary/40 hover:bg-white",
-                )}
-              >
-                {isRecommended ? (
-                  <span className="absolute inset-x-0 -top-3 flex justify-center">
-                    <span className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-label-sm font-semibold text-on-primary shadow-[0_4px_12px_-4px_rgba(53,37,205,0.5)]">
-                      {t("recommended")}
+            <div className="grid items-stretch gap-4 sm:grid-cols-2">
+              {plans.map((plan, index) => {
+                const active = plan.tier === selectedTier;
+                const isRecommended = plan.tier === "intermediate";
+                const priceLabel =
+                  billingPeriod === "annual"
+                    ? t("perYear", { price: money.format((plan.priceBrlCents ?? 0) / 100) })
+                    : t("perMonth", { price: money.format((plan.priceBrlCents ?? 0) / 100) });
+                const replyLimitLabel =
+                  billingPeriod === "annual"
+                    ? t("replyLimitAnnual", { count: count.format(plan.monthlyReplyLimit ?? 0) })
+                    : t("replyLimit", { count: count.format(plan.monthlyReplyLimit ?? 0) });
+                const features = [t("featureChannels"), t("featureTeam"), t("featureHistory")];
+                return (
+                  <button
+                    key={plan.tier}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    tabIndex={active || (!selectedTier && index === 0) ? 0 : -1}
+                    disabled={isStarting}
+                    onClick={() => setSelectedTier(plan.tier)}
+                    className={clsx(
+                      "relative flex flex-col gap-3 rounded-lg border p-5 pt-6 text-left transition-all duration-200",
+                      "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25",
+                      "disabled:cursor-not-allowed disabled:opacity-70",
+                      active
+                        ? "border-primary bg-primary-fixed/45 shadow-[0_8px_24px_-12px_rgba(53,37,205,0.45)]"
+                        : isRecommended
+                          ? "border-primary/40 bg-white shadow-[0_8px_24px_-14px_rgba(53,37,205,0.35)] hover:border-primary/60"
+                          : "border-primary-fixed bg-white/70 hover:border-primary/40 hover:bg-white",
+                    )}
+                  >
+                    {isRecommended ? (
+                      <span className="absolute inset-x-0 -top-3 flex justify-center">
+                        <span className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-label-sm font-semibold text-on-primary shadow-[0_4px_12px_-4px_rgba(53,37,205,0.5)]">
+                          {t("recommended")}
+                        </span>
+                      </span>
+                    ) : null}
+
+                    <span
+                      aria-hidden
+                      className={clsx(
+                        "absolute right-4 top-4 flex h-5 w-5 items-center justify-center rounded-full transition-all duration-200",
+                        active ? "scale-100 bg-primary text-on-primary opacity-100" : "scale-75 opacity-0",
+                      )}
+                    >
+                      <CheckIcon className="h-3 w-3" />
                     </span>
-                  </span>
-                ) : null}
 
-                <span
-                  aria-hidden
-                  className={clsx(
-                    "absolute right-4 top-4 flex h-5 w-5 items-center justify-center rounded-full transition-all duration-200",
-                    active ? "scale-100 bg-primary text-on-primary opacity-100" : "scale-75 opacity-0",
-                  )}
-                >
-                  <CheckIcon className="h-3 w-3" />
-                </span>
+                    <span className="text-body-lg font-semibold tracking-tight text-on-surface">
+                      {plan.displayName}
+                    </span>
+                    <span className="text-headline-md font-semibold tracking-tight text-on-surface tabular-nums">
+                      {priceLabel}
+                    </span>
+                    <span className="text-label-md text-on-surface-variant">{replyLimitLabel}</span>
 
-                <span className="text-body-lg font-semibold tracking-tight text-on-surface">
-                  {plan.displayName}
-                </span>
-                <span className="text-headline-md font-semibold tracking-tight text-on-surface tabular-nums">
-                  {priceLabel}
-                </span>
-                <span className="text-label-md text-on-surface-variant">{replyLimitLabel}</span>
-
-                <ul className="flex flex-col gap-1.5 border-t border-primary-fixed pt-3">
-                  {features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm text-on-surface-variant">
-                      <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-tertiary" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </button>
-            );
-          })}
-        </div>
+                    <ul className="flex flex-col gap-1.5 border-t border-primary-fixed pt-3">
+                      {features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-sm text-on-surface-variant">
+                          <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-tertiary" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {error ? (

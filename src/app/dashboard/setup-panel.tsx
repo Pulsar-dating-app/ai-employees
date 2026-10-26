@@ -10,13 +10,18 @@ import { useSetupSteps } from "./setup-steps-context";
 // sidebar entry: the merchant lands here after onboarding, and every step
 // they still owe should be readable without a click. The next one gets the
 // only filled button. Hidden once every step is done.
-export function SetupPanel() {
+//
+// `channelHandled`: the home page's GoLiveCard already leads with the channel
+// step, so it isn't offered here as "next" a second time, and the panel steps
+// aside entirely when it's the only one left.
+export function SetupPanel({ channelHandled = false }: { channelHandled?: boolean }) {
   const t = useTranslations("Dashboard.setup");
   const steps = useSetupSteps();
   const done = steps.filter((s) => s.done).length;
   const total = steps.length;
   if (total === 0 || done === total) return null;
-  const next = steps.find((s) => !s.done)!;
+  const next = steps.find((s) => !s.done && !(channelHandled && s.key === "channel"));
+  if (!next) return null;
   const remaining = total - done;
 
   return (

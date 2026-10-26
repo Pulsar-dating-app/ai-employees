@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { redirectTargetFor, resolveOnboardingState } from "@/lib/companies/onboarding-step";
-import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import { TRIAL_DAYS } from "@/lib/billing/plans";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { agentPhoto } from "@/lib/agents/media";
@@ -23,11 +22,11 @@ export default async function OnboardingPlanPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Back from Stripe with a subscription started. The webhook is what
-  // actually activates the plan and un-pauses the hire, and it may not have
-  // landed yet -- so this just closes the flow, and the webhook's own
-  // first-activation resume covers the race either way.
-  if (checkout === "success") await finishOnboarding();
+  // Back with a plan chosen (Staffra Free, or a subscription started at
+  // Stripe). The webhook is what actually activates a paid plan and it may
+  // not have landed yet, so the live step is told this rather than left to
+  // derive it -- it accepts a merchant still on "plan" when this is set.
+  if (checkout === "success") redirect("/onboarding/live?checkout=success");
 
   const state = await resolveOnboardingState(supabase);
   // The one step that may be skipped ahead from: the proof's "test it later"

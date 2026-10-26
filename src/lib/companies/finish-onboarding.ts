@@ -3,11 +3,17 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { safeDashboardPath } from "./onboarding-step";
+import { recordFunnelEvent } from "@/lib/funnel/record";
 
 // The merchant leaving the last step is what ends the first session -- not
 // reaching it. Arriving at the proof step and closing the tab leaves the flow
 // open, so they get the moment they never saw when they come back.
-export async function finishOnboarding() {
+//
+// Used as a form action. An optional `next` field picks where they land --
+// the live step sends the ones who chose Instagram or WhatsApp straight to
+// that channel's setup -- but only a plain dashboard path is honoured.
+export async function finishOnboarding(formData?: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -44,8 +50,13 @@ export async function finishOnboarding() {
     await pauseHiresWithoutAPlan(company.id);
   }
 
-  redirect("/dashboard");
+  const target = safeDashboardPath(formData?.get("next"));
+  await recordFunnelEvent(supabase, "onboarding_finished", {
+    to: new URL(target, "http://x").searchParams.get("canal") ?? "dashboard",
+  });
+  redirect(target);
 }
+
 
 // Leaving the first session without a plan parks the hire, rather than
 // leaving a row that says "Active" next to an employee the reply gate will

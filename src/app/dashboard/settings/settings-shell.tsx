@@ -178,10 +178,13 @@ function MobileNav({
 export function SettingsShell({
   initialFilled,
   minSections,
+  hideLowCompleteness = false,
   children,
 }: {
   initialFilled: FilledState;
   minSections: number;
+  // The quick questions above already say what's missing.
+  hideLowCompleteness?: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations("Settings");
@@ -198,7 +201,7 @@ export function SettingsShell({
 
   return (
     <FilledContext.Provider value={report}>
-      {done < minSections ? (
+      {done < minSections && !hideLowCompleteness ? (
         <StatusBanner
           tone="warn"
           title={t("lowCompletenessAlert.title")}

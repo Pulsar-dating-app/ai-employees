@@ -2,15 +2,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { SETTINGS_MIN_SECTIONS } from "@/lib/companies/settings-completeness";
+import { countFilledSections, SETTINGS_MIN_SECTIONS } from "@/lib/companies/settings-completeness";
+import { defaultAgentName } from "@/lib/agents/naming";
 import { isBillingPastDue } from "@/lib/billing/activation";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { BusinessInfoSection } from "./business-info-section";
 import { PolicySection } from "./policy-section";
 import { FaqSection } from "./faq-section";
 import { SettingsShell } from "./settings-shell";
+import { QuickTeach } from "./quick-teach";
 import { requireAdminPage } from "@/lib/auth/company-access";
-export default async function SettingsPage() {
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ pronto?: string }> }) {
   // Company-level page: owners/admins only (members get their agenda).
   await requireAdminPage();
   const supabase = await createClient();
@@ -32,7 +34,22 @@ export default async function SettingsPage() {
     .eq("user_id", user!.id)
     .maybeSingle();
   const canEdit = membership ? ["owner", "admin"].includes(membership.role) : false;
-  const pastDue = await isBillingPastDue(company.id, supabase);
+  const [pastDue, { pronto }, { data: hiredRows }] = await Promise.all([
+    isBillingPastDue(company.id, supabase),
+    searchParams,
+    supabase
+      .from("company_agents")
+      .select("name, agents(slug)")
+      .eq("company_id", company.id)
+      .order("created_at", { ascending: true })
+      .limit(1),
+  ]);
+  const firstHire = (hiredRows ?? [])[0] as unknown as { name: string | null; agents: { slug: string } | null } | undefined;
+  const hireSlug = firstHire?.agents?.slug ?? null;
+  const hireName = firstHire?.name ?? (hireSlug ? defaultAgentName(hireSlug) : null);
+  // Until the business has enough written down, three quick questions come
+  // before the full form (quick-teach.tsx).
+  const showQuickTeach = canEdit && Boolean(hireName) && countFilledSections(company) < SETTINGS_MIN_SECTIONS;
 
   const faq = Array.isArray(company.faq) ? (company.faq as { question: string; answer: string }[]) : null;
 
@@ -56,14 +73,40 @@ export default async function SettingsPage() {
         />
       ) : null}
 
+      {pronto && hireName ? (
+        <StatusBanner
+          tone="info"
+          title={t("quickTeachSaved.title")}
+          body={t("quickTeachSaved.body", { name: hireName })}
+        />
+      ) : null}
+
+      {showQuickTeach ? (
+        <QuickTeach
+          companyId={company.id}
+          agentName={hireName!}
+          scheduling={hireSlug === "ana"}
+          initial={{
+            description: company.description,
+            payment_policy: company.payment_policy,
+            address: company.address ?? null,
+          }}
+        />
+      ) : null}
+
       {!canEdit ? (
         <p className="rounded-2xl bg-surface-container px-4 py-3 text-sm text-on-surface-variant">
           {t("readOnlyBanner")}
         </p>
       ) : null}
 
+      {/* Keyed on the row's last update so a save from QuickTeach, which
+          refreshes the page, remounts the sections with the new values
+          instead of leaving their first-render state on screen. */}
       <SettingsShell
+        key={company.updated_at}
         minSections={SETTINGS_MIN_SECTIONS}
+        hideLowCompleteness={showQuickTeach}
         initialFilled={{
           about: Boolean(company.description),
           contact: false,

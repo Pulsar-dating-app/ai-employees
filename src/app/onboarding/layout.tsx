@@ -12,11 +12,15 @@ import type { Locale } from "@/i18n/locales";
 // -- kept, but given actual depth: two slow-drifting indigo pools and a
 // grain layer stop the gradient from reading as a flat CSS fill, without
 // introducing a color the surface doesn't already own.
+//
+// `overflow-clip`, not `overflow-hidden`, here and on the step card: hidden
+// makes a scroll container, which pins each step's sticky phone action bar to
+// a box that never scrolls instead of to the screen.
 export default async function OnboardingLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center overflow-hidden bg-[linear-gradient(135deg,#e0e7ff_0%,#f8f9fa_60%,#ffffff_100%)] px-4 py-10 sm:py-14">
+    <main className="relative flex min-h-screen flex-col items-center overflow-clip bg-[linear-gradient(135deg,#e0e7ff_0%,#f8f9fa_60%,#ffffff_100%)] px-4 py-10 sm:py-14">
       <div
         aria-hidden
         className="onboarding-ground-pool-a pointer-events-none absolute -left-1/4 -top-1/4 h-[70vmax] w-[70vmax] rounded-full bg-[radial-gradient(closest-side,rgba(53,37,205,0.16),transparent)] blur-3xl"

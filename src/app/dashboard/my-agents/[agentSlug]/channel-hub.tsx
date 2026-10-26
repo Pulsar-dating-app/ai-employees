@@ -24,8 +24,11 @@ import { EmbedDomainsSection } from "./embed-domains-section";
 import { DirectLinkSection } from "./direct-link-section";
 import { TelegramLinkSection } from "./telegram-link-section";
 import { ChannelStatusContext, type ChannelKey, type ChannelStatus } from "./channel-status";
+import { track } from "@/lib/funnel/client";
 
-const CHANNELS: ChannelKey[] = ["whatsapp", "instagram", "telegram", "embed", "link"];
+// The link first: it works the moment it's shared, with nothing to connect.
+// Then the channels customers already message on, hardest-to-set-up last.
+const CHANNELS: ChannelKey[] = ["link", "instagram", "whatsapp", "telegram", "embed"];
 
 const ACCENT: Record<ChannelKey, string> = {
   whatsapp: "#1FA855",
@@ -95,6 +98,7 @@ export function ChannelHub({
   widgetInitial,
   defaultLauncherSrc,
   allowedEmbedDomains,
+  companyName,
 }: {
   companyId: string;
   agentSlug: string;
@@ -119,12 +123,13 @@ export function ChannelHub({
   };
   defaultLauncherSrc: string;
   allowedEmbedDomains: string[];
+  companyName: string;
 }) {
   const t = useTranslations("MyAgents.channelHub");
   const tTabs = useTranslations("MyAgents.channelTabs");
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState<ChannelKey>("whatsapp");
+  const [active, setActive] = useState<ChannelKey>("link");
   const autoOpened = useRef(false);
   const [statuses, setStatuses] = useState<Statuses>(() => ({
     whatsapp: whatsappEntitled ? null : { tone: "locked", label: t("status.notInPlan") },
@@ -150,12 +155,21 @@ export function ChannelHub({
     [router],
   );
 
+  // Opens on a channel when the URL names one: back from Instagram's OAuth,
+  // or `?canal=` from the onboarding live step's "Connect" rows.
   useEffect(() => {
     if (autoOpened.current) return;
-    if (!searchParams.get("instagram") && !searchParams.get("instagram_error")) return;
+    const requested = searchParams.get("canal") as ChannelKey | null;
+    const target =
+      searchParams.get("instagram") || searchParams.get("instagram_error")
+        ? "instagram"
+        : requested && CHANNELS.includes(requested)
+          ? requested
+          : null;
+    if (!target) return;
     autoOpened.current = true;
     const frame = requestAnimationFrame(() => {
-      setActive("instagram");
+      setActive(target);
       setOpen(true);
     });
     return () => cancelAnimationFrame(frame);
@@ -164,6 +178,7 @@ export function ChannelHub({
   function openChannel(key: ChannelKey) {
     setActive(key);
     setOpen(true);
+    track("channel_panel_opened", { channel: key });
   }
 
   return (
@@ -193,7 +208,14 @@ export function ChannelHub({
                   {TILE[key].icon}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="text-[15px] font-semibold text-on-surface">{tTabs(key)}</span>
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-[15px] font-semibold text-on-surface">{tTabs(key)}</span>
+                    {key === "link" ? (
+                      <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-on-primary">
+                        {t("fastest")}
+                      </span>
+                    ) : null}
+                  </span>
                   <StatusLine status={statuses[key]} />
                 </span>
                 <ChevronRightIcon className="h-4 w-4 shrink-0 text-outline transition-[color,transform] duration-200 group-hover:translate-x-0.5 group-hover:text-primary" />
@@ -276,10 +298,12 @@ export function ChannelHub({
           </div>
           <div hidden={active !== "link"}>
             <DirectLinkSection
+              agentSlug={agentSlug}
               agentName={agentName}
               agentPhotoSrc={agentPhotoSrc}
               accent={ACCENT.link}
               chatUrl={chatUrl}
+              companyName={companyName}
             />
           </div>
         </div>

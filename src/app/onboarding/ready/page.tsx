@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { redirectTargetFor, resolveOnboardingState } from "@/lib/companies/onboarding-step";
+import { redirectTargetFor, resolveOnboardingState, stepAfterProof } from "@/lib/companies/onboarding-step";
 import { defaultAgentName } from "@/lib/agents/naming";
 import { agentPhoto } from "@/lib/agents/media";
 import { StepCard } from "../step-card";
@@ -70,6 +70,8 @@ export default async function OnboardingReadyPage() {
         agentName={name}
         portrait={agentPhoto(slug)}
         suggestions={suggestions}
+        nextHref={stepAfterProof(state)}
+        planChosen={state.planActive}
       />
     </StepCard>
   );

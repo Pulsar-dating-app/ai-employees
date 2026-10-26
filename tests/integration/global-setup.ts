@@ -136,6 +136,9 @@ export default async function setup() {
         BREVO_API_KEY: "test-brevo-key",
         EMAIL_FROM: "Staffra <test@staffra.test>",
         BREVO_API_BASE_URL: emailMock.url,
+        // The merchant nudge cron does nothing without it (it e-mails real
+        // merchants in production, so it's opt-in per deploy).
+        MERCHANT_NUDGES_ENABLED: "true",
         GOOGLE_CLIENT_ID: "test-google-client-id",
         GOOGLE_CLIENT_SECRET: "test-google-client-secret",
         GOOGLE_OAUTH_TOKEN_URL: googleOAuthMock.url,

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { defaultAgentName } from "@/lib/agents/naming";
+import { activateFreePlan } from "@/lib/billing/free-plan";
+import { createServiceClient } from "@/lib/supabase/service";
 
 // A merchant who came through /comecar already told us their business, which
 // is what picks the hire (quizAgentSlug). Onboarding hires that agent right
@@ -33,4 +35,19 @@ export async function hireQuizAgent(
 
   console.error("[onboarding] hiring the quiz's agent failed", { code: error.code, message: error.message });
   return false;
+}
+
+// The quiz promised Staffra Free ("R$ 0 para sempre, sem cartão"), so a quiz
+// sign-up starts on it instead of being asked to choose a plan after the
+// proof. Asking again lost a third of them on that screen (decisions.md
+// 2026-10-26). Best-effort: if it fails, the plan step still shows, with Free
+// preselected, so nobody is stranded without a plan.
+export async function startQuizFreePlan(companyId: string): Promise<boolean> {
+  try {
+    await activateFreePlan(createServiceClient(), companyId);
+    return true;
+  } catch (err) {
+    console.error("[onboarding] starting Staffra Free for a quiz sign-up failed", { companyId, err });
+    return false;
+  }
 }

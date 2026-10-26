@@ -21,6 +21,7 @@ import { TourProvider } from "@/components/tour/tour-provider";
 import { SetupStepsProvider } from "./setup-steps-context";
 import { Sidebar, type Attention } from "./sidebar";
 import { TopBar } from "./top-bar";
+import { AppOpenedBeacon } from "./app-opened-beacon";
 import { DashboardBackdrop } from "./backdrop";
 
 // The whole authenticated app is off-limits to crawlers. `proxy.ts` already
@@ -229,6 +230,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="relative z-10 sm:pl-64">
           <TopBar locale={locale as Locale} silence={silence} metaSpendAlert={metaSpend?.alertLevel ?? null} />
           <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
+            <AppOpenedBeacon />
             <SetupStepsProvider steps={setupSteps}>{children}</SetupStepsProvider>
           </main>
         </div>

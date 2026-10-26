@@ -3,19 +3,23 @@
 import { useTranslations } from "next-intl";
 import { LinkIcon } from "@/components/ui/icons";
 import { ChannelPanelHeader } from "./channel-panel-header";
-import { CopyField } from "./copy-field";
+import { ShareChatLink } from "@/components/channels/share-chat-link";
 import { ChannelPreview } from "./channel-preview";
 
 export function DirectLinkSection({
+  agentSlug,
   agentName,
   agentPhotoSrc,
   accent,
   chatUrl,
+  companyName,
 }: {
+  agentSlug: string;
   agentName: string;
   agentPhotoSrc: string | null;
   accent: string;
   chatUrl: string;
+  companyName: string;
 }) {
   const t = useTranslations("MyAgents.shareEmbed");
 
@@ -27,7 +31,7 @@ export function DirectLinkSection({
         title={t("directLinkLabel")}
         description={t("directLinkDescription", { name: agentName })}
       />
-      <CopyField value={chatUrl} label={t("directLinkLabel")} openHref={chatUrl} />
+      <ShareChatLink chatUrl={chatUrl} companyName={companyName} scheduling={agentSlug === "ana"} surface="agent" />
       <ChannelPreview agentName={agentName} agentPhotoSrc={agentPhotoSrc} accent={accent} />
     </div>
   );

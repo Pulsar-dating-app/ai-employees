@@ -192,10 +192,13 @@ export async function POST(
       console.error(`billing checkout: Staffra Free activation failed for company ${companyId}`, err);
       return NextResponse.json({ error: "Could not activate Staffra Free" }, { status: 500 });
     }
+    // Relative on purpose: nothing leaves the app here, and an absolute URL
+    // built from the configured base can switch the merchant to another host
+    // (www vs apex) where their session cookie doesn't exist.
     return NextResponse.json({
       ok: true,
       mode: "free",
-      url: `${resolveCheckoutBaseUrl()}${returnPath ?? "/dashboard/settings/billing"}?checkout=success`,
+      url: `${returnPath ?? "/dashboard/settings/billing"}?checkout=success`,
     });
   }
 

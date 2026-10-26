@@ -74,7 +74,8 @@
       "setup": "Cosa le serve",
       "ready": "Guardala al lavoro",
       "plan": "Il tuo piano",
-      "profile": "Tu"
+      "profile": "Tu",
+      "live": "Online"
     },
     "hire": {
       "title": "Come funziona la tua attività?",
@@ -233,7 +234,8 @@
       "continue": "Continua",
       "continueHint": "Prossimo passo: scegli un piano così può iniziare a servire i clienti",
       "askFirstHint": "Chiedi qualcosa a {name} per continuare",
-      "skip": "La provo più tardi"
+      "skip": "La provo più tardi",
+      "continueHintLive": "Prossimo: mettere {name} al lavoro"
     },
     "plan": {
       "title": "Metti {name} al lavoro",
@@ -262,8 +264,10 @@
       "freeFeatureNoCard": "Nessuna carta richiesta",
       "ctaFree": "Inizia con {plan}",
       "freeBadge": "Gratis per sempre",
-      "orPaid": "Oppure scegli un piano a pagamento, con più risposte e la possibilità di lasciare WhatsApp a noi",
-      "freeWhatsappOwn": "WhatsApp con il tuo account Meta"
+      "orPaid": "Più risposte e la possibilità di lasciare WhatsApp a noi",
+      "freeWhatsappOwn": "WhatsApp con il tuo account Meta",
+      "showPaid": "Vedi i piani a pagamento",
+      "hidePaid": "Nascondi i piani a pagamento"
     },
     "profile": {
       "title": "Per cominciare, come ti chiami?",
@@ -273,6 +277,30 @@
       "nameMissing": "Inserisci il tuo nome.",
       "nameTooLong": "Usa al massimo {max} caratteri.",
       "error": "Si è verificato un errore nel salvare il tuo nome. Riprova."
+    },
+    "live": {
+      "title": "Metti {name} al lavoro",
+      "subtitle": "I tuoi clienti devono sapere dove trovarla. Il link funziona già, senza collegare nulla.",
+      "link": {
+        "badge": "Più veloce · funziona subito",
+        "title": "Il link di {name}",
+        "body": "Chi apre questo link parla con {name}, dal telefono o dal computer."
+      },
+      "channels": {
+        "title": "Oppure lascia che {name} risponda ai tuoi messaggi",
+        "subtitle": "Risponde direttamente sul tuo profilo o sul tuo numero. Bastano pochi minuti.",
+        "connect": "Collega",
+        "instagram": {
+          "title": "Direct di Instagram",
+          "body": "{name} risponde a chi ti scrive su Instagram. Serve un account professionale."
+        },
+        "whatsapp": {
+          "title": "Il tuo WhatsApp",
+          "bodyOwn": "{name} risponde sul tuo numero. Serve un account WhatsApp Business su Meta, con una carta registrata lì.",
+          "bodyIncluded": "{name} risponde sul tuo numero. È già incluso nel tuo piano."
+        }
+      },
+      "finish": "Vai alla dashboard"
     }
   },
   "CheckoutLink": {
@@ -2087,7 +2115,7 @@
         },
         "business": {
           "title": "Raccontaci la tua attività",
-          "body": "Descrizione, pagamenti, domande frequenti: ciò che il tuo team usa per rispondere ai clienti."
+          "body": "Tre domande veloci: cosa fai, come pagano i clienti e dove ti trovi."
         },
         "products": {
           "title": "Aggiungi i tuoi prodotti",
@@ -2119,7 +2147,14 @@
       "deactivatedTitle": "La tua agenda è stata disattivata",
       "deactivatedBody": "L'attività ha disattivato la tua agenda, quindi per ora non c'è niente da gestire qui. Parlane con loro se si tratta di un errore."
     },
-    "metaSpendAlert": "WhatsApp: {pct}% del massimo Meta"
+    "metaSpendAlert": "WhatsApp: {pct}% del massimo Meta",
+    "goLive": {
+      "title": "{name} non sta ancora parlando con nessuno",
+      "body": "È pronta. Ai tuoi clienti serve solo sapere dove trovarla: invia il link o mettilo nella tua bio.",
+      "orChannels": "Oppure lascia che {name} risponda direttamente ai tuoi messaggi:",
+      "instagram": "Collega Instagram",
+      "whatsapp": "Collega WhatsApp"
+    }
   },
   "Metrics": {
     "pageTitle": "Prestazioni",
@@ -2282,6 +2317,42 @@
       "saveChanges": "Salva le domande",
       "unsaved": "Modifiche non salvate",
       "count": "{count, plural, =0 {Ancora nessuna domanda} one {# domanda} other {# domande}}"
+    },
+    "quickTeach": {
+      "title": "Insegna a {name} com'è la tua attività",
+      "subtitle": "Tre domande veloci. È ciò che {name} usa per rispondere ai tuoi clienti senza doverti chiamare.",
+      "description": {
+        "label": "Di cosa si occupa la tua attività?",
+        "placeholderBooking": "Es.: Barbiere in centro, tagli classici e moderni. Solo su appuntamento.",
+        "placeholderSales": "Es.: Negozio di abbigliamento donna, dalla S alla XXL. Spediamo in tutto il paese."
+      },
+      "payments": {
+        "label": "Come possono pagare i tuoi clienti?",
+        "sentence": "Metodi di pagamento: {list}.",
+        "methods": {
+          "pix": "Pix",
+          "credit": "Carta di credito",
+          "debit": "Carta di debito",
+          "cash": "Contanti",
+          "installments": "Rate con carta",
+          "boleto": "Boleto"
+        },
+        "noteLabel": "Altro sul pagamento? (facoltativo)",
+        "notePlaceholderBooking": "Es.: Pagamento il giorno dell'appuntamento.",
+        "notePlaceholderSales": "Es.: Fino a 3 rate senza interessi sopra i 200 R$."
+      },
+      "address": {
+        "labelBooking": "Dove ricevi i clienti?",
+        "labelSales": "Indirizzo del negozio (se c'è)",
+        "placeholder": "Via, numero, quartiere, città"
+      },
+      "hint": "Puoi completare il resto più in basso quando vuoi.",
+      "save": "Salva",
+      "error": "Non siamo riusciti a salvare. Riprova."
+    },
+    "quickTeachSaved": {
+      "title": "Salvato!",
+      "body": "{name} usa già queste informazioni per rispondere ai tuoi clienti."
     }
   },
   "MyAgents": {
@@ -2577,7 +2648,8 @@
         "activating": "In attivazione · {detail}",
         "paymentMethodMissing": "Nessuna carta su Meta",
         "planChangedDisconnected": "Scollegato · ricollega con il tuo account Meta"
-      }
+      },
+      "fastest": "Più veloce"
     },
     "behavior": {
       "title": "Come lavora {name}",
@@ -4042,5 +4114,29 @@
         "text": "cosa è incluso e le cose importanti da sapere."
       }
     ]
+  },
+  "ShareLink": {
+    "shareTextBooking": "Ora puoi prenotare con {company} qui, a qualsiasi ora:",
+    "shareTextSales": "Fai le tue domande e ordina da {company} qui, a qualsiasi ora:",
+    "share": "Condividi",
+    "copy": "Copia",
+    "copied": "Copiato!",
+    "whereTitle": "Dove mettere il link",
+    "where": {
+      "instagramBio": {
+        "title": "Nella bio di Instagram:",
+        "how": "Modifica profilo → Link → Aggiungi link esterno."
+      },
+      "whatsappGreeting": {
+        "title": "Nel saluto di WhatsApp Business:",
+        "how": "Strumenti per l'azienda → Messaggio di benvenuto. Chi ti scrive riceve subito il link."
+      },
+      "direct": {
+        "title": "A chi ti scrive già:",
+        "how": "invialo in Direct, su WhatsApp o nello stato."
+      }
+    },
+    "test": "Provalo come cliente",
+    "sharedNote": "Quando un cliente apre il link, la conversazione compare in Conversazioni nella tua dashboard."
   }
 }

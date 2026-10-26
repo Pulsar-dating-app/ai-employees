@@ -23,16 +23,20 @@ export function buildSetupChecklist(facts: SetupFacts): SetupStep[] {
   const hasAna = facts.hiredSlugs.includes("ana");
   const channelHref = facts.hiredSlugs[0] ? `/dashboard/my-agents/${facts.hiredSlugs[0]}` : "/dashboard";
 
+  // Ordered by what stops her from answering anyone, not by topic: what she
+  // needs to work at all (onboarding normally covers it), then the channel
+  // that puts her in front of customers, then what makes her answers better.
+  // The channel used to come last, and nobody got that far (2026-10-26).
   const steps: (SetupStep | null)[] = [
     { key: "plan", done: facts.planChosen, href: "/dashboard/settings/billing" },
-    { key: "business", done: facts.businessInfoFilled, href: "/dashboard/settings" },
     hasMalu ? { key: "products", done: facts.productsCount > 0, href: "/dashboard/products" } : null,
     hasAna ? { key: "hours", done: facts.hasOpenHours, href: "/dashboard/scheduling/settings#business-hours" } : null,
     hasAna ? { key: "services", done: facts.hasServices, href: "/dashboard/scheduling/services" } : null,
+    { key: "channel", done: facts.channelLive, href: channelHref },
+    { key: "business", done: facts.businessInfoFilled, href: "/dashboard/settings" },
     hasAna && facts.calendarAvailable
       ? { key: "calendar", done: facts.calendarConnected, href: "/dashboard/scheduling/settings#google-calendar" }
       : null,
-    { key: "channel", done: facts.channelLive, href: channelHref },
   ];
   return steps.filter((s): s is SetupStep => s !== null);
 }

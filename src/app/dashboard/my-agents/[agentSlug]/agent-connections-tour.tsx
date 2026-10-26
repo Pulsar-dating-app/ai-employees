@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTour } from "@/components/tour/tour-provider";
 
@@ -9,8 +10,14 @@ const SEEN_KEY = "staffra:tour-seen:agent-connections";
 export function AgentConnectionsTour({ agentName }: { agentName: string }) {
   const { start } = useTour();
   const t = useTranslations("MyAgents.tour");
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Arrived to connect one channel (its panel opens on its own): a tour of
+    // the page underneath would only stand in the way. Not marked seen, so it
+    // still plays on a later visit.
+    if (searchParams.get("canal")) return;
+
     let seen: string | null;
     try {
       seen = localStorage.getItem(SEEN_KEY);

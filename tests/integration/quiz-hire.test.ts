@@ -105,6 +105,34 @@ describe("Hiring the ad quiz's agent", () => {
     expect(setup.html).toContain('value="Pezinho"');
   });
 
+  // createCompany also starts a quiz sign-up on Staffra Free (startQuizFreePlan,
+  // the same activation as the checkout route's). With the plan settled, the
+  // flow goes from the proof straight to going live, never through the plan
+  // step that lost a third of them.
+  it("skips the plan step for a quiz sign-up already on Staffra Free", async () => {
+    const owner = await signUpTestUser("quiz-hire-free");
+    const companyId = await createCompany(owner);
+    await hireQuizAgent(owner.client, companyId, "malu");
+    const free = await api("POST", `/api/companies/${companyId}/billing/checkout`, owner.cookieHeader, {
+      planKey: "free",
+    });
+    expect(free.status).toBe(200);
+
+    await api("POST", `/api/companies/${companyId}/products`, owner.cookieHeader, {
+      name: "Camiseta Tie Dye",
+      price: 51.79,
+      currency: "BRL",
+    });
+    await getTestServiceClient()
+      .from("companies")
+      .update({ proof_seen_at: new Date().toISOString() })
+      .eq("id", companyId);
+
+    const { baseUrl } = getTestEnv();
+    const res = await fetch(`${baseUrl}/dashboard`, { headers: { cookie: owner.cookieHeader }, redirect: "manual" });
+    expect(new URL(res.headers.get("location")!, baseUrl).pathname).toBe("/onboarding/live");
+  });
+
   it("falls back to the hire step for an unknown agent", async () => {
     const owner = await signUpTestUser("quiz-hire-unknown");
     const companyId = await createCompany(owner);

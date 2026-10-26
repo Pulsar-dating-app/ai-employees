@@ -56,7 +56,10 @@ type NavItem = {
   key: "myAgents" | "conversations" | "products" | "scheduling" | "metrics" | "settings" | "agenda" | "mySchedule";
   icon: typeof UsersIcon;
   match: (p: string) => boolean;
-  mobilePrimary?: boolean;
+  // A function decides by who's hired (2026-10-26): the hire's own workspace
+  // -- Agenda for Ana, Products for Malu -- gets the direct tab on a phone,
+  // and Settings, filled once and rarely revisited, moves into "More".
+  mobilePrimary?: boolean | ((s: string[]) => boolean);
   isLocked?: (s: string[]) => boolean;
 };
 
@@ -109,6 +112,7 @@ const NAV_ITEMS: NavItem[] = [
     key: "products" as const,
     icon: PackageIcon,
     match: (p: string) => p.startsWith("/dashboard/products"),
+    mobilePrimary: (s: string[]) => s.includes("malu"),
     isLocked: (s: string[]) => !s.includes("malu"),
   },
   {
@@ -116,6 +120,7 @@ const NAV_ITEMS: NavItem[] = [
     key: "scheduling" as const,
     icon: CalendarIcon,
     match: (p: string) => p.startsWith("/dashboard/scheduling"),
+    mobilePrimary: (s: string[]) => s.includes("ana"),
     isLocked: (s: string[]) => !s.includes("ana"),
   },
   {
@@ -130,7 +135,7 @@ const NAV_ITEMS: NavItem[] = [
     key: "settings" as const,
     icon: SettingsIcon,
     match: (p: string) => p.startsWith("/dashboard/settings"),
-    mobilePrimary: true,
+    mobilePrimary: (s: string[]) => !s.includes("malu") && !s.includes("ana"),
   },
 ];
 
@@ -376,8 +381,10 @@ export function Sidebar({
       attention: locked ? null : (attentionByKey[item.key] ?? null),
     };
   });
-  const mobilePrimaryItems = navItems.filter((item) => item.mobilePrimary);
-  const mobileOverflowItems = navItems.filter((item) => !item.mobilePrimary);
+  const isMobilePrimary = (item: NavItem) =>
+    typeof item.mobilePrimary === "function" ? item.mobilePrimary(hiredAgentSlugs) : Boolean(item.mobilePrimary);
+  const mobilePrimaryItems = navItems.filter(isMobilePrimary);
+  const mobileOverflowItems = navItems.filter((item) => !isMobilePrimary(item));
   const overflowActive = mobileOverflowItems.some((item) => item.match(pathname));
   // The "More" tab is a proxy for whatever's folded inside it -- a warning
   // buried in the sheet is invisible unless the entry point says so too.

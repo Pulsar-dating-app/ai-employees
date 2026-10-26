@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { ONBOARDING_STEPS, stepIndex, type OnboardingStep } from "@/lib/companies/onboarding-step";
+import { track } from "@/lib/funnel/client";
 
 function currentStep(pathname: string): OnboardingStep {
+  if (pathname.startsWith("/onboarding/live")) return "live";
   if (pathname.startsWith("/onboarding/plan")) return "plan";
   if (pathname.startsWith("/onboarding/ready")) return "ready";
   if (pathname.startsWith("/onboarding/setup")) return "setup";
@@ -23,6 +26,13 @@ export function StepRail() {
   const pathname = usePathname();
   const active = currentStep(pathname);
   const activeIndex = stepIndex(active);
+
+  // The rail is on every step and already knows which one is showing, so it
+  // records the funnel's step views -- in an effect, never during a render a
+  // prefetch could trigger.
+  useEffect(() => {
+    track("onboarding_step_viewed", { step: active });
+  }, [active]);
 
   return (
     // The step name is carried by each segment's own sr-only label and by the

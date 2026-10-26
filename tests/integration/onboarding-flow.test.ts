@@ -6,7 +6,7 @@ import { getTestServiceClient } from "./helpers/service-client";
 import { seedActivePlan } from "./helpers/billing";
 import { getTestEnv } from "./helpers/env";
 
-// The first session's four steps, walked over real HTTP. Every step page is a
+// The first session's steps, walked over real HTTP. Every step page is a
 // Server Component that redirects when the merchant has not reached it yet, so
 // these assertions cover both that the pages render at all (a build does not
 // prove that for dynamic routes) and that the guards cannot be skipped.
@@ -42,6 +42,36 @@ describe("Onboarding flow", () => {
   async function hire(user: TestUser, companyId: string, slug: string) {
     await seedActivePlan(companyId);
     await api("POST", `/api/companies/${companyId}/agents/${slug}`, user.cookieHeader, {});
+  }
+
+  // A hire with no plan behind it, the state of a merchant reaching the plan
+  // step. The hire route refuses one (402), so the row goes in directly, the
+  // way the quiz's own hire does.
+  async function hireWithoutPlan(companyId: string, slug: string) {
+    const svc = getTestServiceClient();
+    const { data: agent } = await svc.from("agents").select("id").eq("slug", slug).single();
+    await svc.from("company_agents").insert({
+      company_id: companyId,
+      agent_id: (agent as { id: string }).id,
+      name: slug === "ana" ? "Ana" : "Malu",
+      status: "active",
+      hired_at: new Date().toISOString(),
+    });
+  }
+
+  async function addProduct(user: TestUser, companyId: string) {
+    await api("POST", `/api/companies/${companyId}/products`, user.cookieHeader, {
+      name: "Camiseta Tie Dye",
+      price: 51.79,
+      currency: "BRL",
+    });
+  }
+
+  async function markProofSeen(companyId: string) {
+    await getTestServiceClient()
+      .from("companies")
+      .update({ proof_seen_at: new Date().toISOString() })
+      .eq("id", companyId);
   }
 
   it("sends a brand-new account to step 1 and renders it", async () => {
@@ -129,12 +159,89 @@ describe("Onboarding flow", () => {
     });
     expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/ready");
 
-    // Saw her answer, closed the tab before choosing a plan.
-    await getTestServiceClient()
-      .from("companies")
-      .update({ proof_seen_at: new Date().toISOString() })
-      .eq("id", companyId);
+    // Saw her answer, closed the tab before putting her anywhere. This
+    // company already has a plan, so there is nothing to choose in between.
+    await markProofSeen(companyId);
+    expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/live");
+  });
+
+  it("asks for a plan after the proof when the company has none", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hireWithoutPlan(companyId, "malu");
+    await addProduct(owner, companyId);
+    await markProofSeen(companyId);
+
     expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/plan");
+    // Going live is after the plan, not instead of it.
+    expect((await page("/onboarding/live", owner.cookieHeader)).redirectedTo).toBe("/onboarding/plan");
+  });
+
+  // Back from choosing a plan: Staffra Free is active at once, a paid plan
+  // only once its webhook lands, so the live step trusts the return.
+  it("sends the merchant from the plan step to the live step once a plan is chosen", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hireWithoutPlan(companyId, "malu");
+    await addProduct(owner, companyId);
+    await markProofSeen(companyId);
+
+    const back = await page("/onboarding/plan?checkout=success", owner.cookieHeader);
+    expect(back.redirectedTo).toBe("/onboarding/live");
+    expect((await page("/onboarding/live?checkout=success", owner.cookieHeader)).status).toBe(200);
+
+    const free = await api<{ url: string }>("POST", `/api/companies/${companyId}/billing/checkout`, owner.cookieHeader, {
+      planKey: "free",
+      returnTo: "/onboarding/plan",
+    });
+    expect(free.status).toBe(200);
+    // Relative: never switches the merchant to a host without their session.
+    expect(free.json.url).toBe("/onboarding/plan?checkout=success");
+    expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/live");
+
+    // Choosing a plan doesn't finish the flow; leaving the live step does.
+    const { data: company } = await getTestServiceClient()
+      .from("companies")
+      .select("onboarding_completed_at")
+      .eq("id", companyId)
+      .single();
+    expect((company as { onboarding_completed_at: string | null }).onboarding_completed_at).toBeNull();
+  });
+
+  it("ends on the live step, with the hosted chat link to share", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hire(owner, companyId, "malu");
+    await addProduct(owner, companyId);
+    await markProofSeen(companyId);
+
+    const live = await page("/onboarding/live", owner.cookieHeader);
+    expect(live.status).toBe(200);
+    const { data: company } = await getTestServiceClient().from("companies").select("slug").eq("id", companyId).single();
+    expect(live.html).toContain(`/talk/${(company as { slug: string }).slug}/malu`);
+    // The Instagram and WhatsApp rows hand off to that channel's own setup.
+    expect(live.html).toContain("/dashboard/my-agents/malu?canal=instagram");
+    expect(live.html).toContain("/dashboard/my-agents/malu?canal=whatsapp");
+  });
+
+  // With a plan already active the proof's "test it later" has nothing to
+  // skip to but the live step.
+  it("opens the live step from the proof step when a plan is already active", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hire(owner, companyId, "malu");
+    await addProduct(owner, companyId);
+
+    expect((await page("/onboarding/live", owner.cookieHeader)).status).toBe(200);
+    expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/ready");
+  });
+
+  it("does not open the live step before the setup is done", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hire(owner, companyId, "malu");
+
+    expect((await page("/onboarding/live", owner.cookieHeader)).redirectedTo).toBe("/onboarding/setup");
   });
 
   // 2026-10-23: the proof's "test it later" skips only the proof and lands
@@ -257,7 +364,14 @@ describe("Onboarding flow", () => {
       .update({ onboarding_completed_at: new Date().toISOString() })
       .eq("id", companyId);
 
-    for (const path of ["/onboarding", "/onboarding/hire", "/onboarding/setup", "/onboarding/ready"]) {
+    for (const path of [
+      "/onboarding",
+      "/onboarding/hire",
+      "/onboarding/setup",
+      "/onboarding/ready",
+      "/onboarding/plan",
+      "/onboarding/live",
+    ]) {
       const res = await page(path, owner.cookieHeader);
       expect(res.redirectedTo).toBe("/dashboard");
     }
