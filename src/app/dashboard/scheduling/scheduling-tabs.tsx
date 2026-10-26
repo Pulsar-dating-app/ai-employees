@@ -38,8 +38,15 @@ export function SchedulingTabs({
     settings: settingsNeedAttention,
   };
 
+  // Phones get a 2x2 grid of pills: the four labels side by side are wider
+  // than a phone, and as one row they widened the whole page (468px on a
+  // 375px screen), which cut off Settings and shifted every drawer opened
+  // from these pages (2026-10-26). From `sm` up, the underline row as before.
   return (
-    <nav className="flex gap-1 border-b border-outline-variant" aria-label={t("ariaLabel")}>
+    <nav
+      className="grid grid-cols-2 gap-2 sm:flex sm:gap-1 sm:border-b sm:border-outline-variant"
+      aria-label={t("ariaLabel")}
+    >
       {TABS.map((tab) => {
         const isActive = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
         return (
@@ -48,10 +55,11 @@ export function SchedulingTabs({
             href={tab.href}
             aria-current={isActive ? "page" : undefined}
             className={clsx(
-              "-mb-px flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm transition-colors duration-150",
+              "flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm transition-colors duration-150",
+              "sm:-mb-px sm:min-h-0 sm:justify-start sm:rounded-none sm:border-b-2 sm:px-4 sm:py-2.5",
               isActive
-                ? "border-primary font-semibold text-primary"
-                : "border-transparent font-medium text-on-surface-variant hover:border-outline-variant hover:text-on-surface",
+                ? "bg-primary-fixed font-semibold text-primary sm:border-primary sm:bg-transparent"
+                : "bg-surface-container font-medium text-on-surface-variant hover:text-on-surface sm:border-transparent sm:bg-transparent sm:hover:border-outline-variant",
             )}
           >
             {t(tab.key)}

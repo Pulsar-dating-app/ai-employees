@@ -313,7 +313,10 @@ export function BusinessHoursCard({
                               aria-label={t("removeRangeAria", { day: dayName, position: i + 1 })}
                               disabled={day.ranges.length < 2}
                               onClick={() => removeRange(day.key, i)}
-                              className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface disabled:invisible md:h-8 md:w-8"
+                              // Below md a disabled (sole-range) remove button takes no
+                              // space at all: kept invisible, it pushed the row 13px past
+                              // a phone's width.
+                              className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface disabled:hidden md:h-8 md:w-8 md:disabled:invisible md:disabled:flex"
                             >
                               <XIcon className="h-4 w-4" />
                             </button>

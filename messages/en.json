@@ -3032,7 +3032,12 @@
         "shortName": "One-word names confuse customers. Try something like “Teeth cleaning” instead of “Cleaning”.",
         "noDescription": "A sentence on what's included helps your team answer better.",
         "noPrice": "Without a price, your team can't answer “how much is it?”. Leave it blank only if it varies."
-      }
+      },
+      "priceLabelWithCurrency": "Price ({currency})",
+      "durationChip": "{minutes} min",
+      "durationOther": "Other",
+      "moreOptions": "More options",
+      "lessOptions": "Fewer options"
     },
     "menu": {
       "search": "Search services",
@@ -3063,7 +3068,7 @@
   "Scheduling": {
     "tabs": {
       "ariaLabel": "Scheduling sections",
-      "appointments": "Appointments",
+      "appointments": "Schedule",
       "services": "Services",
       "professionals": "Professionals",
       "settings": "Settings"

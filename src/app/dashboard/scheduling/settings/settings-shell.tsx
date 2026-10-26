@@ -134,9 +134,16 @@ function MobileNav({
   const t = useTranslations("Scheduling.settings");
   const stripRef = useRef<HTMLElement>(null);
 
+  // Sideways only: scrollIntoView would also scroll the page to the strip
+  // (same fix as the company Settings strip, 2026-10-26).
   useEffect(() => {
-    const chip = stripRef.current?.querySelector<HTMLElement>(`[data-chip="${active}"]`);
-    chip?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    const strip = stripRef.current;
+    const chip = strip?.querySelector<HTMLElement>(`[data-chip="${active}"]`);
+    if (!strip || !chip) return;
+    strip.scrollTo({
+      left: chip.offsetLeft - (strip.clientWidth - chip.offsetWidth) / 2,
+      behavior: "smooth",
+    });
   }, [active]);
 
   return (

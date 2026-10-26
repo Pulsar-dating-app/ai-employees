@@ -126,7 +126,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           />
           <div className="relative z-10 sm:pl-64">
             <TopBar locale={locale as Locale} silence={null} />
-            <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
+            <main className="mx-auto w-full max-w-[1280px] overflow-x-clip px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
               {access.professional?.is_active ? children : <DeactivatedMember />}
             </main>
           </div>
@@ -229,7 +229,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         />
         <div className="relative z-10 sm:pl-64">
           <TopBar locale={locale as Locale} silence={silence} metaSpendAlert={metaSpend?.alertLevel ?? null} />
-          <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
+          {/* overflow-x-clip: content wider than a phone must never widen the
+              page. When the scheduling tabs did (2026-10-26) the phone zoomed
+              out and every fixed drawer opened shifted and cut off. `clip`,
+              not `hidden`, so sticky children still stick to the screen. */}
+          <main className="mx-auto w-full max-w-[1280px] overflow-x-clip px-4 pb-24 pt-20 sm:px-10 sm:pb-12 sm:pt-8">
             <AppOpenedBeacon />
             <SetupStepsProvider steps={setupSteps}>{children}</SetupStepsProvider>
           </main>
