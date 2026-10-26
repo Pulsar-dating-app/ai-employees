@@ -1,10 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ChevronRightIcon, InstagramIcon, LinkIcon, WhatsAppIcon } from "@/components/ui/icons";
 import { ShareChatLink } from "@/components/channels/share-chat-link";
-import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import { StepActions } from "../step-card";
 
 export function GoLive({
@@ -21,6 +21,8 @@ export function GoLive({
   whatsappIncluded: boolean;
 }) {
   const t = useTranslations("Onboarding.live");
+  // A plain form post is a full page load: the button says it's on its way.
+  const [leaving, setLeaving] = useState(false);
   const channelPath = (channel: "instagram" | "whatsapp") => `/dashboard/my-agents/${agentSlug}?canal=${channel}`;
 
   return (
@@ -77,8 +79,13 @@ export function GoLive({
       {/* Not filled: sharing the link is this step's one real action, and the
           way out shouldn't outshout it from the sticky phone bar. */}
       <StepActions>
-        <form action={finishOnboarding} className="w-full sm:w-auto">
-          <Button type="submit" variant="secondary" className="w-full sm:w-auto">
+        <form
+          method="post"
+          action={FINISH_URL}
+          onSubmit={() => setLeaving(true)}
+          className="w-full sm:w-auto"
+        >
+          <Button type="submit" variant="secondary" isLoading={leaving} className="w-full sm:w-auto">
             {t("finish")}
           </Button>
         </form>
@@ -86,6 +93,9 @@ export function GoLive({
     </div>
   );
 }
+
+// Plain HTML form posts, not a server action: see complete-onboarding.ts.
+const FINISH_URL = "/api/onboarding/finish";
 
 // Each one ends the first session and lands on that channel's own setup, the
 // same panel the dashboard uses -- rebuilding Meta's connect flows inside
@@ -106,7 +116,7 @@ function ChannelRow({
   cta: string;
 }) {
   return (
-    <form action={finishOnboarding}>
+    <form method="post" action={FINISH_URL}>
       <input type="hidden" name="next" value={next} />
       <button
         type="submit"

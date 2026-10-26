@@ -195,7 +195,7 @@ export function redirectTargetFor(state: OnboardingState, pageStep: OnboardingSt
   return stepIndex(state.step) < stepIndex(pageStep) ? ONBOARDING_PATHS[state.step] : null;
 }
 
-// Where finishing the flow may land (`finishOnboarding`'s `next` field):
+// Where finishing the flow may land (the `next` field posted to /api/onboarding/finish):
 // "/dashboard" or a path under it, with an optional simple query string --
 // never another host, never a protocol-relative "//".
 const DASHBOARD_PATH = /^\/dashboard(\/[\w-]+)*(\?[\w=&-]*)?$/;

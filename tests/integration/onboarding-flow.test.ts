@@ -224,6 +224,54 @@ describe("Onboarding flow", () => {
     expect(live.html).toContain("/dashboard/my-agents/malu?canal=whatsapp");
   });
 
+  // Leaving the flow is a plain form POST answered with a 303, not a server
+  // action: as a redirecting action it looped in real sessions (2026-10-26).
+  it("finishes the flow from a form post and sends the merchant on with a 303", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hire(owner, companyId, "malu");
+    await addProduct(owner, companyId);
+    await markProofSeen(companyId);
+    const { baseUrl } = getTestEnv();
+
+    const finish = async (next: string) => {
+      const body = new FormData();
+      body.set("next", next);
+      const res = await fetch(`${baseUrl}/api/onboarding/finish`, {
+        method: "POST",
+        headers: { cookie: owner.cookieHeader },
+        body,
+        redirect: "manual",
+      });
+      const location = new URL(res.headers.get("location")!, baseUrl);
+      return { status: res.status, to: location.pathname + location.search };
+    };
+
+    expect(await finish("/dashboard/my-agents/malu?canal=instagram")).toEqual({
+      status: 303,
+      to: "/dashboard/my-agents/malu?canal=instagram",
+    });
+    const { data: company } = await getTestServiceClient()
+      .from("companies")
+      .select("onboarding_completed_at")
+      .eq("id", companyId)
+      .single();
+    expect((company as { onboarding_completed_at: string | null }).onboarding_completed_at).not.toBeNull();
+    expect((await page("/dashboard", owner.cookieHeader)).status).toBe(200);
+
+    // Anywhere but the dashboard is ignored.
+    expect((await finish("//evil.example/x")).to).toBe("/dashboard");
+
+    // Another site's form is refused outright.
+    const forged = await fetch(`${baseUrl}/api/onboarding/finish`, {
+      method: "POST",
+      headers: { cookie: owner.cookieHeader, origin: "https://evil.example" },
+      body: new FormData(),
+      redirect: "manual",
+    });
+    expect(forged.status).toBe(403);
+  });
+
   // With a plan already active the proof's "test it later" has nothing to
   // skip to but the live step.
   it("opens the live step from the proof step when a plan is already active", async () => {

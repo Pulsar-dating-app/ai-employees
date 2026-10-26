@@ -10,6 +10,11 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-26 — Leaving onboarding is a form POST, not a server action
+
+**Decision:** the buttons that end the first session (the live step's "Ir para o painel" and its Instagram/WhatsApp rows, and the services step's skip) are plain HTML forms posting to `POST /api/onboarding/finish`. The route marks the flow complete and answers with a 303 to the destination. The `finishOnboarding` server action is gone.
+**Why:** in the first real test, both test sessions looped. The action ran, redirected, and the server rendered the dashboard, then the browser sent the same action again about once a second for minutes, so the button looked dead (Supabase API logs, 13:19–13:22 UTC). A minimal reproduction without a signed-in session didn't loop, so the exact trigger inside Next's client router is unconfirmed. A full-page POST → 303 → GET removes the client router from this transition entirely, and leaving onboarding for the dashboard is a full context switch anyway.
+
 ## 2026-10-26 — Funnel events in our own table; one-off setup e-mails, off until switched on
 
 **Decision:** merchant actions that matter to activation (step views, link shared or copied, channel panel opened, plan chosen, coming back) are recorded in a `funnel_events` table, insert-only for the merchant and read only through SQL. A cron sends at most two one-off e-mails per company: "you stopped mid-setup" and "she's ready, here's her link". The first goes 24h after sign-up, nothing goes after 7 days, and the two are always at least 72h apart. Sending is off unless the deploy sets `MERCHANT_NUDGES_ENABLED=true` and the schedule is created by hand.

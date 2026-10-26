@@ -219,7 +219,7 @@ async function syncBillingFromSubscription(
   }
 
   // The first session parks a hire when the merchant leaves without a plan
-  // (see lib/companies/finish-onboarding.ts). Paying is the thing that was
+  // (see lib/companies/complete-onboarding.ts). Paying is the thing that was
   // missing, so paying is what puts her back to work -- making someone hunt
   // for a toggle right after they paid is exactly the friction the flow
   // exists to remove. Scoped to hires this app paused itself: a merchant who
