@@ -156,18 +156,6 @@ export default async function MyTeamPage({ searchParams }: { searchParams: Promi
         />
       ) : null}
 
-      {company && liveCardMember ? (
-        <GoLiveCard
-          agentSlug={liveCardMember.slug}
-          agentName={liveCardMember.name}
-          photoSrc={liveCardMember.photoSrc}
-          companyName={company.name}
-          chatUrl={`${resolveCheckoutBaseUrl()}/talk/${company.slug}/${liveCardMember.slug}`}
-        />
-      ) : null}
-
-      <SetupPanel channelHandled={Boolean(liveCardMember)} />
-
       {pronto && quickTeachMember ? (
         <StatusBanner
           tone="info"
@@ -189,6 +177,18 @@ export default async function MyTeamPage({ searchParams }: { searchParams: Promi
           returnTo="/dashboard?pronto=1"
         />
       ) : null}
+
+      {company && liveCardMember ? (
+        <GoLiveCard
+          agentSlug={liveCardMember.slug}
+          agentName={liveCardMember.name}
+          photoSrc={liveCardMember.photoSrc}
+          companyName={company.name}
+          chatUrl={`${resolveCheckoutBaseUrl()}/talk/${company.slug}/${liveCardMember.slug}`}
+        />
+      ) : null}
+
+      <SetupPanel channelHandled={Boolean(liveCardMember)} />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-headline-md font-semibold tracking-tight text-on-surface">{t("team.title")}</h2>
