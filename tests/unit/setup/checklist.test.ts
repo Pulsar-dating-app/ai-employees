@@ -17,18 +17,31 @@ describe("buildSetupChecklist", () => {
   it("only includes steps for the team members that were hired", () => {
     expect(buildSetupChecklist({ ...base, hiredSlugs: ["malu"] }).map((s) => s.key)).toEqual([
       "plan",
-      "business",
       "products",
       "channel",
+      "business",
     ]);
     expect(buildSetupChecklist({ ...base, hiredSlugs: ["ana"] }).map((s) => s.key)).toEqual([
       "plan",
-      "business",
       "hours",
       "services",
-      "calendar",
       "channel",
+      "business",
+      "calendar",
     ]);
+  });
+
+  // What onboarding already covered is done, so the channel is what comes up
+  // next -- ahead of business details and the calendar.
+  it("puts the channel next once she has what she needs to work", () => {
+    const steps = buildSetupChecklist({
+      ...base,
+      hiredSlugs: ["ana"],
+      planChosen: true,
+      hasOpenHours: true,
+      hasServices: true,
+    });
+    expect(steps.find((s) => !s.done)?.key).toBe("channel");
   });
 
   it("leaves the calendar step out when Google Calendar isn't available", () => {
@@ -61,7 +74,8 @@ describe("buildSetupChecklist", () => {
   });
 
   it("sends the channel step to the first hire's page, or My Team with nobody hired", () => {
-    expect(buildSetupChecklist({ ...base, hiredSlugs: ["ana", "malu"] }).at(-1)?.href).toBe("/dashboard/my-agents/ana");
-    expect(buildSetupChecklist(base).at(-1)?.href).toBe("/dashboard");
+    const channelHref = (facts: SetupFacts) => buildSetupChecklist(facts).find((s) => s.key === "channel")?.href;
+    expect(channelHref({ ...base, hiredSlugs: ["ana", "malu"] })).toBe("/dashboard/my-agents/ana");
+    expect(channelHref(base)).toBe("/dashboard");
   });
 });

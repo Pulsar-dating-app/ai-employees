@@ -36,7 +36,7 @@ export function StepCard({
     <ViewTransition exit="onboarding-card-swap" default="none">
       <section
         className={clsx(
-          "animate-onboarding-step-in relative overflow-hidden rounded-lg border border-primary-fixed bg-white/85 p-7 shadow-[0_12px_40px_rgba(0,0,0,0.08)] backdrop-blur-md sm:p-10",
+          "animate-onboarding-step-in relative overflow-clip rounded-lg border border-primary-fixed bg-white/85 p-7 shadow-[0_12px_40px_rgba(0,0,0,0.08)] backdrop-blur-md sm:p-10",
           className,
         )}
       >
@@ -71,10 +71,12 @@ export function StepCard({
 }
 
 // Every step ends with exactly one filled indigo control, bottom-right, with
-// optional quiet escape to its left.
+// optional quiet escape to its left. On a phone the bar sticks to the bottom
+// of the screen, edge to edge of the card: the steps with a list in them
+// (services, plans) used to leave their only button below the fold.
 export function StepActions({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center justify-end gap-3 border-t border-primary-fixed pt-6">
+    <div className="sticky bottom-0 z-20 -mx-7 -mb-7 flex flex-wrap items-center justify-end gap-3 border-t border-primary-fixed bg-white/95 px-7 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-md sm:static sm:mx-0 sm:mb-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-6 sm:backdrop-blur-none">
       {children}
     </div>
   );

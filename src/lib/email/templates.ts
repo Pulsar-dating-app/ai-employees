@@ -91,7 +91,7 @@ export function fallbackServiceName(language: EmailLanguage): string {
   return COPY[language].fallbackService;
 }
 
-function shell(headline: string, bodyHtml: string): string {
+export function shell(headline: string, bodyHtml: string): string {
   return `<!-- staffra transactional -->
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#1b1b1f">
   <h1 style="font-size:18px;font-weight:600;margin:0 0 16px">${escapeHtml(headline)}</h1>
@@ -165,7 +165,7 @@ export function renderDeclinedEmail(data: AppointmentEmailData, language: EmailL
   };
 }
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")

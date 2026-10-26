@@ -1,18 +1,28 @@
-"use server";
-
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
+import { safeDashboardPath } from "./onboarding-step";
+import { recordFunnelEvent } from "@/lib/funnel/record";
 
 // The merchant leaving the last step is what ends the first session -- not
 // reaching it. Arriving at the proof step and closing the tab leaves the flow
 // open, so they get the moment they never saw when they come back.
-export async function finishOnboarding() {
-  const supabase = await createClient();
+//
+// Called by POST /api/onboarding/finish, which every "leave the flow" button
+// submits to as a plain HTML form. It used to be a server action that called
+// redirect(), and on 2026-10-26 two real sessions sent it into a loop: the
+// client router re-submitted the action about once a second after applying
+// each redirect, so the button never seemed to do anything. A plain POST
+// answered with a 303 is a full page navigation, with no client router and
+// no action to replay.
+//
+// Returns where to send them: `next` when it's a dashboard path (the live
+// step sends the ones who chose Instagram or WhatsApp straight to that
+// channel's setup), otherwise the dashboard; or null when nobody is signed in.
+export async function completeOnboarding(supabase: SupabaseClient, next: unknown): Promise<string | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) return null;
 
   // Read with the caller's own client: RLS scopes this to a company they
   // actually belong to, and that read IS the authorization for the write
@@ -44,8 +54,13 @@ export async function finishOnboarding() {
     await pauseHiresWithoutAPlan(company.id);
   }
 
-  redirect("/dashboard");
+  const target = safeDashboardPath(next);
+  await recordFunnelEvent(supabase, "onboarding_finished", {
+    to: new URL(target, "http://x").searchParams.get("canal") ?? "dashboard",
+  });
+  return target;
 }
+
 
 // Leaving the first session without a plan parks the hire, rather than
 // leaving a row that says "Active" next to an employee the reply gate will

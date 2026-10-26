@@ -11,6 +11,8 @@ import { getTeamActivity, type TeamActivity } from "@/lib/agents/team-activity";
 import { HireCard, TeamBadge, type TeamMember } from "./team-badge";
 import { requireAdminPage } from "@/lib/auth/company-access";
 import { SetupPanel } from "./setup-panel";
+import { GoLiveCard } from "./go-live-card";
+import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 
 const BANNER_ACTION = {
   primary:
@@ -34,7 +36,7 @@ export default async function MyTeamPage() {
   const t = await getTranslations("MyAgents");
 
   const [{ data: companies }, { data: agents }] = await Promise.all([
-    supabase.from("companies").select("id"),
+    supabase.from("companies").select("id, slug, name"),
     supabase.from("agents").select("id, slug, role, description").eq("is_active", true).order("created_at"),
   ]);
   const company = companies?.[0] ?? null;
@@ -92,6 +94,9 @@ export default async function MyTeamPage() {
     }),
   );
   const hiredMembers = members.filter((m) => m.status !== "available");
+  // The one the "not answering anyone yet" card is about: an active hire
+  // first, since a paused one wouldn't answer the link anyway.
+  const liveCardMember = hiredMembers.find((m) => m.status === "active") ?? hiredMembers[0] ?? null;
   const availableMembers = members.filter((m) => m.status === "available");
   const noActivity: TeamActivity = { conversations: 0, needsYou: 0 };
 
@@ -134,7 +139,17 @@ export default async function MyTeamPage() {
         />
       ) : null}
 
-      <SetupPanel />
+      {company && liveCardMember ? (
+        <GoLiveCard
+          agentSlug={liveCardMember.slug}
+          agentName={liveCardMember.name}
+          photoSrc={liveCardMember.photoSrc}
+          companyName={company.name}
+          chatUrl={`${resolveCheckoutBaseUrl()}/talk/${company.slug}/${liveCardMember.slug}`}
+        />
+      ) : null}
+
+      <SetupPanel channelHandled={Boolean(liveCardMember)} />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-headline-md font-semibold tracking-tight text-on-surface">{t("team.title")}</h2>

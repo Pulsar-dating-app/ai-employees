@@ -119,9 +119,18 @@ function MobileNav({
   const done = COUNTED.filter((k) => filled[k]).length;
   const stripRef = useRef<HTMLDivElement>(null);
 
+  // Centre the active chip by scrolling the strip itself, sideways only.
+  // scrollIntoView also scrolled the page to bring the strip into view, and
+  // since the quick questions sit above it, Settings opened scrolled past
+  // them, in the middle of the long form (2026-10-26).
   useEffect(() => {
-    const chip = stripRef.current?.querySelector<HTMLElement>(`[data-chip="${active}"]`);
-    chip?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    const strip = stripRef.current;
+    const chip = strip?.querySelector<HTMLElement>(`[data-chip="${active}"]`);
+    if (!strip || !chip) return;
+    strip.scrollTo({
+      left: chip.offsetLeft - (strip.clientWidth - chip.offsetWidth) / 2,
+      behavior: "smooth",
+    });
   }, [active]);
 
   return (
@@ -178,10 +187,13 @@ function MobileNav({
 export function SettingsShell({
   initialFilled,
   minSections,
+  hideLowCompleteness = false,
   children,
 }: {
   initialFilled: FilledState;
   minSections: number;
+  // The quick questions above already say what's missing.
+  hideLowCompleteness?: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations("Settings");
@@ -198,7 +210,7 @@ export function SettingsShell({
 
   return (
     <FilledContext.Provider value={report}>
-      {done < minSections ? (
+      {done < minSections && !hideLowCompleteness ? (
         <StatusBanner
           tone="warn"
           title={t("lowCompletenessAlert.title")}

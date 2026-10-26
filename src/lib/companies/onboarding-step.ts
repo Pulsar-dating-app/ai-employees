@@ -1,11 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+// Same set as isBillingActive (lib/billing/activation.ts), which can't be
+// imported here: this file also ships to the client for the step rail, and
+// that one pulls in the service-role client.
+const PLAN_ACTIVE_STATUSES = new Set(["active", "trialing"]);
+
 // The steps the merchant actually walks, in order. This is exactly what the
 // rail renders, which is why "done" is deliberately not a member: having
 // finished is a state, not an extra segment. "profile" (their own name) comes
 // first since 2026-09-25: every account must have a name, including owners
-// who finished onboarding before the step existed.
-export const ONBOARDING_STEPS = ["profile", "company", "hire", "setup", "ready", "plan"] as const;
+// who finished onboarding before the step existed. "live" (2026-10-26) is
+// last: the flow ends with the hire reachable by customers, not in the
+// dashboard with a channel still to find.
+export const ONBOARDING_STEPS = ["profile", "company", "hire", "setup", "ready", "plan", "live"] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
@@ -19,6 +26,7 @@ export const ONBOARDING_PATHS: Record<OnboardingStatus, string> = {
   setup: "/onboarding/setup",
   ready: "/onboarding/ready",
   plan: "/onboarding/plan",
+  live: "/onboarding/live",
   done: "/dashboard",
 };
 
@@ -33,6 +41,9 @@ export type OnboardingState = {
   agentSlug: string | null;
   agentId: string | null;
   agentName: string | null;
+  // An active or trialing plan. Quiz sign-ups start on Staffra Free, so for
+  // them this is already true when the plan step comes up -- and it is skipped.
+  planActive: boolean;
 };
 
 type HiredRow = {
@@ -49,6 +60,7 @@ export async function resolveOnboardingState(supabase: SupabaseClient): Promise<
     agentSlug: null,
     agentId: null,
     agentName: null,
+    planActive: false,
   };
 
   // A name before anything else. "users" RLS returns only the caller's row.
@@ -149,16 +161,29 @@ export async function resolveOnboardingState(supabase: SupabaseClient): Promise<
   // question is whether they configured what they actually offer.
   if (scheduling) query = query.eq("is_default", false);
 
-  const { count } = await query;
+  const [{ count }, { data: billing }] = await Promise.all([
+    query,
+    supabase.from("company_billing").select("subscription_status").eq("company_id", company.id).maybeSingle(),
+  ]);
+  const status = (billing as { subscription_status: string } | null)?.subscription_status ?? "";
+  const withPlan = { ...withAgent, planActive: PLAN_ACTIVE_STATUSES.has(status) };
 
-  if (!count || count === 0) return { ...withAgent, step: "setup" };
+  if (!count || count === 0) return { ...withPlan, step: "setup" };
 
   // She can work; what is left is the ask. The proof step comes first and the
-  // plan step is last on purpose -- the merchant decides at the moment she has
-  // just answered them with their own data, not before they have seen
+  // plan step after it on purpose -- the merchant decides at the moment she
+  // has just answered them with their own data, not before they have seen
   // anything. `hasSeenProof` is what moves them on, so the proof is never
-  // skipped past on the way to being charged.
-  return { ...withAgent, step: hasSeenProof ? "plan" : "ready" };
+  // skipped past on the way to being charged. A company already on a plan
+  // (a quiz sign-up starts on Staffra Free) has nothing to decide there.
+  if (!hasSeenProof) return { ...withPlan, step: "ready" };
+  return { ...withPlan, step: withPlan.planActive ? "live" : "plan" };
+}
+
+// Where the proof step's "test it later" goes: past the proof, to the plan
+// step, or straight to going live when there is no plan left to choose.
+export function stepAfterProof(state: OnboardingState): string {
+  return state.planActive ? ONBOARDING_PATHS.live : ONBOARDING_PATHS.plan;
 }
 
 // Each step page calls this. Two rules: a merchant who already finished never
@@ -168,4 +193,13 @@ export async function resolveOnboardingState(supabase: SupabaseClient): Promise<
 export function redirectTargetFor(state: OnboardingState, pageStep: OnboardingStep): string | null {
   if (state.step === "done") return ONBOARDING_PATHS.done;
   return stepIndex(state.step) < stepIndex(pageStep) ? ONBOARDING_PATHS[state.step] : null;
+}
+
+// Where finishing the flow may land (the `next` field posted to /api/onboarding/finish):
+// "/dashboard" or a path under it, with an optional simple query string --
+// never another host, never a protocol-relative "//".
+const DASHBOARD_PATH = /^\/dashboard(\/[\w-]+)*(\?[\w=&-]*)?$/;
+
+export function safeDashboardPath(next: unknown): string {
+  return typeof next === "string" && DASHBOARD_PATH.test(next) ? next : "/dashboard";
 }

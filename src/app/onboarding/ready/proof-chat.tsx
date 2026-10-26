@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { SendIcon } from "@/components/ui/icons";
 import { LinkifiedText } from "@/components/chat/linkified-text";
+import { StepActions } from "../step-card";
 
 type Turn = { role: "customer" | "agent"; content: string };
 
@@ -34,10 +35,15 @@ export function ProofChat({
   agentName,
   portrait,
   suggestions,
+  nextHref,
+  planChosen,
 }: {
   companyId: string;
   agentSlug: string;
   agentName: string;
+  // The plan step, or the live step when a plan is already active.
+  nextHref: string;
+  planChosen: boolean;
   portrait: string | null;
   suggestions: string[];
 }) {
@@ -203,20 +209,25 @@ export function ProofChat({
 
       {/* A plain text link, not a second button competing with Continue. It
           skips only the proof: leaving here without a plan would park the hire
-          when Staffra Free is one click away on the next step. */}
+          when Staffra Free is one click away on the next step, and with a
+          plan the live step is still ahead. */}
       <Link
-        href="/onboarding/plan"
+        href={nextHref}
         className="w-fit rounded-md text-label-md font-medium text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
       >
         {t("skip")}
       </Link>
 
-      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-primary-fixed pt-6">
+      <StepActions>
         <p className="mr-auto text-label-sm text-on-surface-variant">
-          {answered ? t("continueHint") : t("askFirstHint", { name: agentName })}
+          {answered
+            ? planChosen
+              ? t("continueHintLive", { name: agentName })
+              : t("continueHint")
+            : t("askFirstHint", { name: agentName })}
         </p>
         {answered ? (
-          <Link href="/onboarding/plan">
+          <Link href={nextHref}>
             <Button type="button">{t("continue")}</Button>
           </Link>
         ) : (
@@ -224,7 +235,7 @@ export function ProofChat({
             {t("continue")}
           </Button>
         )}
-      </div>
+      </StepActions>
     </div>
   );
 }

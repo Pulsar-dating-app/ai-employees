@@ -39,7 +39,7 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
       .maybeSingle(),
     supabase
       .from("companies")
-      .select("id, slug, allow_human_handoff, shipping_policy, return_policy, allowed_embed_domains"),
+      .select("id, slug, name, allow_human_handoff, shipping_policy, return_policy, allowed_embed_domains"),
     supabase.auth.getUser(),
   ]);
   if (!agent) notFound();
@@ -114,7 +114,9 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
 
   return (
     <div className="flex max-w-5xl flex-col gap-10">
-      <AgentConnectionsTour agentName={name} />
+      <Suspense fallback={null}>
+        <AgentConnectionsTour agentName={name} />
+      </Suspense>
       <div className="flex flex-col gap-4">
         <BackLink href="/dashboard/my-agents">{t("backToMyAgents")}</BackLink>
         <AgentHero
@@ -133,8 +135,9 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
         />
       </div>
 
-      {agentSlug === "ana" ? <TutorialVideoCard agentName={name} /> : null}
-
+      {/* Channels straight under her name: where she works is what a
+          merchant comes here to set, and on a phone the tutorial video used
+          to push it a full screen down. */}
       <Suspense fallback={null}>
         <ChannelHub
           companyId={company.id}
@@ -160,8 +163,11 @@ export default async function AgentConnectionsPage({ params }: { params: Promise
           }}
           defaultLauncherSrc={resolveDefaultLauncher(agentSlug, companyAgent.photo_type).src}
           allowedEmbedDomains={company.allowed_embed_domains ?? []}
+          companyName={company.name}
         />
       </Suspense>
+
+      {agentSlug === "ana" ? <TutorialVideoCard agentName={name} /> : null}
 
       <section aria-labelledby="agent-behavior-title" className="flex flex-col gap-4">
         <div>

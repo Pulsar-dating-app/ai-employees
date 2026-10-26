@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { CodeIcon, InfoIcon, CopyIcon, CheckIcon } from "@/components/ui/icons";
 import { ChannelPanelHeader } from "./channel-panel-header";
-import { useCopyFeedback } from "./use-copy-feedback";
+import { useCopyFeedback } from "@/components/ui/use-copy-feedback";
 
 export function EmbedSnippetSection({ agentName, embedSnippet }: { agentName: string; embedSnippet: string }) {
   const t = useTranslations("MyAgents.shareEmbed");

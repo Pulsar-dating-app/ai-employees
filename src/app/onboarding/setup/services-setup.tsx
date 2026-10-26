@@ -16,7 +16,6 @@ import {
 } from "@/lib/appointments/service-presets";
 import { StepActions } from "../step-card";
 import { NarratedFeed, type FeedLine } from "./narrated-feed";
-import { finishOnboarding } from "@/lib/companies/finish-onboarding";
 import { OnboardingLoader } from "../onboarding-loader";
 
 type Draft = { id: string; name: string; durationMinutes: number; price: string };
@@ -209,7 +208,8 @@ export function ServicesSetup({
           ))}
         </div>
 
-        <form action={finishOnboarding}>
+        {/* A plain form post, not a server action: see complete-onboarding.ts. */}
+        <form method="post" action="/api/onboarding/finish">
           <button
             type="submit"
             className="w-fit rounded-md text-label-md font-medium text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"

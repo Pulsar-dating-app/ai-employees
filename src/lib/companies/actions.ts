@@ -7,7 +7,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { claimPendingInvite } from "@/lib/team/invites";
 import { quizAgentSlug } from "@/lib/quiz/answers";
 import { readQuizAnswers } from "@/lib/quiz/server";
-import { hireQuizAgent } from "@/lib/quiz/hire";
+import { hireQuizAgent, startQuizFreePlan } from "@/lib/quiz/hire";
 
 // Onboarding: the one place a company is created in the UI. The hire flow
 // and Settings used to each create one inline; now they can assume it
@@ -81,9 +81,14 @@ export async function createCompany(
 
   // Came through the ad quiz: the business they picked there already decided
   // the hire, so the hire step is skipped instead of asked again.
+  // The quiz also promised Staffra Free, so the plan step is skipped too.
   const quiz = await readQuizAnswers(user);
-  if (quiz && companyId && (await hireQuizAgent(supabase, companyId, quizAgentSlug(quiz)))) {
-    redirect("/onboarding/setup");
+  if (quiz && companyId) {
+    const [hired] = await Promise.all([
+      hireQuizAgent(supabase, companyId, quizAgentSlug(quiz)),
+      startQuizFreePlan(companyId),
+    ]);
+    if (hired) redirect("/onboarding/setup");
   }
 
   redirect("/onboarding/hire");

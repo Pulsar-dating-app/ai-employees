@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { CopyIcon, CheckIcon, ExternalLinkIcon } from "@/components/ui/icons";
-import { useCopyFeedback } from "./use-copy-feedback";
+import { useCopyFeedback } from "@/components/ui/use-copy-feedback";
 
 // A read-only value with trailing copy (and optional open) affordances in
 // one bordered field — replaces the old "input wrapper + a separate h-12

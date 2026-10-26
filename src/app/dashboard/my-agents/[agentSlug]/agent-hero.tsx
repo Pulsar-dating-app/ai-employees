@@ -62,10 +62,12 @@ export function AgentHero({
     <section
       data-tour="agent-name"
       aria-labelledby="agent-hero-name"
-      className="relative overflow-hidden rounded-[28px] border border-outline-variant/60 bg-surface-container-lowest p-6 shadow-[0_1px_2px_rgba(25,28,29,0.04),0_24px_60px_-32px_rgba(53,37,205,0.3)] sm:p-8"
+      className="relative overflow-hidden rounded-[28px] border border-outline-variant/60 bg-surface-container-lowest p-4 shadow-[0_1px_2px_rgba(25,28,29,0.04),0_24px_60px_-32px_rgba(53,37,205,0.3)] sm:p-8"
     >
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
-        <div className="billing-card-in relative h-28 w-28 shrink-0 overflow-hidden rounded-[26px] bg-surface-container ring-1 ring-outline-variant/50 sm:h-36 sm:w-36">
+      {/* Compact on phones -- a small portrait beside the name, no blurb --
+          so the channels below are reachable without scrolling past her. */}
+      <div className="flex flex-row items-start gap-4 sm:gap-7">
+        <div className="billing-card-in relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl sm:h-36 sm:w-36 sm:rounded-[26px] bg-surface-container ring-1 ring-outline-variant/50 sm:h-36 sm:w-36">
           {photoSrc ? (
             photoIsCustom ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -79,12 +81,12 @@ export function AgentHero({
             </div>
           )}
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
           <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <h1
                 id="agent-hero-name"
-                className="text-[32px] font-semibold leading-tight tracking-[-0.02em] text-on-surface"
+                className="text-2xl font-semibold leading-tight tracking-[-0.02em] text-on-surface sm:text-[32px]"
               >
                 {name}
               </h1>
@@ -109,7 +111,7 @@ export function AgentHero({
             initialActive={active}
             canEdit={canEdit}
           />
-          {blurb ? <p className="max-w-[68ch] text-sm leading-6 text-on-surface-variant">{blurb}</p> : null}
+          {blurb ? <p className="hidden max-w-[68ch] text-sm leading-6 text-on-surface-variant sm:block">{blurb}</p> : null}
         </div>
       </div>
 
