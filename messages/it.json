@@ -180,12 +180,13 @@
           "other": {}
         },
         "listTitle": "Cosa offri",
+        "priceHint": "Inserisci il prezzo di ogni servizio: è la prima cosa che i clienti chiedono a {name}.",
         "changeTrade": "Cambia settore",
         "nameLabel": "Nome del servizio",
         "durationLabel": "Durata in minuti",
         "minutes": "min",
         "priceLabel": "Prezzo",
-        "pricePlaceholder": "Facoltativo",
+        "pricePlaceholder": "Prezzo",
         "pricePrefix": "R$",
         "remove": "Rimuovi {name}",
         "addService": "Aggiungine un altro",
@@ -292,13 +293,15 @@
         "connect": "Collega",
         "instagram": {
           "title": "Direct di Instagram",
-          "body": "{name} risponde a chi ti scrive su Instagram. Serve un account professionale."
+          "body": "{name} risponde a chi ti scrive su Instagram. Serve un account professionale.",
+          "bodyScheduling": "{name} risponde a chi ti scrive su Instagram e fissa subito l'appuntamento. È lì che i tuoi clienti ti cercano già. Serve un account professionale."
         },
         "whatsapp": {
           "title": "Il tuo WhatsApp",
           "bodyOwn": "{name} risponde sul tuo numero. Serve un account WhatsApp Business su Meta, con una carta registrata lì.",
           "bodyIncluded": "{name} risponde sul tuo numero. È già incluso nel tuo piano."
-        }
+        },
+        "recommended": "Consigliato"
       },
       "finish": "Vai alla dashboard"
     }

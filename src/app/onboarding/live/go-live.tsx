@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { ChevronRightIcon, InstagramIcon, LinkIcon, WhatsAppIcon } from "@/components/ui/icons";
 import { ShareChatLink } from "@/components/channels/share-chat-link";
@@ -23,6 +24,7 @@ export function GoLive({
   const t = useTranslations("Onboarding.live");
   // A plain form post is a full page load: the button says it's on its way.
   const [leaving, setLeaving] = useState(false);
+  const scheduling = agentSlug === "ana";
   const channelPath = (channel: "instagram" | "whatsapp") => `/dashboard/my-agents/${agentSlug}?canal=${channel}`;
 
   return (
@@ -46,7 +48,7 @@ export function GoLive({
           </div>
         </div>
 
-        <ShareChatLink chatUrl={chatUrl} companyName={companyName} scheduling={agentSlug === "ana"} surface="onboarding" />
+        <ShareChatLink chatUrl={chatUrl} companyName={companyName} scheduling={scheduling} surface="onboarding" />
       </section>
 
       <section aria-labelledby="go-live-channels" className="flex flex-col gap-3">
@@ -61,8 +63,9 @@ export function GoLive({
           tile="bg-gradient-to-br from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white"
           icon={<InstagramIcon className="h-5 w-5" />}
           title={t("channels.instagram.title")}
-          body={t("channels.instagram.body", { name: agentName })}
+          body={t(scheduling ? "channels.instagram.bodyScheduling" : "channels.instagram.body", { name: agentName })}
           cta={t("channels.connect")}
+          badge={scheduling ? t("channels.recommended") : undefined}
         />
         <ChannelRow
           next={channelPath("whatsapp")}
@@ -107,6 +110,7 @@ function ChannelRow({
   title,
   body,
   cta,
+  badge,
 }: {
   next: string;
   tile: string;
@@ -114,16 +118,27 @@ function ChannelRow({
   title: string;
   body: string;
   cta: string;
+  badge?: string;
 }) {
+  const [sending, setSending] = useState(false);
   return (
-    <form method="post" action={FINISH_URL}>
+    <form method="post" action={FINISH_URL} onSubmit={() => setSending(true)}>
       <input type="hidden" name="next" value={next} />
       <button
         type="submit"
-        className="group flex w-full items-center gap-4 rounded-lg border border-primary-fixed bg-white/80 p-4 text-left transition-colors hover:border-primary/40 hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
+        disabled={sending}
+        className={clsx(
+          "group flex w-full items-center gap-4 rounded-lg p-4 text-left transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25 disabled:opacity-70",
+          badge ? "border-2 border-primary bg-white" : "border border-primary-fixed bg-white/80 hover:border-primary/40",
+        )}
       >
         <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tile}`}>{icon}</span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          {badge ? (
+            <span className="w-fit rounded-full bg-primary px-2.5 py-0.5 text-label-sm font-semibold text-on-primary">
+              {badge}
+            </span>
+          ) : null}
           <span className="text-[15px] font-semibold text-on-surface">{title}</span>
           <span className="text-[13px] leading-5 text-on-surface-variant">{body}</span>
         </span>

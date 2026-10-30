@@ -292,6 +292,19 @@ describe("Onboarding flow", () => {
     expect((await page("/onboarding/live", owner.cookieHeader)).redirectedTo).toBe("/onboarding/setup");
   });
 
+  it("opens the live step when a scheduling hire skips her services with a plan active", async () => {
+    const owner = await signUpTestUser("owner");
+    const companyId = await createCompany(owner);
+    await hire(owner, companyId, "ana");
+
+    expect((await page("/onboarding/live", owner.cookieHeader)).status).toBe(200);
+    expect((await page("/dashboard", owner.cookieHeader)).redirectedTo).toBe("/onboarding/setup");
+
+    const unpaid = await signUpTestUser("owner");
+    await hireWithoutPlan(await createCompany(unpaid), "ana");
+    expect((await page("/onboarding/live", unpaid.cookieHeader)).redirectedTo).toBe("/onboarding/setup");
+  });
+
   // 2026-10-23: the proof's "test it later" skips only the proof and lands
   // on the plan step (Staffra Free preselected), instead of leaving the flow
   // with no plan. Skipping it doesn't count as having seen her work, so a

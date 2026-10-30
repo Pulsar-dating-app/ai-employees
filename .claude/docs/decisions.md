@@ -10,6 +10,11 @@ Record of notable decisions and the reasoning behind them, newest first.
 **Why:** the reasoning / constraint / tradeoff.
 ```
 
+## 2026-10-30 — After onboarding: skip to the link, prices asked for, Instagram first for Ana, activation measured
+
+**Decision:** four changes. (1) On the services step, "Configuro isso depois" opens `/onboarding/live` when a plan is active, instead of ending the flow in the dashboard; without a plan it still finishes the flow. (2) The services step asks for prices ("Valor" instead of "Opcional", plus a line saying it's the first thing customers ask). Ana's own wording for a missing price is unchanged: a `list_services` line telling her not to say "not informed" was tried against the real model and reverted, since it fought the prompt's "not on file" rule and still said "não informado" in 1 of 3 runs, with awkward phrasing in the other two. (3) On the live step, a scheduling hire's Instagram row is marked "Recomendado" and its copy says she books from the Direct; the link still leads. (4) `channel_connected` and `first_customer_conversation` are recorded by database triggers.
+**Why:** funnel_events for the 12 sign-ups from 26 to 30 October. 8 reached the live step, but none came back on a later day and none got a real customer conversation. A skip from the services step sent one merchant to an empty dashboard without ever seeing Ana or her link. 4 accounts had services without a price, and one merchant's first question in the proof chat ("quanto é o corte?") got "o preço não está informado". 4 copied the link and nothing came of it. The only account with a channel connected Instagram, and that connection left no event at all, so activation had to be pieced together from five tables.
+
 ## 2026-10-26 — Leaving onboarding is a form POST, not a server action
 
 **Decision:** the buttons that end the first session (the live step's "Ir para o painel" and its Instagram/WhatsApp rows, and the services step's skip) are plain HTML forms posting to `POST /api/onboarding/finish`. The route marks the flow complete and answers with a 303 to the destination. The `finishOnboarding` server action is gone.
