@@ -90,6 +90,8 @@ async function handle(request: Request) {
         scheduling: hire?.slug === "ana",
         chatUrl: hire ? `${baseUrl}/talk/${company.slug}/${hire.slug}` : null,
         ctaUrl: `${baseUrl}/api/nudges/click?k=${kind}`,
+        baseUrl,
+        agentSlug: hire?.slug ?? null,
       },
       merchantEmailLanguage(company.country),
     );
