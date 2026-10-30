@@ -26,11 +26,14 @@ export default async function OnboardingLivePage({
   if (!user) redirect("/login");
 
   const state = await resolveOnboardingState(supabase);
-  // Two ways in from an earlier step: back from choosing a plan (a paid one
+  // Three ways in from an earlier step: back from choosing a plan (a paid one
   // may still be waiting on its webhook, so the state can still say "plan"),
-  // and the proof's "test it later" when a plan is already active.
+  // the proof's "test it later" and the services step's "set this up later",
+  // both when a plan is already active.
   const earlyEntry =
-    (state.step === "plan" && checkout === "success") || (state.step === "ready" && state.planActive);
+    (state.step === "plan" && checkout === "success") ||
+    (state.step === "ready" && state.planActive) ||
+    (state.step === "setup" && state.agentSlug === "ana" && state.planActive);
   const back = earlyEntry ? null : redirectTargetFor(state, "live");
   if (back) redirect(back);
 

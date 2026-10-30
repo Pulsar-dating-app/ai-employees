@@ -46,6 +46,7 @@ export default async function OnboardingSetupPage() {
           companyId={state.companyId!}
           agentName={name}
           initialTrade={quiz ? quizServiceTrade(quiz) : null}
+          planActive={state.planActive}
         />
       ) : (
         <CatalogSetup companyId={state.companyId!} agentName={name} />

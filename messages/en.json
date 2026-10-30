@@ -180,12 +180,13 @@
           "other": {}
         },
         "listTitle": "What you offer",
+        "priceHint": "Add a price to each service: it's the first thing customers ask {name}.",
         "changeTrade": "Change trade",
         "nameLabel": "Service name",
         "durationLabel": "Duration in minutes",
         "minutes": "min",
         "priceLabel": "Price",
-        "pricePlaceholder": "Optional",
+        "pricePlaceholder": "Price",
         "pricePrefix": "R$",
         "remove": "Remove {name}",
         "addService": "Add another",
@@ -292,13 +293,15 @@
         "connect": "Connect",
         "instagram": {
           "title": "Instagram Direct",
-          "body": "{name} replies to anyone who messages you on Instagram. It needs to be a professional account."
+          "body": "{name} replies to anyone who messages you on Instagram. It needs to be a professional account.",
+          "bodyScheduling": "{name} replies to anyone who messages you on Instagram and books them in. It's where your customers already find you. It needs to be a professional account."
         },
         "whatsapp": {
           "title": "Your WhatsApp",
           "bodyOwn": "{name} replies on your number. It needs a WhatsApp Business account at Meta, with a card on file there.",
           "bodyIncluded": "{name} replies on your number. It's already included in your plan."
-        }
+        },
+        "recommended": "Recommended"
       },
       "finish": "Go to the dashboard"
     }

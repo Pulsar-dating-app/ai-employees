@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
@@ -17,12 +18,15 @@ import {
 import { StepActions } from "../step-card";
 import { NarratedFeed, type FeedLine } from "./narrated-feed";
 import { OnboardingLoader } from "../onboarding-loader";
+import { ONBOARDING_PATHS } from "@/lib/companies/onboarding-step";
 
 type Draft = { id: string; name: string; durationMinutes: number; price: string };
 type DayHours = { start: string; end: string };
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
 const PAYOFF_DWELL_MS = 1400;
+const SKIP =
+  "w-fit rounded-md text-label-md font-medium text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25";
 const FIELD =
   "h-11 rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-body-md text-on-surface transition-all duration-200 placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20";
 
@@ -40,10 +44,12 @@ export function ServicesSetup({
   companyId,
   agentName,
   initialTrade,
+  planActive,
 }: {
   companyId: string;
   agentName: string;
   initialTrade?: ServicePresetTrade | null;
+  planActive: boolean;
 }) {
   const t = useTranslations("Onboarding.setup.services");
   const router = useRouter();
@@ -208,15 +214,17 @@ export function ServicesSetup({
           ))}
         </div>
 
-        {/* A plain form post, not a server action: see complete-onboarding.ts. */}
-        <form method="post" action="/api/onboarding/finish">
-          <button
-            type="submit"
-            className="w-fit rounded-md text-label-md font-medium text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
-          >
+        {planActive ? (
+          <Link href={ONBOARDING_PATHS.live} className={SKIP}>
             {t("skip")}
-          </button>
-        </form>
+          </Link>
+        ) : (
+          <form method="post" action="/api/onboarding/finish">
+            <button type="submit" className={SKIP}>
+              {t("skip")}
+            </button>
+          </form>
+        )}
       </div>
     );
   }
@@ -236,6 +244,7 @@ export function ServicesSetup({
             {t("changeTrade")}
           </button>
         </div>
+        <p className="text-sm text-on-surface-variant">{t("priceHint", { name: agentName })}</p>
 
         <ul className="flex flex-col gap-2">
           {drafts.map((draft) => (
