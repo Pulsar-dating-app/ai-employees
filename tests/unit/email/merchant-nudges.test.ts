@@ -8,6 +8,8 @@ const data: MerchantNudgeData = {
   scheduling: true,
   chatUrl: "https://staffra.io/talk/barbearia-do-ze/ana",
   ctaUrl: "https://staffra.io/api/nudges/click?k=not_live",
+  baseUrl: "https://staffra.io",
+  agentSlug: "ana",
 };
 
 // Acronyms case-sensitive: Italian "ai" ("ai tuoi clienti") is a preposition.
@@ -22,10 +24,21 @@ describe("merchant nudge e-mails", () => {
     expect(mail.html).toContain(data.ctaUrl);
   });
 
+  it("shows the logo and the hire's photo from absolute URLs", () => {
+    const mail = renderMerchantNudgeEmail("not_live", data, "pt");
+    expect(mail.html).toContain('src="https://staffra.io/email/logo.png"');
+    expect(mail.html).toContain('src="https://staffra.io/email/ana.png"');
+  });
+
   it("works for a merchant who stopped before hiring anyone", () => {
-    const mail = renderMerchantNudgeEmail("onboarding_stalled", { ...data, agentName: null, chatUrl: null }, "pt");
+    const mail = renderMerchantNudgeEmail(
+      "onboarding_stalled",
+      { ...data, agentName: null, chatUrl: null, agentSlug: null },
+      "pt",
+    );
     expect(mail.subject).not.toContain("null");
     expect(mail.text).toContain("Barbearia do Zé");
+    expect(mail.html).not.toContain("/email/ana.png");
   });
 
   it("escapes merchant-entered text in the HTML", () => {

@@ -1,8 +1,8 @@
-// The merchant nudge e-mails (cron /api/cron/merchant-nudges). Same shell as
-// the appointment e-mails. Written to the account owner about their own
+// The merchant nudge e-mails (cron /api/cron/merchant-nudges). Branded with
+// the logo and the hire's photo, unlike the appointment e-mails. Written to the account owner about their own
 // setup, so it reads like a note from the product, never a campaign, and it
 // says why they got it.
-import { escapeHtml, shell, type EmailLanguage, type RenderedEmail } from "./templates";
+import { escapeHtml, type EmailLanguage, type RenderedEmail } from "./templates";
 import type { NudgeKind } from "@/lib/nudges/kinds";
 
 export type MerchantNudgeData = {
@@ -15,6 +15,8 @@ export type MerchantNudgeData = {
   chatUrl: string | null;
   // Where the button goes: the click-tracking route, which forwards to the dashboard.
   ctaUrl: string;
+  baseUrl: string;
+  agentSlug: string | null;
 };
 
 const COPY = {
@@ -30,6 +32,7 @@ const COPY = {
     liveHeadline: (a: string) => `A ${a} ainda não conversou com nenhum cliente`,
     liveBody: (a: string, c: string, scheduling: boolean) =>
       `Ela já conhece ${scheduling ? "os serviços e horários" : "os produtos"} da ${c}. Para começar, seus clientes só precisam do link da ${a}:`,
+    linkLabel: (a: string) => `Link da ${a}`,
     liveHow: "Cole na bio do Instagram ou na mensagem de saudação do WhatsApp Business. Leva um minuto.",
     liveCta: "Abrir meu painel",
     footer: "Você recebeu este e-mail porque criou uma conta no Staffra. É uma mensagem única sobre a configuração da sua conta.",
@@ -46,6 +49,7 @@ const COPY = {
     liveHeadline: (a: string) => `${a} hasn't talked to any customers yet`,
     liveBody: (a: string, c: string, scheduling: boolean) =>
       `She already knows ${c}'s ${scheduling ? "services and hours" : "products"}. To get started, your customers only need ${a}'s link:`,
+    linkLabel: (a: string) => `${a}'s link`,
     liveHow: "Put it in your Instagram bio or your WhatsApp Business greeting message. It takes a minute.",
     liveCta: "Open my dashboard",
     footer: "You're getting this e-mail because you created a Staffra account. It's a one-off message about setting up your account.",
@@ -62,6 +66,7 @@ const COPY = {
     liveHeadline: (a: string) => `${a} non ha ancora parlato con nessun cliente`,
     liveBody: (a: string, c: string, scheduling: boolean) =>
       `Conosce già ${scheduling ? "i servizi e gli orari" : "i prodotti"} di ${c}. Per iniziare, ai tuoi clienti serve solo il link di ${a}:`,
+    linkLabel: (a: string) => `Il link di ${a}`,
     liveHow: "Mettilo nella bio di Instagram o nel messaggio di benvenuto di WhatsApp Business. Ci vuole un minuto.",
     liveCta: "Apri la mia dashboard",
     footer: "Ricevi questa e-mail perché hai creato un account Staffra. È un messaggio unico sulla configurazione del tuo account.",
@@ -76,14 +81,50 @@ export function merchantEmailLanguage(country: string | null): EmailLanguage {
   return "en";
 }
 
-const P = "font-size:14px;line-height:1.5;margin:0 0 16px";
+const P = "font-size:15px;line-height:1.6;margin:0 0 16px;color:#1b1b1f";
+const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+const AGENT_EMAIL_PHOTOS: Record<string, string> = { ana: "/email/ana.png", malu: "/email/malu.png" };
 
-function button(label: string, url: string): string {
-  return `<p style="margin:24px 0"><a href="${escapeHtml(url)}" style="display:inline-block;background:#3525cd;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:8px">${escapeHtml(label)}</a></p>`;
+function asset(baseUrl: string, path: string): string {
+  return `${baseUrl.replace(/\/$/, "")}${path}`;
 }
 
-function footer(text: string): string {
-  return `<p style="font-size:12px;color:#5b5b66;margin:24px 0 0">${escapeHtml(text)}</p>`;
+function layout(data: MerchantNudgeData, headline: string, bodyHtml: string, footerText: string): string {
+  const photo = data.agentSlug && data.agentName ? AGENT_EMAIL_PHOTOS[data.agentSlug] : undefined;
+  const heading = `<h1 style="font-size:20px;line-height:1.3;font-weight:700;margin:0;color:#1b1b1f">${escapeHtml(headline)}</h1>`;
+  const headingRow = photo
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr>` +
+      `<td style="vertical-align:middle;padding-right:14px"><img src="${escapeHtml(asset(data.baseUrl, photo))}" width="56" height="56" alt="${escapeHtml(data.agentName ?? "")}" style="display:block;width:56px;height:56px;border-radius:50%;border:0"></td>` +
+      `<td style="vertical-align:middle">${heading}</td></tr></table>`
+    : `<div style="margin:0 0 20px">${heading}</div>`;
+
+  return `<!-- staffra merchant nudge -->
+<div style="background:#f4f3fb;padding:32px 16px;font-family:${FONT}">
+  <div style="max-width:520px;margin:0 auto">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr>
+      <td style="vertical-align:middle;padding-right:8px"><img src="${escapeHtml(asset(data.baseUrl, "/email/logo.png"))}" width="28" height="28" alt="Staffra" style="display:block;width:28px;height:28px;border:0"></td>
+      <td style="vertical-align:middle;font-size:16px;font-weight:700;color:#1b1b1f">Staffra</td>
+    </tr></table>
+    <div style="background:#ffffff;border-radius:12px;padding:28px;border:1px solid #e6e3f5">
+      ${headingRow}
+      ${bodyHtml}
+    </div>
+    <p style="font-size:12px;line-height:1.5;color:#6b6b76;margin:16px 4px 0">${escapeHtml(footerText)}</p>
+  </div>
+</div>`;
+}
+
+function button(label: string, url: string): string {
+  return `<p style="margin:24px 0 0"><a href="${escapeHtml(url)}" style="display:inline-block;background:#3525cd;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:13px 22px;border-radius:8px">${escapeHtml(label)}</a></p>`;
+}
+
+function linkBox(label: string, url: string): string {
+  return (
+    `<div style="background:#f1efff;border:1px solid #dcd7ff;border-radius:10px;padding:14px 16px;margin:0 0 16px">` +
+    `<div style="font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#5b4fd6;margin:0 0 6px">${escapeHtml(label)}</div>` +
+    `<a href="${escapeHtml(url)}" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;color:#3525cd;word-break:break-all;text-decoration:none">${escapeHtml(url)}</a>` +
+    `</div>`
+  );
 }
 
 export function renderMerchantNudgeEmail(
@@ -99,14 +140,15 @@ export function renderMerchantNudgeEmail(
     const body = c.liveBody(a, data.companyName, data.scheduling);
     return {
       subject: c.liveSubject(a),
-      html: shell(
+      html: layout(
+        data,
         c.liveHeadline(a),
         `<p style="${P}">${escapeHtml(hi)}</p>` +
           `<p style="${P}">${escapeHtml(body)}</p>` +
-          `<p style="${P}"><a href="${escapeHtml(data.chatUrl)}" style="font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#3525cd;word-break:break-all">${escapeHtml(data.chatUrl)}</a></p>` +
+          linkBox(c.linkLabel(a), data.chatUrl) +
           `<p style="${P}">${escapeHtml(c.liveHow)}</p>` +
-          button(c.liveCta, data.ctaUrl) +
-          footer(c.footer),
+          button(c.liveCta, data.ctaUrl),
+        c.footer,
       ),
       text: [hi, "", body, data.chatUrl, "", c.liveHow, "", `${c.liveCta}: ${data.ctaUrl}`, "", c.footer].join("\n"),
     };
@@ -115,12 +157,11 @@ export function renderMerchantNudgeEmail(
   const body = c.stalledBody(data.companyName);
   return {
     subject: c.stalledSubject(data.agentName),
-    html: shell(
+    html: layout(
+      data,
       c.stalledHeadline(data.agentName),
-      `<p style="${P}">${escapeHtml(hi)}</p>` +
-        `<p style="${P}">${escapeHtml(body)}</p>` +
-        button(c.stalledCta, data.ctaUrl) +
-        footer(c.footer),
+      `<p style="${P}">${escapeHtml(hi)}</p>` + `<p style="${P}">${escapeHtml(body)}</p>` + button(c.stalledCta, data.ctaUrl),
+      c.footer,
     ),
     text: [hi, "", body, "", `${c.stalledCta}: ${data.ctaUrl}`, "", c.footer].join("\n"),
   };
