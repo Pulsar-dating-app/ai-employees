@@ -281,27 +281,29 @@
     },
     "live": {
       "title": "Put {name} to work",
-      "subtitle": "Your customers need to know where to reach her. The link works right now, with nothing to connect.",
+      "subtitle": "Connect your Instagram and {name} starts answering whoever messages you in Direct. It takes a minute, right from your phone.",
+      "instagram": {
+        "badge": "Recommended · takes 1 minute",
+        "title": "Connect your Instagram",
+        "cta": "Connect my Instagram"
+      },
       "link": {
-        "badge": "Fastest · works right now",
         "title": "{name}'s chat link",
         "body": "Anyone who opens this link talks to {name}, on their phone or computer."
       },
       "channels": {
-        "title": "Or let {name} answer your messages",
-        "subtitle": "She replies right on your profile or your number. It takes a few minutes.",
+        "title": "Other ways to reach customers",
+        "subtitle": "{name} can also answer on your WhatsApp or through a link.",
         "connect": "Connect",
         "instagram": {
-          "title": "Instagram Direct",
           "body": "{name} replies to anyone who messages you on Instagram. It needs to be a professional account.",
           "bodyScheduling": "{name} replies to anyone who messages you on Instagram and books them in. It's where your customers already find you. It needs to be a professional account."
         },
         "whatsapp": {
           "title": "Your WhatsApp",
-          "bodyOwn": "{name} replies on your number. It needs a WhatsApp Business account at Meta, with a card on file there.",
-          "bodyIncluded": "{name} replies on your number. It's already included in your plan."
-        },
-        "recommended": "Recommended"
+          "bodyOwn": "{name} answers on your WhatsApp Business number. You connect it through Meta, with a Facebook account: it's easier on a computer.",
+          "bodyIncluded": "{name} answers on your number, already included in your plan. You connect it through Meta: it's easier on a computer."
+        }
       },
       "finish": "Go to the dashboard"
     }
@@ -2116,10 +2118,6 @@
           "title": "Choose a plan",
           "body": "Your team answers customers once a plan is active."
         },
-        "business": {
-          "title": "Tell us about your business",
-          "body": "Three quick questions: what you do, how customers pay and where you are."
-        },
         "products": {
           "title": "Add your products",
           "body": "Your team only recommends what's in your catalog."
@@ -2131,10 +2129,6 @@
         "services": {
           "title": "Add your services",
           "body": "What customers can book, with duration and price."
-        },
-        "calendar": {
-          "title": "Connect Google Calendar",
-          "body": "Avoids booking times when you're already busy."
         },
         "channel": {
           "title": "Connect a channel",
@@ -2158,6 +2152,39 @@
       "instagram": "Connect Instagram",
       "whatsapp": "Connect WhatsApp"
     }
+  },
+  "Welcome": {
+    "title": "Done! {name} is already answering on your Instagram",
+    "bodyScheduling": "{name} answers every message that reaches your Direct right away and books the appointment into your schedule. There's nothing else you need to do.",
+    "bodySales": "{name} answers every message that reaches your Direct right away and helps the customer choose. There's nothing else you need to do.",
+    "test": {
+      "title": "Want to see it work?",
+      "body": "Ask someone to message you in Direct, or send one from another profile. {name} answers in seconds."
+    },
+    "places": {
+      "title": "Where to keep track",
+      "subtitle": "It's all in the menu. None of it is required.",
+      "conversations": {
+        "title": "Conversations",
+        "body": "Everything {name} answered. When she needs you, that conversation shows up first."
+      },
+      "scheduling": {
+        "title": "Appointments",
+        "body": "The times {name} booked with your customers."
+      },
+      "products": {
+        "title": "Products",
+        "body": "What {name} offers your customers."
+      },
+      "agent": {
+        "body": "Name, photo and where she answers."
+      },
+      "settings": {
+        "title": "Settings",
+        "body": "If you like, tell her more about your business, such as your address and payment methods, so {name} answers even better."
+      }
+    },
+    "cta": "Go to the dashboard"
   },
   "Metrics": {
     "pageTitle": "Performance",

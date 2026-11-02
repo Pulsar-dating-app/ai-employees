@@ -197,9 +197,22 @@ export function redirectTargetFor(state: OnboardingState, pageStep: OnboardingSt
 
 // Where finishing the flow may land (the `next` field posted to /api/onboarding/finish):
 // "/dashboard" or a path under it, with an optional simple query string --
-// never another host, never a protocol-relative "//".
+// never another host, never a protocol-relative "//". The live step's main
+// button may also go straight to the Instagram login (its start route checks
+// who may connect).
 const DASHBOARD_PATH = /^\/dashboard(\/[\w-]+)*(\?[\w=&-]*)?$/;
+const INSTAGRAM_CONNECT_PATH =
+  /^\/api\/companies\/[0-9a-f-]{36}\/agents\/[\w-]+\/instagram\/connect\/start(\?from=onboarding)?$/;
 
 export function safeDashboardPath(next: unknown): string {
   return typeof next === "string" && DASHBOARD_PATH.test(next) ? next : "/dashboard";
+}
+
+export function safeFinishTarget(next: unknown): string {
+  return typeof next === "string" && INSTAGRAM_CONNECT_PATH.test(next) ? next : safeDashboardPath(next);
+}
+
+export function finishChannel(target: string): string {
+  if (INSTAGRAM_CONNECT_PATH.test(target)) return "instagram";
+  return new URL(target, "http://x").searchParams.get("canal") ?? "dashboard";
 }

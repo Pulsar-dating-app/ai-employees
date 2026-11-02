@@ -281,27 +281,29 @@
     },
     "live": {
       "title": "Metti {name} al lavoro",
-      "subtitle": "I tuoi clienti devono sapere dove trovarla. Il link funziona già, senza collegare nulla.",
+      "subtitle": "Collega il tuo Instagram e {name} inizia a rispondere a chi ti scrive in Direct. Ci vuole un minuto, anche dal telefono.",
+      "instagram": {
+        "badge": "Consigliato · ci vuole 1 minuto",
+        "title": "Collega il tuo Instagram",
+        "cta": "Collega il mio Instagram"
+      },
       "link": {
-        "badge": "Più veloce · funziona subito",
         "title": "Il link di {name}",
         "body": "Chi apre questo link parla con {name}, dal telefono o dal computer."
       },
       "channels": {
-        "title": "Oppure lascia che {name} risponda ai tuoi messaggi",
-        "subtitle": "Risponde direttamente sul tuo profilo o sul tuo numero. Bastano pochi minuti.",
+        "title": "Altri modi per rispondere ai clienti",
+        "subtitle": "{name} può rispondere anche sul tuo WhatsApp o tramite un link.",
         "connect": "Collega",
         "instagram": {
-          "title": "Direct di Instagram",
           "body": "{name} risponde a chi ti scrive su Instagram. Serve un account professionale.",
           "bodyScheduling": "{name} risponde a chi ti scrive su Instagram e fissa subito l'appuntamento. È lì che i tuoi clienti ti cercano già. Serve un account professionale."
         },
         "whatsapp": {
           "title": "Il tuo WhatsApp",
-          "bodyOwn": "{name} risponde sul tuo numero. Serve un account WhatsApp Business su Meta, con una carta registrata lì.",
-          "bodyIncluded": "{name} risponde sul tuo numero. È già incluso nel tuo piano."
-        },
-        "recommended": "Consigliato"
+          "bodyOwn": "{name} risponde sul tuo numero WhatsApp Business. Il collegamento si fa su Meta e richiede un account Facebook: è più facile dal computer.",
+          "bodyIncluded": "{name} risponde sul tuo numero, già incluso nel tuo piano. Il collegamento si fa su Meta: è più facile dal computer."
+        }
       },
       "finish": "Vai alla dashboard"
     }
@@ -2116,10 +2118,6 @@
           "title": "Scegli un piano",
           "body": "Il tuo team risponde ai clienti quando un piano è attivo."
         },
-        "business": {
-          "title": "Raccontaci la tua attività",
-          "body": "Tre domande veloci: cosa fai, come pagano i clienti e dove ti trovi."
-        },
         "products": {
           "title": "Aggiungi i tuoi prodotti",
           "body": "Il tuo team consiglia solo ciò che è nel tuo catalogo."
@@ -2131,10 +2129,6 @@
         "services": {
           "title": "Aggiungi i tuoi servizi",
           "body": "Cosa possono prenotare i clienti, con durata e prezzo."
-        },
-        "calendar": {
-          "title": "Collega Google Calendar",
-          "body": "Evita di prenotare negli orari in cui sei già occupato."
         },
         "channel": {
           "title": "Collega un canale",
@@ -2158,6 +2152,39 @@
       "instagram": "Collega Instagram",
       "whatsapp": "Collega WhatsApp"
     }
+  },
+  "Welcome": {
+    "title": "Fatto! {name} sta già rispondendo sul tuo Instagram",
+    "bodyScheduling": "{name} risponde subito a ogni messaggio che arriva nel tuo Direct e fissa l'appuntamento nella tua agenda. Non devi fare nient'altro.",
+    "bodySales": "{name} risponde subito a ogni messaggio che arriva nel tuo Direct e aiuta il cliente a scegliere. Non devi fare nient'altro.",
+    "test": {
+      "title": "Vuoi vederla all'opera?",
+      "body": "Chiedi a qualcuno di scriverti in Direct, o scrivi da un altro profilo. {name} risponde in pochi secondi."
+    },
+    "places": {
+      "title": "Dove seguire tutto",
+      "subtitle": "È tutto nel menu. Niente di questo è obbligatorio.",
+      "conversations": {
+        "title": "Conversazioni",
+        "body": "Tutto ciò a cui {name} ha risposto. Quando ha bisogno di te, quella conversazione compare per prima."
+      },
+      "scheduling": {
+        "title": "Agenda",
+        "body": "Gli appuntamenti che {name} ha fissato con i tuoi clienti."
+      },
+      "products": {
+        "title": "Prodotti",
+        "body": "Ciò che {name} offre ai tuoi clienti."
+      },
+      "agent": {
+        "body": "Nome, foto e dove risponde."
+      },
+      "settings": {
+        "title": "Impostazioni",
+        "body": "Se vuoi, racconta di più sulla tua attività, come indirizzo e metodi di pagamento, così {name} risponde ancora meglio."
+      }
+    },
+    "cta": "Vai al pannello"
   },
   "Metrics": {
     "pageTitle": "Prestazioni",

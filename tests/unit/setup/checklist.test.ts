@@ -4,12 +4,9 @@ import { buildSetupChecklist, type SetupFacts } from "@/lib/setup/checklist";
 const base: SetupFacts = {
   hiredSlugs: [],
   planChosen: false,
-  businessInfoFilled: false,
   productsCount: 0,
   hasOpenHours: false,
   hasServices: false,
-  calendarAvailable: true,
-  calendarConnected: false,
   channelLive: false,
 };
 
@@ -19,20 +16,17 @@ describe("buildSetupChecklist", () => {
       "plan",
       "products",
       "channel",
-      "business",
     ]);
     expect(buildSetupChecklist({ ...base, hiredSlugs: ["ana"] }).map((s) => s.key)).toEqual([
       "plan",
       "hours",
       "services",
       "channel",
-      "business",
-      "calendar",
     ]);
   });
 
   // What onboarding already covered is done, so the channel is what comes up
-  // next -- ahead of business details and the calendar.
+  // next. Business details and the calendar are optional and never listed.
   it("puts the channel next once she has what she needs to work", () => {
     const steps = buildSetupChecklist({
       ...base,
@@ -44,31 +38,22 @@ describe("buildSetupChecklist", () => {
     expect(steps.find((s) => !s.done)?.key).toBe("channel");
   });
 
-  it("leaves the calendar step out when Google Calendar isn't available", () => {
-    const keys = buildSetupChecklist({ ...base, hiredSlugs: ["ana"], calendarAvailable: false }).map((s) => s.key);
-    expect(keys).not.toContain("calendar");
-  });
-
   it("marks each step done from its own fact", () => {
     const steps = buildSetupChecklist({
       ...base,
       hiredSlugs: ["malu", "ana"],
       planChosen: true,
-      businessInfoFilled: true,
       productsCount: 3,
       hasOpenHours: true,
       hasServices: false,
-      calendarConnected: true,
       channelLive: false,
     });
     const done = Object.fromEntries(steps.map((s) => [s.key, s.done]));
     expect(done).toEqual({
       plan: true,
-      business: true,
       products: true,
       hours: true,
       services: false,
-      calendar: true,
       channel: false,
     });
   });

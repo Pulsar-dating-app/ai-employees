@@ -24,6 +24,8 @@ export const FUNNEL_EVENTS = [
   "app_opened",
   // A link in one of the merchant nudge e-mails was followed. { kind }
   "nudge_clicked",
+  "whatsapp_signup_started",
+  "whatsapp_signup_cancelled",
 ] as const;
 
 export type FunnelEvent = (typeof FUNNEL_EVENTS)[number];

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { api } from "./helpers/request";
 import { getTestEnv } from "./helpers/env";
@@ -104,6 +105,15 @@ describe("Instagram connect UI entry points (start, callback)", () => {
       // The nonce embedded in `state` must match the cookie the callback
       // will read back -- that pairing is the entire CSRF protection.
       expect(setCookieNonce(res)).toBe(state.nonce);
+      expect(state.returnTo).toBeUndefined();
+
+      const fromOnboarding = await rawGet(`${startPath(companyId, "malu")}?from=onboarding`, owner.cookieHeader);
+      const onboardingState = JSON.parse(
+        Buffer.from(new URL(fromOnboarding.headers.get("location")!).searchParams.get("state")!, "base64url").toString(
+          "utf-8",
+        ),
+      );
+      expect(onboardingState.returnTo).toBe("welcome");
     });
   });
 
@@ -203,6 +213,28 @@ describe("Instagram connect UI entry points (start, callback)", () => {
       // The professional-account id from GET /me?fields=user_id, not the
       // OAuth exchange's app-scoped "igid_callback-success".
       expect(status.json.connection?.instagram_user_id).toBe("igsid_callback-success");
+    });
+
+    it("sends a connect started from onboarding to the welcome page", async () => {
+      const owner = await signUpTestUser("owner");
+      const companyId = await createCompany(owner.cookieHeader, "Welcome Callback Co");
+      await hireAgent(owner.cookieHeader, companyId, "malu");
+
+      const nonce = generateNonce();
+      const state = encodeState({ companyId, agentSlug: "malu", nonce, returnTo: "welcome" });
+      const res = await rawGet(
+        callbackUrl({ code: `callback-welcome-${randomUUID()}`, state }),
+        `${owner.cookieHeader}; ${OAUTH_STATE_COOKIE}=${nonce}`,
+      );
+      expect(res.status).toBe(302);
+      expect(new URL(res.headers.get("location")!, baseUrl).pathname).toBe("/dashboard/welcome");
+
+      const status = await api<{ connection: { status: string } | null }>(
+        "GET",
+        `/api/companies/${companyId}/agents/malu/instagram`,
+        owner.cookieHeader,
+      );
+      expect(status.json.connection?.status).toBe("connected");
     });
 
     it("surfaces the Meta round trip failing as connect_failed", async () => {

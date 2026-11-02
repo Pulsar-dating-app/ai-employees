@@ -11,9 +11,10 @@ import { GoLive } from "./go-live";
 
 // The last step: put her where customers can reach her. Until 2026-10-26 the
 // flow ended in the dashboard, with "connect a channel" last on a checklist,
-// and not one ad sign-up ever got a real conversation. The hosted link leads
-// because it works the moment it is shared, with nothing to connect;
-// Instagram and WhatsApp follow, each a hand-off to its own setup.
+// and not one ad sign-up ever got a real conversation. Instagram leads since
+// 2026-11-02: it is the one channel merchants connect from a phone, and the
+// only one that brought them real customers. WhatsApp and the hosted link
+// follow.
 export default async function OnboardingLivePage({
   searchParams,
 }: {
@@ -51,6 +52,7 @@ export default async function OnboardingLivePage({
   return (
     <StepCard title={t("title", { name })} subtitle={t("subtitle", { name })} portrait={agentPhoto(slug)} portraitAlt={name}>
       <GoLive
+        companyId={state.companyId!}
         agentSlug={slug}
         agentName={name}
         companyName={companyRow?.name ?? state.companyName ?? ""}

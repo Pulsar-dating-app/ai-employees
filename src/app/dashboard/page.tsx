@@ -11,12 +11,6 @@ import { getTeamActivity, type TeamActivity } from "@/lib/agents/team-activity";
 import { HireCard, TeamBadge, type TeamMember } from "./team-badge";
 import { requireAdminPage } from "@/lib/auth/company-access";
 import { SetupPanel } from "./setup-panel";
-import { QuickTeach } from "./settings/quick-teach";
-import {
-  countFilledSections,
-  SETTINGS_MIN_SECTIONS,
-  type SettingsCompletenessFields,
-} from "@/lib/companies/settings-completeness";
 import { GoLiveCard } from "./go-live-card";
 import { resolveCheckoutBaseUrl } from "@/lib/checkout/links";
 
@@ -35,19 +29,15 @@ type HiredAgentRow = {
   photo_asset_url: string | null;
 };
 
-export default async function MyTeamPage({ searchParams }: { searchParams: Promise<{ pronto?: string }> }) {
+export default async function MyTeamPage() {
   // Company-level page: owners/admins only (members get their agenda).
   await requireAdminPage();
   const supabase = await createClient();
   const t = await getTranslations("MyAgents");
 
-  const [{ data: companies }, { data: agents }, { pronto }, tSettings] = await Promise.all([
-    supabase
-      .from("companies")
-      .select("id, slug, name, description, payment_policy, additional_information, faq, address"),
+  const [{ data: companies }, { data: agents }] = await Promise.all([
+    supabase.from("companies").select("id, slug, name"),
     supabase.from("agents").select("id, slug, role, description").eq("is_active", true).order("created_at"),
-    searchParams,
-    getTranslations("Settings"),
   ]);
   const company = companies?.[0] ?? null;
 
@@ -110,13 +100,6 @@ export default async function MyTeamPage({ searchParams }: { searchParams: Promi
   const availableMembers = members.filter((m) => m.status === "available");
   const noActivity: TeamActivity = { conversations: 0, needsYou: 0 };
 
-  // "Contar sobre o seu negócio" answered right here, on the page the
-  // setup panel points at, instead of a trip to Settings.
-  const quickTeachMember = hiredMembers[0] ?? null;
-  const showQuickTeach =
-    Boolean(company && quickTeachMember) &&
-    countFilledSections(company as SettingsCompletenessFields) < SETTINGS_MIN_SECTIONS;
-
   return (
     <div className="flex flex-col gap-8">
       <h1 className="sr-only">{t("pageTitle")}</h1>
@@ -153,28 +136,6 @@ export default async function MyTeamPage({ searchParams }: { searchParams: Promi
               {t("nearLimitBanner.action")}
             </Link>
           }
-        />
-      ) : null}
-
-      {pronto && quickTeachMember ? (
-        <StatusBanner
-          tone="info"
-          title={tSettings("quickTeachSaved.title")}
-          body={tSettings("quickTeachSaved.body", { name: quickTeachMember.name })}
-        />
-      ) : null}
-
-      {company && showQuickTeach && quickTeachMember ? (
-        <QuickTeach
-          companyId={company.id}
-          agentName={quickTeachMember.name}
-          scheduling={quickTeachMember.slug === "ana"}
-          initial={{
-            description: company.description,
-            payment_policy: company.payment_policy,
-            address: company.address ?? null,
-          }}
-          returnTo="/dashboard?pronto=1"
         />
       ) : null}
 

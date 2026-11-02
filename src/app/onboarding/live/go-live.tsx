@@ -2,19 +2,20 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { ChevronRightIcon, InstagramIcon, LinkIcon, WhatsAppIcon } from "@/components/ui/icons";
 import { ShareChatLink } from "@/components/channels/share-chat-link";
 import { StepActions } from "../step-card";
 
 export function GoLive({
+  companyId,
   agentSlug,
   agentName,
   companyName,
   chatUrl,
   whatsappIncluded,
 }: {
+  companyId: string;
   agentSlug: string;
   agentName: string;
   companyName: string;
@@ -24,49 +25,51 @@ export function GoLive({
   const t = useTranslations("Onboarding.live");
   // A plain form post is a full page load: the button says it's on its way.
   const [leaving, setLeaving] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const scheduling = agentSlug === "ana";
   const channelPath = (channel: "instagram" | "whatsapp") => `/dashboard/my-agents/${agentSlug}?canal=${channel}`;
 
   return (
     <div className="flex flex-col gap-7">
       <section
-        aria-labelledby="go-live-link"
+        aria-labelledby="go-live-instagram"
         className="flex flex-col gap-4 rounded-lg border-2 border-primary bg-primary-fixed/35 p-4 sm:p-5"
       >
         <span className="w-fit rounded-full bg-primary px-3 py-1 text-label-sm font-semibold text-on-primary">
-          {t("link.badge")}
+          {t("instagram.badge")}
         </span>
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-primary">
-            <LinkIcon className="h-5 w-5" />
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white">
+            <InstagramIcon className="h-5 w-5" />
           </span>
           <div className="flex flex-col gap-1">
-            <h2 id="go-live-link" className="text-body-lg font-semibold text-on-surface">
-              {t("link.title", { name: agentName })}
+            <h2 id="go-live-instagram" className="text-body-lg font-semibold text-on-surface">
+              {t("instagram.title")}
             </h2>
-            <p className="text-sm text-on-surface-variant">{t("link.body", { name: agentName })}</p>
+            <p className="text-sm text-on-surface-variant">
+              {t(scheduling ? "channels.instagram.bodyScheduling" : "channels.instagram.body", { name: agentName })}
+            </p>
           </div>
         </div>
-
-        <ShareChatLink chatUrl={chatUrl} companyName={companyName} scheduling={scheduling} surface="onboarding" />
+        <form method="post" action={FINISH_URL} onSubmit={() => setConnecting(true)}>
+          <input
+            type="hidden"
+            name="next"
+            value={`/api/companies/${companyId}/agents/${agentSlug}/instagram/connect/start?from=onboarding`}
+          />
+          <Button type="submit" isLoading={connecting} className="w-full">
+            {t("instagram.cta")}
+          </Button>
+        </form>
       </section>
 
       <section aria-labelledby="go-live-channels" className="flex flex-col gap-3">
         <div>
           <h2 id="go-live-channels" className="text-body-lg font-semibold text-on-surface">
-            {t("channels.title", { name: agentName })}
+            {t("channels.title")}
           </h2>
-          <p className="text-sm text-on-surface-variant">{t("channels.subtitle")}</p>
+          <p className="text-sm text-on-surface-variant">{t("channels.subtitle", { name: agentName })}</p>
         </div>
-        <ChannelRow
-          next={channelPath("instagram")}
-          tile="bg-gradient-to-br from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white"
-          icon={<InstagramIcon className="h-5 w-5" />}
-          title={t("channels.instagram.title")}
-          body={t(scheduling ? "channels.instagram.bodyScheduling" : "channels.instagram.body", { name: agentName })}
-          cta={t("channels.connect")}
-          badge={scheduling ? t("channels.recommended") : undefined}
-        />
         <ChannelRow
           next={channelPath("whatsapp")}
           tile="bg-[#25D366] text-white"
@@ -77,10 +80,22 @@ export function GoLive({
           })}
           cta={t("channels.connect")}
         />
+        <div className="flex flex-col gap-4 rounded-lg border border-primary-fixed bg-white/80 p-4">
+          <div className="flex items-start gap-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-fixed text-primary">
+              <LinkIcon className="h-5 w-5" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[15px] font-semibold text-on-surface">{t("link.title", { name: agentName })}</span>
+              <span className="text-[13px] leading-5 text-on-surface-variant">{t("link.body", { name: agentName })}</span>
+            </span>
+          </div>
+          <ShareChatLink chatUrl={chatUrl} companyName={companyName} scheduling={scheduling} surface="onboarding" />
+        </div>
       </section>
 
-      {/* Not filled: sharing the link is this step's one real action, and the
-          way out shouldn't outshout it from the sticky phone bar. */}
+      {/* Not filled: connecting Instagram is this step's one real action, and
+          the way out shouldn't outshout it from the sticky phone bar. */}
       <StepActions>
         <form
           method="post"
@@ -110,7 +125,6 @@ function ChannelRow({
   title,
   body,
   cta,
-  badge,
 }: {
   next: string;
   tile: string;
@@ -118,7 +132,6 @@ function ChannelRow({
   title: string;
   body: string;
   cta: string;
-  badge?: string;
 }) {
   const [sending, setSending] = useState(false);
   return (
@@ -127,18 +140,10 @@ function ChannelRow({
       <button
         type="submit"
         disabled={sending}
-        className={clsx(
-          "group flex w-full items-center gap-4 rounded-lg p-4 text-left transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25 disabled:opacity-70",
-          badge ? "border-2 border-primary bg-white" : "border border-primary-fixed bg-white/80 hover:border-primary/40",
-        )}
+        className="group flex w-full items-center gap-4 rounded-lg border border-primary-fixed bg-white/80 p-4 text-left transition-colors hover:border-primary/40 hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25 disabled:opacity-70"
       >
         <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tile}`}>{icon}</span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          {badge ? (
-            <span className="w-fit rounded-full bg-primary px-2.5 py-0.5 text-label-sm font-semibold text-on-primary">
-              {badge}
-            </span>
-          ) : null}
           <span className="text-[15px] font-semibold text-on-surface">{title}</span>
           <span className="text-[13px] leading-5 text-on-surface-variant">{body}</span>
         </span>

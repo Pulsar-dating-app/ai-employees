@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
-import { safeDashboardPath } from "./onboarding-step";
+import { finishChannel, safeFinishTarget } from "./onboarding-step";
 import { recordFunnelEvent } from "@/lib/funnel/record";
 
 // The merchant leaving the last step is what ends the first session -- not
@@ -15,9 +15,9 @@ import { recordFunnelEvent } from "@/lib/funnel/record";
 // answered with a 303 is a full page navigation, with no client router and
 // no action to replay.
 //
-// Returns where to send them: `next` when it's a dashboard path (the live
-// step sends the ones who chose Instagram or WhatsApp straight to that
-// channel's setup), otherwise the dashboard; or null when nobody is signed in.
+// Returns where to send them: `next` when it's a dashboard path or the
+// Instagram login (the live step sends the ones who chose a channel straight
+// to it), otherwise the dashboard; or null when nobody is signed in.
 export async function completeOnboarding(supabase: SupabaseClient, next: unknown): Promise<string | null> {
   const {
     data: { user },
@@ -54,10 +54,8 @@ export async function completeOnboarding(supabase: SupabaseClient, next: unknown
     await pauseHiresWithoutAPlan(company.id);
   }
 
-  const target = safeDashboardPath(next);
-  await recordFunnelEvent(supabase, "onboarding_finished", {
-    to: new URL(target, "http://x").searchParams.get("canal") ?? "dashboard",
-  });
+  const target = safeFinishTarget(next);
+  await recordFunnelEvent(supabase, "onboarding_finished", { to: finishChannel(target) });
   return target;
 }
 

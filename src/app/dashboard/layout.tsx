@@ -14,7 +14,6 @@ import {
 import { getUsageSummary } from "@/lib/billing/usage-summary";
 import { getMetaSpendSummary } from "@/lib/whatsapp/meta-spend";
 import { createServiceClient } from "@/lib/supabase/service";
-import { countFilledSections, SETTINGS_MIN_SECTIONS } from "@/lib/companies/settings-completeness";
 import { getSchedulingWarnings } from "@/lib/scheduling/warnings";
 import { buildSetupChecklist, loadPlanAndChannelFacts } from "@/lib/setup/checklist";
 import { TourProvider } from "@/components/tour/tour-provider";
@@ -143,7 +142,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     isSilentForNoPlan,
     usage,
     productsCount,
-    settingsFields,
     schedulingWarnings,
     planAndChannel,
     metaSpend,
@@ -157,11 +155,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
           .select("id", { count: "exact", head: true })
           .eq("company_id", companyId)
           .eq("is_active", true),
-        supabase
-          .from("companies")
-          .select("description, payment_policy, additional_information, faq")
-          .eq("id", companyId)
-          .maybeSingle(),
         getSchedulingWarnings(supabase, companyId),
         loadPlanAndChannelFacts(supabase, companyId),
         getMetaSpendSummary(createServiceClient(), companyId),
@@ -171,7 +164,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         false,
         null,
         { count: 0 },
-        { data: null },
         { calendarNotConnected: false, businessHoursEmpty: false, servicesEmpty: false },
         { planChosen: false, channelLive: false },
         null,
@@ -179,22 +171,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const silence = isBillingPastDue ? "past_due" : isSilentForNoPlan ? "no_plan" : null;
 
-  const filledSections = settingsFields.data ? countFilledSections(settingsFields.data) : 0;
   const hasMalu = hiredAgentSlugs.includes("malu");
   const hasAna = hiredAgentSlugs.includes("ana");
   const attention: Attention = {
     settings:
       silence === "past_due"
         ? "problem"
-        : filledSections < SETTINGS_MIN_SECTIONS || !planAndChannel.planChosen
+        : !planAndChannel.planChosen
           ? "setup"
           : null,
     products: hasMalu && (productsCount.count ?? 0) === 0 ? "setup" : null,
     scheduling:
       hasAna &&
-      (schedulingWarnings.calendarNotConnected ||
-        schedulingWarnings.businessHoursEmpty ||
-        schedulingWarnings.servicesEmpty)
+      (schedulingWarnings.businessHoursEmpty || schedulingWarnings.servicesEmpty)
         ? "setup"
         : null,
   };
@@ -202,12 +191,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     ? buildSetupChecklist({
         hiredSlugs: hiredAgentSlugs,
         planChosen: planAndChannel.planChosen,
-        businessInfoFilled: filledSections >= SETTINGS_MIN_SECTIONS,
         productsCount: productsCount.count ?? 0,
         hasOpenHours: !schedulingWarnings.businessHoursEmpty,
         hasServices: !schedulingWarnings.servicesEmpty,
-        calendarAvailable: Boolean(process.env.GOOGLE_CLIENT_ID),
-        calendarConnected: !schedulingWarnings.calendarNotConnected,
         channelLive: planAndChannel.channelLive,
       })
     : [];

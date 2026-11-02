@@ -14,7 +14,7 @@ import { OAUTH_STATE_COOKIE, encodeState, generateNonce } from "@/lib/instagram/
 // starting a connect flow that could end up overwriting the company's
 // Instagram connection is not something a read-only member should trigger.
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ companyId: string; agentSlug: string }> },
 ) {
   const { companyId, agentSlug } = await params;
@@ -66,7 +66,8 @@ export async function GET(
   }
 
   const nonce = generateNonce();
-  const state = encodeState({ companyId, agentSlug, nonce });
+  const returnTo = new URL(request.url).searchParams.get("from") === "onboarding" ? "welcome" : undefined;
+  const state = encodeState({ companyId, agentSlug, nonce, ...(returnTo ? { returnTo } : {}) });
 
   const response = NextResponse.redirect(buildAuthorizeUrl(state), { status: 302 });
 
