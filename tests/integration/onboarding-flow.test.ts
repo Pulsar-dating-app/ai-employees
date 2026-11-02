@@ -219,8 +219,8 @@ describe("Onboarding flow", () => {
     expect(live.status).toBe(200);
     const { data: company } = await getTestServiceClient().from("companies").select("slug").eq("id", companyId).single();
     expect(live.html).toContain(`/talk/${(company as { slug: string }).slug}/malu`);
-    // The Instagram and WhatsApp rows hand off to that channel's own setup.
-    expect(live.html).toContain("/dashboard/my-agents/malu?canal=instagram");
+    // Instagram goes straight to its login; WhatsApp to its own setup.
+    expect(live.html).toContain(`/api/companies/${companyId}/agents/malu/instagram/connect/start?from=onboarding`);
     expect(live.html).toContain("/dashboard/my-agents/malu?canal=whatsapp");
   });
 
@@ -259,7 +259,16 @@ describe("Onboarding flow", () => {
     expect((company as { onboarding_completed_at: string | null }).onboarding_completed_at).not.toBeNull();
     expect((await page("/dashboard", owner.cookieHeader)).status).toBe(200);
 
-    // Anywhere but the dashboard is ignored.
+    const instagramStart = `/api/companies/${companyId}/agents/malu/instagram/connect/start`;
+    expect(await finish(instagramStart)).toEqual({ status: 303, to: instagramStart });
+    const start = await fetch(`${baseUrl}${instagramStart}`, {
+      headers: { cookie: owner.cookieHeader },
+      redirect: "manual",
+    });
+    expect(start.status).toBe(302);
+    expect(new URL(start.headers.get("location")!).pathname).toBe("/oauth/authorize");
+
+    // Anywhere but the dashboard or the Instagram login is ignored.
     expect((await finish("//evil.example/x")).to).toBe("/dashboard");
 
     // Another site's form is refused outright.

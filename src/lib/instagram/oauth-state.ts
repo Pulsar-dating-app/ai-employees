@@ -18,6 +18,7 @@ export interface OAuthState {
   companyId: string;
   agentSlug: string;
   nonce: string;
+  returnTo?: "welcome";
 }
 
 export const OAUTH_STATE_COOKIE = "ig_oauth_nonce";
@@ -41,7 +42,9 @@ export function decodeState(raw: string): OAuthState | null {
       typeof parsed?.agentSlug === "string" &&
       typeof parsed?.nonce === "string"
     ) {
-      return parsed as OAuthState;
+      const state: OAuthState = { companyId: parsed.companyId, agentSlug: parsed.agentSlug, nonce: parsed.nonce };
+      if (parsed.returnTo === "welcome") state.returnTo = "welcome";
+      return state;
     }
     return null;
   } catch {

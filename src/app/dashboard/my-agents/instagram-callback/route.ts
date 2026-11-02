@@ -84,6 +84,7 @@ export async function GET(request: Request) {
   );
 
   if (connectResponse.ok) {
+    if (state.returnTo === "welcome") return redirectTo(new URL("/dashboard/welcome", url.origin));
     returnUrl.searchParams.set("instagram", "connected");
     return redirectTo(returnUrl);
   }

@@ -15,7 +15,7 @@ describe("Dashboard go-live and quick setup cards", () => {
     const { baseUrl } = getTestEnv();
     const res = await fetch(baseUrl + path, { headers: { cookie }, redirect: "manual" });
     const html = res.status === 200 ? await res.text() : "";
-    const leaked = html.match(/(Dashboard|Settings|ShareLink)\.[A-Za-z.]+/);
+    const leaked = html.match(/(Dashboard|Settings|ShareLink|Welcome)\.[A-Za-z.]+/);
     if (leaked) throw new Error(`Unresolved message key rendered on ${path}: ${leaked[0]}`);
     return { status: res.status, html };
   }
@@ -43,6 +43,8 @@ describe("Dashboard go-live and quick setup cards", () => {
     expect(before.status).toBe(200);
     expect(before.html).toContain(`/talk/${slug}/ana`);
     expect(before.html).toContain("/dashboard/my-agents/ana?canal=instagram");
+    // Business details are optional: the home page doesn't ask for them.
+    expect(before.html).not.toContain('id="quick-teach-description"');
 
     // An allowed embed site is one of the checklist's "channel live" facts.
     await getTestServiceClient()
@@ -53,6 +55,34 @@ describe("Dashboard go-live and quick setup cards", () => {
     const after = await render("/dashboard", owner.cookieHeader);
     expect(after.status).toBe(200);
     expect(after.html).not.toContain("/dashboard/my-agents/ana?canal=instagram");
+  });
+
+  it("shows the welcome page: she's answering, and where to find everything", async () => {
+    const owner = await signUpTestUser("go-live-welcome");
+    const { companyId } = await finishedCompanyWithAna(owner);
+    await getTestServiceClient().from("company_instagram_connections").insert({
+      company_id: companyId,
+      agent_id: (
+        (await getTestServiceClient().from("agents").select("id").eq("slug", "ana").single()).data as { id: string }
+      ).id,
+      instagram_user_id: `igsid_${randomUUID()}`,
+      username: "studio.welcome",
+      status: "connected",
+    });
+
+    const welcome = await render("/dashboard/welcome", owner.cookieHeader);
+    expect(welcome.status).toBe(200);
+    expect(welcome.html).toContain("studio.welcome");
+    expect(welcome.html).toContain('href="/dashboard/conversations"');
+    expect(welcome.html).toContain('href="/dashboard/scheduling"');
+    expect(welcome.html).toContain('href="/dashboard/my-agents/ana"');
+    expect(welcome.html).toContain('href="/dashboard/settings"');
+
+    // Back on the home page, the "not answering anyone yet" card is gone.
+    const home = await render("/dashboard", owner.cookieHeader);
+    expect(home.status).toBe(200);
+    expect(home.html).not.toContain('id="go-live-title"');
+    expect(home.html).not.toContain("/dashboard/my-agents/ana?canal=instagram");
   });
 
   it("asks the quick questions on Settings until enough is filled in", async () => {

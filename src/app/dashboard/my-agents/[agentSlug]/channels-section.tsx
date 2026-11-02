@@ -9,6 +9,7 @@ import { WhatsAppIcon, CheckIcon, LockIcon } from "@/components/ui/icons";
 import { ChannelPanelHeader } from "./channel-panel-header";
 import { ChannelPreview } from "./channel-preview";
 import { useReportChannelStatus } from "./channel-status";
+import { track } from "@/lib/funnel/client";
 import type { WhatsappProvider } from "@/lib/whatsapp/enforcement";
 
 const PENDING_POLL_MS = 5000;
@@ -105,6 +106,7 @@ export function ChannelsSection({
   const [recheckingPayment, setRecheckingPayment] = useState(false);
   const [paymentStillMissing, setPaymentStillMissing] = useState(false);
   const pendingSignup = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string; isCoexistence?: boolean }>({});
+  const signupReported = useRef(false);
   const statusUrl = `/api/companies/${companyId}/agents/${agentSlug}/whatsapp`;
 
   useEffect(() => {
@@ -135,7 +137,13 @@ export function ChannelsSection({
       try {
         const data = JSON.parse(event.data);
         if (data.type !== "WA_EMBEDDED_SIGNUP") return;
-        if (data.event === "FINISH") {
+        if (data.event === "CANCEL" || data.event === "ERROR") {
+          signupReported.current = true;
+          track("whatsapp_signup_cancelled", {
+            step: data.event === "ERROR" ? "error" : String(data.data?.current_step ?? "unknown"),
+            ...(data.event === "ERROR" ? { error: String(data.data?.error_message ?? "") } : {}),
+          });
+        } else if (data.event === "FINISH") {
           pendingSignup.current.phoneNumberId = data.data?.phone_number_id;
           pendingSignup.current.wabaId = data.data?.waba_id;
           maybeSubmit();
@@ -182,6 +190,7 @@ export function ChannelsSection({
       .then(({ ok, json }) => {
         pendingSignup.current = {};
         if (!ok) {
+          track("whatsapp_signup_cancelled", { step: "connect_failed", error: String(json?.error ?? "") });
           setErrorMessage(t("connectError"));
           setView("idle");
           return;
@@ -191,6 +200,7 @@ export function ChannelsSection({
       })
       .catch(() => {
         pendingSignup.current = {};
+        track("whatsapp_signup_cancelled", { step: "connect_failed" });
         setErrorMessage(t("connectError"));
         setView("idle");
       });
@@ -222,16 +232,22 @@ export function ChannelsSection({
 
   function startSignup() {
     if (!window.FB) {
+      track("whatsapp_signup_cancelled", { step: "sdk_not_ready" });
       setErrorMessage(t("sdkNotReady"));
       return;
     }
+    track("whatsapp_signup_started");
     setErrorMessage(null);
     setView("connecting");
     pendingSignup.current = {};
+    signupReported.current = false;
     window.FB.login(
       (response) => {
         if (!response.authResponse?.code) {
           setView("idle");
+          setTimeout(() => {
+            if (!signupReported.current) track("whatsapp_signup_cancelled", { step: "closed" });
+          }, 1500);
           return;
         }
         pendingSignup.current.code = response.authResponse.code;

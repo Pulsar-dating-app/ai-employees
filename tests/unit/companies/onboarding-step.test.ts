@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   redirectTargetFor,
   safeDashboardPath,
+  safeFinishTarget,
+  finishChannel,
   stepAfterProof,
   type OnboardingState,
 } from "@/lib/companies/onboarding-step";
@@ -61,6 +63,32 @@ describe("safeDashboardPath", () => {
       "/dashboard?next=https://evil.example",
     ]) {
       expect(safeDashboardPath(next)).toBe("/dashboard");
+    }
+  });
+});
+
+describe("safeFinishTarget", () => {
+  const start = "/api/companies/1b017b3d-2e9e-467a-9259-0fdc278222b4/agents/ana/instagram/connect/start";
+
+  it("lets the live step go straight to the Instagram login", () => {
+    expect(safeFinishTarget(start)).toBe(start);
+    expect(finishChannel(start)).toBe("instagram");
+    expect(safeFinishTarget(`${start}?from=onboarding`)).toBe(`${start}?from=onboarding`);
+    expect(finishChannel(`${start}?from=onboarding`)).toBe("instagram");
+  });
+
+  it("keeps dashboard paths and refuses any other API route", () => {
+    expect(safeFinishTarget("/dashboard/my-agents/ana?canal=whatsapp")).toBe("/dashboard/my-agents/ana?canal=whatsapp");
+    expect(finishChannel("/dashboard/my-agents/ana?canal=whatsapp")).toBe("whatsapp");
+    expect(finishChannel("/dashboard")).toBe("dashboard");
+    for (const next of [
+      "/api/companies/1b017b3d-2e9e-467a-9259-0fdc278222b4/agents/ana/instagram",
+      "/api/companies/x/agents/ana/instagram/connect/start",
+      `${start}?next=https://evil.example`,
+      `${start}?from=onboarding&next=https://evil.example`,
+      `https://evil.example${start}`,
+    ]) {
+      expect(safeFinishTarget(next)).toBe("/dashboard");
     }
   });
 });
